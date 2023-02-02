@@ -1,0 +1,31 @@
+version: "3"
+services:
+    database-auth:
+        image: "mysql:8.0"
+        container_name: "authenticate-db"
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_ROOT_USERNAME: root
+            MYSQL_DATABASE: auth
+    database-app:
+        image: "mysql:8.0"
+        container_name: "gestione-ordini-db"
+        ports:
+            - "3309:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_ROOT_USERNAME: root
+            MYSQL_DATABASE: gestioneordini
+    sql-server:
+        image: "mysql:8.0"
+        container_name: "sql-server-db"
+        ports:
+            - "3308:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_ROOT_USERNAME: root
+            MYSQL_DATABASE: sqlserver
+
+
