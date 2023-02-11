@@ -16,7 +16,7 @@ public class TokenService {
         Set<String> roles = user.roles.stream()
                 .map(role -> role.name)
                 .collect(Collectors.toSet());
-        long l = System.currentTimeMillis() + 3600;
+        long l = (System.currentTimeMillis() / 1000) + 3600;
         dto.setIdToken(Jwt.subject("gp-api-service").expiresAt(l).groups(roles).sign());
         dto.setExpireIn(l);
         dto.setError(Boolean.FALSE);
