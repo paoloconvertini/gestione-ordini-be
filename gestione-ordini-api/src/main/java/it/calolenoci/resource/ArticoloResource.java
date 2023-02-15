@@ -1,3 +1,4 @@
+/*
 package it.calolenoci.resource;
 
 import io.quarkus.panache.common.Sort;
@@ -28,3 +29,4 @@ public class ArticoloResource {
     }
 
 }
+*/

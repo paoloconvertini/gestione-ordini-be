@@ -1,3 +1,4 @@
+/*
 package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
@@ -53,3 +54,4 @@ public class Articolo extends PanacheEntity implements Serializable {
         return find("idOrdine =:idOrdine", Parameters.with("idOrdine", id).map()).list();
     }
 }
+*/
