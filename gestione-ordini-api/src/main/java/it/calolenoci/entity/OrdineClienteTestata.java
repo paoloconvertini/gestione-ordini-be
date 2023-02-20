@@ -1,7 +1,5 @@
 package it.calolenoci.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,8 +20,8 @@ import java.util.Objects;
 public class OrdineClienteTestata implements Serializable {
 
 
-@EmbeddedId
-OrdineId ordineId;
+    @EmbeddedId
+    OrdineId ordineId;
 
     @Column
     private Integer gruppoCliente;
@@ -54,9 +52,6 @@ OrdineId ordineId;
     @Column
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataConferma;
-
-    @Column(length = 15)
-    private String numeroConfermaCli;
 
     @Column
     @Temporal(TemporalType.TIMESTAMP)

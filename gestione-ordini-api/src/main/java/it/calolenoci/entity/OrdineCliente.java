@@ -17,29 +17,18 @@ import java.util.Objects;
 @Table(name = "ORDCLI2")
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(OrdineDettaglioId.class)
 @Getter
 @Setter
 public class OrdineCliente implements Serializable {
 
-    @Column(length = 4)
-    @Id
-    private Integer anno;
-
-    @Column(length = 3)
-    @Id
-    private String serie;
-
-    @Column
-    @Id
-    private Integer progressivo;
-
-    @Column
-    @Id
-    private Integer rigo;
+    @EmbeddedId
+    OrdineDettaglioId ordineDettaglioId;
 
     @Column(length = 2)
     private String tipoRigo;
+
+    @Column(length = 13)
+    private String fArticolo;
 
     @Column(length = 25)
     private String codArtFornitore;
@@ -70,23 +59,23 @@ public class OrdineCliente implements Serializable {
     @Column(length = 2)
     private String fUnitaMisura;
 
-    @Column
+    @Column(name="GE_UPDATEDATE")
     @Temporal(TemporalType.TIMESTAMP)
     private Date geUpdateDate;
 
-    @Column(length = 500)
+    @Column(length = 500, name = "GE_UPDATEUSER")
     private String geUpdateUser;
 
-    @Column(length = 1)
+    @Column(length = 1, name = "GE_FLAG_RISERVATO")
     private Character geFlagRiservato;
 
-    @Column(length = 1)
+    @Column(length = 1, name = "GE_FLAG_NON_DISPONIBILE")
     private Character geFlagNonDisponibile;
 
-    @Column(length = 1)
+    @Column(length = 1, name = "GE_FLAG_ORDINATO")
     private Character geFlagOrdinato;
 
-    @Column(length = 20)
+    @Column(length = 20, name="GE_TONO")
     private String geTono;
 
     @Override
@@ -94,11 +83,11 @@ public class OrdineCliente implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OrdineCliente that = (OrdineCliente) o;
-        return Objects.equals(anno, that.anno) && Objects.equals(serie, that.serie) && Objects.equals(progressivo, that.progressivo) && Objects.equals(rigo, that.rigo);
+        return Objects.equals(ordineDettaglioId, that.ordineDettaglioId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(anno, serie, progressivo, rigo);
+        return Objects.hash(ordineDettaglioId);
     }
 }

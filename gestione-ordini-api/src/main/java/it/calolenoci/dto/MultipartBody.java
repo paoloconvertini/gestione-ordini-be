@@ -10,11 +10,11 @@ import org.jboss.resteasy.reactive.PartType;
 public class MultipartBody {
 
     @FormParam("file")
-    @PartType(MediaType.APPLICATION_OCTET_STREAM)
-    public InputStream file;
-
-    @FormParam("fileName")
     @PartType(MediaType.TEXT_PLAIN)
-    public String fileName;
+    public String file;
+
+    @FormParam("orderId")
+    @PartType(MediaType.TEXT_PLAIN)
+    public String orderId;
 
 }

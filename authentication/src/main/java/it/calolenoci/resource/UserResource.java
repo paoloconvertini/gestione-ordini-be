@@ -41,7 +41,7 @@ public class UserResource {
         entity.lastname = user.lastname;
         entity.password = cryptoService.encrypt(user.password);
         entity.dataNascita = user.dataNascita;
-        List<Role> collect = user.roles.stream().map(r -> Role.findByName(r.name)).collect(Collectors.toList());
+        List<Role> collect = user.roles.stream().map(r -> Role.findByName(r.name)).toList();
         entity.roles.addAll(collect);
         entity.persist();
         return Response.status(Response.Status.CREATED).entity(user).build();
