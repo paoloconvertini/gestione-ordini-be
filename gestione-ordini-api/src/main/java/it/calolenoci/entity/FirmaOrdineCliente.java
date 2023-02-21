@@ -13,28 +13,24 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "FIRMAORDINECLIENTE")
-@NoArgsConstructor
-@AllArgsConstructor
+@IdClass(OrdineId.class)
 @Getter
 @Setter
-public class FirmaOrdineCliente implements Serializable {
+public class FirmaOrdineCliente extends PanacheEntityBase {
 
-    @EmbeddedId
-    OrdineId ordineId;
+    @Column(length = 4)
+    @Id
+    private  Integer anno;
+
+    @Column(length = 3)
+    @Id
+    private String serie;
+
+    @Column
+    @Id
+    private Integer progressivo;
 
     @Column(length = 100)
-    public String fileName;
+    private String fileName;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FirmaOrdineCliente that = (FirmaOrdineCliente) o;
-        return Objects.equals(ordineId, that.ordineId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(ordineId);
-    }
 }

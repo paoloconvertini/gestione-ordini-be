@@ -1,10 +1,12 @@
 package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -14,14 +16,17 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "REGISTROAZIONI")
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-public class RegistroAzioni extends PanacheEntity {
+public class RegistroAzioni extends PanacheEntityBase {
+
+    @Column(length = 36)
+    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @Id
+    private String id;
 
     @Column
-    public Integer anno;
+    private Integer anno;
 
     @Column(length = 3)
     private String serie;

@@ -1,26 +1,29 @@
 package it.calolenoci.entity;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Parameters;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
 @Table(name = "PIANOCONTI")
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-public class PianoConti implements Serializable {
+@IdClass(PianoContiId.class)
+public class PianoConti extends PanacheEntityBase {
 
-    @EmbeddedId
-    PianoContiId pianoContiId;
+    @Column
+    @Id
+    private Integer gruppoConto;
+
+    @Column(length = 6)
+    @Id
+    private String sottoConto;
 
     @Column(length = 40)
     private String intestazione;
@@ -57,4 +60,10 @@ public class PianoConti implements Serializable {
 
     @Column(length = 80)
     private String pec;
+
+    public static PianoConti findByGruppoAndSottoConto(Integer gruppo, String sottoConto ) {
+      return find("gruppoConto = : gruppo and sottoConto = :sottoConto",
+              Parameters.with("gruppo", gruppo).and("sottoConto", sottoConto)).firstResult();
+
+    }
 }

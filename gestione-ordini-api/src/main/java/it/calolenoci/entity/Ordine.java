@@ -1,28 +1,83 @@
 package it.calolenoci.entity;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import io.quarkus.panache.common.Parameters;
+import io.quarkus.panache.common.Sort;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
-import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "ORDCLI")
-public class Ordine extends PanacheEntityBase implements Serializable {
+@IdClass(OrdineId.class)
+@Getter
+@Setter
+public class Ordine extends PanacheEntityBase {
 
     @Column(length = 4)
     @Id
-    public  Integer anno;
+    private  Integer anno;
 
     @Column(length = 3)
     @Id
-    public String serie;
+    private String serie;
 
     @Column
     @Id
-    public Integer progressivo;
+    private Integer progressivo;
 
+    @Column
+    private Integer gruppoCliente;
+
+    @Column(length = 6)
+    private String contoCliente;
+
+    @Column
+    private Integer gruppoFattura;
+
+    @Column(length = 6)
+    private String contoFattura;
+
+    @Column(length = 1)
+    private String tipoFattura;
+
+    @Column
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dataOrdine;
+
+    @Column
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dataRichiesta;
+
+    @Column(length = 15)
+    private String numeroConferma;
+
+    @Column
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dataConferma;
+
+    @Column
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dataConfermaCli;
+
+    @Column(length = 30)
+    private String status;
+
+    public static List<Ordine> findOrdiniByStatus(String status) {
+        if(StringUtils.isBlank(status)) {
+            return list("status is null", Sort.descending("dataOrdine"));
+        } else {
+            return list("status", Sort.descending("dataOrdine"), status);
+        }
+    }
+
+    public static Ordine findByOrdineId(Integer anno, String serie,  Integer progressivo) {
+        return find("anno = :anno and progressivo = :progressivo and serie = :serie",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).firstResult();
+    }
 
 }

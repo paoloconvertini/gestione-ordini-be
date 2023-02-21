@@ -1,26 +1,42 @@
 package it.calolenoci.service;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import it.calolenoci.dto.OrdineDTO;
+import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.OrdineReportDto;
+import it.calolenoci.mapper.OrdineClienteReportMapper;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRSaver;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.springframework.util.ResourceUtils;
 
 @Singleton
 public class JasperService {
 
     @ConfigProperty(name = "ordini.path")
     String pathReport;
+
+    @Inject
+    OrdineClienteReportMapper mapper;
+
+    public List<OrdineReportDto> getOrdiniReport(OrdineDTO dto, List<OrdineDettaglioDto> articoli, String filename) {
+        List<OrdineReportDto> dtoList = new ArrayList<>();
+        articoli.forEach(a -> {
+            dtoList.add(mapper.fromEntityToDto(dto, a, filename));
+        });
+
+        return dtoList;
+    }
 
     public void createReport(List<OrdineReportDto> articoli) throws JRException, IOException {
 
@@ -56,7 +72,8 @@ public class JasperService {
     }
 
     private static JasperReport getJasperReport() throws FileNotFoundException, JRException {
-        File template = ResourceUtils.getFile("classpath:reports/Invoice.jrxml");
+       // File template = ResourceUtils.getFile("classpath:reports/Invoice.jrxml");
+        File template = new File(""); //FIXME get file from resource dir
         return JasperCompileManager.compileReport(template.getAbsolutePath());
     }
     private static Map<String, Object> getParameters(){

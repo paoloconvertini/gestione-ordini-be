@@ -1,6 +1,6 @@
 package it.calolenoci.resource;
 
-import it.calolenoci.entity.OrdineCliente;
+import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
@@ -29,7 +29,7 @@ public class ArticoloResource {
     @Operation(summary = "Returns all the roles from the database")
     @GET
     @RolesAllowed("Admin")
-    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineCliente.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/{anno}/{serie}/{progressivo}")
     public Response getArticoliByIdOrdine(Integer anno, String serie, Integer progressivo) {

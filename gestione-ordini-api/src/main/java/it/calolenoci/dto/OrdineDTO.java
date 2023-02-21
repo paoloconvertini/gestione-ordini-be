@@ -1,27 +1,25 @@
 package it.calolenoci.dto;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Date;
 
-@Data
-@NoArgsConstructor
-public class OrdineClienteTestataDto implements Serializable {
+@RegisterForReflection
+@Getter
+@Setter
+public class OrdineDTO implements Serializable {
+
     private  Integer anno;
     private  String serie;
     private  Integer progressivo;
-    private  Integer gruppoCliente;
-    private  String contoCliente;
-    //private  Integer gruppoFattura;
-    //private  String contoFattura;
-    private  String tipoFattura;
-    private  Date dataOrdine;
-    private  Date dataRichiesta;
+    private Date dataOrdine;
     private  String numeroConferma;
+    private  String tipoFattura;
     private  Date dataConferma;
-    private  Date dataConfermaCli;
     private  String intestazione;
     private  String continuaIntest;
     private  String indirizzo;
@@ -34,4 +32,7 @@ public class OrdineClienteTestataDto implements Serializable {
     private  String cellulare;
     private  String email;
     private  String pec;
+
+
+
 }

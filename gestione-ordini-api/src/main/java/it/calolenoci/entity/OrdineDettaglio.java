@@ -1,28 +1,35 @@
 package it.calolenoci.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.Date;
-import java.util.Objects;
 
 
 @Entity
 @Table(name = "ORDCLI2")
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-public class OrdineCliente implements Serializable {
+@IdClass(OrdineDettaglioId.class)
+public class OrdineDettaglio extends PanacheEntityBase {
 
-    @EmbeddedId
-    OrdineDettaglioId ordineDettaglioId;
+    @Column(length = 4)
+    @Id
+    private  Integer anno;
+
+    @Column(length = 3)
+    @Id
+    private String serie;
+
+    @Column
+    @Id
+    private Integer progressivo;
+
+    @Column
+    @Id
+    private Integer rigo;
 
     @Column(length = 2)
     private String tipoRigo;
@@ -56,6 +63,9 @@ public class OrdineCliente implements Serializable {
     @Column
     private Float prezzo;
 
+    @Column
+    private Integer fColli;
+
     @Column(length = 2)
     private String fUnitaMisura;
 
@@ -78,16 +88,4 @@ public class OrdineCliente implements Serializable {
     @Column(length = 20, name="GE_TONO")
     private String geTono;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        OrdineCliente that = (OrdineCliente) o;
-        return Objects.equals(ordineDettaglioId, that.ordineDettaglioId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(ordineDettaglioId);
-    }
 }

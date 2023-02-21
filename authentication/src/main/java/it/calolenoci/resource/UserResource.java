@@ -11,6 +11,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -57,11 +58,11 @@ public class UserResource {
 
     @Operation(summary = "Returns all the roles from the database")
     @GET
-    @RolesAllowed("Admin")
+    @PermitAll
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Users")
     public Response getAllUsers() {
-        return Response.ok(User.findAll(Sort.ascending("name", "lastname"))).build();
+        return Response.ok(User.listAll(Sort.ascending("name", "lastname"))).build();
     }
 
     @DELETE

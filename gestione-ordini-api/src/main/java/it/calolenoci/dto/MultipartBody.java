@@ -1,11 +1,10 @@
 package it.calolenoci.dto;
 
-import java.io.InputStream;
+
+import org.jboss.resteasy.reactive.PartType;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.core.MediaType;
-
-import org.jboss.resteasy.reactive.PartType;
 
 public class MultipartBody {
 

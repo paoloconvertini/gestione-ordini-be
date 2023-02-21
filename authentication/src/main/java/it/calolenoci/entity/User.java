@@ -15,9 +15,7 @@ import java.util.Map;
 
 @Entity
 @Table(name = "USER")
-@NoArgsConstructor
-@AllArgsConstructor
-public class User extends PanacheEntity implements Serializable {
+public class User extends PanacheEntity {
 
     @Column(unique = true, nullable = false)
     public String username;
@@ -30,9 +28,6 @@ public class User extends PanacheEntity implements Serializable {
 
     @Column(nullable = false)
     public Date dataNascita;
-
-    @Column(nullable = false)
-    public String password;
 
     @ManyToMany
     @JoinTable(

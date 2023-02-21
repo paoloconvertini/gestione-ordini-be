@@ -1,14 +1,13 @@
 package it.calolenoci.resource;
 
 import it.calolenoci.dto.MultipartBody;
+import it.calolenoci.dto.OrdineDTO;
+import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.OrdineReportDto;
-import it.calolenoci.entity.*;
-import it.calolenoci.repository.FirmaOrdineClienteRepository;
-import it.calolenoci.repository.OrdineClienteRepository;
-import it.calolenoci.repository.OrdineRepository;
-import it.calolenoci.repository.OrdineTestataRepository;
-import it.calolenoci.service.JasperService;
-import it.calolenoci.service.OrdineService;
+import it.calolenoci.entity.Ordine;
+import it.calolenoci.enums.AzioneEnum;
+import it.calolenoci.enums.StatoOrdineEnum;
+import it.calolenoci.service.*;
 import net.sf.jasperreports.engine.JRException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -16,7 +15,6 @@ import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
@@ -24,7 +22,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
@@ -34,35 +34,25 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 public class OrdineResource {
 
     @Inject
-    OrdineRepository rep;
-
-    @Inject
     JasperService service;
 
-    @Autowired
-    OrdineTestataRepository ordineTestataRepository;
-
-    @Autowired
-    FirmaOrdineClienteRepository firmaOrdineClienteRepository;
-
-    @Autowired
-    OrdineClienteRepository ordineClienteRepository;
 
     @Inject
     OrdineService ordineService;
+
+    @Inject
+    FirmaService firmaService;
+
+    @Inject
+    EventoService eventoService;
 
 
     @ConfigProperty(name = "firma.store.path")
     String pathFirma;
 
-   @Path("/test")
-   @GET
-   @PermitAll
-   @Consumes(APPLICATION_JSON)
-   @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
-   public Response test(){
-       return Response.ok(rep.findAll()).build();
-   }
+    @Inject
+    ArticoloService articoloService;
+
 
     @Operation(summary = "Returns all the roles from the database")
     @POST
@@ -72,84 +62,44 @@ public class OrdineResource {
     @Path("/upload")
     public Response upload(MultipartBody data) throws IOException, JRException {
 
+        final Integer anno = Integer.valueOf(data.orderId.split("_")[0]);
+        final String serie = data.orderId.split("_")[1];
+        final Integer progressivo = Integer.valueOf(data.orderId.split("_")[2]);
         String filename = "firma_" + data.orderId + ".png";
-        FirmaOrdineCliente firmaOrdineCliente = new FirmaOrdineCliente();
-        OrdineId ordineId = new OrdineId(Integer.valueOf(data.orderId.split("_")[0]),
-                data.orderId.split("_")[1], Integer.valueOf(data.orderId.split("_")[2]));
-        firmaOrdineCliente.setOrdineId(ordineId);
-        firmaOrdineCliente.setFileName(filename);
-        firmaOrdineClienteRepository.save(firmaOrdineCliente);
-        firmaOrdineCliente.setOrdineId(ordineId);
-        firmaOrdineCliente.setFileName(filename);
-        firmaOrdineClienteRepository.save(firmaOrdineCliente);
-
-        RegistroAzioni r = new RegistroAzioni();
-        r.setAnno(Integer.valueOf(data.orderId.split("_")[0]));
-        r.setProgressivo(Integer.valueOf(data.orderId.split("_")[2]));
-        r.setSerie(data.orderId.split("_")[1]);
-        r.setData(new Date());
-        r.setAzione("FIRMA");
-        r.persist();
+        String name = pathFirma + filename;
+        firmaService.save(anno, serie, progressivo, filename);
+        eventoService.save(anno, serie, progressivo, AzioneEnum.FIRMA);
 
         String encodedImage = data.file.split(",")[1];
         byte[] decodedImage = Base64.getDecoder().decode(encodedImage);
-        FileOutputStream fos = new FileOutputStream(pathFirma + filename);
+        FileOutputStream fos = new FileOutputStream(name);
         fos.write(decodedImage);
         fos.close();
 
+        OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
+        if(ordineDTO != null) {
+            Ordine ordine = Ordine.findByOrdineId(anno, serie, progressivo);
+            ordine.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDesczrizione());
+            ordine.persist();
 
-        Optional<OrdineClienteTestata> ordineClienteTestata = ordineTestataRepository.findById(ordineId);
-
-        List<OrdineReportDto> dtoList = new ArrayList<>();
-        if(ordineClienteTestata.isPresent()) {
-            OrdineClienteTestata ordine = ordineClienteTestata.get();
-            List<OrdineCliente> articoli = ordineClienteRepository.findByOrdineDettaglioIdAnnoAndOrdineDettaglioIdSerieAndOrdineDettaglioIdProgressivoOrderByOrdineDettaglioId(ordineId.getAnno(),
-                    ordineId.getSerie(), ordineId.getProgressivo());
-            articoli.forEach(a -> {
-                OrdineReportDto dto = new OrdineReportDto();
-                dto.setANNO(ordineId.getAnno());
-                dto.setSERIE(ordineId.getSerie());
-                dto.setPROGRESSIVO(ordineId.getProgressivo());
-                dto.setRIGO(a.getOrdineDettaglioId().getRigo());
-                dto.setFARTICOLO("pippo");//FIXME aggiungere FARTICOLO
-                dto.setCODARTFORNITORE(a.getCodArtFornitore());
-                dto.setFDESCRARTICOLO(a.getFDescrArticolo());
-                dto.setQUANTITA(a.getQuantita());
-                dto.setPREZZO(a.getPrezzo());
-                dto.setFUNITAMISURA(a.getFUnitaMisura());
-                dto.setSCONTOARTICOLO(5f);
-                dto.setINTESTAZIONE("Pippo PLuto");//FIXME aggiungere intestazione
-                dto.setINDIRIZZO("Via le mani dal naso");//FIXME aggiungere indirizzo
-                dto.setLOCALITA("Metropoli");//FIXME aggiungere localita
-                dto.setCAP("00000");//FIXME aggiungere cap
-                dto.setPROVINCIA("AZ");//FIXME aggiungere provincia
-                dto.setTELEFONO("080 00 1100");//FIXME aggiungere telefono
-                dto.setFCOLLI(1); //FIXME aggiungere colli
-                dto.setFILENAME(pathFirma + filename);
-                dto.setDATAORDINE(ordine.getDataOrdine());
-                dto.setDATACONFERMA(ordine.getDataConferma());
-                dto.setNUMEROCONFERMA(ordine.getNumeroConferma());
-                dtoList.add(dto);
-            });
+            List<OrdineDettaglioDto> articoli = articoloService.findById(anno, serie, progressivo);
+            List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, articoli, name);
+            if(!dtoList.isEmpty()){
+                service.createReport(dtoList);
+            }
         }
-
-        if(!dtoList.isEmpty()){
-            service.createReport(dtoList);
-        }
-
         return Response.ok().build();
     }
 
 
-    @Operation(summary = "Returns all the roles from the database")
+    @Operation(summary = "Returns all the ordini from the database")
     @GET
     @PermitAll
-    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineClienteTestata.class, type = SchemaType.ARRAY)))
-    @APIResponse(responseCode = "204", description = "No Users")
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
-    public Response getAllOrdini() {
-        return Response.ok(ordineService.findAll()).build();
+    public Response getAllOrdini(@QueryParam("status") String status) {
+        return Response.ok(ordineService.findAllByStatus(status)).build();
     }
-
 
 }

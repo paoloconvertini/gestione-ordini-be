@@ -1,10 +1,7 @@
 package it.calolenoci.mapper;
 
-import it.calolenoci.dto.OrdineClienteDto;
-import it.calolenoci.dto.OrdineClienteTestataDto;
-import it.calolenoci.entity.OrdineCliente;
-import it.calolenoci.entity.OrdineClienteTestata;
-import it.calolenoci.entity.PianoConti;
+import it.calolenoci.dto.OrdineDettaglioDto;
+import it.calolenoci.entity.OrdineDettaglio;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -12,17 +9,18 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ArticoloMapper {
 
-    public OrdineClienteDto fromEntityToDto (OrdineCliente o) {
-        OrdineClienteDto dto = new OrdineClienteDto();
-        dto.setAnno(o.getOrdineDettaglioId().getAnno());
-        dto.setSerie(o.getOrdineDettaglioId().getSerie());
-        dto.setProgressivo(o.getOrdineDettaglioId().getProgressivo());
-        dto.setRigo(o.getOrdineDettaglioId().getRigo());
+    public OrdineDettaglioDto fromEntityToDto (OrdineDettaglio o) {
+        OrdineDettaglioDto dto = new OrdineDettaglioDto();
+        dto.setAnno(o.getAnno());
+        dto.setSerie(o.getSerie());
+        dto.setProgressivo(o.getProgressivo());
+        dto.setRigo(o.getRigo());
         dto.setTipoRigo(o.getTipoRigo());
         dto.setFArticolo(o.getFArticolo());
         dto.setCodArtFornitore(o.getCodArtFornitore());
         dto.setFDescrArticolo(o.getFDescrArticolo());
         dto.setFUnitaMisura(o.getFUnitaMisura());
+        dto.setFColli(o.getFColli());
         dto.setGeTono(o.getGeTono());
         dto.setPrezzo(o.getPrezzo());
         dto.setGeFlagNonDisponibile(o.getGeFlagNonDisponibile());
