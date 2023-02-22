@@ -69,6 +69,21 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 2)
     private String fUnitaMisura;
 
+    @Column
+    private Float scontoArticolo;
+
+    @Column
+    private Float scontoC1;
+
+    @Column
+    private Float scontoC2;
+
+    @Column
+    private Float scontoP;
+
+    @Column(length = 3)
+    private String fCodiceIva;
+
     @Column(name="GE_UPDATEDATE")
     @Temporal(TemporalType.TIMESTAMP)
     private Date geUpdateDate;

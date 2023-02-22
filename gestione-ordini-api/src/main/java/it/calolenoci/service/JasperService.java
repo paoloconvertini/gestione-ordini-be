@@ -31,9 +31,7 @@ public class JasperService {
 
     public List<OrdineReportDto> getOrdiniReport(OrdineDTO dto, List<OrdineDettaglioDto> articoli, String filename) {
         List<OrdineReportDto> dtoList = new ArrayList<>();
-        articoli.forEach(a -> {
-            dtoList.add(mapper.fromEntityToDto(dto, a, filename));
-        });
+        articoli.forEach(a -> dtoList.add(mapper.fromEntityToDto(dto, a, filename)));
 
         return dtoList;
     }
@@ -47,7 +45,7 @@ public class JasperService {
         JasperReport jasperReport = compileReport();
 
         // 2. parameters "empty"
-        Map<String, Object> parameters = getParameters();
+        Map<String, Object> parameters = getParameters(articoli);
 
         // 3. datasource "java object"
         JRDataSource dataSource = getDataSource(articoli);
@@ -71,13 +69,13 @@ public class JasperService {
         return jasperReport;
     }
 
-    private static JasperReport getJasperReport() throws FileNotFoundException, JRException {
-       // File template = ResourceUtils.getFile("classpath:reports/Invoice.jrxml");
-        File template = new File(""); //FIXME get file from resource dir
-        return JasperCompileManager.compileReport(template.getAbsolutePath());
-    }
-    private static Map<String, Object> getParameters(){
-        return new HashMap<>();
+    private static Map<String, Object> getParameters(List<OrdineReportDto> articoli){
+        Map<String, Object> map = new HashMap<>();
+        map.put("totaleImponibile" , articoli.stream().filter(a-> !"C".equals(a.getTIPORIGO())).mapToDouble(OrdineReportDto::getValoreTotale).sum());
+        map.put("totaleIVA" , (Double)map.get("totaleImponibile")*22/100);
+        map.put("totaleDocumento" , (Double)map.get("totaleImponibile") + (Double)map.get("totaleIVA"));
+        map.put("totaleNetto" , map.get("totaleDocumento"));
+        return map;
     }
 
     private static JRDataSource getDataSource(List<OrdineReportDto> articoli){

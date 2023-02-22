@@ -19,6 +19,12 @@ public class OrdineTestataMapper {
         dto.setNumeroConferma(o.getNumeroConferma());
         dto.setIntestazione(p.getIntestazione());
         dto.setContinuaIntest(p.getContinuaIntest());
+        dto.setIndirizzo(p.getIndirizzo());
+        dto.setCap(p.getCap());
+        dto.setLocalita(p.getLocalita());
+        dto.setTelefono(p.getTelefono());
+        dto.setProvincia(p.getProvincia());
+        dto.setStatoResidenza(p.getStatoResidenza());
         return dto;
     }
 }

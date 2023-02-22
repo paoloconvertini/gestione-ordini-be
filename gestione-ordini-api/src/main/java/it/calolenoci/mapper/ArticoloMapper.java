@@ -21,6 +21,11 @@ public class ArticoloMapper {
         dto.setFDescrArticolo(o.getFDescrArticolo());
         dto.setFUnitaMisura(o.getFUnitaMisura());
         dto.setFColli(o.getFColli());
+        dto.setScontoArticolo(o.getScontoArticolo());
+        dto.setScontoC1(o.getScontoC1());
+        dto.setScontoC2(o.getScontoC2());
+        dto.setScontoP(o.getScontoP());
+        dto.setFCodiceIva(o.getFCodiceIva());
         dto.setGeTono(o.getGeTono());
         dto.setPrezzo(o.getPrezzo());
         dto.setGeFlagNonDisponibile(o.getGeFlagNonDisponibile());

@@ -19,6 +19,11 @@ public class OrdineDettaglioDto implements Serializable {
     private  Float quantita;
     private  Float prezzo;
     private  String fUnitaMisura;
+    private Float scontoArticolo;
+    private Float scontoC1;
+    private Float scontoC2;
+    private Float scontoP;
+    private String fCodiceIva;
     private Integer fColli;
     private  Character geFlagRiservato;
     private  Character geFlagNonDisponibile;

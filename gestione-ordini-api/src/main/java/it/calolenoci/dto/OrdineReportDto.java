@@ -27,6 +27,10 @@ public class OrdineReportDto implements Serializable {
 	private Float PREZZO;
 	private String FUNITAMISURA;
 	private Float SCONTOARTICOLO;
+	private Float SCONTOC1;
+	private Float SCONTOC2;
+	private Float SCONTOP;
+	private String FCODICEIVA;
 	private String INTESTAZIONE;
 	private String INDIRIZZO;
 	private String LOCALITA;
@@ -34,11 +38,6 @@ public class OrdineReportDto implements Serializable {
 	private String PROVINCIA;
 	private String TELEFONO;
 	private String EMAIL;
-	private String INTESTAZIONE2;
-	private String INDIRIZZO2;
-	private String LOCALITA2;
-	private String CAP2;
-	private String PROVINCIA2;
 	private String PARTITAIVA;
 	private String CODICEFISCALE;
 	private String COGNOME;
@@ -48,5 +47,5 @@ public class OrdineReportDto implements Serializable {
 	private String NUMEROCONFERMA;
 	private Date DATAORDINE;
 	private Date DATACONFERMA;
-
+	private Float valoreTotale;
 }

@@ -21,7 +21,11 @@ import java.util.Objects;
 public class RegistroAzioni extends PanacheEntityBase {
 
     @Column(length = 36)
-    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator"
+    )
     @Id
     private String id;
 

@@ -29,6 +29,9 @@ public class User extends PanacheEntity {
     @Column(nullable = false)
     public Date dataNascita;
 
+    @Column(nullable = false)
+    public String password;
+
     @ManyToMany
     @JoinTable(
             name = "USER_ROLE",
