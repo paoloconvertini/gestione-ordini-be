@@ -1,5 +1,6 @@
 ALTER TABLE ORDCLI2 ADD
     (
+    GE_STATUS varchar(50) NULL,
  GE_UPDATEDATE           datetime    NULL,
  GE_UPDATEUSER           varchar(500) NULL,
  GE_FLAG_RISERVATO       char(1) default 0,

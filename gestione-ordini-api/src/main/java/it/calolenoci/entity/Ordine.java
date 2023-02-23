@@ -9,7 +9,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "ORDCLI")
@@ -64,15 +66,19 @@ public class Ordine extends PanacheEntityBase {
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataConfermaCli;
 
-    @Column(length = 30)
-    private String status;
+    @Column(length = 30, name = "GE_STATUS")
+    private String geStatus;
 
     public static List<Ordine> findOrdiniByStatus(String status) {
         if(StringUtils.isBlank(status)) {
-            return list("status is null", Sort.descending("dataOrdine"));
+            return list("geStatus is null", Sort.descending("dataOrdine"));
         } else {
-            return list("status", Sort.descending("dataOrdine"), status);
+            return list("geStatus", Sort.descending("dataOrdine"), status);
         }
+    }
+
+    public static List<Ordine> findOrdiniByStatus() {
+        return list("geStatus in ('COMPLETO', 'INCOMPLETO')");
     }
 
     public static Ordine findByOrdineId(Integer anno, String serie,  Integer progressivo) {

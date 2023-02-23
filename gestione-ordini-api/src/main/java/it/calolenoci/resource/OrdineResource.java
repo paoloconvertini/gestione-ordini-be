@@ -22,7 +22,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -46,7 +45,6 @@ public class OrdineResource {
     @Inject
     EventoService eventoService;
 
-
     @ConfigProperty(name = "firma.store.path")
     String pathFirma;
 
@@ -68,7 +66,7 @@ public class OrdineResource {
         String filename = "firma_" + data.orderId + ".png";
         String name = pathFirma + filename;
         firmaService.save(anno, serie, progressivo, filename);
-        eventoService.save(anno, serie, progressivo, AzioneEnum.FIRMA);
+        eventoService.save(anno, serie, progressivo, data.username, AzioneEnum.FIRMA, null);
 
         String encodedImage = data.file.split(",")[1];
         byte[] decodedImage = Base64.getDecoder().decode(encodedImage);
@@ -77,14 +75,11 @@ public class OrdineResource {
         fos.close();
 
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
-        if(ordineDTO != null) {
-            Ordine ordine = Ordine.findByOrdineId(anno, serie, progressivo);
-            ordine.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDesczrizione());
-            ordine.persist();
-
-            List<OrdineDettaglioDto> articoli = articoloService.findById(anno, serie, progressivo);
+        if (ordineDTO != null) {
+            ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE);
+            List<OrdineDettaglioDto> articoli = articoloService.findAndChangeStatusById(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE);
             List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, articoli, name);
-            if(!dtoList.isEmpty()){
+            if (!dtoList.isEmpty()) {
                 service.createReport(dtoList);
             }
         }
@@ -101,5 +96,6 @@ public class OrdineResource {
     public Response getAllOrdini(@QueryParam("status") String status) {
         return Response.ok(ordineService.findAllByStatus(status)).build();
     }
+
 
 }

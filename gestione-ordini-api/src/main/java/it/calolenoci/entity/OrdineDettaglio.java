@@ -1,6 +1,8 @@
 package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Parameters;
+import it.calolenoci.enums.StatoOrdineEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -102,5 +104,20 @@ public class OrdineDettaglio extends PanacheEntityBase {
 
     @Column(length = 20, name="GE_TONO")
     private String geTono;
+
+    @Column(length = 50, name = "GE_STATUS")
+    private String geStatus;
+
+    public static void updateStatus(Integer anno, String serie, Integer progressivo, String stato){
+        update("set? geStatus = :stato where anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                Parameters.with("stato", stato).and("anno", anno).and("serie", serie)
+                        .and("progressivo", progressivo));
+    }
+
+    public static OrdineDettaglio getById(Integer anno, String serie, Integer progressivo, Integer rigo) {
+        return find("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo = :rigo",
+        Parameters.with("anno", anno).and("serie", serie)
+                .and("progressivo", progressivo).and("rigo", rigo)).firstResult();
+    }
 
 }

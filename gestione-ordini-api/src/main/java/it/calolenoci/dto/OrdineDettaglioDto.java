@@ -8,6 +8,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 public class OrdineDettaglioDto implements Serializable {
+    private String username;
     private  Integer anno;
     private  Integer progressivo;
     private  String tipoRigo;
@@ -25,8 +26,8 @@ public class OrdineDettaglioDto implements Serializable {
     private Float scontoP;
     private String fCodiceIva;
     private Integer fColli;
-    private  Character geFlagRiservato;
-    private  Character geFlagNonDisponibile;
-    private  Character geFlagOrdinato;
+    private  Boolean geFlagRiservato;
+    private  Boolean geFlagNonDisponibile;
+    private  Boolean geFlagOrdinato;
     private  String geTono;
 }

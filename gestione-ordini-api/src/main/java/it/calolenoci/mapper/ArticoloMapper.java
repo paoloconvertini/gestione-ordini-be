@@ -28,10 +28,18 @@ public class ArticoloMapper {
         dto.setFCodiceIva(o.getFCodiceIva());
         dto.setGeTono(o.getGeTono());
         dto.setPrezzo(o.getPrezzo());
-        dto.setGeFlagNonDisponibile(o.getGeFlagNonDisponibile());
+        dto.setGeFlagNonDisponibile(o.getGeFlagNonDisponibile() == '1');
         dto.setQuantita(o.getQuantita());
-        dto.setGeFlagOrdinato(o.getGeFlagOrdinato());
-        dto.setGeFlagRiservato(o.getGeFlagRiservato());
+        dto.setGeFlagOrdinato(o.getGeFlagOrdinato() == '1');
+        dto.setGeFlagRiservato(o.getGeFlagRiservato() == '1');
         return dto;
+    }
+
+    public void fromDtoToEntity (OrdineDettaglio o, OrdineDettaglioDto dto) {
+        o.setGeTono(dto.getGeTono());
+        o.setGeFlagNonDisponibile(dto.getGeFlagNonDisponibile()?'1':'0');
+        o.setQuantita(dto.getQuantita());
+        o.setGeFlagOrdinato(dto.getGeFlagOrdinato()?'1':'0');
+        o.setGeFlagRiservato(dto.getGeFlagRiservato()?'1':'0');
     }
 }

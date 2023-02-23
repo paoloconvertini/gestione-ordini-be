@@ -11,13 +11,17 @@ import java.util.Date;
 public class EventoService {
 
     @Transactional
-    public void save(Integer anno, String serie, Integer progressivo, AzioneEnum azioneEnum) {
+    public void save(Integer anno, String serie, Integer progressivo, String username, AzioneEnum azioneEnum, Integer rigo) {
         RegistroAzioni r = new RegistroAzioni();
         r.setAnno(anno);
         r.setSerie(serie);
         r.setProgressivo(progressivo);
         r.setAzione(azioneEnum.getDesczrizione());
+        r.setUser(username);
         r.setData(new Date());
+        if(rigo != null) {
+            r.setRigo(rigo);
+        }
         r.persist();
     }
 
