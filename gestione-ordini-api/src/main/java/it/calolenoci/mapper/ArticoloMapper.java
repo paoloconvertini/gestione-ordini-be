@@ -32,6 +32,7 @@ public class ArticoloMapper {
         dto.setQuantita(o.getQuantita());
         dto.setGeFlagOrdinato(o.getGeFlagOrdinato() == '1');
         dto.setGeFlagRiservato(o.getGeFlagRiservato() == '1');
+        dto.setGeFlagConsegnato(o.getGeFlagConsegnato() == '1');
         return dto;
     }
 
@@ -41,5 +42,6 @@ public class ArticoloMapper {
         o.setQuantita(dto.getQuantita());
         o.setGeFlagOrdinato(dto.getGeFlagOrdinato()?'1':'0');
         o.setGeFlagRiservato(dto.getGeFlagRiservato()?'1':'0');
+        o.setGeFlagConsegnato(dto.getGeFlagConsegnato()?'1':'0');
     }
 }

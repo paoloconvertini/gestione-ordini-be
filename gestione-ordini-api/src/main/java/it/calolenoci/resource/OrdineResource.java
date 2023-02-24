@@ -1,9 +1,6 @@
 package it.calolenoci.resource;
 
-import it.calolenoci.dto.MultipartBody;
-import it.calolenoci.dto.OrdineDTO;
-import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.dto.OrdineReportDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
@@ -17,6 +14,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -58,6 +56,7 @@ public class OrdineResource {
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
     @Consumes(MULTIPART_FORM_DATA)
     @Path("/upload")
+    @RolesAllowed({"Admin", "Venditore"})
     public Response upload(MultipartBody data) throws IOException, JRException {
 
         final Integer anno = Integer.valueOf(data.orderId.split("_")[0]);
@@ -83,13 +82,13 @@ public class OrdineResource {
                 service.createReport(dtoList);
             }
         }
-        return Response.ok().build();
+        return Response.ok().entity(new ResponseDto("Firma creata con successo!", false)).build();
     }
 
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
-    @PermitAll
+    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)

@@ -29,5 +29,6 @@ public class OrdineDettaglioDto implements Serializable {
     private  Boolean geFlagRiservato;
     private  Boolean geFlagNonDisponibile;
     private  Boolean geFlagOrdinato;
+    private  Boolean geFlagConsegnato;
     private  String geTono;
 }

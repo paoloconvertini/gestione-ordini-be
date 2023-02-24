@@ -102,6 +102,9 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 1, name = "GE_FLAG_ORDINATO")
     private Character geFlagOrdinato;
 
+    @Column(length = 1, name = "GE_FLAG_CONSEGNATO")
+    private Character geFlagConsegnato;
+
     @Column(length = 20, name="GE_TONO")
     private String geTono;
 
@@ -109,7 +112,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
     private String geStatus;
 
     public static void updateStatus(Integer anno, String serie, Integer progressivo, String stato){
-        update("set? geStatus = :stato where anno = :anno AND serie = :serie AND progressivo = :progressivo",
+        update("geStatus = :stato where anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("stato", stato).and("anno", anno).and("serie", serie)
                         .and("progressivo", progressivo));
     }

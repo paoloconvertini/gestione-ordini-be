@@ -34,12 +34,15 @@ public class OrdineService {
         return list;
     }
 
+    @Transactional
     private void checkStatusDettaglio() {
         List<Ordine> ordineList = Ordine.findOrdiniByStatus();
         ordineList.forEach(o-> {
             if(articoloService.findAnyNoStatus(o.getAnno(), o.getSerie(), o.getProgressivo())) {
                 o.setGeStatus(null);
+                o.persist();
             }
+
         });
     }
 
