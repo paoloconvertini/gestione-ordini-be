@@ -10,6 +10,7 @@ import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -42,12 +43,12 @@ public class ArticoloService {
 
     public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
         return OrdineDettaglio.count("anno = :anno AND serie = :serie AND progressivo = :progressivo " +
-                "AND geStatus is null",
+                        "AND geStatus is null",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) > 0;
     }
 
     @Transactional
-    public void changeAllStatus(Integer anno, String serie, Integer progressivo, StatoOrdineEnum statoOrdineEnum){
+    public void changeAllStatus(Integer anno, String serie, Integer progressivo, StatoOrdineEnum statoOrdineEnum) {
         OrdineDettaglio.updateStatus(anno, serie, progressivo, statoOrdineEnum.getDesczrizione());
     }
 
@@ -65,25 +66,35 @@ public class ArticoloService {
         list.forEach(dto -> {
 
             OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
-            if(!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
+            if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.QUANTITA.getDesczrizione(), dto.getRigo()));
+                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.QUANTITA.getDesczrizione(),
+                        dto.getRigo(), null, dto.getQuantita()));
             }
-            if(!Objects.equals(ordineDettaglio.getGeTono(), dto.getGeTono())) {
+            if (!Objects.equals(ordineDettaglio.getGeTono(), dto.getGeTono())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.TONO.getDesczrizione(), dto.getRigo()));
+                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.TONO.getDesczrizione(),
+                        dto.getRigo(), dto.getGeTono(), null));
             }
-            if(dto.getGeFlagRiservato()) {
+            if (!Objects.equals(dto.getGeFlagRiservato(), convertiFlag(ordineDettaglio.getGeFlagRiservato()))) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.RISERVATO.getDesczrizione(), dto.getRigo()));
+                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.RISERVATO.getDesczrizione()
+                        , dto.getRigo(), null, null));
             }
-            if(dto.getGeFlagOrdinato()){
+            if (!Objects.equals(dto.getGeFlagOrdinato(), convertiFlag(ordineDettaglio.getGeFlagOrdinato()))) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.ORDINATO.getDesczrizione(), dto.getRigo()));
+                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.ORDINATO.getDesczrizione()
+                        , dto.getRigo(), null, null));
             }
-            if(dto.getGeFlagNonDisponibile()) {
+            if (!Objects.equals(dto.getGeFlagNonDisponibile(), convertiFlag(ordineDettaglio.getGeFlagNonDisponibile()))) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.NON_DISPONIBILE.getDesczrizione(), dto.getRigo()));
+                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.NON_DISPONIBILE.getDesczrizione()
+                        , dto.getRigo(), null, null));
+            }
+            if (!Objects.equals(dto.getGeFlagConsegnato(), convertiFlag(ordineDettaglio.getGeFlagConsegnato()))) {
+                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.CONSEGNATO.getDesczrizione()
+                        , dto.getRigo(), null, null));
             }
 
             mapper.fromDtoToEntity(ordineDettaglio, dto);
@@ -91,5 +102,9 @@ public class ArticoloService {
         });
         OrdineDettaglio.persist(ordineDettaglioList);
         RegistroAzioni.persist(registroAzioniList);
+    }
+
+    private Boolean convertiFlag(Character flag) {
+        return flag == '1';
     }
 }

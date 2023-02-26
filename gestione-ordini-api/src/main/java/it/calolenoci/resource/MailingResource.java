@@ -1,4 +1,4 @@
-package it.calolenoci.service;
+package it.calolenoci.resource;
 
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.MailTemplate;

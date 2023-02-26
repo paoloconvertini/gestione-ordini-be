@@ -1,17 +1,12 @@
 package it.calolenoci.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.Date;
-import java.util.Objects;
 
 
 @Entity
@@ -49,6 +44,13 @@ public class RegistroAzioni extends PanacheEntityBase {
 
     @Column(length = 30)
     private String azione;
+
+    @Column(name = "quantita")
+    private Float quantita;
+
+    @Column(length = 20, name= "tono")
+    private String tono;
+
 
 
 }

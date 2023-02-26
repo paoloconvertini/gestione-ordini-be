@@ -2,6 +2,7 @@ package it.calolenoci.dto;
 
 import lombok.Data;
 
+import javax.persistence.Column;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -17,4 +18,6 @@ public class RegistroAzioniDto implements Serializable {
     private String user;
     private Date data;
     private String azione;
+    private Float quantita;
+    private String tono;
 }
