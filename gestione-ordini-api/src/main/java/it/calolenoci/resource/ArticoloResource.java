@@ -33,14 +33,26 @@ public class ArticoloResource {
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/{anno}/{serie}/{progressivo}")
     public Response getArticoliByIdOrdine(Integer anno, String serie, Integer progressivo) {
-        return Response.ok(articoloService.findById(anno, serie, progressivo)).build();
+        return Response.ok(articoloService.findById(anno, serie, progressivo, false)).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @GET
+    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Path("/{anno}/{serie}/{progressivo}/{filtro}")
+    public Response getArticoliByIdOrdine(Integer anno, String serie, Integer progressivo, Boolean filtro) {
+        return Response.ok(articoloService.findById(anno, serie, progressivo, filtro)).build();
     }
 
     @Operation(summary = "Save dettaglio ordine")
     @PUT
     @RolesAllowed({"Admin", "Magazziniere", "Amministrativo"})
-    public Response saveArticoli(List<OrdineDettaglioDto> list){
-        articoloService.save(list);
+    public Response saveArticoli(List<OrdineDettaglioDto> list) {
+        if (!list.isEmpty()) {
+            articoloService.save(list);
+        }
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("ok", false)).build();
     }
 

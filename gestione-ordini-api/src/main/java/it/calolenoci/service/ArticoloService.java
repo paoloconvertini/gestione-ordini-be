@@ -16,16 +16,14 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @ApplicationScoped
 public class ArticoloService {
 
 
     @Inject
-    EventoService eventoService;
+    OrdineService ordineService;
 
     @Inject
     RegistroAzioniMapper registroAzioniMapper;
@@ -33,9 +31,13 @@ public class ArticoloService {
     @Inject
     ArticoloMapper mapper;
 
-    public List<OrdineDettaglioDto> findById(Integer anno, String serie, Integer progressivo) {
+    public List<OrdineDettaglioDto> findById(Integer anno, String serie, Integer progressivo, Boolean filtro) {
         List<OrdineDettaglioDto> list = new ArrayList<>();
-        List<OrdineDettaglio> articoli = OrdineDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo", Sort.ascending("rigo"),
+        String query = "anno = :anno AND serie = :serie AND progressivo = :progressivo";
+        if(filtro) {
+            query += " AND geFlagNonDisponibile = '1'";
+        }
+        List<OrdineDettaglio> articoli = OrdineDettaglio.find(query, Sort.ascending("rigo"),
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list();
         articoli.forEach(a -> list.add(mapper.fromEntityToDto(a)));
         return list;
@@ -54,7 +56,7 @@ public class ArticoloService {
 
     @Transactional
     public List<OrdineDettaglioDto> findAndChangeStatusById(Integer anno, String serie, Integer progressivo, StatoOrdineEnum statoOrdineEnum) {
-        List<OrdineDettaglioDto> list = findById(anno, serie, progressivo);
+        List<OrdineDettaglioDto> list = findById(anno, serie, progressivo, false);
         changeAllStatus(anno, serie, progressivo, statoOrdineEnum);
         return list;
     }
@@ -63,8 +65,20 @@ public class ArticoloService {
     public void save(List<OrdineDettaglioDto> list) {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
+        boolean[] cambioStato = {false, false, false, false};
         list.forEach(dto -> {
-
+            if(!dto.getGeFlagRiservato()) {
+                cambioStato[0] = true;
+            }
+            if(!dto.getGeFlagRiservato() && !dto.getGeFlagNonDisponibile()) {
+                cambioStato[1] = true;
+            }
+            if(!dto.getGeFlagOrdinato()) {
+                cambioStato[2] = true;
+            }
+            if(!dto.getGeFlagConsegnato()) {
+                cambioStato[3] = true;
+            }
             OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
             if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
@@ -100,6 +114,19 @@ public class ArticoloService {
             mapper.fromDtoToEntity(ordineDettaglio, dto);
             ordineDettaglioList.add(ordineDettaglio);
         });
+        OrdineDettaglio o = ordineDettaglioList.get(0);
+        if(!cambioStato[0] || !cambioStato[2]) {
+            //ordineDettaglioList.forEach(ordine -> ordine.setGeStatus(StatoOrdineEnum.INCOMPLETO.getDesczrizione()));
+            ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.INCOMPLETO);
+        }
+        if(!cambioStato[1]) {
+            ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.DA_ORDINARE);
+            //ordineDettaglioList.forEach(ordine -> ordine.setGeStatus(StatoOrdineEnum.DA_ORDINARE.getDesczrizione()));
+        }
+        if(!cambioStato[3]) {
+            ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.COMPLETO);
+            //ordineDettaglioList.forEach(ordine -> ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDesczrizione()));
+        }
         OrdineDettaglio.persist(ordineDettaglioList);
         RegistroAzioni.persist(registroAzioniList);
     }

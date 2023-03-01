@@ -8,6 +8,8 @@ import lombok.Getter;
 public enum StatoOrdineEnum {
 
     DA_PROCESSARE("DA_PROCESSARE"),
+
+    DA_ORDINARE("DA_ORDINARE"),
     INCOMPLETO("INCOMPLETO"),
     COMPLETO("COMPLETO");
 
