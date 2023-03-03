@@ -25,6 +25,7 @@ public class OrdineTestataMapper {
         dto.setTelefono(p.getTelefono());
         dto.setProvincia(p.getProvincia());
         dto.setStatoResidenza(p.getStatoResidenza());
+        dto.setStatus(o.getGeStatus());
         return dto;
     }
 }

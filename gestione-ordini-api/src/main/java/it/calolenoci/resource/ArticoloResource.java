@@ -51,9 +51,11 @@ public class ArticoloResource {
     @RolesAllowed({"Admin", "Magazziniere", "Amministrativo"})
     public Response saveArticoli(List<OrdineDettaglioDto> list) {
         if (!list.isEmpty()) {
-            articoloService.save(list);
+            String save = articoloService.save(list);
+            return Response.status(Response.Status.CREATED).entity(new ResponseDto(save, false)).build();
+
         }
-        return Response.status(Response.Status.CREATED).entity(new ResponseDto("ok", false)).build();
+        return Response.status(Response.Status.OK).entity(new ResponseDto("lista vuota", true)).build();
     }
 
 }

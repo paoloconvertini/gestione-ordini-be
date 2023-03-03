@@ -2,6 +2,7 @@ package it.calolenoci.service;
 
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
+import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
@@ -62,23 +63,12 @@ public class ArticoloService {
     }
 
     @Transactional
-    public void save(List<OrdineDettaglioDto> list) {
+    public String save(List<OrdineDettaglioDto> list) {
+
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
-        boolean[] cambioStato = {false, false, false, false};
+                                //DA_ORDINARE, INCOMPLETO, COMPLETO
         list.forEach(dto -> {
-            if(!dto.getGeFlagRiservato()) {
-                cambioStato[0] = true;
-            }
-            if(!dto.getGeFlagRiservato() && !dto.getGeFlagNonDisponibile()) {
-                cambioStato[1] = true;
-            }
-            if(!dto.getGeFlagOrdinato()) {
-                cambioStato[2] = true;
-            }
-            if(!dto.getGeFlagConsegnato()) {
-                cambioStato[3] = true;
-            }
             OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
             if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
@@ -110,25 +100,40 @@ public class ArticoloService {
                         dto.getProgressivo(), dto.getUsername(), AzioneEnum.CONSEGNATO.getDesczrizione()
                         , dto.getRigo(), null, null));
             }
-
             mapper.fromDtoToEntity(ordineDettaglio, dto);
             ordineDettaglioList.add(ordineDettaglio);
         });
         OrdineDettaglio o = ordineDettaglioList.get(0);
-        if(!cambioStato[0] || !cambioStato[2]) {
-            //ordineDettaglioList.forEach(ordine -> ordine.setGeStatus(StatoOrdineEnum.INCOMPLETO.getDesczrizione()));
-            ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.INCOMPLETO);
+        OrdineDTO ordineDTO = ordineService.findById(o.getAnno(), o.getSerie(), o.getProgressivo());
+        String result = ordineDTO.getStatus();
+
+        if(StatoOrdineEnum.DA_PROCESSARE.getDesczrizione().equals(result)) {
+            boolean noneMatch = ordineDettaglioList.stream().noneMatch(ord -> ord.getGeFlagRiservato() == '0');
+            if(noneMatch) {
+                ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.INCOMPLETO);
+            }
+            boolean anyMatch = ordineDettaglioList.stream().anyMatch(ord -> ord.getGeFlagRiservato() == '0' && ord.getGeFlagNonDisponibile() == '0');
+            if(!anyMatch) {
+                ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.DA_ORDINARE);
+            }
         }
-        if(!cambioStato[1]) {
-            ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.DA_ORDINARE);
-            //ordineDettaglioList.forEach(ordine -> ordine.setGeStatus(StatoOrdineEnum.DA_ORDINARE.getDesczrizione()));
+
+        if(StatoOrdineEnum.DA_ORDINARE.getDesczrizione().equals(result)){
+            boolean noneMatch = ordineDettaglioList.stream().noneMatch(ord -> ord.getGeFlagOrdinato() == '0');
+            if(noneMatch){
+                ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.INCOMPLETO);
+            }
         }
-        if(!cambioStato[3]) {
-            ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.COMPLETO);
-            //ordineDettaglioList.forEach(ordine -> ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDesczrizione()));
+
+        if(StatoOrdineEnum.INCOMPLETO.getDesczrizione().equals(result)){
+            boolean noneMatch = ordineDettaglioList.stream().noneMatch(ord -> ord.getGeFlagConsegnato() == '0');
+            if(noneMatch){
+                ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.COMPLETO);
+            }
         }
         OrdineDettaglio.persist(ordineDettaglioList);
         RegistroAzioni.persist(registroAzioniList);
+        return result;
     }
 
     private Boolean convertiFlag(Character flag) {

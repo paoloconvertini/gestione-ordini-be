@@ -32,7 +32,7 @@ public class OrdineDTO implements Serializable {
     private  String cellulare;
     private  String email;
     private  String pec;
-
+    private String status;
 
 
 }
