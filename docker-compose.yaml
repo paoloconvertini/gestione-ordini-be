@@ -1,49 +1,60 @@
 version: "3"
 services:
-    auth:
-        networks:
-            - backend
-            - frontend
-        image: "pconvertini/ge-auth-api:1.0.0-SNAPSHOT"
-        container_name: "ge-auth-api"
-        ports:
-            - "8081:8081"
-        depends_on:
-            -   database-auth
-        volumes:
-            -   /Users/pconvertini/IdeaProjects/logs/gestione-ordini/:/deployments/quarkus/logs/gestione-ordini/
-            -   /Users/pconvertini/IdeaProjects/gestione-ordini-be/authentication/src/main/resources/jwt:/deployments/jwt/
-    api:
-        networks:
-            - backend
-            - frontend
-        image: "pconvertini/gestione-ordini-api:1.0.0-SNAPSHOT"
-        container_name: "ge-api"
-        ports:
-            - "8080:8080"
-        volumes:
-            - /Users/pconvertini/IdeaProjects/logs/gestione-ordini/:/deployments/quarkus/logs/gestione-ordini/
-            - /Users/pconvertini/IdeaProjects/gestione-ordini-be/firme_ordini_clienti:/deployments/firme_ordini_clienti/
-            - /Users/pconvertini/IdeaProjects/gestione-ordini-be/ordini:/deployments/ordini
-    database-auth:
-        networks:
-            - backend
-        image: "mysql:8.0"
-        container_name: "authenticate-db"
-        ports:
-            - "3306:3306"
-        environment:
-            MYSQL_ROOT_PASSWORD: root
-            MYSQL_ROOT_USERNAME: root
-            MYSQL_DATABASE: auth
-    client:
-        networks:
-            - frontend
-        image: "pconvertini/gestione-ordini:1.2"
-        container_name: "ge-frontend"
-        ports:
-            - "4200:80"
+  auth:
+    networks:
+      - backend
+      - frontend
+    image: "pconvertini/ge-auth-api:1.0.0-SNAPSHOT"
+    container_name: "ge-auth-api"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - database-auth
+    volumes:
+      - /Users/pconvertini/IdeaProjects/logs/gestione-ordini/:/deployments/quarkus/logs/gestione-ordini/
+      - /Users/pconvertini/IdeaProjects/gestione-ordini-be/authentication/src/main/resources/jwt:/deployments/jwt/
+  api:
+    networks:
+      - backend
+      - frontend
+    image: "pconvertini/gestione-ordini-api:1.0.0-SNAPSHOT"
+    container_name: "ge-api"
+    ports:
+      - "8080:8080"
+    volumes:
+      - /Users/pconvertini/IdeaProjects/logs/gestione-ordini/:/deployments/quarkus/logs/gestione-ordini/
+      - /Users/pconvertini/IdeaProjects/gestione-ordini-be/firme_ordini_clienti:/deployments/firme_ordini_clienti/
+      - /Users/pconvertini/IdeaProjects/gestione-ordini-be/ordini:/deployments/ordini
+  database-auth:
+    networks:
+      - backend
+    image: "mysql:8.0"
+    container_name: "authenticate-db"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_USERNAME: root
+      MYSQL_DATABASE: auth
+  database-api:
+    networks:
+      - backend
+    image: "mysql:8.0"
+    container_name: "api-db"
+    ports:
+      - "8889:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_USERNAME: root
+      MYSQL_DATABASE: gestioneordini
+  client:
+    networks:
+      - frontend
+    image: "pconvertini/gestione-ordini:1.2"
+    container_name: "ge-frontend"
+    ports:
+      - "4200:80"
 networks:
-    frontend:
-    backend:
+  frontend:
+  backend:
 
