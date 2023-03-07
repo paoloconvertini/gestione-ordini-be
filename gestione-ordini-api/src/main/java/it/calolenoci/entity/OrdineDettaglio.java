@@ -86,13 +86,6 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 3)
     private String fCodiceIva;
 
-    @Column(name="GE_UPDATEDATE")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date geUpdateDate;
-
-    @Column(length = 500, name = "GE_UPDATEUSER")
-    private String geUpdateUser;
-
     @Column(length = 1, name = "GE_FLAG_RISERVATO")
     private Character geFlagRiservato;
 
