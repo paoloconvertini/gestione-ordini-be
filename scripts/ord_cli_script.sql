@@ -1,5 +1,3 @@
-
-
 CREATE TABLE ORDCLI2(
 	ANNO int NOT NULL,
 	SERIE varchar(3) NOT NULL,

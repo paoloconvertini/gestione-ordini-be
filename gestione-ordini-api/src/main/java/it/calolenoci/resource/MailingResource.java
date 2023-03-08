@@ -10,11 +10,13 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import java.io.File;
+import it.calolenoci.dto.ResponseDto;
+import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Consumes(APPLICATION_JSON)
-@Path("api/v1")
+@Path("api/v1/mail")
 public class MailingResource {
 
     @CheckedTemplate
@@ -23,16 +25,20 @@ public class MailingResource {
     }
 
     @POST
-    @Path("/mail")
-    public Uni<Void> send(EmailDto dto) {
+    public Response send(EmailDto dto) {
         File f = new File("ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
         Mail m = new Mail();
         m.setSubject("Ordine confermato!");
         m.addTo(dto.getTo());
         m.addAttachment(f.getName(), f, "application/pdf");
-        return Templates.ordine("Paolo Convertini")
+        Uni<Void> uni = Templates.ordine("Paolo Convertini")
                 .mail(m)
                 .send();
+        uni.subscribe().with(result -> {
+            //return Response.ok(new ResponseDto("errore invio mail", true)).build();
+        }, failure -> {}
+        );
+        return Response.ok(new ResponseDto("errore invio mail", true)).build();
     }
 
 }

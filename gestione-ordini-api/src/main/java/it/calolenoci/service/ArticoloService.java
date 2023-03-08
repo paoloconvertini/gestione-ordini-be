@@ -63,11 +63,9 @@ public class ArticoloService {
     }
 
     @Transactional
-    public String save(List<OrdineDettaglioDto> list) {
-
+    public void save(List<OrdineDettaglioDto> list) {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
-                                //DA_ORDINARE, INCOMPLETO, COMPLETO
         list.forEach(dto -> {
             OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
             if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
@@ -103,36 +101,29 @@ public class ArticoloService {
             mapper.fromDtoToEntity(ordineDettaglio, dto);
             ordineDettaglioList.add(ordineDettaglio);
         });
-        OrdineDettaglio o = ordineDettaglioList.get(0);
-        OrdineDTO ordineDTO = ordineService.findById(o.getAnno(), o.getSerie(), o.getProgressivo());
-        String result = ordineDTO.getStatus();
+        OrdineDettaglio.persist(ordineDettaglioList);
+        RegistroAzioni.persist(registroAzioniList);
+    }
 
+    @Transactional
+    public String chiudi(Integer anno, String serie, Integer progressivo) {
+        OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
+        String result = ordineDTO.getStatus();
+        List<OrdineDettaglioDto> ordineDettaglioDtoList = findById(anno, serie, progressivo, true);
         if(StatoOrdineEnum.DA_PROCESSARE.getDesczrizione().equals(result)) {
-            boolean noneMatch = ordineDettaglioList.stream().noneMatch(ord -> ord.getGeFlagRiservato() == '0');
-            if(noneMatch) {
-                ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.INCOMPLETO);
-            }
-            boolean anyMatch = ordineDettaglioList.stream().anyMatch(ord -> ord.getGeFlagRiservato() == '0' && ord.getGeFlagNonDisponibile() == '0');
-            if(!anyMatch) {
-                ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.DA_ORDINARE);
+            if(ordineDettaglioDtoList.isEmpty()) {
+                ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.INCOMPLETO);
+                result = StatoOrdineEnum.INCOMPLETO.getDesczrizione();
+            } else {
+                ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.DA_ORDINARE);
+                result = StatoOrdineEnum.DA_ORDINARE.getDesczrizione();
             }
         }
 
         if(StatoOrdineEnum.DA_ORDINARE.getDesczrizione().equals(result)){
-            boolean noneMatch = ordineDettaglioList.stream().noneMatch(ord -> ord.getGeFlagOrdinato() == '0');
-            if(noneMatch){
-                ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.INCOMPLETO);
-            }
+            ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.INCOMPLETO);
+            result = StatoOrdineEnum.INCOMPLETO.getDesczrizione();
         }
-
-        if(StatoOrdineEnum.INCOMPLETO.getDesczrizione().equals(result)){
-            boolean noneMatch = ordineDettaglioList.stream().noneMatch(ord -> ord.getGeFlagConsegnato() == '0');
-            if(noneMatch){
-                ordineService.changeStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.COMPLETO);
-            }
-        }
-        OrdineDettaglio.persist(ordineDettaglioList);
-        RegistroAzioni.persist(registroAzioniList);
         return result;
     }
 

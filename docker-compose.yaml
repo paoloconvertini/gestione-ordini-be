@@ -36,6 +36,8 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_ROOT_USERNAME: root
       MYSQL_DATABASE: auth
+    volumes:
+      - authdata:/var/lib/mysql
   database-api:
     networks:
       - backend
@@ -47,6 +49,8 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_ROOT_USERNAME: root
       MYSQL_DATABASE: gestioneordini
+    volumes:
+      - apidata:/var/lib/mysql
   client:
     networks:
       - frontend
@@ -57,4 +61,7 @@ services:
 networks:
   frontend:
   backend:
+volumes:
+  apidata:
+  authdata:
 

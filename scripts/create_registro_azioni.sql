@@ -1,6 +1,6 @@
 create table REGISTROAZIONI
 (
-    id          int          not null,
+    id          varchar(36)          not null,
     anno        int          null,
     progressivo int          null,
     serie       varchar(3)   null,
