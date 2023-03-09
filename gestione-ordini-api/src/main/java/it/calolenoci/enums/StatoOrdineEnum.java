@@ -11,7 +11,9 @@ public enum StatoOrdineEnum {
 
     DA_ORDINARE("DA_ORDINARE"),
     INCOMPLETO("INCOMPLETO"),
-    COMPLETO("COMPLETO");
+    COMPLETO("COMPLETO"),
 
-    private final String desczrizione;
+    ARCHIVIATO("ARCHIVIATO");
+
+    private final String descrizione;
 }

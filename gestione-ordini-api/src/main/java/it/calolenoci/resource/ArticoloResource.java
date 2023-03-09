@@ -53,7 +53,6 @@ public class ArticoloResource {
         if (!list.isEmpty()) {
             articoloService.save(list);
             return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
-
         }
         return Response.status(Response.Status.OK).entity(new ResponseDto("lista vuota", true)).build();
     }
@@ -61,9 +60,12 @@ public class ArticoloResource {
     @Operation(summary = "Save dettaglio ordine")
     @GET
     @RolesAllowed({"Admin", "Magazziniere", "Amministrativo"})
-    @Path("/chiudi/{anno}/{serie}/{progressivo}")
-    public Response chiudi(Integer anno, String serie, Integer progressivo) {
-        return Response.status(Response.Status.CREATED).entity(new ResponseDto(articoloService.chiudi(anno, serie, progressivo), false)).build();
+    @Path("/chiudi")
+    public Response chiudi(List<OrdineDettaglioDto> list) {
+        if (!list.isEmpty()) {
+            return Response.status(Response.Status.CREATED).entity(new ResponseDto(articoloService.save(list, true), false)).build();
+        }
+        return Response.status(Response.Status.CREATED).entity(new ResponseDto("lista vuota", true)).build();
     }
 
 }

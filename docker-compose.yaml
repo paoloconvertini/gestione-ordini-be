@@ -1,6 +1,11 @@
 version: "3"
 services:
   auth:
+    environment:
+      CORS_ORIGIN: #INSERIRE IP
+      AUTH_DB_USER: #user db
+      AUTH_DB_PASSWORD: #user password
+      CRYPTO_KEY: #secret key
     networks:
       - backend
       - frontend
@@ -14,6 +19,15 @@ services:
       - /Users/pconvertini/IdeaProjects/logs/gestione-ordini/:/deployments/quarkus/logs/gestione-ordini/
       - /Users/pconvertini/IdeaProjects/gestione-ordini-be/authentication/src/main/resources/jwt:/deployments/jwt/
   api:
+    environment:
+      CORS_ORIGIN: #INSERIRE IP
+      DB_USER: #user db
+      DB_PASSWORD: #password db
+      MAIL_FROM: ###from@gmail.com
+      MAIL_HOST: ###smtp.gmail.com
+      MAIL_PORT: ###465
+      MAIL_USERNAME: ###
+      MAIL_PASSWORD: ###
     networks:
       - backend
       - frontend
@@ -54,7 +68,7 @@ services:
   client:
     networks:
       - frontend
-    image: "pconvertini/gestione-ordini:1.2"
+    image: "pconvertini/gestione-ordini:latest"
     container_name: "ge-frontend"
     ports:
       - "4200:80"

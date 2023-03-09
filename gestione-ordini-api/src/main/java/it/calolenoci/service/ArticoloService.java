@@ -4,19 +4,16 @@ import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.entity.RegistroAzioni;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.net.URI;
 import java.util.*;
 
 @ApplicationScoped
@@ -52,7 +49,7 @@ public class ArticoloService {
 
     @Transactional
     public void changeAllStatus(Integer anno, String serie, Integer progressivo, StatoOrdineEnum statoOrdineEnum) {
-        OrdineDettaglio.updateStatus(anno, serie, progressivo, statoOrdineEnum.getDesczrizione());
+        OrdineDettaglio.updateStatus(anno, serie, progressivo, statoOrdineEnum.getDescrizione());
     }
 
     @Transactional
@@ -63,7 +60,12 @@ public class ArticoloService {
     }
 
     @Transactional
-    public void save(List<OrdineDettaglioDto> list) {
+    public String save(List<OrdineDettaglioDto> list) {
+        return save(list, false);
+    }
+
+    @Transactional
+    public String save(List<OrdineDettaglioDto> list, Boolean chiudi) {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
         list.forEach(dto -> {
@@ -103,26 +105,36 @@ public class ArticoloService {
         });
         OrdineDettaglio.persist(ordineDettaglioList);
         RegistroAzioni.persist(registroAzioniList);
+        if(chiudi) {
+            OrdineDettaglio ordineDettaglio = ordineDettaglioList.get(0);
+           return chiudi(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo());
+        }
+        return null;
     }
 
     @Transactional
-    public String chiudi(Integer anno, String serie, Integer progressivo) {
+    private String chiudi(Integer anno, String serie, Integer progressivo) {
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
         String result = ordineDTO.getStatus();
         List<OrdineDettaglioDto> ordineDettaglioDtoList = findById(anno, serie, progressivo, true);
-        if(StatoOrdineEnum.DA_PROCESSARE.getDesczrizione().equals(result)) {
+        if(StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
             if(ordineDettaglioDtoList.isEmpty()) {
                 ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.INCOMPLETO);
-                result = StatoOrdineEnum.INCOMPLETO.getDesczrizione();
+                result = StatoOrdineEnum.INCOMPLETO.getDescrizione();
             } else {
                 ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.DA_ORDINARE);
-                result = StatoOrdineEnum.DA_ORDINARE.getDesczrizione();
+                result = StatoOrdineEnum.DA_ORDINARE.getDescrizione();
             }
         }
 
-        if(StatoOrdineEnum.DA_ORDINARE.getDesczrizione().equals(result)){
+        if(StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(result)){
             ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.INCOMPLETO);
-            result = StatoOrdineEnum.INCOMPLETO.getDesczrizione();
+            result = StatoOrdineEnum.INCOMPLETO.getDescrizione();
+        }
+
+        if(StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)){
+            ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.COMPLETO);
+            result = StatoOrdineEnum.COMPLETO.getDescrizione();
         }
         return result;
     }

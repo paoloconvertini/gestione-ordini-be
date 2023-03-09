@@ -1,6 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.PianoConti;
@@ -24,8 +23,8 @@ public class OrdineService {
 
     public List<OrdineDTO> findAllByStatus(String status) {
         List<OrdineDTO> list = new ArrayList<>();
-        if(StatoOrdineEnum.INCOMPLETO.getDesczrizione().equals(status) ||
-        StatoOrdineEnum.COMPLETO.getDesczrizione().equals(status)) {
+        if(StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(status) ||
+        StatoOrdineEnum.COMPLETO.getDescrizione().equals(status)) {
             checkStatusDettaglio();
         }
         List<Ordine> ordini = Ordine.findOrdiniByStatus(status);
@@ -55,7 +54,7 @@ public class OrdineService {
     @Transactional
     public void changeStatus(Integer anno, String serie, Integer progressivo, StatoOrdineEnum statoOrdineEnum) {
         Ordine ordine = Ordine.findByOrdineId(anno, serie, progressivo);
-        ordine.setGeStatus(statoOrdineEnum.getDesczrizione());
+        ordine.setGeStatus(statoOrdineEnum.getDescrizione());
         ordine.persist();
     }
 
