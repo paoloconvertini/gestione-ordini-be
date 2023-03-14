@@ -4,6 +4,7 @@ import it.calolenoci.dto.*;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
+import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.*;
 import net.sf.jasperreports.engine.JRException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -49,6 +50,8 @@ public class OrdineResource {
     @Inject
     ArticoloService articoloService;
 
+    @Inject
+    FetchScheduler scheduler;
 
     @Operation(summary = "Returns all the roles from the database")
     @POST
@@ -96,5 +99,12 @@ public class OrdineResource {
         return Response.ok(ordineService.findAllByStatus(status)).build();
     }
 
+    @GET
+    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
+    @Path("/updateConsegne")
+    public Response updateConsegne(@QueryParam("status") String status) {
+        scheduler.update();
+        return Response.ok(ordineService.findAllByStatus(status)).build();
+    }
 
 }

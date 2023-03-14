@@ -58,7 +58,7 @@ public class ArticoloResource {
     }
 
     @Operation(summary = "Save dettaglio ordine")
-    @GET
+    @POST
     @RolesAllowed({"Admin", "Magazziniere", "Amministrativo"})
     @Path("/chiudi")
     public Response chiudi(List<OrdineDettaglioDto> list) {

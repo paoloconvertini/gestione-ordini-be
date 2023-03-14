@@ -5,14 +5,14 @@ create table REGISTROAZIONI
     progressivo int          null,
     serie       varchar(3)   null,
     rigo        int          null,
-    user        varchar(100) null,
-    data        datetime     not null,
+    username        varchar(100) null,
+    createDate        datetime     not null,
     azione      varchar(30)  not null,
     quantita float null,
     tono varchar(20) null,
     constraint REGISTROAZIONI_pk
         primary key (id)
-);
+    );
 
 create unique index REGISTROAZIONI_id_uindex
     on REGISTROAZIONI (id);

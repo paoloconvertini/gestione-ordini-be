@@ -1,9 +1,5 @@
 package it.calolenoci.mapper;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.dto.RegistroAzioniDto;
-import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.entity.RegistroAzioni;
 import org.apache.commons.lang3.StringUtils;
 
@@ -22,8 +18,8 @@ public class RegistroAzioniMapper {
             r.setRigo(rigo);
         }
         r.setSerie(serie);
-        r.setData(new Date());
-        r.setUser(username);
+        r.setCreateDate(new Date());
+        r.setUsername(username);
         r.setAzione(azione);
         if (quantita != null) {
             r.setQuantita(quantita);
@@ -32,19 +28,5 @@ public class RegistroAzioniMapper {
             r.setTono(tono);
         }
         return r;
-    }
-
-    public RegistroAzioniDto fromEntityToDto(RegistroAzioni r) {
-        RegistroAzioniDto dto = new RegistroAzioniDto();
-        dto.setAnno(r.getAnno());
-        dto.setProgressivo(r.getProgressivo());
-        dto.setRigo(r.getRigo());
-        dto.setSerie(r.getSerie());
-        dto.setData(r.getData());
-        dto.setUser(r.getUser());
-        dto.setAzione(r.getAzione());
-        dto.setTono(r.getTono());
-        dto.setQuantita(r.getQuantita());
-        return dto;
     }
 }

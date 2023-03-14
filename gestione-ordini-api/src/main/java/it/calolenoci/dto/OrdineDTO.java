@@ -3,6 +3,7 @@ package it.calolenoci.dto;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -11,6 +12,8 @@ import java.util.Date;
 @RegisterForReflection
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class OrdineDTO implements Serializable {
 
     private  Integer anno;
@@ -34,5 +37,25 @@ public class OrdineDTO implements Serializable {
     private  String pec;
     private String status;
 
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma, String intestazione, String continuaIntest, String indirizzo, String localita, String cap, String provincia, String statoResidenza, String statoEstero, String telefono, String cellulare, String email, String pec, String status) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataOrdine = dataOrdine;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.continuaIntest = continuaIntest;
+        this.indirizzo = indirizzo;
+        this.localita = localita;
+        this.cap = cap;
+        this.provincia = provincia;
+        this.statoResidenza = statoResidenza;
+        this.statoEstero = statoEstero;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.email = email;
+        this.pec = pec;
+        this.status = status;
+    }
 
 }

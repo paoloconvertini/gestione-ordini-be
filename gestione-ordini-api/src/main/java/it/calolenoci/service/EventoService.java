@@ -10,15 +10,12 @@ import it.calolenoci.mapper.RegistroAzioniMapper;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @ApplicationScoped
 public class EventoService {
 
-    @Inject
-    RegistroAzioniMapper mapper;
 
     @Transactional
     public void save(Integer anno, String serie, Integer progressivo, String username, AzioneEnum azioneEnum, Integer rigo) {
@@ -27,20 +24,20 @@ public class EventoService {
         r.setSerie(serie);
         r.setProgressivo(progressivo);
         r.setAzione(azioneEnum.getDesczrizione());
-        r.setUser(username);
-        r.setData(new Date());
+        r.setUsername(username);
+        r.setCreateDate(new Date());
         if (rigo != null) {
             r.setRigo(rigo);
         }
         r.persist();
     }
 
-    public List<RegistroAzioni> getByAnnoSerieProgressivoRigo(Integer anno, String serie, Integer progressivo, Integer rigo) {
+    public List<RegistroAzioniDto> getByAnnoSerieProgressivoRigo(Integer anno, String serie, Integer progressivo, Integer rigo) {
         return RegistroAzioni
                 .find("anno = :anno AND serie = :serie AND progressivo =: progressivo AND rigo = :rigo",
-                        Sort.descending("data"),
+                        Sort.descending("createDate"),
                 Parameters.with("anno", anno).and("serie", serie)
-                        .and("progressivo", progressivo).and("rigo", rigo)).list();
+                        .and("progressivo", progressivo).and("rigo", rigo)).project(RegistroAzioniDto.class).list();
     }
 
 }

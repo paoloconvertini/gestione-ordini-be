@@ -37,10 +37,10 @@ public class RegistroAzioni extends PanacheEntityBase {
     private Integer rigo;
 
     @Column(length = 100)
-    private String user;
+    private String username;
 
     @Temporal(TemporalType.TIMESTAMP)
-    private Date data;
+    private Date createDate;
 
     @Column(length = 30)
     private String azione;

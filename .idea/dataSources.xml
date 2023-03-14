@@ -8,11 +8,11 @@
       <jdbc-url>jdbc:mysql://localhost:3306/auth</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="MAMP@localhost" uuid="fa351fcb-f7e3-4efd-bee5-1ac8e1f41714">
-      <driver-ref>mysql.8</driver-ref>
+    <data-source source="LOCAL" name="master@localhost" uuid="d2b9b66c-6b39-4476-851e-bf3f12c97358">
+      <driver-ref>sqlserver.ms</driver-ref>
       <synchronize>true</synchronize>
-      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://localhost:8889</jdbc-url>
+      <jdbc-driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc-driver>
+      <jdbc-url>jdbc:sqlserver://localhost:1433;database=master</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

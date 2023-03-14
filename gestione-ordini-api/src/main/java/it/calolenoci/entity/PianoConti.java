@@ -61,9 +61,4 @@ public class PianoConti extends PanacheEntityBase {
     @Column(length = 80)
     private String pec;
 
-    public static PianoConti findByGruppoAndSottoConto(Integer gruppo, String sottoConto ) {
-      return find("gruppoConto = : gruppo and sottoConto = :sottoConto",
-              Parameters.with("gruppo", gruppo).and("sottoConto", sottoConto)).firstResult();
-
-    }
 }

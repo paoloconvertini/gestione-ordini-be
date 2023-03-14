@@ -1,12 +1,17 @@
 package it.calolenoci.dto;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@RegisterForReflection
 public class OrdineDettaglioDto implements Serializable {
     private String username;
     private  Integer anno;
@@ -31,4 +36,85 @@ public class OrdineDettaglioDto implements Serializable {
     private  Boolean geFlagOrdinato;
     private  Boolean geFlagConsegnato;
     private  String geTono;
+    private String notaOrdineFornitore;
+    private String numeroBolla;
+    private Date dataBolla;
+
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono) {
+        this.anno = anno;
+        this.progressivo = progressivo;
+        this.tipoRigo = tipoRigo;
+        this.rigo = rigo;
+        this.serie = serie;
+        this.fArticolo = fArticolo;
+        this.codArtFornitore = codArtFornitore;
+        this.fDescrArticolo = fDescrArticolo;
+        this.quantita = quantita;
+        this.prezzo = prezzo;
+        this.fUnitaMisura = fUnitaMisura;
+        this.scontoArticolo = scontoArticolo;
+        this.scontoC1 = scontoC1;
+        this.scontoC2 = scontoC2;
+        this.scontoP = scontoP;
+        this.fCodiceIva = fCodiceIva;
+        this.fColli = fColli;
+        this.geFlagRiservato = geFlagRiservato;
+        this.geFlagNonDisponibile = geFlagNonDisponibile;
+        this.geFlagOrdinato = geFlagOrdinato;
+        this.geFlagConsegnato = geFlagConsegnato;
+        this.geTono = geTono;
+    }
+
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono, String notaOrdineFornitore) {
+        this.anno = anno;
+        this.progressivo = progressivo;
+        this.tipoRigo = tipoRigo;
+        this.rigo = rigo;
+        this.serie = serie;
+        this.fArticolo = fArticolo;
+        this.codArtFornitore = codArtFornitore;
+        this.fDescrArticolo = fDescrArticolo;
+        this.quantita = quantita;
+        this.prezzo = prezzo;
+        this.fUnitaMisura = fUnitaMisura;
+        this.scontoArticolo = scontoArticolo;
+        this.scontoC1 = scontoC1;
+        this.scontoC2 = scontoC2;
+        this.scontoP = scontoP;
+        this.fCodiceIva = fCodiceIva;
+        this.fColli = fColli;
+        this.geFlagRiservato = geFlagRiservato;
+        this.geFlagNonDisponibile = geFlagNonDisponibile;
+        this.geFlagOrdinato = geFlagOrdinato;
+        this.geFlagConsegnato = geFlagConsegnato;
+        this.geTono = geTono;
+        this.notaOrdineFornitore = notaOrdineFornitore;
+    }
+
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono, String numeroBolla, Date dataBolla) {
+        this.anno = anno;
+        this.progressivo = progressivo;
+        this.tipoRigo = tipoRigo;
+        this.rigo = rigo;
+        this.serie = serie;
+        this.fArticolo = fArticolo;
+        this.codArtFornitore = codArtFornitore;
+        this.fDescrArticolo = fDescrArticolo;
+        this.quantita = quantita;
+        this.prezzo = prezzo;
+        this.fUnitaMisura = fUnitaMisura;
+        this.scontoArticolo = scontoArticolo;
+        this.scontoC1 = scontoC1;
+        this.scontoC2 = scontoC2;
+        this.scontoP = scontoP;
+        this.fCodiceIva = fCodiceIva;
+        this.fColli = fColli;
+        this.geFlagRiservato = geFlagRiservato;
+        this.geFlagNonDisponibile = geFlagNonDisponibile;
+        this.geFlagOrdinato = geFlagOrdinato;
+        this.geFlagConsegnato = geFlagConsegnato;
+        this.geTono = geTono;
+        this.numeroBolla = numeroBolla;
+        this.dataBolla = dataBolla;
+    }
 }

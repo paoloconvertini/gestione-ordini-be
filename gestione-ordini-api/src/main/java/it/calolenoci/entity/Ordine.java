@@ -69,14 +69,6 @@ public class Ordine extends PanacheEntityBase {
     @Column(length = 30, name = "GE_STATUS")
     private String geStatus;
 
-    public static List<Ordine> findOrdiniByStatus(String status) {
-        if(StringUtils.isBlank(status)) {
-            return list("geStatus is null", Sort.descending("dataOrdine"));
-        } else {
-            return list("geStatus", Sort.descending("dataOrdine"), status);
-        }
-    }
-
     public static List<Ordine> findOrdiniByStatus() {
         return list("geStatus in ('COMPLETO', 'INCOMPLETO')");
     }
@@ -85,5 +77,7 @@ public class Ordine extends PanacheEntityBase {
         return find("anno = :anno and progressivo = :progressivo and serie = :serie",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).firstResult();
     }
+
+
 
 }
