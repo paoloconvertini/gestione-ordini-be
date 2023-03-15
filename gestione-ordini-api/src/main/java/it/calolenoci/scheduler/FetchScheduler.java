@@ -27,7 +27,7 @@ public class FetchScheduler {
     ArticoloService articoloService;
 
 
-    @Scheduled(cron = "{cron.expr}")
+    @Scheduled(every = "${cron.expr:1m}")
     @Transactional
     public void update() {
         Log.info("INIZIO UPDATE CHECK BOLLE");

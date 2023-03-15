@@ -137,32 +137,23 @@ public class ArticoloService {
     }
 
     private String chiudi(Integer anno, String serie, Integer progressivo) {
-        //OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
         Ordine ordine = Ordine.findByOrdineId(anno, serie, progressivo);
         final String result = ordine.getGeStatus();
         List<OrdineDettaglioDto> ordineDettaglioDtoList = findById(anno, serie, progressivo, true);
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
             if (ordineDettaglioDtoList.isEmpty()) {
-                //ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.INCOMPLETO);
                 ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
-                //result = StatoOrdineEnum.INCOMPLETO.getDescrizione();
             } else {
-                //ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.DA_ORDINARE);
                 ordine.setGeStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
-                // result = StatoOrdineEnum.DA_ORDINARE.getDescrizione();
             }
         }
 
         if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(result)) {
             ordine.setGeStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
-            //ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.INCOMPLETO);
-            //result = StatoOrdineEnum.INCOMPLETO.getDescrizione();
         }
 
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
             ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
-            //ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.COMPLETO);
-            // result = StatoOrdineEnum.COMPLETO.getDescrizione();
         }
         ordine.persist();
         return ordine.getGeStatus();

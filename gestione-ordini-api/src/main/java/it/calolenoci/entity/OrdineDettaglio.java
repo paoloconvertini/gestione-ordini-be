@@ -135,7 +135,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
                 "FROM OrdineDettaglio o " +
                 "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo";
         if(filtro) {
-            query += " AND geFlagNonDisponibile = '1'";
+            query += " AND geFlagNonDisponibile = 'T'";
         }
         return find(query, Sort.ascending("rigo"), Parameters.with("anno", anno).and("serie", serie)
                         .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
