@@ -50,5 +50,9 @@ public class User extends PanacheEntity {
         return find("username =:username AND password =:password", params).firstResult();
     }
 
+    public String getFullName(){
+        return this.name + " " + this.lastname;
+    }
+
 }
 

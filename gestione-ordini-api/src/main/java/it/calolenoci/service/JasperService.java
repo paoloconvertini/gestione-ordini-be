@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,9 +53,18 @@ public class JasperService {
 
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
         String destFileName = "ordine_" + ordineId + ".pdf";
-        File f =new File(destFileName);
-        f.createNewFile();
-        JasperExportManager.exportReportToPdfFile(jasperPrint, destFileName);
+        File f = new File(pathReport + "/" + destFileName);
+        if(!f.exists()) {
+            f.getParentFile().mkdirs();
+            try {
+                if(!f.createNewFile()) {
+                    System.out.println("File already exists");
+                }
+            } catch (IOException ex) {
+                System.out.println(ex);
+            }
+        }
+        JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
     }
 
     private JasperReport compileReport() {

@@ -15,17 +15,13 @@ import java.util.List;
 @ApplicationScoped
 public class FatturaService {
 
-    public List<FatturaDto> getBolle(){
-        List<FatturaDto> resultList = FattureDettaglio
+    public List<Integer> getBolle(){
+        return FattureDettaglio
                 .find("Select f2.progrOrdCli from FattureDettaglio f2 INNER JOIN Fatture f ON" +
                         " f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo" +
                         " WHERE f2.progrOrdCli <> 0 ")
-                .project(FatturaDto.class)
+                .project(Integer.class)
                 .list();
-        if(resultList.isEmpty()){
-            return null;
-        }
-        return resultList;
     }
 
 }

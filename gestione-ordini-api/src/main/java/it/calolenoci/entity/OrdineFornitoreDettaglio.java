@@ -27,6 +27,9 @@ public class OrdineFornitoreDettaglio extends PanacheEntityBase {
     private Integer progressivo;
 
     @Column
+    private Integer progrGenerale;
+
+    @Column
     @Id
     private Integer rigo;
 
@@ -35,5 +38,26 @@ public class OrdineFornitoreDettaglio extends PanacheEntityBase {
 
     @Column(length = 5000, name = "NOTEORDFOR2", columnDefinition = "text")
     private String nota;
+
+    @Column(length = 13)
+    private String oArticolo;
+
+    @Column(length = 50)
+    private String oDescrArticolo;
+
+    @Column
+    private Float oQuantita;
+
+    @Column
+    private Float oPrezzo;
+
+    @Column(length = 2)
+    private String oUnitaMisura;
+
+    @Column
+    private Integer oColli;
+
+    @Column(length = 3)
+    private String oCodiceIva;
 
 }

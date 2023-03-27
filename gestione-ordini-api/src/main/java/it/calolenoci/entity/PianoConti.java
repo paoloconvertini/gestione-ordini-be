@@ -61,4 +61,10 @@ public class PianoConti extends PanacheEntityBase {
     @Column(length = 80)
     private String pec;
 
+    @Column(length = 3, name = "BANCAPAG")
+    private String banca;
+
+    @Column(length = 3, name = "DCODICEPAGAMENT")
+    private String codPagamento;
+
 }

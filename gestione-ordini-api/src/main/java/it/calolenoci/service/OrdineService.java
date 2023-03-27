@@ -9,11 +9,15 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import javax.transaction.Transactional;
 import java.util.List;
 
 @ApplicationScoped
 public class OrdineService {
+
+    @ConfigProperty(name = "data.inizio")
+    String dataCongig;
 
     @Inject
     ArticoloService articoloService;
@@ -32,7 +36,7 @@ public class OrdineService {
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
         if(StringUtils.isBlank(status)) {
-            query += "WHERE o.geStatus is null";
+            query += "WHERE o.geStatus is null and o.dataOrdine >= " + dataCongig;
             return Ordine.find(query, Sort.descending("dataOrdine"))
                     .project(OrdineDTO.class).list();
         } else {

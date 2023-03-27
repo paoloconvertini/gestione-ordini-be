@@ -3,6 +3,7 @@ package it.calolenoci.service;
 import io.smallrye.jwt.build.Jwt;
 import it.calolenoci.dto.LoginDTO;
 import it.calolenoci.entity.User;
+import org.eclipse.microprofile.jwt.Claims;
 
 import javax.inject.Singleton;
 import java.util.Set;
@@ -17,7 +18,7 @@ public class TokenService {
                 .map(role -> role.name)
                 .collect(Collectors.toSet());
         long l = (System.currentTimeMillis() / 1000) + 3600;
-        dto.setIdToken(Jwt.subject("gp-api-service").expiresAt(l).groups(roles).sign());
+        dto.setIdToken(Jwt.upn(user.username).claim(Claims.full_name, user.getFullName()).subject("gp-api-service").expiresAt(l).groups(roles).sign());
         dto.setExpireIn(l);
         dto.setError(Boolean.FALSE);
         return dto;

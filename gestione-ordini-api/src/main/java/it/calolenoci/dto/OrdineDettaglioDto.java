@@ -13,7 +13,6 @@ import java.util.Date;
 @AllArgsConstructor
 @RegisterForReflection
 public class OrdineDettaglioDto implements Serializable {
-    private String username;
     private  Integer anno;
     private  Integer progressivo;
     private  String tipoRigo;
@@ -36,9 +35,16 @@ public class OrdineDettaglioDto implements Serializable {
     private  Boolean geFlagOrdinato;
     private  Boolean geFlagConsegnato;
     private  String geTono;
-    private String notaOrdineFornitore;
+
+    private Integer annoOAF;
+
+    private String serieOAF;
+
+    private Integer progressivoOAF;
     private String numeroBolla;
     private Date dataBolla;
+
+    private Date dataOrdineOAF;
 
     public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono) {
         this.anno = anno;
@@ -65,7 +71,7 @@ public class OrdineDettaglioDto implements Serializable {
         this.geTono = geTono;
     }
 
-    public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono, String notaOrdineFornitore) {
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono, Integer annoOAF, String serieOAF, Integer progressivoOAF, Date dataOrdineOAF) {
         this.anno = anno;
         this.progressivo = progressivo;
         this.tipoRigo = tipoRigo;
@@ -88,7 +94,10 @@ public class OrdineDettaglioDto implements Serializable {
         this.geFlagOrdinato = geFlagOrdinato;
         this.geFlagConsegnato = geFlagConsegnato;
         this.geTono = geTono;
-        this.notaOrdineFornitore = notaOrdineFornitore;
+        this.annoOAF = annoOAF;
+        this.serieOAF = serieOAF;
+        this.progressivoOAF = progressivoOAF;
+        this.dataOrdineOAF = dataOrdineOAF;
     }
 
     public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono, String numeroBolla, Date dataBolla) {

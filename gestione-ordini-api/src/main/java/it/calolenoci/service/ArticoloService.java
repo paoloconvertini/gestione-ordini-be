@@ -36,15 +36,7 @@ public class ArticoloService {
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(ordineDTO.getStatus())) {
-            list = OrdineDettaglio.findOnlyArticoliById(anno, serie, progressivo, false);
-            list.forEach(o -> {
-                String nota = "Riferimento n. " + o.getAnno() + "/" + o.getSerie() +
-                        "/" + o.getProgressivo() + "-" + o.getRigo();
-                OrdineFornitoreDettaglio fornitoreDettaglio = OrdineFornitoreDettaglio.find("nota like :nota", Parameters.with("nota", nota)).firstResult();
-                if (fornitoreDettaglio != null) {
-                    o.setNotaOrdineFornitore(fornitoreDettaglio.getNota());
-                }
-            });
+            list = OrdineDettaglio.findArticoliOrdinatiById(anno, serie, progressivo);
         } else if (StatoOrdineEnum.COMPLETO.getDescrizione().equals(ordineDTO.getStatus())) {
             list = OrdineDettaglio.findArticoliConsegnatiById(anno, serie, progressivo);
         } else {
@@ -84,44 +76,44 @@ public class ArticoloService {
     }
 
     @Transactional
-    public void save(List<OrdineDettaglioDto> list) {
-        save(list, false);
+    public void save(List<OrdineDettaglioDto> list, String user) {
+        save(list, user, false);
     }
 
     @Transactional
-    public String save(List<OrdineDettaglioDto> list, Boolean chiudi) {
+    public String save(List<OrdineDettaglioDto> list, String user, Boolean chiudi) {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
         list.forEach(dto -> {
             OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
             if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.QUANTITA.getDesczrizione(),
+                        dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDesczrizione(),
                         dto.getRigo(), null, dto.getQuantita()));
             }
             if (!Objects.equals(ordineDettaglio.getGeTono(), dto.getGeTono())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.TONO.getDesczrizione(),
+                        dto.getProgressivo(), user, AzioneEnum.TONO.getDesczrizione(),
                         dto.getRigo(), dto.getGeTono(), null));
             }
             if (!Objects.equals(dto.getGeFlagRiservato(), ordineDettaglio.getGeFlagRiservato())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.RISERVATO.getDesczrizione()
+                        dto.getProgressivo(), user, AzioneEnum.RISERVATO.getDesczrizione()
                         , dto.getRigo(), null, null));
             }
             if (!Objects.equals(dto.getGeFlagOrdinato(), ordineDettaglio.getGeFlagOrdinato())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.ORDINATO.getDesczrizione()
+                        dto.getProgressivo(), user, AzioneEnum.ORDINATO.getDesczrizione()
                         , dto.getRigo(), null, null));
             }
             if (!Objects.equals(dto.getGeFlagNonDisponibile(), ordineDettaglio.getGeFlagNonDisponibile())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.NON_DISPONIBILE.getDesczrizione()
+                        dto.getProgressivo(), user, AzioneEnum.NON_DISPONIBILE.getDesczrizione()
                         , dto.getRigo(), null, null));
             }
             if (!Objects.equals(dto.getGeFlagConsegnato(), ordineDettaglio.getGeFlagConsegnato())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), dto.getUsername(), AzioneEnum.CONSEGNATO.getDesczrizione()
+                        dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDesczrizione()
                         , dto.getRigo(), null, null));
             }
             mapper.fromDtoToEntity(ordineDettaglio, dto);

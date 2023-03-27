@@ -15,4 +15,5 @@ public class EmailDto {
     private Integer progressivo;
 
     private String serie;
+
 }

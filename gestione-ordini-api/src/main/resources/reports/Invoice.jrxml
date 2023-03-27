@@ -282,7 +282,7 @@ AND c.contocliente = pc.sottoconto]]>
 				<text><![CDATA[Conferma:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="80" width="342" height="20" uuid="e622555d-198b-4ccd-a4a1-c59c53304058">
+				<reportElement x="0" y="89" width="342" height="72" uuid="e622555d-198b-4ccd-a4a1-c59c53304058">
 					<property name="local_mesure_unitheight" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
@@ -290,7 +290,15 @@ AND c.contocliente = pc.sottoconto]]>
 				<textElement>
 					<font fontName="SansSerif" size="8" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Via Foggia, 1 - 72013 Ceglie Messapica (BR)]]></text>
+				<text><![CDATA[72013 CEGLIE MESSAPICA (BR)
+Via FOGGIA , 1
+P.I. / C.F. : 02582780744
+Rea: BR-156796
+E.-mail: calolenoci@libero.it
+PEC: calolenocifrancescotradingsrl@pec.it
+Sito: www.calolenocifrancesco.it
+Tel 0831-377180   Fax 0831-383047
+]]></text>
 			</staticText>
 			<rectangle>
 				<reportElement x="342" y="0" width="209" height="152" uuid="3e59e8bb-3d48-47fa-8a3b-493919d4b5b0"/>
@@ -401,50 +409,6 @@ AND c.contocliente = pc.sottoconto]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{PROVINCIA}]]></textFieldExpression>
 			</textField>
-			<staticText>
-				<reportElement x="0" y="95" width="342" height="20" uuid="512cbb95-663b-4f2e-b4f9-98abdcf23188">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<box padding="3"/>
-				<textElement>
-					<font fontName="SansSerif" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Partita Iva e Cod Fiscale 02111510745]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="0" y="111" width="342" height="20" uuid="c3d00ecb-8fb8-4a3c-9796-edeb7b474ee5">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<box padding="3"/>
-				<textElement>
-					<font fontName="SansSerif" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[C.C.I.A .A . 0121551 REA - Capitale Sociale € 100.000.00 i.v.]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="0" y="127" width="342" height="20" uuid="4eb62508-f465-42f8-8e9b-ed875fb0758a">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<box padding="3"/>
-				<textElement>
-					<font fontName="SansSerif" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Tel. 0831 377180 / Fax 0831 383047 www.calolenocifrancesco.it]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="0" y="141" width="342" height="20" uuid="c8a589cb-8b2f-4e11-9dc0-7bba3985921a">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<box padding="3"/>
-				<textElement>
-					<font fontName="SansSerif" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[PEC: calolenocifrancescosrl@initpec.it e.mail: calolenoci@libero.it]]></text>
-			</staticText>
 			<rectangle>
 				<reportElement x="0" y="162" width="280" height="39" uuid="06bf15b9-fce1-43a5-b655-421235f39179"/>
 			</rectangle>
@@ -517,29 +481,10 @@ AND c.contocliente = pc.sottoconto]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
 			</textField>
-			<staticText>
-				<reportElement x="1" y="0" width="340" height="40" forecolor="#918E8E" uuid="08719ea1-d458-4f3f-bca6-167145281d2b"/>
-				<box topPadding="2" leftPadding="2"/>
-				<textElement markup="none">
-					<font size="24" isBold="true"/>
-				</textElement>
-				<text><![CDATA[CALO' LENOCI ]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="0" y="40" width="140" height="40" forecolor="#918E8E" uuid="393c2c2b-ac5e-403e-82a0-344b7d82c455"/>
-				<textElement>
-					<font size="22" isBold="true"/>
-				</textElement>
-				<text><![CDATA[FRANCESCO]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="140" y="40" width="200" height="40" forecolor="#918E8E" uuid="4acbd99e-0805-4874-b754-34e3555ea4d4"/>
-				<box topPadding="8"/>
-				<textElement>
-					<font size="14" isBold="true"/>
-				</textElement>
-				<text><![CDATA[s.r.l.]]></text>
-			</staticText>
+			<image>
+				<reportElement x="0" y="0" width="342" height="89" uuid="c40e9abe-e08b-4d8e-a21a-9d8f2a934f10"/>
+				<imageExpression><![CDATA["logo.jpg"]]></imageExpression>
+			</image>
 		</band>
 	</title>
 	<columnHeader>
@@ -790,10 +735,50 @@ AND c.contocliente = pc.sottoconto]]>
 			</textField>
 		</band>
 	</detail>
+	<pageFooter>
+		<band height="123">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<rectangle>
+				<reportElement x="0" y="13" width="554" height="102" uuid="23808a9e-c599-486b-90b2-c49935fc6a0a"/>
+			</rectangle>
+			<image onErrorType="Blank">
+				<reportElement x="365" y="20" width="189" height="59" uuid="f0e59054-6c9e-4dce-9ba6-dc4a9791f64c"/>
+				<imageExpression><![CDATA[$F{FILENAME}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="2" y="65" width="260" height="20" uuid="5149cf35-18c1-4a12-b992-f99b9d14e3d4"/>
+				<textElement>
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<text><![CDATA[CalòLenociFrancescoSrl ...............................]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="280" y="65" width="274" height="20" uuid="baa0ed82-fb38-4c3d-83f2-f94d981af9f5"/>
+				<textElement>
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<text><![CDATA[Firma del cliente.........................................................]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="380" y="87" width="100" height="25" uuid="bd90bd44-45c9-49a0-a273-437000c4c9cc"/>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Pag. " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="480" y="87" width="73" height="25" uuid="80a2d2cd-b11b-4af2-a6ea-f7f7671b1495"/>
+				<textElement textAlignment="Left">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" di " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
 	<lastPageFooter>
 		<band height="333">
 			<rectangle>
-				<reportElement x="1" y="13" width="554" height="247" uuid="37e3c61d-d558-4794-b3bd-fc4d9ad9368f"/>
+				<reportElement x="0" y="13" width="554" height="247" uuid="37e3c61d-d558-4794-b3bd-fc4d9ad9368f"/>
 			</rectangle>
 			<staticText>
 				<reportElement positionType="Float" x="-1" y="261" width="556" height="72" uuid="1a0d7088-5af7-4865-8be1-41ec5f51fb36"/>

@@ -7,6 +7,7 @@ import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.enums.StatoOrdineEnum;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -146,10 +147,14 @@ public class OrdineDettaglio extends PanacheEntityBase {
         String query = "SELECT  o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo,  o.fUnitaMisura,  " +
                 "o.scontoArticolo,  o.scontoC1,  o.scontoC2,  o.scontoP,  o.fCodiceIva,  o.fColli, " +
-                "o.geFlagRiservato,  o.geFlagNonDisponibile,  o.geFlagOrdinato,  o.geFlagConsegnato,  o.geTono, f.nota " +
-                "FROM OrdineDettaglio o LEFT JOIN ORDFOR2 f ON f.pid = o.progrGenerale " +
+                "o.geFlagRiservato,  o.geFlagNonDisponibile,  o.geFlagOrdinato,  o.geFlagConsegnato,  o.geTono, " +
+                "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF  " +
+                "FROM OrdineDettaglio o LEFT JOIN OrdineFornitoreDettaglio f2 ON " +
+                "f2.nota like CONCAT('Riferimento n. ', trim(str(o.anno)), '/', o.serie, '/', trim(str(o.progressivo)), '-', trim(str(o.rigo))) " +
+                "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ";
-        return find(query, Sort.ascending("rigo"), Parameters.with("anno", anno).and("serie", serie)
+
+        return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
                 .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
 
     }

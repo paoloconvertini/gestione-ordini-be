@@ -1,9 +1,6 @@
 package it.calolenoci.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -15,6 +12,8 @@ import java.util.Objects;
 @Embeddable
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
+@EqualsAndHashCode
 public class FornitoreId implements Serializable {
 
     @Column(length = 4, name = "ANNOOAF")
@@ -26,21 +25,5 @@ public class FornitoreId implements Serializable {
     @Column(name="PROGRESSIVOOAF")
     private Integer progressivo;
 
-    @Override
-    public String toString() {
-        return anno + "_" + serie + "_" + progressivo;
-    }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FornitoreId ordineId = (FornitoreId) o;
-        return Objects.equals(anno, ordineId.anno) && Objects.equals(serie, ordineId.serie) && Objects.equals(progressivo, ordineId.progressivo);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(anno, serie, progressivo);
-    }
 }

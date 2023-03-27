@@ -16,8 +16,4 @@ public class MultipartBody {
     @PartType(MediaType.TEXT_PLAIN)
     public String orderId;
 
-    @FormParam("username")
-    @PartType(MediaType.TEXT_PLAIN)
-    public String username;
-
 }

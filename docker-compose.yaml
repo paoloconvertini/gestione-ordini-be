@@ -17,7 +17,7 @@ services:
       - database-auth
     volumes:
       - /Users/pconvertini/IdeaProjects/logs/gestione-ordini/:/deployments/quarkus/logs/gestione-ordini/
-      - /Users/pconvertini/IdeaProjects/gestione-ordini-be/authentication/src/main/resources/jwt:/deployments/jwt/
+      - /Users/pconvertini/IdeaProjects/gestione-ordini-be/jwt:/deployments/jwt/
   api:
     environment:
       CORS_ORIGIN: #INSERIRE IP
@@ -66,9 +66,12 @@ services:
     volumes:
       - apidata:/var/lib/mysql
   client:
+    environment:
+      BACKEND_BASE_URL: ###
+      BACKEND_BASE_AUTH_URL: ###
     networks:
       - frontend
-    image: "pconvertini/gestione-ordini:latest"
+    image: "pconvertini/gestione-ordini:1.4"
     container_name: "ge-frontend"
     ports:
       - "4200:80"

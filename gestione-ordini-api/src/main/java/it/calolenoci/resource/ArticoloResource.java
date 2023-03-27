@@ -4,6 +4,8 @@ import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -25,6 +27,10 @@ public class ArticoloResource {
 
     @Inject
     ArticoloService articoloService;
+
+    @Inject
+    @Claim(standard = Claims.upn)
+    String user;
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
@@ -51,7 +57,7 @@ public class ArticoloResource {
     @RolesAllowed({"Admin", "Magazziniere", "Amministrativo"})
     public Response saveArticoli(List<OrdineDettaglioDto> list) {
         if (!list.isEmpty()) {
-            articoloService.save(list);
+            articoloService.save(list, user);
             return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
         }
         return Response.status(Response.Status.OK).entity(new ResponseDto("lista vuota", true)).build();
@@ -63,7 +69,7 @@ public class ArticoloResource {
     @Path("/chiudi")
     public Response chiudi(List<OrdineDettaglioDto> list) {
         if (!list.isEmpty()) {
-            return Response.status(Response.Status.CREATED).entity(new ResponseDto(articoloService.save(list, true), false)).build();
+            return Response.status(Response.Status.CREATED).entity(new ResponseDto(articoloService.save(list, user, true), false)).build();
         }
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("lista vuota", true)).build();
     }

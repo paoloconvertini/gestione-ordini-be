@@ -2,6 +2,7 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/authentication/src/main/resources/import.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/scripts/articoli.sql" dialect="TSQL" />
     <file url="file://$PROJECT_DIR$/scripts/create_registro_azioni.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/scripts/fatture.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/scripts/fatture2.sql" dialect="MySQL" />

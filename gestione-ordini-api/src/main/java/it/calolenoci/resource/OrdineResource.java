@@ -8,6 +8,8 @@ import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.*;
 import net.sf.jasperreports.engine.JRException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -16,6 +18,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -29,6 +32,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 @Produces(APPLICATION_JSON)
 @Path("api/v1/ordini-clienti")
+@RequestScoped
 public class OrdineResource {
 
     @Inject
@@ -53,9 +57,12 @@ public class OrdineResource {
     @Inject
     FetchScheduler scheduler;
 
+    @Inject
+    @Claim(standard = Claims.upn)
+    String user;
+
     @Operation(summary = "Returns all the roles from the database")
     @POST
-    @PermitAll
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
     @Consumes(MULTIPART_FORM_DATA)
     @Path("/upload")
@@ -68,7 +75,7 @@ public class OrdineResource {
         String filename = "firma_" + data.orderId + ".png";
         String name = pathFirma + filename;
         firmaService.save(anno, serie, progressivo, filename);
-        eventoService.save(anno, serie, progressivo, data.username, AzioneEnum.FIRMA, null);
+        eventoService.save(anno, serie, progressivo, user, AzioneEnum.FIRMA, null);
 
         String encodedImage = data.file.split(",")[1];
         byte[] decodedImage = Base64.getDecoder().decode(encodedImage);

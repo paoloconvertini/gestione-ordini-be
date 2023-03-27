@@ -32,11 +32,13 @@ public class FetchScheduler {
     public void update() {
         Log.info("INIZIO UPDATE CHECK BOLLE");
         Integer update;
-        List<Integer> list = fatturaService.getBolle().stream().map(FatturaDto::getProgrOrdCli).collect(Collectors.toList());
-        update = articoloService.updateFlagConsegnato(list);
-        if(update != null){
-            Log.debug("Aggiornati " + update + " articoli");
-            ordineService.checkConsegnati();
+        List<Integer> list = fatturaService.getBolle();
+        if(list != null && !list.isEmpty()){
+            update = articoloService.updateFlagConsegnato(list);
+            if(update != null){
+                Log.debug("Aggiornati " + update + " articoli");
+                ordineService.checkConsegnati();
+            }
         }
     }
 
