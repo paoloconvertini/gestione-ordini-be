@@ -123,7 +123,9 @@ public class ArticoloService {
         RegistroAzioni.persist(registroAzioniList);
         if (chiudi) {
             OrdineDettaglio ordineDettaglio = ordineDettaglioList.get(0);
-            return chiudi(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo());
+            String stato = chiudi(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo());
+            OrdineDettaglio.updateStatus(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo(), stato);
+            return stato;
         }
         return null;
     }
