@@ -54,6 +54,7 @@ public class JasperService {
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
         String destFileName = "ordine_" + ordineId + ".pdf";
         File f = new File(pathReport + "/" + destFileName);
+        //File f = new File(destFileName);
         if(!f.exists()) {
             f.getParentFile().mkdirs();
             try {

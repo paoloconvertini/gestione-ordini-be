@@ -23,6 +23,11 @@ services:
       CORS_ORIGIN: #INSERIRE IP
       DB_USER: #user db
       DB_PASSWORD: #password db
+      DB_URL: ###jdbc:sqlserver://localhost:1433;database=master;encrypt=true;trustServerCertificate=true;
+      CRON_EXPR: ###30m
+      ORDINI_PATH: ###
+      FIRMA_ORDINI_PATH: ###
+      DATA_INIZIO: ###
       MAIL_FROM: ###from@gmail.com
       MAIL_HOST: ###smtp.gmail.com
       MAIL_PORT: ###465
