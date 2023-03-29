@@ -6,6 +6,7 @@ services:
       AUTH_DB_USER: #user db
       AUTH_DB_PASSWORD: #user password
       CRYPTO_KEY: #secret key
+      LOG_DIR: ###
     networks:
       - backend
       - frontend
@@ -16,7 +17,6 @@ services:
     depends_on:
       - database-auth
     volumes:
-      - /Users/pconvertini/IdeaProjects/logs/gestione-ordini/:/deployments/quarkus/logs/gestione-ordini/
       - /Users/pconvertini/IdeaProjects/gestione-ordini-be/jwt:/deployments/jwt/
   api:
     environment:
@@ -33,6 +33,7 @@ services:
       MAIL_PORT: ###465
       MAIL_USERNAME: ###
       MAIL_PASSWORD: ###
+      LOG_DIR: ###
     networks:
       - backend
       - frontend
@@ -40,10 +41,6 @@ services:
     container_name: "ge-api"
     ports:
       - "8080:8080"
-    volumes:
-      - /Users/pconvertini/IdeaProjects/logs/gestione-ordini/:/deployments/quarkus/logs/gestione-ordini/
-      - /Users/pconvertini/IdeaProjects/gestione-ordini-be/firme_ordini_clienti:/deployments/firme_ordini_clienti/
-      - /Users/pconvertini/IdeaProjects/gestione-ordini-be/ordini:/deployments/ordini
   database-auth:
     networks:
       - backend
