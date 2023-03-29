@@ -19,6 +19,7 @@ import it.calolenoci.mapper.OrdineClienteReportMapper;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRSaver;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Singleton
@@ -53,8 +54,7 @@ public class JasperService {
 
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
         String destFileName = "ordine_" + ordineId + ".pdf";
-        File f = new File(pathReport != null ? pathReport + "/" + destFileName : destFileName);
-        //File f = new File(destFileName);
+        File f = new File(StringUtils.isNotBlank(pathReport) ? pathReport + "/" + destFileName : destFileName);
         if(!f.exists()) {
             f.getParentFile().mkdirs();
             try {
