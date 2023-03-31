@@ -81,10 +81,10 @@ public class OrdineService {
     }
 
     @Transactional
-    public void changeStatus(Integer anno, String serie, Integer progressivo, StatoOrdineEnum statoOrdineEnum) {
+    public void changeStatus(Integer anno, String serie, Integer progressivo, String status) {
         Ordine.update("geStatus =:stato where anno = :anno and progressivo = :progressivo and serie = :serie",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)
-                        .and("stato", statoOrdineEnum.getDescrizione()));
+                        .and("stato", status));
     }
 
 }

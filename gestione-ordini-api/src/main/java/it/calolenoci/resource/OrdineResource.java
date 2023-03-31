@@ -85,7 +85,7 @@ public class OrdineResource {
 
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
         if (ordineDTO != null) {
-            ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE);
+            ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             List<OrdineDettaglioDto> articoli = articoloService.findAndChangeStatusById(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE);
             List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, articoli, name);
             if (!dtoList.isEmpty()) {
@@ -112,6 +112,14 @@ public class OrdineResource {
     public Response updateConsegne(@QueryParam("status") String status) {
         scheduler.update();
         return Response.ok(ordineService.findAllByStatus(status)).build();
+    }
+
+    @GET
+    @Path("/apriOrdine/{anno}/{serie}/{progressivo}/{status}")
+    @RolesAllowed({"Admin", "Magazziniere"})
+    public Response apriOrdine(Integer anno, String serie, Integer progressivo, String status){
+        ordineService.changeStatus(anno, serie, progressivo, status);
+        return Response.ok(new ResponseDto("Ordine riaperto", false)).build();
     }
 
 }
