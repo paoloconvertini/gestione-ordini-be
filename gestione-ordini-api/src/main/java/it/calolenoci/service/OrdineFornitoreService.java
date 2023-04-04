@@ -6,6 +6,7 @@ import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.ArticoloDto;
 import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.dto.OrdineDettaglioDto;
+import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.entity.OrdineFornitore;
@@ -27,7 +28,7 @@ public class OrdineFornitoreService {
 
 
     @Transactional
-    public void save(Integer anno, String serie, Integer progressivo) throws Exception {
+    public void save(Integer anno, String serie, Integer progressivo, String user) throws Exception {
         try {
             List<OrdineFornitoreDettaglio> ordineFornitoreDettaglios = new ArrayList<>();
             List<OrdineFornitore> fornitoreList = new ArrayList<>();
@@ -64,6 +65,7 @@ public class OrdineFornitoreService {
                     ordineFornitore.setConto(sottoConto);
                     ordineFornitore.setCodicePagamento(articoloDto.getCodPagamento());
                     ordineFornitore.setBancaPagamento(articoloDto.getBanca());
+                    ordineFornitore.setCreateUser(user);
                     fornitoreList.add(ordineFornitore);
                 }
                 articoloDtoList.forEach(a -> {
@@ -104,6 +106,23 @@ public class OrdineFornitoreService {
             throw new Exception(e.getMessage());
         }
 
+    }
+
+    public List<OrdineFornitoreDto> findAllByStatus(String status) {
+        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
+                "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio " +
+                "FROM OrdineFornitore o " +
+                "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto ";
+        if(StringUtils.isNotBlank(status)) {
+            query += " where o.provvisorio =:stato";
+            return OrdineFornitore.find(query, Sort.descending("dataOrdine")
+                            , Parameters.with("stato", status))
+                    .project(OrdineFornitoreDto.class).list();
+        } else {
+            query += " where o.provvisorio is null";
+            return OrdineFornitore.find(query, Sort.descending("dataOrdine"))
+                    .project(OrdineFornitoreDto.class).list();
+        }
     }
 
 }

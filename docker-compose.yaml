@@ -5,6 +5,7 @@ services:
       CORS_ORIGIN: #INSERIRE IP
       AUTH_DB_USER: #user db
       AUTH_DB_PASSWORD: #user password
+      AUTH_URL: #url
       CRYPTO_KEY: #secret key
       LOG_DIR: ###
     networks:

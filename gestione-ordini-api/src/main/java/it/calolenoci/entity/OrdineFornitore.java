@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -58,7 +59,7 @@ public class OrdineFornitore extends PanacheEntityBase {
     @Column(length = 3)
     private String magazzino;
 
-    @Column
+    @Column(length = 1)
     private String provvisorio;
 
     @Column(length = 6)
