@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static it.calolenoci.enums.Ruolo.*;
 
 @Consumes(APPLICATION_JSON)
 @Path("api/v1/mail")
@@ -38,7 +39,7 @@ public class MailingResource {
 
     @POST
     @Produces(APPLICATION_JSON)
-    @RolesAllowed({"Admin", "Venditore"})
+    @RolesAllowed({ADMIN, VENDITORE})
     public Uni<Response> send(EmailDto dto) {
         File f = new File("ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
         Mail m = new Mail();

@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static it.calolenoci.enums.Ruolo.*;
 
 @Path("api/v1/oaf/articoli")
 @Produces(APPLICATION_JSON)
@@ -37,7 +38,7 @@ public class OAFArticoloResource {
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
-    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/{anno}/{serie}/{progressivo}")
@@ -46,15 +47,22 @@ public class OAFArticoloResource {
     }
 
 
-    @Operation(summary = "Save dettaglio ordine a fornitore")
-    @POST
-    @RolesAllowed({"Admin"})
-    @Path("/approva")
-    public Response approva(List<OrdineDettaglioDto> list) {
-        if (!list.isEmpty()) {
-            return Response.status(Response.Status.CREATED).entity(new ResponseDto(articoloService.save(list, true), false)).build();
-        }
-        return Response.status(Response.Status.CREATED).entity(new ResponseDto("lista vuota", true)).build();
+    @Operation(summary = "Approva dettaglio ordine a fornitore")
+    @GET
+    @RolesAllowed({ADMIN})
+    @Path("/approva/{anno}/{serie}/{progressivo}")
+    public Response approva(Integer anno, String serie, Integer progressivo) {
+        this.articoloService.approva(anno, serie, progressivo);
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore approvato", true)).build();
+    }
+
+    @Operation(summary = "Richiedi approvazione ordine a fornitore")
+    @GET
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/richiediApprovazione/{anno}/{serie}/{progressivo}")
+    public Response richiediApprovazione(Integer anno, String serie, Integer progressivo) {
+        this.articoloService.richiediApprovazione(anno, serie, progressivo);
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", true)).build();
     }
 
 }

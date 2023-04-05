@@ -125,4 +125,15 @@ public class OrdineFornitoreService {
         }
     }
 
+    @Transactional
+    public void richiediApprovazione(Integer anno, String serie, Integer progressivo) {
+        OrdineFornitore.update("provvisorio = 'T' where anno = :anno AND seire = :serie AND progressivo",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
+    }
+
+    @Transactional
+    public void richiediApprovazione(List<OrdineFornitoreDto> list) {
+        list.forEach(o -> this.richiediApprovazione(o.getAnno(), o.getSerie(), o.getProgressivo()));
+    }
+
 }

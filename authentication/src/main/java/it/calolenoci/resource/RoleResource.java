@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path("api/v1/roles")
-@RolesAllowed("Admin")
+@RolesAllowed(ADMIN)
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 public class RoleResource {

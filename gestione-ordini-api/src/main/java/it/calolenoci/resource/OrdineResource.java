@@ -29,6 +29,7 @@ import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static it.calolenoci.enums.Ruolo.*;
 
 @Produces(APPLICATION_JSON)
 @Path("api/v1/ordini-clienti")
@@ -66,7 +67,7 @@ public class OrdineResource {
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
     @Consumes(MULTIPART_FORM_DATA)
     @Path("/upload")
-    @RolesAllowed({"Admin", "Venditore"})
+    @RolesAllowed({ADMIN, VENDITORE})
     public Response upload(MultipartBody data) throws IOException, JRException {
 
         final Integer anno = Integer.valueOf(data.orderId.split("_")[0]);
@@ -98,7 +99,7 @@ public class OrdineResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
-    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
@@ -107,7 +108,7 @@ public class OrdineResource {
     }
 
     @GET
-    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
     @Path("/updateConsegne")
     public Response updateConsegne(@QueryParam("status") String status) {
         scheduler.update();
@@ -116,7 +117,7 @@ public class OrdineResource {
 
     @GET
     @Path("/apriOrdine/{anno}/{serie}/{progressivo}/{status}")
-    @RolesAllowed({"Admin", "Magazziniere"})
+    @RolesAllowed({ADMIN, MAGAZZINIERE})
     public Response apriOrdine(Integer anno, String serie, Integer progressivo, String status){
         ordineService.changeStatus(anno, serie, progressivo, status);
         return Response.ok(new ResponseDto("Ordine riaperto", false)).build();

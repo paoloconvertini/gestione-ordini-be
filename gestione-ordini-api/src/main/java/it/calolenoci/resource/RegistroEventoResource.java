@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static it.calolenoci.enums.Ruolo.*;
 
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
@@ -25,7 +26,7 @@ public class RegistroEventoResource {
 
     @GET
     @Path("/{anno}/{serie}/{progressivo}/{rigo}")
-    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
     public Response getEventoById(Integer anno, String serie, Integer progressivo, Integer rigo) {
         return Response.ok(service.getByAnnoSerieProgressivoRigo(anno, serie, progressivo, rigo)).build();
     }

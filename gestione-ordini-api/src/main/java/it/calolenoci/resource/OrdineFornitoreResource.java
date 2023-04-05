@@ -1,5 +1,6 @@
 package it.calolenoci.resource;
 
+import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.service.OrdineFornitoreService;
@@ -18,7 +19,11 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
+import java.util.List;
+
+import static it.calolenoci.enums.Ruolo.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static it.calolenoci.enums.Ruolo.*;
 
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
@@ -35,7 +40,7 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Crea ordine a fornitore")
     @GET
-    @RolesAllowed({"Admin", "Amministrativo"})
+    @RolesAllowed({ADMIN, AMMINISTRATIVO})
     @Path("/{anno}/{serie}/{progressivo}")
     public Response createOAF(Integer anno, String serie, Integer progressivo) {
 
@@ -49,11 +54,32 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
-    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     public Response getAllOrdini(@QueryParam("status") String status) {
         return Response.ok(service.findAllByStatus(status)).build();
+    }
+
+    @Operation(summary = "Richiedi approvazione ordine a fornitore")
+    @GET
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/richiediApprovazione/{anno}/{serie}/{progressivo}")
+    public Response richiediApprovazione(Integer anno, String serie, Integer progressivo) {
+        this.service.richiediApprovazione(anno, serie, progressivo);
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", true)).build();
+    }
+
+    @Operation(summary = "Richiedi approvazione ordine a fornitore")
+    @POST
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/richiediApprovazione")
+    public Response richiediApprovazione(List<OrdineFornitoreDto> list) {
+        if(list.isEmpty()){
+            return Response.status(Response.Status.OK).entity(new ResponseDto("Lista vuota", true)).build();
+        }
+        this.service.richiediApprovazione(list);
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", true)).build();
     }
 
 

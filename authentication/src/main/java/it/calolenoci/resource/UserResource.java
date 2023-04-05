@@ -33,7 +33,7 @@ public class UserResource {
 
     @POST
     @Transactional
-    @RolesAllowed({"Admin", "User"})
+    @RolesAllowed({ADMIN, "User"})
     @APIResponse(responseCode = "200", description = "User salvato con successo")
     public Response saveUser(User user) {
         User entity = new User();
@@ -50,7 +50,7 @@ public class UserResource {
 
     @GET
     @Path("/{idUser}")
-    @RolesAllowed({"Admin", "User"})
+    @RolesAllowed({ADMIN, "User"})
     public Response getUser(Long idUser) {
         User entity = findUserById(idUser);
         return Response.ok(entity).build();
@@ -68,7 +68,7 @@ public class UserResource {
     @DELETE
     @Path("/{idUser}")
     @Transactional
-    @RolesAllowed("Admin")
+    @RolesAllowed(ADMIN)
     public Response delete(Long idUser) {
         findUserById(idUser).delete();
         return Response.ok().build();
@@ -77,7 +77,7 @@ public class UserResource {
     @PUT
     @Path("/{id}")
     @Transactional
-    @RolesAllowed({"Admin", "User"})
+    @RolesAllowed({ADMIN, "User"})
     @APIResponse(responseCode = "404", description = "User non trovato")
     @APIResponse(responseCode = "200", description = "User aggiornato con successo")
     public Response update(Long id, User user) {

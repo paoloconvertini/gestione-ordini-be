@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static it.calolenoci.enums.Ruolo.*;
 
 @Path("api/v1/articoli")
 @Produces(APPLICATION_JSON)
@@ -34,7 +35,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
-    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/{anno}/{serie}/{progressivo}")
@@ -44,7 +45,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
-    @RolesAllowed({"Admin", "Venditore", "Magazziniere", "Amministrativo"})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/{anno}/{serie}/{progressivo}/{filtro}")
@@ -54,7 +55,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Save dettaglio ordine")
     @PUT
-    @RolesAllowed({"Admin", "Magazziniere", "Amministrativo"})
+    @RolesAllowed({ADMIN, MAGAZZINIERE, AMMINISTRATIVO})
     public Response saveArticoli(List<OrdineDettaglioDto> list) {
         if (!list.isEmpty()) {
             articoloService.save(list, user);
@@ -65,7 +66,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Save dettaglio ordine")
     @POST
-    @RolesAllowed({"Admin", "Magazziniere", "Amministrativo"})
+    @RolesAllowed({ADMIN, MAGAZZINIERE, AMMINISTRATIVO})
     @Path("/chiudi")
     public Response chiudi(List<OrdineDettaglioDto> list) {
         if (!list.isEmpty()) {

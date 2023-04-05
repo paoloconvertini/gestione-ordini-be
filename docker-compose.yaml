@@ -59,7 +59,6 @@ services:
     environment:
       BACKEND_BASE_URL: ###
       BACKEND_BASE_AUTH_URL: ###
-      ALLOWED_DOMAINS: ###
     networks:
       - frontend
     image: "pconvertini/gestione-ordini:1.4"

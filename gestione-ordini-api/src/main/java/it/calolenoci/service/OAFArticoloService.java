@@ -4,10 +4,7 @@ import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
-import it.calolenoci.entity.Ordine;
-import it.calolenoci.entity.OrdineDettaglio;
-import it.calolenoci.entity.OrdineFornitoreDettaglio;
-import it.calolenoci.entity.RegistroAzioni;
+import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.ArticoloMapper;
@@ -43,11 +40,16 @@ public class OAFArticoloService {
     }
 
     @Transactional
-    public void changeAllStatus(Integer anno, String serie, Integer progressivo, StatoOrdineEnum statoOrdineEnum) {
-        OrdineDettaglio.updateStatus(anno, serie, progressivo, statoOrdineEnum.getDescrizione());
+    public void approva(Integer anno, String serie, Integer progressivo) {
+        OrdineFornitore.update("provvisorio = 'F' where anno = :anno AND seire = :serie AND progressivo",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
     }
 
-
+    @Transactional
+    public void richiediApprovazione(Integer anno, String serie, Integer progressivo) {
+        OrdineFornitore.update("provvisorio = 'T' where anno = :anno AND seire = :serie AND progressivo",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
+    }
 
     @Transactional
     public void save(List<OrdineDettaglioDto> list) {
