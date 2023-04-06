@@ -1,5 +1,6 @@
 package it.calolenoci.resource;
 
+import io.quarkus.logging.Log;
 import it.calolenoci.dto.ErrorResponseDTO;
 import it.calolenoci.dto.UserRequestDTO;
 import it.calolenoci.entity.User;
@@ -96,6 +97,7 @@ public class LoginResource {
     public Response login(UserRequestDTO dto) {
         User utente = User.findByUsernameAndPassword(dto.getUsername(), cryptoService.encrypt(dto.getPassword()));
         if(utente == null){
+            Log.error("Utente non trovato!");
             throw new NotFoundException();
         }
         return Response.ok(service.generateToken(utente)).build();

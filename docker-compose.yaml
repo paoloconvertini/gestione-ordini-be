@@ -1,47 +1,51 @@
 version: "3"
 services:
-  auth:
+  auth-service:
     environment:
-      CORS_ORIGIN: #INSERIRE IP
-      AUTH_DB_USER: #user db
-      AUTH_DB_PASSWORD: #user password
-      AUTH_URL: #url
-      CRYPTO_KEY: #secret key
-      LOG_DIR: ###
+      CORS_ORIGIN: "*"
+      AUTH_DB_USER: "root"
+      AUTH_DB_PASSWORD: "root"
+      AUTH_URL: "jdbc:mysql://database-auth:3306/auth"
+      CRYPTO_KEY: "PdSgVkYp3s6v9y/B"
+      LOG_DIR: "/logs/auth-service.log"
     networks:
       - backend
       - frontend
-    image: "pconvertini/ge-auth-api:1.0.0-SNAPSHOT"
+    image: "pconvertini/ge-auth-api:1.2"
     container_name: "ge-auth-api"
     ports:
       - "8081:8081"
     depends_on:
       - database-auth
     volumes:
-      - /Users/pconvertini/IdeaProjects/gestione-ordini-be/jwt:/jwt
-  api:
+      - "/Users/pconvertini/IdeaProjects/gestione-ordini-be/jwt:/jwt"
+      - "/Users/pconvertini/IdeaProjects/logs/gestione-ordini:/logs"
+  api-service:
     environment:
-      CORS_ORIGIN: #INSERIRE IP
-      DB_USER: #user db
-      DB_PASSWORD: #password db
-      DB_URL: ###jdbc:sqlserver://localhost:1433;database=master;encrypt=true;trustServerCertificate=true;
-      CRON_EXPR: ###30m
-      ORDINI_PATH: ###
-      FIRMA_ORDINI_PATH: ###
-      DATA_INIZIO: ###
-      MAIL_FROM: ###from@gmail.com
-      MAIL_HOST: ###smtp.gmail.com
-      MAIL_PORT: ###465
-      MAIL_USERNAME: ###
-      MAIL_PASSWORD: ###
-      LOG_DIR: ###
+      CORS_ORIGIN: "*"
+      DB_USER: "sa"
+      DB_PASSWORD: "D@tabas3"
+      DB_URL: "jdbc:sqlserver://192.168.1.60:1433;database=master;encrypt=true;trustServerCertificate=true;"
+      CRON_EXPR: "30m"
+      ORDINI_PATH: "/Users/pconvertini/Documents/ordini/"
+      FIRMA_ORDINI_PATH: "/Users/pconvertini/Documents/firme_ordini_clienti/"
+      DATA_INIZIO: "2023-03-15"
+      MAIL_FROM: "from@gmail.com"
+      MAIL_HOST: "smtp.gmail.com"
+      MAIL_PORT: "465"
+      MAIL_USERNAME: "paolo.convertini@gmail.com"
+      MAIL_PASSWORD: "uucffjibedgehgqk"
+      LOG_DIR: "/logs/api-service.log"
     networks:
       - backend
       - frontend
-    image: "pconvertini/gestione-ordini-api:1.0.0-SNAPSHOT"
+    image: "pconvertini/gestione-ordini-api:1.2"
     container_name: "ge-api"
     ports:
       - "8080:8080"
+    volumes:
+      - "/Users/pconvertini/IdeaProjects/gestione-ordini-be/jwt:/jwt"
+      - "/Users/pconvertini/IdeaProjects/logs/gestione-ordini:/logs"
   database-auth:
     networks:
       - backend
@@ -50,18 +54,18 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_ROOT_USERNAME: root
-      MYSQL_DATABASE: auth
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_ROOT_USERNAME: "root"
+      MYSQL_DATABASE: "auth"
     volumes:
       - authdata:/var/lib/mysql
   client:
     environment:
-      BACKEND_BASE_URL: ###
-      BACKEND_BASE_AUTH_URL: ###
+      BACKEND_BASE_URL: "http://192.168.1.60:8080/api/v1/"
+      BACKEND_BASE_AUTH_URL: "http://192.168.1.60:8081/api/v1/"
     networks:
       - frontend
-    image: "pconvertini/gestione-ordini:1.4"
+    image: "pconvertini/gestione-ordini:1.7.1"
     container_name: "ge-frontend"
     ports:
       - "4200:80"
@@ -69,6 +73,5 @@ networks:
   frontend:
   backend:
 volumes:
-  apidata:
   authdata:
 

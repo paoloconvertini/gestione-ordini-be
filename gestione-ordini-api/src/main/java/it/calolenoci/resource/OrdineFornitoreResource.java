@@ -67,7 +67,7 @@ public class OrdineFornitoreResource {
     @Path("/richiediApprovazione/{anno}/{serie}/{progressivo}")
     public Response richiediApprovazione(Integer anno, String serie, Integer progressivo) {
         this.service.richiediApprovazione(anno, serie, progressivo);
-        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", true)).build();
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", false)).build();
     }
 
     @Operation(summary = "Richiedi approvazione ordine a fornitore")
@@ -79,7 +79,7 @@ public class OrdineFornitoreResource {
             return Response.status(Response.Status.OK).entity(new ResponseDto("Lista vuota", true)).build();
         }
         this.service.richiediApprovazione(list);
-        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", true)).build();
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", false)).build();
     }
 
 

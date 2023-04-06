@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static it.calolenoci.constant.Ruolo.ADMIN;
+import static it.calolenoci.constant.Ruolo.USER;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path("api/v1/users")
@@ -33,7 +35,7 @@ public class UserResource {
 
     @POST
     @Transactional
-    @RolesAllowed({ADMIN, "User"})
+    @RolesAllowed({ADMIN, USER})
     @APIResponse(responseCode = "200", description = "User salvato con successo")
     public Response saveUser(User user) {
         User entity = new User();

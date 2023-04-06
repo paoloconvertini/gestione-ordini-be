@@ -41,13 +41,13 @@ public class OAFArticoloService {
 
     @Transactional
     public void approva(Integer anno, String serie, Integer progressivo) {
-        OrdineFornitore.update("provvisorio = 'F' where anno = :anno AND seire = :serie AND progressivo",
+        OrdineFornitore.update("provvisorio = 'F' where anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
     }
 
     @Transactional
     public void richiediApprovazione(Integer anno, String serie, Integer progressivo) {
-        OrdineFornitore.update("provvisorio = 'T' where anno = :anno AND seire = :serie AND progressivo",
+        OrdineFornitore.update("provvisorio = 'T' where anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
     }
 

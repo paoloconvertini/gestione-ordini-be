@@ -53,7 +53,7 @@ public class OAFArticoloResource {
     @Path("/approva/{anno}/{serie}/{progressivo}")
     public Response approva(Integer anno, String serie, Integer progressivo) {
         this.articoloService.approva(anno, serie, progressivo);
-        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore approvato", true)).build();
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore approvato", false)).build();
     }
 
     @Operation(summary = "Richiedi approvazione ordine a fornitore")
@@ -62,7 +62,7 @@ public class OAFArticoloResource {
     @Path("/richiediApprovazione/{anno}/{serie}/{progressivo}")
     public Response richiediApprovazione(Integer anno, String serie, Integer progressivo) {
         this.articoloService.richiediApprovazione(anno, serie, progressivo);
-        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", true)).build();
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", false)).build();
     }
 
 }
