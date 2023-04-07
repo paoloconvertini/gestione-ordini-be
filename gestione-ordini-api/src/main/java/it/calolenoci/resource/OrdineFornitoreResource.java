@@ -43,10 +43,13 @@ public class OrdineFornitoreResource {
     @RolesAllowed({ADMIN, AMMINISTRATIVO})
     @Path("/{anno}/{serie}/{progressivo}")
     public Response createOAF(Integer anno, String serie, Integer progressivo) {
-
         try {
-            service.save(anno, serie, progressivo, user);
-            return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
+            List<String> list = service.save(anno, serie, progressivo, user);
+            if(!list.isEmpty()) {
+                return Response.status(Response.Status.CREATED).entity(list).build();
+            } else {
+                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun elemento salvato!", false)).build();
+            }
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
         }

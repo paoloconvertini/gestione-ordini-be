@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +68,7 @@ public class JasperService {
             }
         }
         JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
-        Files.move(f.getAbsoluteFile().toPath(), Path.of(pathReport + "/" + destFileName));
+        Files.move(f.getAbsoluteFile().toPath(), Path.of(pathReport + "/" + destFileName), StandardCopyOption.REPLACE_EXISTING);
     }
 
     private JasperReport compileReport() {

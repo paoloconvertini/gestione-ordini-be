@@ -14,6 +14,8 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ArticoloDto implements Serializable {
+    private String intestazione;
+
     private String articolo;
     private String descrArticolo;
     private String descrArtSuppl;
@@ -33,7 +35,8 @@ public class ArticoloDto implements Serializable {
 
     private Integer colli;
 
-    public ArticoloDto(String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura, Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento, String banca, Date dataInserimento, Integer progrGenerale, Integer rigo, Float quantita, Integer colli) {
+    public ArticoloDto(String intestazione, String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura, Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento, String banca, Date dataInserimento, Integer progrGenerale, Integer rigo, Float quantita, Integer colli) {
+        this.intestazione = intestazione;
         this.articolo = articolo;
         this.descrArticolo = descrArticolo;
         this.descrArtSuppl = descrArtSuppl;
