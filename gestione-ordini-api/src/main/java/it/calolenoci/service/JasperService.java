@@ -7,11 +7,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.quarkus.logging.Log;
 import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.OrdineReportDto;
@@ -54,18 +56,18 @@ public class JasperService {
 
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
         String destFileName = "ordine_" + ordineId + ".pdf";
-        File f = new File(StringUtils.isNotBlank(pathReport) ? pathReport + "/" + destFileName : destFileName);
+        File f = new File(destFileName);
         if(!f.exists()) {
-            f.getParentFile().mkdirs();
             try {
                 if(!f.createNewFile()) {
-                    System.out.println("File already exists");
+                    Log.info("File " + f.getName() + " already exists");
                 }
             } catch (IOException ex) {
-                System.out.println(ex);
+                Log.error("Errore creazione file e cartelle report", ex);
             }
         }
         JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
+        Files.move(f.getAbsoluteFile().toPath(), Path.of(pathReport + "/" + destFileName));
     }
 
     private JasperReport compileReport() {

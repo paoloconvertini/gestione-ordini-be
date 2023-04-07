@@ -69,13 +69,6 @@ public class ArticoloService {
     }
 
     @Transactional
-    public List<OrdineDettaglioDto> findAndChangeStatusById(Integer anno, String serie, Integer progressivo, StatoOrdineEnum statoOrdineEnum) {
-        List<OrdineDettaglioDto> list = findById(anno, serie, progressivo, false);
-        changeAllStatus(anno, serie, progressivo, statoOrdineEnum);
-        return list;
-    }
-
-    @Transactional
     public void save(List<OrdineDettaglioDto> list, String user) {
         save(list, user, false);
     }

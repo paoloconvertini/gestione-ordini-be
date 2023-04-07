@@ -15,6 +15,7 @@ import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.jfree.util.Log;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -22,6 +23,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
@@ -58,17 +60,13 @@ public class OrdineResource {
     @Inject
     FetchScheduler scheduler;
 
-    @Inject
-    @Claim(standard = Claims.upn)
-    String user;
-
     @Operation(summary = "Returns all the roles from the database")
     @POST
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
     @Consumes(MULTIPART_FORM_DATA)
     @Path("/upload")
     @RolesAllowed({ADMIN, VENDITORE})
-    public Response upload(MultipartBody data) throws IOException, JRException {
+    public Response upload(MultipartBody data) {
 
         final Integer anno = Integer.valueOf(data.orderId.split("_")[0]);
         final String serie = data.orderId.split("_")[1];
@@ -76,21 +74,32 @@ public class OrdineResource {
         String filename = "firma_" + data.orderId + ".png";
         String name = pathFirma + filename;
         firmaService.save(anno, serie, progressivo, filename);
-        eventoService.save(anno, serie, progressivo, user, AzioneEnum.FIRMA, null);
 
         String encodedImage = data.file.split(",")[1];
         byte[] decodedImage = Base64.getDecoder().decode(encodedImage);
-        FileOutputStream fos = new FileOutputStream(name);
-        fos.write(decodedImage);
-        fos.close();
+        FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(name);
+            fos.write(decodedImage);
+            fos.close();
+        } catch (IOException e) {
+            Log.error("Errore nella creazione del file di firma " + filename, e);
+            throw new RuntimeException(e);
+        }
 
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
         if (ordineDTO != null) {
-            ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-            List<OrdineDettaglioDto> articoli = articoloService.findAndChangeStatusById(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE);
+            List<OrdineDettaglioDto> articoli = articoloService.findById(anno, serie, progressivo, false);
             List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, articoli, name);
             if (!dtoList.isEmpty()) {
-                service.createReport(dtoList);
+                try {
+                    service.createReport(dtoList);
+                    ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+                    articoloService.changeAllStatus(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE);
+                } catch (JRException | IOException e) {
+                    Log.error("Errore nella creazione del report per l'ordine " + data.orderId, e);
+                    throw new RuntimeException(e);
+                }
             }
         }
         return Response.ok().entity(new ResponseDto("Firma creata con successo!", false)).build();
