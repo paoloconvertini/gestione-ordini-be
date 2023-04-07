@@ -6,6 +6,7 @@ import io.quarkus.qute.CheckedTemplate;
 import io.smallrye.mutiny.Uni;
 import it.calolenoci.dto.EmailDto;
 import it.calolenoci.dto.ResponseDto;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 
@@ -28,9 +29,9 @@ public class MailingResource {
     @Inject
     @Claim(standard = Claims.full_name)
     String fullName;
-    private static void accept(Throwable failure) {
-        Response.ok(new ResponseDto("errore invio mail", true)).build();
-    }
+
+    @ConfigProperty(name = "ordini.path")
+    String pathReport;
 
     @CheckedTemplate
     static class Templates {
@@ -41,7 +42,7 @@ public class MailingResource {
     @Produces(APPLICATION_JSON)
     @RolesAllowed({ADMIN, VENDITORE})
     public Uni<Response> send(EmailDto dto) {
-        File f = new File("ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
+        File f = new File(pathReport + "/ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
         Mail m = new Mail();
         m.addInlineAttachment("logo.jpg", new File("src/main/resources/logo.jpg"),
                 "image/jpg", "<logo@calolenoci>");
