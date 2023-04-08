@@ -1,5 +1,6 @@
 package it.calolenoci.resource;
 
+import io.quarkus.logging.Log;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.MailTemplate;
 import io.quarkus.qute.CheckedTemplate;
@@ -42,20 +43,31 @@ public class MailingResource {
     @Produces(APPLICATION_JSON)
     @RolesAllowed({ADMIN, VENDITORE})
     public Uni<Response> send(EmailDto dto) {
-        File f = new File(pathReport + "/ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
-        Mail m = new Mail();
-        m.addInlineAttachment("logo.jpg", new File("src/main/resources/logo.jpg"),
-                "image/jpg", "<logo@calolenoci>");
-        m.setSubject("Ordine confermato!");
-        m.addTo(dto.getTo());
-        //m.setFrom("Venditore 1");
-        m.addAttachment(f.getName(), f, "application/pdf");
-        return Templates.ordine(fullName, dto.getAnno(), dto.getSerie(), dto.getProgressivo())
-                .mail(m)
-                .send()
-                .map(a -> Response.ok(new ResponseDto("Mail inviata correttamente",false)).build())
-                .onFailure()
-                .recoverWithItem(Response.serverError().build());
+        try {
+            File f = new File(pathReport + "/ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
+            Mail m = new Mail();
+            m.addInlineAttachment("logo.jpg", new File("src/main/resources/logo.jpg"),
+                    "image/jpg", "<logo@calolenoci>");
+            m.setSubject("Ordine confermato!");
+            m.addTo(dto.getTo());
+            //m.setFrom("Venditore 1");
+            m.addAttachment(f.getName(), f, "application/pdf");
+            Uni<Response> uni = Templates.ordine(fullName, dto.getAnno(), dto.getSerie(), dto.getProgressivo())
+                    .mail(m)
+                    .send()
+                    .map(a -> Response.ok(new ResponseDto("Mail inviata correttamente", false)).build())
+                    .onFailure()
+                    .recoverWithItem(a -> {
+                        Log.error("Errore invio mail: " + a);
+                        return Response.serverError().build();
+                    });
+            Log.debug("Invio corretto!");
+            return uni;
+        } catch (Exception e) {
+            Log.error("Errore invio mail", e);
+            return null;
+        }
+
     }
 
 }
