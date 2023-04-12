@@ -1,6 +1,8 @@
 package it.calolenoci.resource;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Sort;
+import it.calolenoci.dto.UserResponseDTO;
 import it.calolenoci.entity.Role;
 import it.calolenoci.entity.User;
 import it.calolenoci.service.CryptoService;
@@ -18,6 +20,7 @@ import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,7 +28,7 @@ import static it.calolenoci.constant.Ruolo.ADMIN;
 import static it.calolenoci.constant.Ruolo.USER;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path("api/v1/users")
+@Path("api/users")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 public class UserResource {
@@ -44,6 +47,7 @@ public class UserResource {
         entity.lastname = user.lastname;
         entity.password = cryptoService.encrypt(user.password);
         entity.dataNascita = user.dataNascita;
+        entity.email = user.email;
         List<Role> collect = user.roles.stream().map(r -> Role.findByName(r.name)).toList();
         entity.roles.addAll(collect);
         entity.persist();
@@ -66,6 +70,30 @@ public class UserResource {
     public Response getAllUsers() {
         return Response.ok(User.listAll(Sort.ascending("name", "lastname"))).build();
     }
+
+    @Operation(summary = "Returns all the roles from the database")
+    @GET
+    @PermitAll
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Users")
+    @Path("/byRole")
+    public Response getAllUsersByRole() {
+        List<User> list = User.listAll();
+        List<User> users = list.stream().filter(u ->
+                u.roles.stream().anyMatch(r -> r.name.equals("Magazziniere") || r.name.equals("Venditore") || r.name.equals("Logistica"))).toList();
+        List<UserResponseDTO> result = new ArrayList<>();
+        users.forEach(u -> {
+            if(StringUtils.isNotBlank(u.email)) {
+                UserResponseDTO dto = new UserResponseDTO();
+                dto.setName(u.name);
+                dto.setLastname(u.lastname);
+                dto.setEmail(u.email);
+                result.add(dto);
+            }
+        });
+        return Response.ok(result).build();
+    }
+
 
     @DELETE
     @Path("/{idUser}")
@@ -94,9 +122,12 @@ public class UserResource {
         if (user.dataNascita != null) {
             entity.dataNascita = user.dataNascita;
         }
+        if(user.email != null) {
+            entity.email = user.email;
+        }
         if (user.roles != null && !user.roles.isEmpty()) {
-            entity.roles = new ArrayList<>();
-            List<Role> collect = user.roles.stream().map(r -> Role.findByName(r.name)).collect(Collectors.toList());
+            entity.roles = new LinkedHashSet<>();
+            List<Role> collect = user.roles.stream().map(r -> Role.findByName(r.name)).toList();
             entity.roles.addAll(collect);
         }
         if (StringUtils.isNotBlank(user.password)) {

@@ -33,12 +33,6 @@ public class OAFArticoloService {
                 .project(OrdineFornitoreDettaglioDto.class).list();
     }
 
-    public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
-        return OrdineDettaglio.count("anno = :anno AND serie = :serie AND progressivo = :progressivo " +
-                        "AND geStatus is null",
-                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) > 0;
-    }
-
     @Transactional
     public void approva(Integer anno, String serie, Integer progressivo) {
         OrdineFornitore.update("provvisorio = 'F' where anno = :anno AND serie = :serie AND progressivo = :progressivo",
@@ -51,7 +45,7 @@ public class OAFArticoloService {
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
     }
 
-    @Transactional
+    /*@Transactional
     public void save(List<OrdineDettaglioDto> list) {
         save(list, false);
     }
@@ -95,6 +89,6 @@ public class OAFArticoloService {
         }
         ordine.persist();
         return ordine.getGeStatus();
-    }
+    }*/
 
 }

@@ -21,7 +21,7 @@ import java.util.List;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static it.calolenoci.enums.Ruolo.*;
 
-@Path("api/v1/articoli")
+@Path("api/articoli")
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
 public class ArticoloResource {

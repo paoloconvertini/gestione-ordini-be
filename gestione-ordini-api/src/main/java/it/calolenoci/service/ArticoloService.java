@@ -11,10 +11,12 @@ import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +33,12 @@ public class ArticoloService {
 
     @Inject
     ArticoloMapper mapper;
+
+    @Inject
+    MailService mailService;
+
+    @ConfigProperty(name = "ordini.path")
+    String pathReport;
 
     public List<OrdineDettaglioDto> findById(Integer anno, String serie, Integer progressivo, Boolean filtro) {
         List<OrdineDettaglioDto> list;
@@ -129,6 +137,7 @@ public class ArticoloService {
         List<OrdineDettaglioDto> ordineDettaglioDtoList = findById(anno, serie, progressivo, true);
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
             if (ordineDettaglioDtoList.isEmpty()) {
+                sendMail(anno, serie, progressivo);
                 ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
             } else {
                 ordine.setGeStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
@@ -140,10 +149,25 @@ public class ArticoloService {
         }
 
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
+            sendMail(anno, serie, progressivo);
             ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
         }
         ordine.persist();
         return ordine.getGeStatus();
+    }
+
+    private void sendMail(Integer anno, String serie, Integer progressivo) {
+        File f = new File(pathReport + "/ordine_" + anno + "_" + serie + "_" + progressivo + ".pdf");
+        OrdineDTO dto = Ordine.find("SELECT p.intestazione, p.localita, p.provincia, p.telefono, p.email " +
+                                " FROM Ordine o " +
+                                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
+                                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo",
+                        Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo))
+                .project(OrdineDTO.class).firstResult();
+        dto.setAnno(anno);
+        dto.setSerie(serie);
+        dto.setProgressivo(progressivo);
+        mailService.sendMailOrdineCompleto(f, dto);
     }
 
 }

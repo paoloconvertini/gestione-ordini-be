@@ -27,7 +27,7 @@ import static it.calolenoci.enums.Ruolo.*;
 
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
-@Path("api/v1/oaf")
+@Path("api/oaf")
 @RequestScoped
 public class OrdineFornitoreResource {
 

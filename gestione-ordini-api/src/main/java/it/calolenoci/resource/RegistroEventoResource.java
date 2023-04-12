@@ -18,7 +18,7 @@ import static it.calolenoci.enums.Ruolo.*;
 
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
-@Path("api/v1/registro")
+@Path("api/registro")
 public class RegistroEventoResource {
 
     @Inject

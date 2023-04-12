@@ -1,12 +1,12 @@
 package it.calolenoci.resource;
 
-import io.quarkus.logging.Log;
-import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.MailTemplate;
 import io.quarkus.qute.CheckedTemplate;
 import io.smallrye.mutiny.Uni;
 import it.calolenoci.dto.EmailDto;
-import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.dto.InlineAttachment;
+import it.calolenoci.dto.MailAttachment;
+import it.calolenoci.service.MailService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
@@ -20,11 +20,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.io.File;
 
+import static it.calolenoci.enums.Ruolo.ADMIN;
+import static it.calolenoci.enums.Ruolo.VENDITORE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static it.calolenoci.enums.Ruolo.*;
 
 @Consumes(APPLICATION_JSON)
-@Path("api/v1/mail")
+@Path("api/mail")
 public class MailingResource {
 
     @Inject
@@ -34,6 +35,12 @@ public class MailingResource {
     @ConfigProperty(name = "ordini.path")
     String pathReport;
 
+    @ConfigProperty(name = "logo.path")
+    String logoPath;
+
+    @Inject
+    MailService service;
+
     @CheckedTemplate
     static class Templates {
         public static native MailTemplate.MailTemplateInstance ordine(String venditore, Integer anno, String serie, Integer progressivo);
@@ -42,32 +49,15 @@ public class MailingResource {
     @POST
     @Produces(APPLICATION_JSON)
     @RolesAllowed({ADMIN, VENDITORE})
+    @Path("/confermato")
     public Uni<Response> send(EmailDto dto) {
-        try {
-            File f = new File(pathReport + "/ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
-            Mail m = new Mail();
-            m.addInlineAttachment("logo.jpg", new File("src/main/resources/logo.jpg"),
-                    "image/jpg", "<logo@calolenoci>");
-            m.setSubject("Ordine confermato!");
-            m.addTo(dto.getTo());
-            //m.setFrom("Venditore 1");
-            m.addAttachment(f.getName(), f, "application/pdf");
-            Uni<Response> uni = Templates.ordine(fullName, dto.getAnno(), dto.getSerie(), dto.getProgressivo())
-                    .mail(m)
-                    .send()
-                    .map(a -> Response.ok(new ResponseDto("Mail inviata correttamente", false)).build())
-                    .onFailure()
-                    .recoverWithItem(a -> {
-                        Log.error("Errore invio mail: " + a);
-                        return Response.serverError().build();
-                    });
-            Log.debug("Invio corretto!");
-            return uni;
-        } catch (Exception e) {
-            Log.error("Errore invio mail", e);
-            return null;
-        }
-
+        File f = new File(pathReport + "/ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
+        MailAttachment attachment = new MailAttachment(f.getName(), f, "application/pdf");
+        String subject = "Ordine confermato!";
+        InlineAttachment inlineAttach = new InlineAttachment("logo.jpg", new File(logoPath),
+                "image/jpg", "<logo@calolenoci>");
+        MailTemplate.MailTemplateInstance ordine = Templates.ordine(fullName, dto.getAnno(), dto.getSerie(), dto.getProgressivo());
+        return service.send(ordine, attachment, subject, inlineAttach, dto.getTo());
     }
 
 }

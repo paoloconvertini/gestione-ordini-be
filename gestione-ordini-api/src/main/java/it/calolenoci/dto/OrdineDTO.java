@@ -58,4 +58,12 @@ public class OrdineDTO implements Serializable {
         this.status = status;
     }
 
+    public OrdineDTO(String intestazione, String localita, String provincia, String telefono, String email) {
+        this.intestazione = intestazione;
+        this.localita = localita;
+        this.provincia = provincia;
+        this.telefono = telefono;
+        this.email = email;
+    }
+
 }

@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 
 @ApplicationScoped
-@Path("api/v1/login")
+@Path("api/login")
 @Slf4j
 public class LoginResource {
 

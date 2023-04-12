@@ -34,7 +34,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static it.calolenoci.enums.Ruolo.*;
 
 @Produces(APPLICATION_JSON)
-@Path("api/v1/ordini-clienti")
+@Path("api/ordini-clienti")
 @RequestScoped
 public class OrdineResource {
 

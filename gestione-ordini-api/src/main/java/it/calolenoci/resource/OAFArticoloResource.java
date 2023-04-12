@@ -23,7 +23,7 @@ import java.util.List;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static it.calolenoci.enums.Ruolo.*;
 
-@Path("api/v1/oaf/articoli")
+@Path("api/oaf/articoli")
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
 @RequestScoped

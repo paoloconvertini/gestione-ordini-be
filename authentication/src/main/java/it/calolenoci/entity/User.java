@@ -1,17 +1,16 @@
 package it.calolenoci.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.panache.common.Parameters;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 @Entity
 @Table(name = "USER")
@@ -30,7 +29,11 @@ public class User extends PanacheEntity {
     public Date dataNascita;
 
     @Column(nullable = false)
+    @JsonIgnore
     public String password;
+
+    @Column
+    public String email;
 
     @ManyToMany
     @JoinTable(
@@ -40,7 +43,7 @@ public class User extends PanacheEntity {
                     name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(
                     name = "role_id", referencedColumnName = "id"))
-    public Collection<Role> roles = new ArrayList<>();
+    public Set<Role> roles = new LinkedHashSet<>();
 
     public static User findByUsernameAndPassword(String username, String password){
         Map<String, Object> params = Parameters.with("username", username)
@@ -54,5 +57,17 @@ public class User extends PanacheEntity {
         return this.name + " " + this.lastname;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        User user = (User) o;
+        return id != null && Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
 
