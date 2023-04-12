@@ -54,7 +54,7 @@ public class MailingResource {
         File f = new File(pathReport + "/ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
         MailAttachment attachment = new MailAttachment(f.getName(), f, "application/pdf");
         String subject = "Ordine confermato!";
-        InlineAttachment inlineAttach = new InlineAttachment("logo.jpg", new File(logoPath),
+        InlineAttachment inlineAttach = new InlineAttachment("logo.jpg", new File(logoPath + "/logo.jpg"),
                 "image/jpg", "<logo@calolenoci>");
         MailTemplate.MailTemplateInstance ordine = Templates.ordine(fullName, dto.getAnno(), dto.getSerie(), dto.getProgressivo());
         return service.send(ordine, attachment, subject, inlineAttach, dto.getTo());
