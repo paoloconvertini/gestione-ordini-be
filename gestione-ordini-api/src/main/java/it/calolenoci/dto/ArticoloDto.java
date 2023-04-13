@@ -35,7 +35,7 @@ public class ArticoloDto implements Serializable {
 
     private Integer colli;
 
-    public ArticoloDto(String intestazione, String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura, Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento, String banca, Date dataInserimento, Integer progrGenerale, Integer rigo, Float quantita, Integer colli) {
+    public ArticoloDto(String intestazione, String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura, Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento, String banca, Integer progrGenerale, Integer rigo, Float quantita, Integer colli) {
         this.intestazione = intestazione;
         this.articolo = articolo;
         this.descrArticolo = descrArticolo;
@@ -47,7 +47,6 @@ public class ArticoloDto implements Serializable {
         this.sottoConto = sottoConto;
         this.codPagamento = codPagamento;
         this.banca = banca;
-        this.dataInserimento = dataInserimento;
         this.progrGenerale = progrGenerale;
         this.rigo = rigo;
         this.quantita = quantita;

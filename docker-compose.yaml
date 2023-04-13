@@ -36,6 +36,7 @@ services:
       MAIL_USERNAME: "paolo.convertini@gmail.com"
       MAIL_PASSWORD: "uucffjibedgehgqk"
       LOG_DIR: "/logs/api-service.log"
+      EMAIL_COMPLETO_TO: "paolo.convertini@gmail.com"
     networks:
       - backend
       - frontend
@@ -63,8 +64,8 @@ services:
       - authdata:/var/lib/mysql
   client:
     environment:
-      BACKEND_BASE_URL: "http://192.168.1.60:8080/api/v1/"
-      BACKEND_BASE_AUTH_URL: "http://192.168.1.60:8081/api/v1/"
+      BACKEND_BASE_URL: "http://192.168.1.60:8080/api/"
+      BACKEND_BASE_AUTH_URL: "http://192.168.1.60:8081/api/"
     networks:
       - frontend
     image: "pconvertini/gestione-ordini:1.8.1"

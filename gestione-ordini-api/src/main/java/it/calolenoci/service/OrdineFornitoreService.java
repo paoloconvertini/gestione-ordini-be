@@ -34,15 +34,14 @@ public class OrdineFornitoreService {
             List<OrdineFornitoreDettaglio> ordineFornitoreDettaglios = new ArrayList<>();
             List<OrdineFornitore> fornitoreList = new ArrayList<>();
             Map<String, List<ArticoloDto>> mapArticoli = OrdineDettaglio.find("select pc.intestazione, a.articolo , a.descrArticolo, a.descrArtSuppl, a.unitaMisura, a.prezzoBase, a.costoBase, " +
-                            "m.gruppoMag as gruppoConto, m.contoMag as sottoConto,pc.codPagamento, pc.banca, MAX(m.dataInserimento) as dataInserimento, o.progrGenerale, o.rigo, o.quantita, o.fColli " +
+                            "fa.fornitoreArticoloId.gruppo as gruppoConto, fa.fornitoreArticoloId.conto as sottoConto,pc.codPagamento, pc.banca, o.progrGenerale, o.rigo, o.quantita, o.fColli " +
                             " from OrdineDettaglio o " +
-                            " left join Articolo a ON a.articolo = o.fArticolo and a.descrArticolo = o.fDescrArticolo " +
-                            "          left join Magazzino m ON  o.fArticolo = m.mArticolo and o.fDescrArticolo = a.descrArticolo " +
-                            "          left JOIN PianoConti pc ON m.gruppoMag = pc.gruppoConto and m.contoMag = pc.sottoConto " +
-                            "          where o.progressivo = :progressivo and o.anno = :anno and o.serie = :serie and o.geFlagNonDisponibile = true " +
-                            "           and pc.gruppoConto = 2351 " +
+                            " inner join Articolo a ON a.articolo = o.fArticolo and a.descrArticolo = o.fDescrArticolo " +
+                            "          inner join FornitoreArticolo fa ON  o.fArticolo = fa.fornitoreArticoloId.articolo " +
+                            "          inner JOIN PianoConti pc ON fa.fornitoreArticoloId.gruppo = pc.gruppoConto and fa.fornitoreArticoloId.conto = pc.sottoConto " +
+                            "          where o.progressivo = :progressivo and o.anno = :anno and o.serie = :serie and o.geFlagNonDisponibile = 'T' " +
                             "           group by pc.intestazione, a.articolo , a.descrArticolo, a.descrArtSuppl, a.unitaMisura, a.prezzoBase, a.costoBase, " +
-                            "                    m.gruppoMag, m.contoMag,pc.codPagamento, pc.banca, o.progrGenerale, o.rigo, o.quantita, o.fColli",
+                            "                    fa.fornitoreArticoloId.gruppo, fa.fornitoreArticoloId.conto,pc.codPagamento, pc.banca, o.progrGenerale, o.rigo, o.quantita, o.fColli",
                     Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).project(ArticoloDto.class).stream().collect(Collectors.groupingBy(ArticoloDto::getIntestazione));
 
             if (mapArticoli.isEmpty()) {
