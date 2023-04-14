@@ -46,7 +46,9 @@ public class OrdineDettaglioDto implements Serializable {
 
     private Date dataOrdineOAF;
 
-    public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono) {
+    private String articolo;
+
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono, String articolo) {
         this.anno = anno;
         this.progressivo = progressivo;
         this.tipoRigo = tipoRigo;
@@ -69,6 +71,7 @@ public class OrdineDettaglioDto implements Serializable {
         this.geFlagOrdinato = geFlagOrdinato;
         this.geFlagConsegnato = geFlagConsegnato;
         this.geTono = geTono;
+        this.articolo = articolo;
     }
 
     public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Float quantita, Float prezzo, String fUnitaMisura, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva, Integer fColli, Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato, String geTono, Integer annoOAF, String serieOAF, Integer progressivoOAF, Date dataOrdineOAF) {

@@ -1,12 +1,11 @@
 package it.calolenoci.service;
 
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.entity.Ordine;
-import it.calolenoci.entity.OrdineDettaglio;
-import it.calolenoci.entity.OrdineFornitoreDettaglio;
-import it.calolenoci.entity.RegistroAzioni;
+import it.calolenoci.dto.PianoContiDto;
+import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.ArticoloMapper;
@@ -18,6 +17,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -170,4 +170,24 @@ public class ArticoloService {
         mailService.sendMailOrdineCompleto(f, dto);
     }
 
+    @Transactional
+    public boolean addFornitore(PianoContiDto dto, String user) {
+        try {
+            FornitoreArticolo fornitoreArticolo = new FornitoreArticolo();
+            fornitoreArticolo.setTempoConsegna(0);
+            fornitoreArticolo.setCoefPrezzo(0f);
+            fornitoreArticolo.setPrezzo(0f);
+            fornitoreArticolo.setFDefault("S");
+            fornitoreArticolo.setCreateUser(user);
+            fornitoreArticolo.setUpdateUser(user);
+            fornitoreArticolo.setFornitoreArticoloId(new FornitoreArticoloId(dto.getCodiceArticolo(), dto.getGruppoConto(), dto.getSottoConto()));
+            fornitoreArticolo.setUpdateDate(new Date());
+            fornitoreArticolo.setCreateDate(new Date());
+            fornitoreArticolo.persist();
+            return true;
+        } catch (Exception e){
+            Log.error("Errore nella creazione del FornitoreArticolo ", e);
+            return false;
+        }
+    }
 }

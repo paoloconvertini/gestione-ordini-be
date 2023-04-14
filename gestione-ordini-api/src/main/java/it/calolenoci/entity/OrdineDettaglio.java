@@ -129,14 +129,15 @@ public class OrdineDettaglio extends PanacheEntityBase {
     }
 
     public static List<OrdineDettaglioDto> findOnlyArticoliById(Integer anno, String serie, Integer progressivo, Boolean filtro){
-        String query = "SELECT anno,  progressivo,  tipoRigo,  rigo,  serie,  fArticolo,  " +
-                "codArtFornitore,  fDescrArticolo,  quantita,  prezzo,  fUnitaMisura,  " +
-                "scontoArticolo,  scontoC1,  scontoC2,  scontoP,  fCodiceIva,  fColli, " +
-                "geFlagRiservato, geFlagNonDisponibile, geFlagOrdinato, geFlagConsegnato,  geTono " +
+        String query = "SELECT o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
+                "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo,  o.fUnitaMisura,  " +
+                "o.scontoArticolo,  o.scontoC1,  o.scontoC2,  o.scontoP,  o.fCodiceIva,  o.fColli, " +
+                "o.geFlagRiservato, o.geFlagNonDisponibile, o.geFlagOrdinato, o.geFlagConsegnato,  o.geTono, a.fornitoreArticoloId.articolo " +
                 "FROM OrdineDettaglio o " +
-                "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo";
+                "LEFT JOIN FornitoreArticolo a ON a.fornitoreArticoloId.articolo = o.fArticolo " +
+                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo";
         if(filtro) {
-            query += " AND geFlagNonDisponibile = 'T'";
+            query += " AND o.geFlagNonDisponibile = 'T'";
         }
         return find(query, Sort.ascending("rigo"), Parameters.with("anno", anno).and("serie", serie)
                         .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();

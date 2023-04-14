@@ -1,6 +1,7 @@
 package it.calolenoci.resource;
 
 import it.calolenoci.dto.OrdineDettaglioDto;
+import it.calolenoci.dto.PianoContiDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
@@ -73,6 +74,18 @@ public class ArticoloResource {
             return Response.status(Response.Status.CREATED).entity(new ResponseDto(articoloService.save(list, user, true), false)).build();
         }
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("lista vuota", true)).build();
+    }
+
+    @Operation(summary = "Save dettaglio ordine")
+    @POST
+    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @Path("/addFornitore")
+    public Response addFornitore(PianoContiDto dto) {
+        boolean ok = this.articoloService.addFornitore(dto, user);
+        if(!ok) {
+            return Response.status(Response.Status.OK).entity(new ResponseDto("Errore! Non è stato possibile aggiungere il fornitore " + dto.getIntestazione() + " all'articolo " + dto.getCodiceArticolo(), true)).build();
+        }
+        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Fornitore aggiunto all'articolo " + dto.getCodiceArticolo(), false)).build();
     }
 
 }
