@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
 
@@ -47,9 +48,6 @@ public class OrdineResource {
 
     @Inject
     FirmaService firmaService;
-
-    @Inject
-    EventoService eventoService;
 
     @ConfigProperty(name = "firma.store.path")
     String pathFirma;
@@ -112,14 +110,25 @@ public class OrdineResource {
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
-    public Response getAllOrdini(@QueryParam("status") String status) {
+    public Response getAllOrdini(@QueryParam("status") String status) throws ParseException {
         return Response.ok(ordineService.findAllByStatus(status)).build();
+    }
+
+    @Operation(summary = "Returns all the ordini from the database")
+    @GET
+    @Path("/{venditore}")
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
+    @Consumes(APPLICATION_JSON)
+    public Response getAllOrdiniByVenditore(@QueryParam("status") String status, String venditore) throws ParseException {
+        return Response.ok(ordineService.findAllByStatus(status, venditore)).build();
     }
 
     @GET
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
     @Path("/updateConsegne")
-    public Response updateConsegne(@QueryParam("status") String status) {
+    public Response updateConsegne(@QueryParam("status") String status) throws ParseException {
         scheduler.update();
         return Response.ok(ordineService.findAllByStatus(status)).build();
     }

@@ -73,26 +73,28 @@ public class OrdineFornitoreService {
                     fornitoreList.add(ordineFornitore);
                 }
                 articoloDtoList.forEach(a -> {
-                    OrdineFornitoreDettaglio fornitoreDettaglio = new OrdineFornitoreDettaglio();
-                    fornitoreDettaglio.setProgressivo(prog);
-                    fornitoreDettaglio.setProgrGenerale(progressivoFornDettaglio + articoloDtoList.indexOf(a) + 1);
-                    fornitoreDettaglio.setAnno(Year.now().getValue());
-                    fornitoreDettaglio.setSerie("B");
-                    fornitoreDettaglio.setRigo(articoloDtoList.indexOf(a) + 1);
-                    fornitoreDettaglio.setPid(a.getProgrGenerale());
-                    fornitoreDettaglio.setOArticolo(a.getArticolo());
-                    fornitoreDettaglio.setODescrArticolo(a.getDescrArticolo());
-                    fornitoreDettaglio.setOPrezzo(a.getPrezzoBase());
-                    fornitoreDettaglio.setOQuantita(a.getQuantita());
-                    fornitoreDettaglio.setOUnitaMisura(a.getUnitaMisura());
-                    fornitoreDettaglio.setOColli(a.getColli());
-                    fornitoreDettaglio.setOCodiceIva("22");
                     String nota = "Riferimento n. " + anno + "/" + serie + "/" + progressivo + "-" + a.getRigo();
-                    fornitoreDettaglio.setNota(nota);
-                    ordineFornitoreDettaglios.add(fornitoreDettaglio);
-                    OrdineDettaglio.update("geFlagNonDisponibile = 'F', geFlagOrdinato = 'T' where anno = :anno " +
-                            "and serie = :serie and progressivo = :progressivo and rigo = :rigo", Parameters.with("anno", anno)
-                            .and("serie", serie).and("progressivo", progressivo).and("rigo", a.getRigo()));
+                    if(OrdineFornitoreDettaglio.count("nota = :nota", Parameters.with("nota", nota)) == 0){
+                        OrdineFornitoreDettaglio fornitoreDettaglio = new OrdineFornitoreDettaglio();
+                        fornitoreDettaglio.setProgressivo(prog);
+                        fornitoreDettaglio.setProgrGenerale(progressivoFornDettaglio + articoloDtoList.indexOf(a) + 1);
+                        fornitoreDettaglio.setAnno(Year.now().getValue());
+                        fornitoreDettaglio.setSerie("B");
+                        fornitoreDettaglio.setRigo(articoloDtoList.indexOf(a) + 1);
+                        fornitoreDettaglio.setPid(a.getProgrGenerale());
+                        fornitoreDettaglio.setOArticolo(a.getArticolo());
+                        fornitoreDettaglio.setODescrArticolo(a.getDescrArticolo());
+                        fornitoreDettaglio.setOPrezzo(a.getPrezzoBase());
+                        fornitoreDettaglio.setOQuantita(a.getQuantita());
+                        fornitoreDettaglio.setOUnitaMisura(a.getUnitaMisura());
+                        fornitoreDettaglio.setOColli(a.getColli());
+                        fornitoreDettaglio.setOCodiceIva("22");
+                        fornitoreDettaglio.setNota(nota);
+                        ordineFornitoreDettaglios.add(fornitoreDettaglio);
+                        OrdineDettaglio.update("geFlagNonDisponibile = 'F', geFlagOrdinato = 'T' where anno = :anno " +
+                                "and serie = :serie and progressivo = :progressivo and rigo = :rigo", Parameters.with("anno", anno)
+                                .and("serie", serie).and("progressivo", progressivo).and("rigo", a.getRigo()));
+                    }
                 });
                 long count = OrdineDettaglio.count("geFlagNonDisponibile = 'T' and anno = :anno " +
                         " and serie = :serie and progressivo = :progressivo ", Parameters.with("anno", anno)

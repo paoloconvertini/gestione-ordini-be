@@ -11,8 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserResponseDTO {
-    private String name;
-    private String lastname;
+    private String fullname;
     private String email;
+    private String codVenditore;
+    private Boolean checked;
 }
 

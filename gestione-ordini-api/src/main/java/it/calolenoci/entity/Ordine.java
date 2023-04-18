@@ -47,6 +47,9 @@ public class Ordine extends PanacheEntityBase {
     @Column(length = 1)
     private String tipoFattura;
 
+    @Column(length = 1)
+    private String provvisorio;
+
     @Column
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataOrdine;

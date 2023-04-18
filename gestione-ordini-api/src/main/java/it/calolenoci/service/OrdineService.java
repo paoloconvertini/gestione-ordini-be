@@ -11,6 +11,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import javax.transaction.Transactional;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 @ApplicationScoped
@@ -19,10 +22,12 @@ public class OrdineService {
     @ConfigProperty(name = "data.inizio")
     String dataCongig;
 
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
     @Inject
     ArticoloService articoloService;
 
-    public List<OrdineDTO> findAllByStatus(String status) {
+    public List<OrdineDTO> findAllByStatus(String status) throws ParseException {
         if(!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(status) &&
                 !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
             checkStatusDettaglio();
@@ -36,13 +41,37 @@ public class OrdineService {
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
         if(StringUtils.isBlank(status)) {
-            query += "WHERE o.geStatus is null and o.dataOrdine >= " + dataCongig;
-            return Ordine.find(query, Sort.descending("dataOrdine"))
+            query += "WHERE o.geStatus is null and o.dataOrdine >= :dataCongig  and o.provvisorio <> 'S' ";
+            return Ordine.find(query, Sort.descending("dataOrdine"), Parameters.with("dataCongig", sdf.parse(dataCongig)))
                     .project(OrdineDTO.class).list();
         } else {
             query += "WHERE o.geStatus = :status";
             return Ordine.find(query, Sort.descending("dataOrdine"), Parameters.with("status", status))
                     .project(OrdineDTO.class).list();
+        }
+    }
+
+    public List<OrdineDTO> findAllByStatus(String status, String venditore) throws ParseException {
+        if(!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(status) &&
+                !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
+            checkStatusDettaglio();
+        }
+        if(StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
+            checkConsegnati();
+        }
+        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
+                "p.intestazione,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
+                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus " +
+                "FROM Ordine o " +
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
+        if(StringUtils.isBlank(status)) {
+            query += "WHERE o.geStatus is null and o.dataOrdine >= :dataConfig and o.provvisorio <> 'S' and o.serie = :venditore" ;
+            return Ordine.find(query, Sort.descending("dataOrdine"), Parameters.with("dataConfig", sdf.parse(dataCongig))
+                            .and("venditore", venditore)).project(OrdineDTO.class).list();
+        } else {
+            query += "WHERE o.geStatus = :status and o.serie = :venditore";
+            return Ordine.find(query, Sort.descending("dataOrdine"), Parameters.with("status", status)
+                    .and("venditore", venditore)).project(OrdineDTO.class).list();
         }
     }
 

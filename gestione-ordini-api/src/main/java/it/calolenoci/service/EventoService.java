@@ -16,22 +16,6 @@ import java.util.List;
 @ApplicationScoped
 public class EventoService {
 
-
-    @Transactional
-    public void save(Integer anno, String serie, Integer progressivo, String username, AzioneEnum azioneEnum, Integer rigo) {
-        RegistroAzioni r = new RegistroAzioni();
-        r.setAnno(anno);
-        r.setSerie(serie);
-        r.setProgressivo(progressivo);
-        r.setAzione(azioneEnum.getDesczrizione());
-        r.setUsername(username);
-        r.setCreateDate(new Date());
-        if (rigo != null) {
-            r.setRigo(rigo);
-        }
-        r.persist();
-    }
-
     public List<RegistroAzioniDto> getByAnnoSerieProgressivoRigo(Integer anno, String serie, Integer progressivo, Integer rigo) {
         return RegistroAzioni
                 .find("anno = :anno AND serie = :serie AND progressivo =: progressivo AND rigo = :rigo",

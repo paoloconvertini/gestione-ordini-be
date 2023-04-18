@@ -7,6 +7,8 @@ import it.calolenoci.entity.Role;
 import it.calolenoci.entity.User;
 import it.calolenoci.service.CryptoService;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -15,6 +17,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
@@ -31,10 +34,15 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path("api/users")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
+@RequestScoped
 public class UserResource {
 
     @Inject
     CryptoService cryptoService;
+
+    @Inject
+    @Claim(standard = Claims.nickname)
+    String codVenditore;
 
     @POST
     @Transactional
@@ -56,7 +64,7 @@ public class UserResource {
 
     @GET
     @Path("/{idUser}")
-    @RolesAllowed({ADMIN, "User"})
+    @RolesAllowed({ADMIN, USER})
     public Response getUser(Long idUser) {
         User entity = findUserById(idUser);
         return Response.ok(entity).build();
@@ -64,7 +72,7 @@ public class UserResource {
 
     @Operation(summary = "Returns all the roles from the database")
     @GET
-    @PermitAll
+    @RolesAllowed({ADMIN, USER})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Users")
     public Response getAllUsers() {
@@ -72,25 +80,36 @@ public class UserResource {
     }
 
     @Operation(summary = "Returns all the roles from the database")
-    @GET
-    @PermitAll
+    @POST
+    @RolesAllowed({ADMIN, USER})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Users")
     @Path("/byRole")
-    public Response getAllUsersByRole() {
+    public Response getAllUsersByRole(List<String> ruoli) {
+
         List<User> list = User.listAll();
         List<User> users = list.stream().filter(u ->
-                u.roles.stream().anyMatch(r -> r.name.equals("Magazziniere") || r.name.equals("Venditore") || r.name.equals("Logistica"))).toList();
+                u.roles.stream().anyMatch(r ->
+                        ruoli.stream().anyMatch(role ->  r.name.equals(role))))
+                .toList();
         List<UserResponseDTO> result = new ArrayList<>();
         users.forEach(u -> {
-            if(StringUtils.isNotBlank(u.email)) {
-                UserResponseDTO dto = new UserResponseDTO();
-                dto.setName(u.name);
-                dto.setLastname(u.lastname);
-                dto.setEmail(u.email);
-                result.add(dto);
+            UserResponseDTO dto = new UserResponseDTO();
+            dto.setFullname(u.getFullName());
+            if(StringUtils.isNotBlank(u.codVenditore)) {
+                dto.setCodVenditore(u.codVenditore);
+                if(codVenditore.equals(u.codVenditore)) {
+                    dto.setChecked(Boolean.TRUE);
+                } else {
+                    dto.setChecked(Boolean.FALSE);
+                }
             }
+            if(StringUtils.isNotBlank(u.email)) {
+                dto.setEmail(u.email);
+            }
+            result.add(dto);
         });
+        result.add(new UserResponseDTO("tutti", "", "", Boolean.FALSE));
         return Response.ok(result).build();
     }
 
@@ -107,7 +126,7 @@ public class UserResource {
     @PUT
     @Path("/{id}")
     @Transactional
-    @RolesAllowed({ADMIN, "User"})
+    @RolesAllowed({ADMIN, USER})
     @APIResponse(responseCode = "404", description = "User non trovato")
     @APIResponse(responseCode = "200", description = "User aggiornato con successo")
     public Response update(Long id, User user) {

@@ -1,15 +1,27 @@
-INSERT INTO auth.USER (id, dataNascita,email, lastname, name, password, username)
-VALUES (1, '2023-03-06 10:04:14.000000','paolo.convertini@gmail.com',  'convertini', 'paolo', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'pconvertini');
-INSERT INTO auth.USER (id, dataNascita,email, lastname, name, password, username)
-VALUES (2, '2023-03-06 10:04:14.000000','paolo.convertini@gmail.com',  'calolenoci', 'damiano', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'dcalolenoci');
-INSERT INTO auth.USER (id, dataNascita,email, lastname, name, password, username)
-VALUES (3, '2023-03-06 10:04:14.000000','', 'amministrazione', 'franco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'franco');
-INSERT INTO auth.USER (id, dataNascita,email, lastname, name, password, username)
-VALUES (4, '2023-03-06 10:04:14.000000','', 'magazzino', 'francesco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'francesco');
-INSERT INTO auth.USER (id, dataNascita,email, lastname, name, password, username)
-VALUES (5, '2023-03-06 10:04:14.000000','', 'calolenoci', 'piero', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'pcalolenoci');
-INSERT INTO auth.USER (id, dataNascita, email, lastname, name, password, username)
-VALUES (6, '2023-03-06 10:04:14', 'paolo.convertini@gmail.com', 'logistica', 'daniele', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'daniele');
+INSERT INTO auth.USER (id,email, lastname, name, password, username)
+VALUES (1, 'paolo.convertini@gmail.com',  'convertini', 'paolo', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'pconvertini');
+INSERT INTO auth.USER (id, email, lastname, name, password, username, codVenditore)
+VALUES (2,'paolo.convertini@gmail.com',  'calolenoci', 'damiano', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'dcalolenoci', '11');
+INSERT INTO auth.USER (id, email, lastname, name, password, username)
+VALUES (3, '', 'amministrazione', 'franco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'franco');
+INSERT INTO auth.USER (id, email, lastname, name, password, username)
+VALUES (4, '', 'magazzino', 'francesco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'francesco');
+INSERT INTO auth.USER (id, email, lastname, name, password, username, codVenditore)
+VALUES (5, '', 'calolenoci', 'piero', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'pcalolenoci', '01');
+INSERT INTO auth.USER (id,  email, lastname, name, password, username)
+VALUES (6, 'paolo.convertini@gmail.com', 'logistica', 'daniele', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'daniele');
+INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
+VALUES (7, 'paolo.convertini@gmail.com', 'scialpi', 'lorenzo', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'lscialpi', '03');
+INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
+VALUES (8, 'paolo.convertini@gmail.com', 'fumarola', 'antonianna', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'afumarola', '08');
+INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
+VALUES (9, 'paolo.convertini@gmail.com', 'calolenoci', 'rocco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'rcalolenoci', '10');
+INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
+VALUES (10, 'paolo.convertini@gmail.com', 'devincienti', 'francesco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'fdevincienti', '13');
+INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
+VALUES (11, 'paolo.convertini@gmail.com', 'semeraro', 'angela', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'asemeraro', '15');
+INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
+VALUES (12, 'paolo.convertini@gmail.com', '', 'mariagrazia', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'mariagrazia', '16');
 
 
 
@@ -24,7 +36,39 @@ INSERT INTO auth.ROLE (id, name) VALUES (6, 'Logistica');
 
 INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (1, 1);
 INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (2, 4);
+INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (7, 4);
+INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (8, 4);
+INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (9, 4);
+INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (10, 4);
+INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (11, 4);
+INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (12, 4);
 INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (3, 5);
 INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (4, 3);
 INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (5, 1);
 INSERT INTO auth.USER_ROLE (user_id, role_id) VALUES (6, 6);
+INSERT INTO auth.USER_ROLE (user_id, role_id)
+VALUES (5, 2);
+
+INSERT INTO auth.USER_ROLE (user_id, role_id)
+VALUES (7, 2);
+
+INSERT INTO auth.USER_ROLE (user_id, role_id)
+VALUES (8, 2);
+
+INSERT INTO auth.USER_ROLE (user_id, role_id)
+VALUES (9, 2);
+
+INSERT INTO auth.USER_ROLE (user_id, role_id)
+VALUES (2, 2);
+
+INSERT INTO auth.USER_ROLE (user_id, role_id)
+VALUES (10, 2);
+
+INSERT INTO auth.USER_ROLE (user_id, role_id)
+VALUES (11, 2);
+
+INSERT INTO auth.USER_ROLE (user_id, role_id)
+VALUES (12, 2);
+
+INSERT INTO auth.USER_ROLE (role_id, user_id)
+VALUES (4, 5);

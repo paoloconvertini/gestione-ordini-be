@@ -25,7 +25,7 @@ public class User extends PanacheEntity {
     @Column(nullable = false)
     public String lastname;
 
-    @Column(nullable = false)
+    @Column
     public Date dataNascita;
 
     @Column(nullable = false)
@@ -34,6 +34,9 @@ public class User extends PanacheEntity {
 
     @Column
     public String email;
+
+    @Column(length = 3)
+    public String codVenditore;
 
     @ManyToMany
     @JoinTable(

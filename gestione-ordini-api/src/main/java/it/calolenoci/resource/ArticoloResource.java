@@ -14,6 +14,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import javax.annotation.security.RolesAllowed;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -25,6 +26,7 @@ import static it.calolenoci.enums.Ruolo.*;
 @Path("api/articoli")
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
+@RequestScoped
 public class ArticoloResource {
 
     @Inject
