@@ -87,6 +87,8 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setOColli(a.getColli());
                         fornitoreDettaglio.setOCodiceIva("22");
                         fornitoreDettaglio.setNota(nota);
+                        Log.debug("Chiave per articolo " + fornitoreDettaglio.getOArticolo() + ": " + fornitoreDettaglio.getAnno()+fornitoreDettaglio.getSerie()
+                        + fornitoreDettaglio.getProgressivo() + fornitoreDettaglio.getRigo());
                         ordineFornitoreDettaglios.add(fornitoreDettaglio);
                         OrdineDettaglio.update("geFlagNonDisponibile = 'F', geFlagOrdinato = 'T' where anno = :anno " +
                                 "and serie = :serie and progressivo = :progressivo and rigo = :rigo", Parameters.with("anno", anno)
