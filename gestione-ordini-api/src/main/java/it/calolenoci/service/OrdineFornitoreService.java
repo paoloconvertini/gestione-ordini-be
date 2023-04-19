@@ -36,7 +36,7 @@ public class OrdineFornitoreService {
             Map<String, List<ArticoloDto>> mapArticoli = OrdineDettaglio.find("select pc.intestazione, a.articolo , a.descrArticolo, a.descrArtSuppl, a.unitaMisura, a.prezzoBase, a.costoBase, " +
                             "fa.fornitoreArticoloId.gruppo as gruppoConto, fa.fornitoreArticoloId.conto as sottoConto,pc.codPagamento, pc.banca, o.progrGenerale, o.rigo, o.quantita, o.fColli " +
                             " from OrdineDettaglio o " +
-                            " inner join Articolo a ON a.articolo = o.fArticolo and a.descrArticolo = o.fDescrArticolo " +
+                            " inner join Articolo a ON a.articolo = o.fArticolo " +
                             "          inner join FornitoreArticolo fa ON  o.fArticolo = fa.fornitoreArticoloId.articolo " +
                             "          inner JOIN PianoConti pc ON fa.fornitoreArticoloId.gruppo = pc.gruppoConto and fa.fornitoreArticoloId.conto = pc.sottoConto " +
                             "          where o.progressivo = :progressivo and o.anno = :anno and o.serie = :serie and o.geFlagNonDisponibile = 'T' " +
@@ -74,7 +74,7 @@ public class OrdineFornitoreService {
                 }
                 articoloDtoList.forEach(a -> {
                     String nota = "Riferimento n. " + anno + "/" + serie + "/" + progressivo + "-" + a.getRigo();
-                    if(OrdineFornitoreDettaglio.count("nota = :nota", Parameters.with("nota", nota)) == 0){
+                   // if(OrdineFornitoreDettaglio.count("nota LIKE :nota", Parameters.with("nota", nota)) == 0){
                         OrdineFornitoreDettaglio fornitoreDettaglio = new OrdineFornitoreDettaglio();
                         fornitoreDettaglio.setProgressivo(prog);
                         fornitoreDettaglio.setProgrGenerale(progressivoFornDettaglio + articoloDtoList.indexOf(a) + 1);
@@ -94,7 +94,7 @@ public class OrdineFornitoreService {
                         OrdineDettaglio.update("geFlagNonDisponibile = 'F', geFlagOrdinato = 'T' where anno = :anno " +
                                 "and serie = :serie and progressivo = :progressivo and rigo = :rigo", Parameters.with("anno", anno)
                                 .and("serie", serie).and("progressivo", progressivo).and("rigo", a.getRigo()));
-                    }
+                  //  }
                 });
                 long count = OrdineDettaglio.count("geFlagNonDisponibile = 'T' and anno = :anno " +
                         " and serie = :serie and progressivo = :progressivo ", Parameters.with("anno", anno)
