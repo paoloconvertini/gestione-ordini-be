@@ -1,27 +1,23 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.ArticoloDto;
-import it.calolenoci.dto.OrdineDTO;
-import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.entity.OrdineFornitore;
 import it.calolenoci.entity.OrdineFornitoreDettaglio;
-import it.calolenoci.enums.StatoOrdineEnum;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jfree.util.Log;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.time.Year;
-import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -43,7 +39,6 @@ public class OrdineFornitoreService {
                             "           group by pc.intestazione, a.articolo , a.descrArticolo, a.descrArtSuppl, a.unitaMisura, a.prezzoBase, a.costoBase, " +
                             "                    fa.fornitoreArticoloId.gruppo, fa.fornitoreArticoloId.conto,pc.codPagamento, pc.banca, o.progrGenerale, o.rigo, o.quantita, o.fColli",
                     Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).project(ArticoloDto.class).stream().collect(Collectors.groupingBy(ArticoloDto::getIntestazione));
-
             if (mapArticoli.isEmpty()) {
                 return fornitori;
             }
@@ -53,6 +48,7 @@ public class OrdineFornitoreService {
             Integer progressivoFornDettaglio = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM OrdineFornitoreDettaglio o").project(Integer.class).firstResult();
             for (String sottoConto : mapArticoli.keySet()) {
                 List<ArticoloDto> articoloDtoList = mapArticoli.get(sottoConto);
+                Log.debug("Trovati " + articoloDtoList.size() + " articoli per il fornitore " + sottoConto);
                 int prog = progressivoForn + index;
                 if (!articoloDtoList.isEmpty()) {
                     ArticoloDto articoloDto = articoloDtoList.get(0);
@@ -74,8 +70,9 @@ public class OrdineFornitoreService {
                 }
                 articoloDtoList.forEach(a -> {
                     String nota = "Riferimento n. " + anno + "/" + serie + "/" + progressivo + "-" + a.getRigo();
-                   // if(OrdineFornitoreDettaglio.count("nota LIKE :nota", Parameters.with("nota", nota)) == 0){
-                        OrdineFornitoreDettaglio fornitoreDettaglio = new OrdineFornitoreDettaglio();
+                   if(OrdineFornitoreDettaglio.count("nota LIKE :nota", Parameters.with("nota", nota)) == 0){
+                       Log.debug("Creo ordine per articolo: " + a.getArticolo() + " - " + a.getDescrArticolo());
+                       OrdineFornitoreDettaglio fornitoreDettaglio = new OrdineFornitoreDettaglio();
                         fornitoreDettaglio.setProgressivo(prog);
                         fornitoreDettaglio.setProgrGenerale(progressivoFornDettaglio + articoloDtoList.indexOf(a) + 1);
                         fornitoreDettaglio.setAnno(Year.now().getValue());
@@ -94,17 +91,17 @@ public class OrdineFornitoreService {
                         OrdineDettaglio.update("geFlagNonDisponibile = 'F', geFlagOrdinato = 'T' where anno = :anno " +
                                 "and serie = :serie and progressivo = :progressivo and rigo = :rigo", Parameters.with("anno", anno)
                                 .and("serie", serie).and("progressivo", progressivo).and("rigo", a.getRigo()));
-                  //  }
+                  }
                 });
-                long count = OrdineDettaglio.count("geFlagNonDisponibile = 'T' and anno = :anno " +
-                        " and serie = :serie and progressivo = :progressivo ", Parameters.with("anno", anno)
-                        .and("serie", serie).and("progressivo", progressivo));
-                if (count == articoloDtoList.size()) {
-                    Ordine.update("geStatus = 'INCOMPLETO' where anno = :anno " +
-                            " and serie = :serie and progressivo = :progressivo", Parameters.with("anno", anno)
-                            .and("serie", serie).and("progressivo", progressivo));
-                }
                 index++;
+            }
+            long count = OrdineDettaglio.count("geFlagNonDisponibile = 'T' and anno = :anno " +
+                    " and serie = :serie and progressivo = :progressivo ", Parameters.with("anno", anno)
+                    .and("serie", serie).and("progressivo", progressivo));
+            if(count == 0) {
+                Ordine.update("geStatus = 'INCOMPLETO' where anno = :anno " +
+                        " and serie = :serie and progressivo = :progressivo", Parameters.with("anno", anno)
+                        .and("serie", serie).and("progressivo", progressivo));
             }
             OrdineFornitoreDettaglio.persist(ordineFornitoreDettaglios);
             OrdineFornitore.persist(fornitoreList);
