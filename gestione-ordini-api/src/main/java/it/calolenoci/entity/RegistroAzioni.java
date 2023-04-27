@@ -46,7 +46,7 @@ public class RegistroAzioni extends PanacheEntityBase {
     private String azione;
 
     @Column(name = "quantita")
-    private Float quantita;
+    private Double quantita;
 
     @Column(length = 20, name= "tono")
     private String tono;

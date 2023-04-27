@@ -22,13 +22,13 @@ public class OrdineFornitoreDettaglioDto implements Serializable {
     private String nota;
     private String oArticolo;
     private String oDescrArticolo;
-    private Float oQuantita;
+    private Double oQuantita;
     private Float oPrezzo;
     private String oUnitaMisura;
     private Integer oColli;
     private String oCodiceIva;
 
-    public OrdineFornitoreDettaglioDto(Integer anno, String serie, Integer progressivo, Integer rigo, String nota, String oArticolo, String oDescrArticolo, Float oQuantita, Float oPrezzo, String oUnitaMisura) {
+    public OrdineFornitoreDettaglioDto(Integer anno, String serie, Integer progressivo, Integer rigo, String nota, String oArticolo, String oDescrArticolo, Double oQuantita, Float oPrezzo, String oUnitaMisura) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;

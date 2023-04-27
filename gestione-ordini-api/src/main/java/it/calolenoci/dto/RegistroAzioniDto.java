@@ -24,6 +24,6 @@ public class RegistroAzioniDto implements Serializable {
     private String username;
     private Date createDate;
     private String azione;
-    private Float quantita;
+    private Double quantita;
     private String tono;
 }

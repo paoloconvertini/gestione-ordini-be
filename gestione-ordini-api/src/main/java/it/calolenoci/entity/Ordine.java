@@ -6,6 +6,7 @@ import io.quarkus.panache.common.Sort;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -72,8 +73,19 @@ public class Ordine extends PanacheEntityBase {
     @Column(length = 30, name = "GE_STATUS")
     private String geStatus;
 
-    public static List<Ordine> findOrdiniByStatus() {
-        return list("geStatus in ('COMPLETO', 'INCOMPLETO')");
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Column(length = 1, name = "GE_WARN_NO_BOLLA", columnDefinition = "CHAR(1)")
+    private Boolean geWarnNoBolla;
+
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Column(length = 1, name = "GE_LOCKED", columnDefinition = "CHAR(1)")
+    private Boolean geLocked;
+
+    @Column(length = 100, name= "GE_USER_LOCK")
+    private String geUserLock;
+
+    public static List<Ordine> findOrdiniByStatus(List<String> param) {
+        return list("geStatus in (:param)", Parameters.with("param", param));
     }
 
     public static Ordine findByOrdineId(Integer anno, String serie,  Integer progressivo) {

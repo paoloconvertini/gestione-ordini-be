@@ -13,6 +13,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import javax.transaction.Transactional;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -36,8 +37,9 @@ public class OrdineService {
             checkConsegnati();
         }
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
-                "p.intestazione,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
-                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus " +
+                "p.intestazione,  p.sottoConto, p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
+                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, " +
+                "o.geLocked as locked, o.geUserLock as userLock " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
         if(StringUtils.isBlank(status)) {
@@ -60,8 +62,9 @@ public class OrdineService {
             checkConsegnati();
         }
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
-                "p.intestazione,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
-                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus " +
+                "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
+                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, " +
+                "o.geLocked as locked, o.geUserLock as userLock " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
         if(StringUtils.isBlank(status)) {
@@ -77,7 +80,10 @@ public class OrdineService {
 
     @Transactional
     public void checkStatusDettaglio() {
-        List<Ordine> ordineList = Ordine.findOrdiniByStatus();
+        List<String> list = new ArrayList<>();
+        list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+        list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+        List<Ordine> ordineList = Ordine.findOrdiniByStatus(list);
         ordineList.forEach(o-> {
             if(articoloService.findAnyNoStatus(o.getAnno(), o.getSerie(), o.getProgressivo())) {
                 o.setGeStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
@@ -89,7 +95,10 @@ public class OrdineService {
 
     @Transactional
     public void checkConsegnati() {
-        List<Ordine> ordineList = Ordine.findOrdiniByStatus();
+        List<String> list = new ArrayList<>();
+        list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+        list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+        List<Ordine> ordineList = Ordine.findOrdiniByStatus(list);
         ordineList.forEach(o-> {
             if(articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo())) {
                 o.setGeStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
@@ -100,8 +109,8 @@ public class OrdineService {
 
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
         return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
-                "p.intestazione,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
-                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus " +
+                "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
+                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, o.geLocked as locked, o.geUserLock as userLock " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo",

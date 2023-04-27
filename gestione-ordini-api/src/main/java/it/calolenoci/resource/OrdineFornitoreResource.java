@@ -57,7 +57,7 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     public Response getAllOrdini(@QueryParam("status") String status) {

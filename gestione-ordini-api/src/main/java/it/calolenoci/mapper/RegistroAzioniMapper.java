@@ -10,7 +10,7 @@ import java.util.Date;
 @ApplicationScoped
 public class RegistroAzioniMapper {
 
-    public RegistroAzioni fromDtoToEntity(Integer anno, String serie, Integer progressivo, String username, String azione, Integer rigo, String tono, Float quantita) {
+    public RegistroAzioni fromDtoToEntity(Integer anno, String serie, Integer progressivo, String username, String azione, Integer rigo, String tono, Double quantita) {
         RegistroAzioni r = new RegistroAzioni();
         r.setAnno(anno);
         r.setProgressivo(progressivo);

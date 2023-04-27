@@ -26,7 +26,7 @@ public class RegistroEventoResource {
 
     @GET
     @Path("/{anno}/{serie}/{progressivo}/{rigo}")
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     public Response getEventoById(Integer anno, String serie, Integer progressivo, Integer rigo) {
         return Response.ok(service.getByAnnoSerieProgressivoRigo(anno, serie, progressivo, rigo)).build();
     }

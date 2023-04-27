@@ -21,4 +21,18 @@ import java.util.Date;
 @RegisterForReflection
 public class FatturaDto implements Serializable {
     private Integer progrOrdCli;
+    private Double qta;
+    private String numeroBolla;
+    private Date dataBolla;
+
+    public FatturaDto(Integer progrOrdCli, Double qta) {
+        this.progrOrdCli = progrOrdCli;
+        this.qta = qta;
+    }
+
+    public FatturaDto(String numeroBolla, Date dataBolla, Double qta) {
+        this.numeroBolla = numeroBolla;
+        this.dataBolla = dataBolla;
+        this.qta = qta;
+    }
 }

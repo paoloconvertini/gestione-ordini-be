@@ -1,10 +1,13 @@
 package it.calolenoci.resource;
 
+import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.PianoContiDto;
 import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
+import it.calolenoci.service.FatturaService;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -16,6 +19,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -33,27 +37,56 @@ public class ArticoloResource {
     ArticoloService articoloService;
 
     @Inject
+    FatturaService fatturaService;
+
+    @Inject
     @Claim(standard = Claims.upn)
     String user;
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/{anno}/{serie}/{progressivo}")
+    @Transactional
     public Response getArticoliByIdOrdine(Integer anno, String serie, Integer progressivo) {
+        Ordine.update("geLocked = 'T', geUserLock = :user where " +
+                "anno =:anno and serie =:serie and progressivo = :progressivo",
+                Parameters.with("user", user).and("anno", anno).and("serie", serie)
+                        .and("progressivo", progressivo));
         return Response.ok(articoloService.findById(anno, serie, progressivo, false)).build();
     }
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Path("/vedi/{anno}/{serie}/{progressivo}")
+    @Transactional
+    public Response vediAndgetArticoliByIdOrdine(Integer anno, String serie, Integer progressivo) {
+        return Response.ok(articoloService.findById(anno, serie, progressivo, false)).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @GET
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/{anno}/{serie}/{progressivo}/{filtro}")
     public Response getArticoliByIdOrdine(Integer anno, String serie, Integer progressivo, Boolean filtro) {
         return Response.ok(articoloService.findById(anno, serie, progressivo, filtro)).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @GET
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Path("/getBolle/{progrCliente}")
+    public Response getBolle(Integer progrCliente) {
+        return Response.ok(fatturaService.getBolle(progrCliente)).build();
     }
 
     @Operation(summary = "Save dettaglio ordine")

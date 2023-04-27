@@ -31,11 +31,11 @@ public class ArticoloDto implements Serializable {
     private Integer rigo;
 
     private Integer progrGeneraleFornitore;
-    private Float quantita;
+    private Double quantita;
 
     private Integer colli;
 
-    public ArticoloDto(String intestazione, String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura, Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento, String banca, Integer progrGenerale, Integer rigo, Float quantita, Integer colli) {
+    public ArticoloDto(String intestazione, String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura, Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento, String banca, Integer progrGenerale, Integer rigo, Double quantita, Integer colli) {
         this.intestazione = intestazione;
         this.articolo = articolo;
         this.descrArticolo = descrArticolo;

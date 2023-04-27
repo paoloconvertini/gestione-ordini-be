@@ -62,7 +62,13 @@ public class OrdineDettaglio extends PanacheEntityBase {
     private Date dataRichConsegna;
 
     @Column
-    private Float quantita;
+    private Double quantita;
+
+    @Column(name = "QUANTITA_DA_CONSEGNARE")
+    private Double qtaDaConsegnare;
+
+    @Column(name = "QTA_CONS_NO_BOLLA")
+    private Double qtaConsegnatoSenzaBolla;
 
     @Column
     private Float quantitaV;
@@ -116,6 +122,10 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 50, name = "GE_STATUS")
     private String geStatus;
 
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Column(length = 1, name = "HAS_BOLLA", columnDefinition = "CHAR(1)")
+    private Boolean flBolla;
+
     public static void updateStatus(Integer anno, String serie, Integer progressivo, String stato){
         update("geStatus = :stato where anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("stato", stato).and("anno", anno).and("serie", serie)
@@ -128,49 +138,23 @@ public class OrdineDettaglio extends PanacheEntityBase {
                 .and("progressivo", progressivo).and("rigo", rigo)).firstResult();
     }
 
-    public static List<OrdineDettaglioDto> findOnlyArticoliById(Integer anno, String serie, Integer progressivo, Boolean filtro){
-        String query = "SELECT o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
+    public static List<OrdineDettaglioDto> findArticoliById(Integer anno, String serie, Integer progressivo, Boolean filtro){
+        String query = "SELECT o.anno,  o.progressivo, o.progrGenerale,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo,  o.fUnitaMisura,  " +
-                "o.scontoArticolo,  o.scontoC1,  o.scontoC2,  o.scontoP,  o.fCodiceIva,  o.fColli, " +
-                "o.geFlagRiservato, o.geFlagNonDisponibile, o.geFlagOrdinato, o.geFlagConsegnato,  o.geTono, a.fornitoreArticoloId.articolo " +
+                "o.geFlagRiservato, o.geFlagNonDisponibile, o.geFlagOrdinato, o.geFlagConsegnato,  o.geTono, a.fornitoreArticoloId.articolo, " +
+                "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF,  " +
+                "o.qtaConsegnatoSenzaBolla, (CASE WHEN o.qtaDaConsegnare IS NULL THEN o.quantita ELSE o.qtaDaConsegnare END) as qtaDaConsegnare, o.flBolla " +
                 "FROM OrdineDettaglio o " +
+                "LEFT JOIN OrdineFornitoreDettaglio f2 ON " +
+                "f2.nota like CONCAT('Riferimento n. ', trim(str(o.anno)), '/', o.serie, '/', trim(str(o.progressivo)), '-', trim(str(o.rigo))) " +
                 "LEFT JOIN FornitoreArticolo a ON a.fornitoreArticoloId.articolo = o.fArticolo " +
+                "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo";
         if(filtro) {
             query += " AND o.geFlagNonDisponibile = 'T'";
         }
-        return find(query, Sort.ascending("rigo"), Parameters.with("anno", anno).and("serie", serie)
+        return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
                         .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
-
-    }
-
-    public static List<OrdineDettaglioDto> findArticoliOrdinatiById(Integer anno, String serie, Integer progressivo){
-        String query = "SELECT  o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
-                "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo,  o.fUnitaMisura,  " +
-                "o.scontoArticolo,  o.scontoC1,  o.scontoC2,  o.scontoP,  o.fCodiceIva,  o.fColli, " +
-                "o.geFlagRiservato,  o.geFlagNonDisponibile,  o.geFlagOrdinato,  o.geFlagConsegnato,  o.geTono, " +
-                "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF  " +
-                "FROM OrdineDettaglio o LEFT JOIN OrdineFornitoreDettaglio f2 ON " +
-                "f2.nota like CONCAT('Riferimento n. ', trim(str(o.anno)), '/', o.serie, '/', trim(str(o.progressivo)), '-', trim(str(o.rigo))) " +
-                "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
-                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ";
-
-        return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
-                .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
-
-    }
-
-    public static List<OrdineDettaglioDto> findArticoliConsegnatiById(Integer anno, String serie, Integer progressivo){
-        String query = "SELECT  o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
-                "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo,  o.fUnitaMisura,  " +
-                "o.scontoArticolo,  o.scontoC1,  o.scontoC2,  o.scontoP,  o.fCodiceIva,  o.fColli, " +
-                "o.geFlagRiservato,  o.geFlagNonDisponibile,  o.geFlagOrdinato,  o.geFlagConsegnato,  o.geTono, " +
-                "f.numeroBolla, f.dataBolla " +
-                "FROM OrdineDettaglio o LEFT JOIN FattureDettaglio f2 ON o.progrGenerale = f2.progrOrdCli " +
-                "LEFT JOIN Fatture f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
-                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ";
-        return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
-                .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
 
     }
 

@@ -23,7 +23,7 @@ public class OrdineReportDto implements Serializable {
 	private String FARTICOLO;
 	private String CODARTFORNITORE;
 	private String FDESCRARTICOLO;
-	private Float QUANTITA;
+	private Double QUANTITA;
 	private Float PREZZO;
 	private String FUNITAMISURA;
 	private Float SCONTOARTICOLO;
@@ -47,5 +47,5 @@ public class OrdineReportDto implements Serializable {
 	private String NUMEROCONFERMA;
 	private Date DATAORDINE;
 	private Date DATACONFERMA;
-	private Float valoreTotale;
+	private Double valoreTotale;
 }

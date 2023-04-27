@@ -2,9 +2,7 @@ package it.calolenoci.service;
 
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
-import it.calolenoci.dto.OrdineDTO;
-import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.dto.PianoContiDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
@@ -20,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 @ApplicationScoped
 public class ArticoloService {
@@ -40,17 +39,17 @@ public class ArticoloService {
     @ConfigProperty(name = "ordini.path")
     String pathReport;
 
-    public List<OrdineDettaglioDto> findById(Integer anno, String serie, Integer progressivo, Boolean filtro) {
+    public ResponseOrdineDettaglio findById(Integer anno, String serie, Integer progressivo, Boolean filtro) {
+        ResponseOrdineDettaglio response = new ResponseOrdineDettaglio();
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
-        if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(ordineDTO.getStatus())) {
-            list = OrdineDettaglio.findArticoliOrdinatiById(anno, serie, progressivo);
-        } else if (StatoOrdineEnum.COMPLETO.getDescrizione().equals(ordineDTO.getStatus())) {
-            list = OrdineDettaglio.findArticoliConsegnatiById(anno, serie, progressivo);
-        } else {
-            list = OrdineDettaglio.findOnlyArticoliById(anno, serie, progressivo, filtro);
-        }
-        return list;
+        list = OrdineDettaglio.findArticoliById(anno, serie, progressivo, filtro);
+        response.setIntestazione(ordineDTO.getIntestazione());
+        response.setSottoConto(ordineDTO.getSottoConto());
+        response.setLocked(ordineDTO.getLocked());
+        response.setUserLock(ordineDTO.getUserLock());
+        response.setArticoli(list);
+        return response;
     }
 
     public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
@@ -60,9 +59,14 @@ public class ArticoloService {
     }
 
     @Transactional
-    public Integer updateFlagConsegnato(List<Integer> param) {
-        return OrdineDettaglio.update("geFlagConsegnato = 'T' where geFlagConsegnato = 'F' AND progrGenerale IN (:param)",
-                Parameters.with("param", param));
+    public Integer updateArticoliBolle(List<FatturaDto> list) {
+        AtomicReference<Integer> aggiornati = new AtomicReference<>(0);
+        list.forEach(e -> {
+            aggiornati.updateAndGet(v -> v + OrdineDettaglio.update("geFlagConsegnato = CASE WHEN (quantita - :qta) = 0 THEN 'T' ELSE 'F' END, qtaDaConsegnare = (quantita - :qta), " +
+                    "flBolla = 'T' WHERE progrGenerale = :progrGenerale and geFlagConsegnato <> 'T'", Parameters.with("qta", e.getQta())
+                    .and("progrGenerale", e.getProgrOrdCli())));
+        });
+        return aggiornati.get();
     }
 
     public boolean findNoConsegnati(Integer anno, String serie, Integer progressivo) {
@@ -124,6 +128,10 @@ public class ArticoloService {
         RegistroAzioni.persist(registroAzioniList);
         if (chiudi) {
             OrdineDettaglio ordineDettaglio = ordineDettaglioList.get(0);
+            Ordine.update("geLocked = 'F', geUserLock = null where anno =:anno and serie =:serie and progressivo = :progressivo",
+                    Parameters.with("anno", ordineDettaglio.getAnno())
+                            .and("serie", ordineDettaglio.getSerie())
+                            .and("progressivo", ordineDettaglio.getProgressivo()));
             String stato = chiudi(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo());
             OrdineDettaglio.updateStatus(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo(), stato);
             return stato;
@@ -134,9 +142,9 @@ public class ArticoloService {
     private String chiudi(Integer anno, String serie, Integer progressivo) {
         Ordine ordine = Ordine.findByOrdineId(anno, serie, progressivo);
         final String result = ordine.getGeStatus();
-        List<OrdineDettaglioDto> ordineDettaglioDtoList = findById(anno, serie, progressivo, true);
+        ResponseOrdineDettaglio responseOrdineDettaglio = findById(anno, serie, progressivo, true);
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
-            if (ordineDettaglioDtoList.isEmpty()) {
+            if (responseOrdineDettaglio.getArticoli().isEmpty()) {
                 sendMail(anno, serie, progressivo);
                 ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
             } else {

@@ -1,15 +1,13 @@
 package it.calolenoci.resource;
 
+import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.Ordine;
-import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.*;
 import net.sf.jasperreports.engine.JRException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.jwt.Claim;
-import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -17,13 +15,12 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.jfree.util.Log;
 
-import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
@@ -87,8 +84,8 @@ public class OrdineResource {
 
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
         if (ordineDTO != null) {
-            List<OrdineDettaglioDto> articoli = articoloService.findById(anno, serie, progressivo, false);
-            List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, articoli, name);
+            ResponseOrdineDettaglio responseOrdineDettaglio = articoloService.findById(anno, serie, progressivo, false);
+            List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, responseOrdineDettaglio.getArticoli(), name);
             if (!dtoList.isEmpty()) {
                 try {
                     service.createReport(dtoList);
@@ -106,7 +103,7 @@ public class OrdineResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
@@ -117,7 +114,7 @@ public class OrdineResource {
     @Operation(summary = "Returns all the ordini from the database")
     @GET
     @Path("/{venditore}")
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
@@ -125,8 +122,21 @@ public class OrdineResource {
         return Response.ok(ordineService.findAllByStatus(status, venditore)).build();
     }
 
+    @Consumes(APPLICATION_JSON)
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @Path("/unlock/{anno}/{serie}/{progressivo}")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO})
+    @Transactional
+    public Response unlock(Integer anno, String serie, Integer progressivo) {
+        Ordine.update("geLocked = 'F', geUserLock = null where anno =:anno and serie =:serie and progressivo = :progressivo",
+                Parameters.with("anno", anno)
+                        .and("serie", serie)
+                        .and("progressivo", progressivo));
+        return Response.status(Response.Status.OK).entity(new ResponseDto("ordine sbloccato", false)).build();
+    }
+
+    @GET
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @Path("/updateConsegne")
     public Response updateConsegne(@QueryParam("status") String status) throws ParseException {
         scheduler.update();

@@ -95,14 +95,14 @@ public class OrdineFornitoreService {
                 }
                 index++;
             }
-            long count = OrdineDettaglio.count("geFlagNonDisponibile = 'T' and anno = :anno " +
+      /*      long count = OrdineDettaglio.count("geFlagNonDisponibile = 'T' and anno = :anno " +
                     " and serie = :serie and progressivo = :progressivo ", Parameters.with("anno", anno)
                     .and("serie", serie).and("progressivo", progressivo));
             if (count == 0) {
                 Ordine.update("geStatus = 'INCOMPLETO' where anno = :anno " +
                         " and serie = :serie and progressivo = :progressivo", Parameters.with("anno", anno)
                         .and("serie", serie).and("progressivo", progressivo));
-            }
+            }*/
             OrdineFornitoreDettaglio.persist(ordineFornitoreDettaglios);
             OrdineFornitore.persist(fornitoreList);
         } catch (Exception e) {

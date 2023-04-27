@@ -20,7 +20,7 @@ public class OrdineClienteReportMapper {
             if (dto.getQUANTITA() != null && dto.getPREZZO() != null) {
                 dto.setValoreTotale(calcolaValoreTotale(a));
             } else {
-                dto.setValoreTotale(0F);
+                dto.setValoreTotale(0D);
             }
             if(a.getScontoArticolo() != null && a.getScontoArticolo() != 0) {
                 dto.setSCONTOARTICOLO(a.getScontoArticolo());
@@ -57,8 +57,8 @@ public class OrdineClienteReportMapper {
         return dto;
     }
 
-    private Float calcolaValoreTotale(OrdineDettaglioDto dto) {
-        Float valoreTotale;
+    private Double calcolaValoreTotale(OrdineDettaglioDto dto) {
+        Double valoreTotale;
         valoreTotale = dto.getQuantita() * dto.getPrezzo();
         if (dto.getScontoArticolo() != null && dto.getScontoArticolo() != 0) {
             valoreTotale -= (valoreTotale * dto.getScontoArticolo() / 100);

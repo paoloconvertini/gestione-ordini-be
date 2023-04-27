@@ -16,5 +16,9 @@ public class ArticoloMapper {
         o.setGeFlagOrdinato(dto.getGeFlagOrdinato());
         o.setGeFlagRiservato(dto.getGeFlagRiservato());
         o.setGeFlagConsegnato(dto.getGeFlagConsegnato());
+        o.setQtaDaConsegnare(dto.getQtaDaConsegnare());
+        if(dto.getQtaConsegnatoSenzaBolla() != null) {
+            o.setQtaConsegnatoSenzaBolla(dto.getQtaConsegnatoSenzaBolla());
+        }
     }
 }

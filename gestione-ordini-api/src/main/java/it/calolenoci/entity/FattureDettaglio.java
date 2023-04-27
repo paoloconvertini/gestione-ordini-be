@@ -42,4 +42,7 @@ public class FattureDettaglio extends PanacheEntityBase {
     @Column(length = 50)
     private String fDescrArticolo;
 
+    @Column
+    private Double quantita;
+
 }
