@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 @ApplicationScoped
@@ -44,6 +45,13 @@ public class ArticoloService {
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
         list = OrdineDettaglio.findArticoliById(anno, serie, progressivo, filtro);
+        AtomicReference<Double> totale = new AtomicReference<>(0D);
+        list.forEach(e -> {
+            if(e.getPrezzo() != null && e.getQuantita() != null){
+                totale.updateAndGet(v -> v + e.getPrezzo() * e.getQuantita());
+            }
+        });
+        response.setTotale(totale.get());
         response.setIntestazione(ordineDTO.getIntestazione());
         response.setSottoConto(ordineDTO.getSottoConto());
         response.setLocked(ordineDTO.getLocked());
@@ -89,6 +97,7 @@ public class ArticoloService {
     public String save(List<OrdineDettaglioDto> list, String user, Boolean chiudi) {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
+        AtomicBoolean warnNoBolla = new AtomicBoolean(false);
         list.forEach(dto -> {
             OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
             if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
@@ -121,13 +130,20 @@ public class ArticoloService {
                         dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDesczrizione()
                         , dto.getRigo(), null, null));
             }
+            if(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0)
+            warnNoBolla.set(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0);
             mapper.fromDtoToEntity(ordineDettaglio, dto);
             ordineDettaglioList.add(ordineDettaglio);
         });
+        OrdineDettaglio ordineDettaglio = ordineDettaglioList.get(0);
+        Ordine.update("geWarnNoBolla =:warn where anno =:anno and serie =:serie and progressivo = :progressivo",
+                Parameters.with("anno", ordineDettaglio.getAnno())
+                        .and("serie", ordineDettaglio.getSerie())
+                        .and("progressivo", ordineDettaglio.getProgressivo())
+                        .and("warn", warnNoBolla.get()));
         OrdineDettaglio.persist(ordineDettaglioList);
         RegistroAzioni.persist(registroAzioniList);
         if (chiudi) {
-            OrdineDettaglio ordineDettaglio = ordineDettaglioList.get(0);
             Ordine.update("geLocked = 'F', geUserLock = null where anno =:anno and serie =:serie and progressivo = :progressivo",
                     Parameters.with("anno", ordineDettaglio.getAnno())
                             .and("serie", ordineDettaglio.getSerie())

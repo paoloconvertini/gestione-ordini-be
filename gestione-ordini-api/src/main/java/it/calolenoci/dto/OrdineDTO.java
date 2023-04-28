@@ -45,10 +45,12 @@ public class OrdineDTO implements Serializable {
 
     private String userLock;
 
+
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma,
                      String intestazione, String sottoConto, String continuaIntest, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
-                     String telefono, String cellulare, String email, String pec, String status, Boolean locked, String userLock) {
+                     String telefono, String cellulare, String email, String pec, String status,
+                     Boolean locked, String userLock, Boolean warnNoBolla) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
@@ -70,6 +72,7 @@ public class OrdineDTO implements Serializable {
         this.status = status;
         this.locked = locked;
         this.userLock = userLock;
+        this.warnNoBolla = warnNoBolla;
     }
 
 

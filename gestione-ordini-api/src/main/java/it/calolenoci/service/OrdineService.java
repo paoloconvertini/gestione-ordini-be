@@ -39,7 +39,7 @@ public class OrdineService {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
                 "p.intestazione,  p.sottoConto, p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, " +
-                "o.geLocked as locked, o.geUserLock as userLock " +
+                "o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
         if(StringUtils.isBlank(status)) {
@@ -64,7 +64,7 @@ public class OrdineService {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, " +
-                "o.geLocked as locked, o.geUserLock as userLock " +
+                "o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
         if(StringUtils.isBlank(status)) {
@@ -110,7 +110,7 @@ public class OrdineService {
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
         return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
-                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, o.geLocked as locked, o.geUserLock as userLock " +
+                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo",

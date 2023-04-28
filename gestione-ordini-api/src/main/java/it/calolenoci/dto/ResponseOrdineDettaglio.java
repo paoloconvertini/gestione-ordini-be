@@ -16,6 +16,7 @@ public class ResponseOrdineDettaglio {
     private String sottoConto;
     private String userLock;
     private Boolean locked;
+    private Double totale;
     private List<OrdineDettaglioDto> articoli;
 
 }
