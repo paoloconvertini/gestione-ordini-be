@@ -27,11 +27,17 @@ public class OrdineDettaglioDto implements Serializable {
     private  Double quantita;
     private  Float prezzo;
     private  String fUnitaMisura;
+
     private Float scontoArticolo;
+
     private Float scontoC1;
+
     private Float scontoC2;
+
     private Float scontoP;
+
     private String fCodiceIva;
+
     private Integer fColli;
     private  Boolean geFlagRiservato;
     private  Boolean geFlagNonDisponibile;
@@ -44,7 +50,9 @@ public class OrdineDettaglioDto implements Serializable {
     private String serieOAF;
 
     private Integer progressivoOAF;
+
     private String numeroBolla;
+
     private Date dataBolla;
 
     private Date dataOrdineOAF;

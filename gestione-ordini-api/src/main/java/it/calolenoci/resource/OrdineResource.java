@@ -84,7 +84,7 @@ public class OrdineResource {
 
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
         if (ordineDTO != null) {
-            ResponseOrdineDettaglio responseOrdineDettaglio = articoloService.findById(anno, serie, progressivo, false);
+            ResponseOrdineDettaglio responseOrdineDettaglio = articoloService.findById(new FiltroArticoli(anno, serie, progressivo));
             List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, responseOrdineDettaglio.getArticoli(), name);
             if (!dtoList.isEmpty()) {
                 try {
@@ -108,7 +108,7 @@ public class OrdineResource {
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
     public Response getAllOrdini(@QueryParam("status") String status) throws ParseException {
-        return Response.ok(ordineService.findAllByStatus(status)).build();
+        return Response.ok(ordineService.findAllByStatus(status, null)).build();
     }
 
     @Operation(summary = "Returns all the ordini from the database")
@@ -140,7 +140,7 @@ public class OrdineResource {
     @Path("/updateConsegne")
     public Response updateConsegne(@QueryParam("status") String status) throws ParseException {
         scheduler.update();
-        return Response.ok(ordineService.findAllByStatus(status)).build();
+        return Response.ok(ordineService.findAllByStatus(status, null)).build();
     }
 
     @GET

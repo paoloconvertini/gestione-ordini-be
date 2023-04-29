@@ -1,6 +1,7 @@
 package it.calolenoci.resource;
 
 import io.quarkus.panache.common.Parameters;
+import it.calolenoci.dto.FiltroArticoli;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.PianoContiDto;
 import it.calolenoci.dto.ResponseDto;
@@ -44,39 +45,20 @@ public class ArticoloResource {
     String user;
 
     @Operation(summary = "Returns all the articoli from the database")
-    @GET
+    @POST
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
-    @Path("/{anno}/{serie}/{progressivo}")
     @Transactional
-    public Response getArticoliByIdOrdine(Integer anno, String serie, Integer progressivo) {
-        Ordine.update("geLocked = 'T', geUserLock = :user where " +
-                "anno =:anno and serie =:serie and progressivo = :progressivo",
-                Parameters.with("user", user).and("anno", anno).and("serie", serie)
-                        .and("progressivo", progressivo));
-        return Response.ok(articoloService.findById(anno, serie, progressivo, false)).build();
-    }
-
-    @Operation(summary = "Returns all the articoli from the database")
-    @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
-    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
-    @APIResponse(responseCode = "204", description = "No Articoli")
-    @Path("/vedi/{anno}/{serie}/{progressivo}")
-    @Transactional
-    public Response vediAndgetArticoliByIdOrdine(Integer anno, String serie, Integer progressivo) {
-        return Response.ok(articoloService.findById(anno, serie, progressivo, false)).build();
-    }
-
-    @Operation(summary = "Returns all the articoli from the database")
-    @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
-    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
-    @APIResponse(responseCode = "204", description = "No Articoli")
-    @Path("/{anno}/{serie}/{progressivo}/{filtro}")
-    public Response getArticoliByIdOrdine(Integer anno, String serie, Integer progressivo, Boolean filtro) {
-        return Response.ok(articoloService.findById(anno, serie, progressivo, filtro)).build();
+    public Response getArticoliByIdOrdine(FiltroArticoli filtro) {
+        if(!filtro.getView()){
+            Ordine.update("geLocked = 'T', geUserLock = :user where " +
+                            "anno =:anno and serie =:serie and progressivo = :progressivo",
+                    Parameters.with("user", user).and("anno", filtro.getAnno())
+                            .and("serie", filtro.getSerie())
+                            .and("progressivo", filtro.getProgressivo()));
+        }
+        return Response.ok(articoloService.findById(filtro)).build();
     }
 
     @Operation(summary = "Returns all the articoli from the database")

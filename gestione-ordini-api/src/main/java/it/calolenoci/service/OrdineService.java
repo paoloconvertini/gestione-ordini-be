@@ -9,13 +9,13 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import javax.transaction.Transactional;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @ApplicationScoped
 public class OrdineService {
@@ -28,38 +28,15 @@ public class OrdineService {
     @Inject
     ArticoloService articoloService;
 
-    public List<OrdineDTO> findAllByStatus(String status) throws ParseException {
-        if(!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(status) &&
-                !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
-            checkStatusDettaglio();
-        }
-        if(StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
-            checkConsegnati();
-        }
-        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
-                "p.intestazione,  p.sottoConto, p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
-                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, " +
-                "o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla " +
-                "FROM Ordine o " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
-        if(StringUtils.isBlank(status)) {
-            query += "WHERE o.geStatus is null and o.dataOrdine >= :dataCongig  and o.provvisorio <> 'S' ";
-            return Ordine.find(query, Sort.descending("dataOrdine"), Parameters.with("dataCongig", sdf.parse(dataCongig)))
-                    .project(OrdineDTO.class).list();
-        } else {
-            query += "WHERE o.geStatus = :status";
-            return Ordine.find(query, Sort.descending("dataOrdine"), Parameters.with("status", status))
-                    .project(OrdineDTO.class).list();
-        }
-    }
-
     public List<OrdineDTO> findAllByStatus(String status, String venditore) throws ParseException {
-        if(!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(status) &&
-                !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
-            checkStatusDettaglio();
-        }
-        if(StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
-            checkConsegnati();
+        if (StringUtils.isNotBlank(status)){
+            if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(status) &&
+                    !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
+                checkStatusDettaglio();
+            }
+            if (!StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
+                checkConsegnati();
+            }
         }
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
@@ -67,15 +44,19 @@ public class OrdineService {
                 "o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
-        if(StringUtils.isBlank(status)) {
-            query += "WHERE o.geStatus is null and o.dataOrdine >= :dataConfig and o.provvisorio <> 'S' and o.serie = :venditore" ;
-            return Ordine.find(query, Sort.descending("dataOrdine"), Parameters.with("dataConfig", sdf.parse(dataCongig))
-                            .and("venditore", venditore)).project(OrdineDTO.class).list();
+        Map<String, Object> map = new HashMap<>();
+        if (StringUtils.isBlank(status)) {
+            query += "WHERE o.geStatus is null and o.dataOrdine >= :dataConfig and o.provvisorio <> 'S'";
+             map.put("dataConfig",sdf.parse(dataCongig));
         } else {
-            query += "WHERE o.geStatus = :status and o.serie = :venditore";
-            return Ordine.find(query, Sort.descending("dataOrdine"), Parameters.with("status", status)
-                    .and("venditore", venditore)).project(OrdineDTO.class).list();
+            query += "WHERE o.geStatus = :status ";
+            map.put("status", status);
         }
+        if(StringUtils.isNotBlank(venditore)) {
+            query +=  " and o.serie = :venditore";
+            map.put("venditore", venditore);
+        }
+        return Ordine.find(query, Sort.descending("dataOrdine"), map).project(OrdineDTO.class).list();
     }
 
     @Transactional
@@ -84,8 +65,8 @@ public class OrdineService {
         list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
         list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
         List<Ordine> ordineList = Ordine.findOrdiniByStatus(list);
-        ordineList.forEach(o-> {
-            if(articoloService.findAnyNoStatus(o.getAnno(), o.getSerie(), o.getProgressivo())) {
+        ordineList.forEach(o -> {
+            if (articoloService.findAnyNoStatus(o.getAnno(), o.getSerie(), o.getProgressivo())) {
                 o.setGeStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
                 o.persist();
             }
@@ -99,8 +80,8 @@ public class OrdineService {
         list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
         list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
         List<Ordine> ordineList = Ordine.findOrdiniByStatus(list);
-        ordineList.forEach(o-> {
-            if(articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo())) {
+        ordineList.forEach(o -> {
+            if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getGeWarnNoBolla()) {
                 o.setGeStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
                 o.persist();
             }
@@ -109,10 +90,10 @@ public class OrdineService {
 
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
         return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
-                "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
-                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla " +
-                "FROM Ordine o " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
+                                "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
+                                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla " +
+                                "FROM Ordine o " +
+                                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo",
                         Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo))
                 .project(OrdineDTO.class).firstResult();

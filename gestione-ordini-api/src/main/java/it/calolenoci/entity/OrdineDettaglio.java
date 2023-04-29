@@ -3,11 +3,10 @@ package it.calolenoci.entity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
+import it.calolenoci.dto.FiltroArticoli;
 import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.enums.StatoOrdineEnum;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -24,7 +23,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
 
     @Column(length = 4)
     @Id
-    private  Integer anno;
+    private Integer anno;
 
     @Column(length = 3)
     @Id
@@ -116,7 +115,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 1, name = "GE_FLAG_CONSEGNATO", columnDefinition = "CHAR(1)")
     private Boolean geFlagConsegnato;
 
-    @Column(length = 20, name="GE_TONO")
+    @Column(length = 20, name = "GE_TONO")
     private String geTono;
 
     @Column(length = 50, name = "GE_STATUS")
@@ -126,7 +125,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 1, name = "HAS_BOLLA", columnDefinition = "CHAR(1)")
     private Boolean flBolla;
 
-    public static void updateStatus(Integer anno, String serie, Integer progressivo, String stato){
+    public static void updateStatus(Integer anno, String serie, Integer progressivo, String stato) {
         update("geStatus = :stato where anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("stato", stato).and("anno", anno).and("serie", serie)
                         .and("progressivo", progressivo));
@@ -134,11 +133,11 @@ public class OrdineDettaglio extends PanacheEntityBase {
 
     public static OrdineDettaglio getById(Integer anno, String serie, Integer progressivo, Integer rigo) {
         return find("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo = :rigo",
-        Parameters.with("anno", anno).and("serie", serie)
-                .and("progressivo", progressivo).and("rigo", rigo)).firstResult();
+                Parameters.with("anno", anno).and("serie", serie)
+                        .and("progressivo", progressivo).and("rigo", rigo)).firstResult();
     }
 
-    public static List<OrdineDettaglioDto> findArticoliById(Integer anno, String serie, Integer progressivo, Boolean filtro){
+    public static List<OrdineDettaglioDto> findArticoliById(FiltroArticoli filtro) {
         String query = "SELECT o.anno,  o.progressivo, o.progrGenerale,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo,  o.fUnitaMisura,  " +
                 "o.geFlagRiservato, o.geFlagNonDisponibile, o.geFlagOrdinato, o.geFlagConsegnato,  o.geTono, a.fornitoreArticoloId.articolo, " +
@@ -150,11 +149,21 @@ public class OrdineDettaglio extends PanacheEntityBase {
                 "LEFT JOIN FornitoreArticolo a ON a.fornitoreArticoloId.articolo = o.fArticolo " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo";
-        if(filtro) {
-            query += " AND o.geFlagNonDisponibile = 'T'";
+        if (filtro.getFlNonDisponibile() != null && filtro.getFlNonDisponibile()) {
+            query += " AND o.geFlagNonDisponibile = 'T' ";
         }
-        return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
-                        .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
+        if (filtro.getFlDaConsegnare() != null) {
+            if (filtro.getFlDaConsegnare()) {
+                query += " AND o.geFlagConsegnato = 'F' ";
+            } else {
+                query += " AND o.geFlagConsegnato = 'T' ";
+            }
+        }
+        if (filtro.getFlDaRiservare() != null && filtro.getFlDaRiservare()) {
+                query += " AND o.geFlagRiservato = 'F' ";
+        }
+        return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie())
+                .and("progressivo", filtro.getProgressivo())).project(OrdineDettaglioDto.class).list();
 
     }
 

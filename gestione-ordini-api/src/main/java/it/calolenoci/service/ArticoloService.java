@@ -40,18 +40,16 @@ public class ArticoloService {
     @ConfigProperty(name = "ordini.path")
     String pathReport;
 
-    public ResponseOrdineDettaglio findById(Integer anno, String serie, Integer progressivo, Boolean filtro) {
+    public ResponseOrdineDettaglio findById(FiltroArticoli filtro) {
         ResponseOrdineDettaglio response = new ResponseOrdineDettaglio();
         List<OrdineDettaglioDto> list;
-        OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
-        list = OrdineDettaglio.findArticoliById(anno, serie, progressivo, filtro);
-        AtomicReference<Double> totale = new AtomicReference<>(0D);
-        list.forEach(e -> {
-            if(e.getPrezzo() != null && e.getQuantita() != null){
-                totale.updateAndGet(v -> v + e.getPrezzo() * e.getQuantita());
-            }
-        });
-        response.setTotale(totale.get());
+        OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
+        list = OrdineDettaglio.findArticoliById(filtro);
+        Double aDouble = OrdineDettaglio.find("SELECT SUM(o.prezzo*o.quantita) FROM OrdineDettaglio o " +
+                        "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo"
+                ,                 Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie()).and("progressivo", filtro.getProgressivo()))
+                .project(Double.class).singleResult();
+        response.setTotale(aDouble);
         response.setIntestazione(ordineDTO.getIntestazione());
         response.setSottoConto(ordineDTO.getSottoConto());
         response.setLocked(ordineDTO.getLocked());
@@ -158,9 +156,12 @@ public class ArticoloService {
     private String chiudi(Integer anno, String serie, Integer progressivo) {
         Ordine ordine = Ordine.findByOrdineId(anno, serie, progressivo);
         final String result = ordine.getGeStatus();
-        ResponseOrdineDettaglio responseOrdineDettaglio = findById(anno, serie, progressivo, true);
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
-            if (responseOrdineDettaglio.getArticoli().isEmpty()) {
+            if (OrdineDettaglio.count("anno = :anno and serie =:serie" +
+                    " and progressivo =:progressivo" +
+                    " and geFlagNonDisponibile = 'T'", Parameters.with("anno", anno)
+                    .and("serie", serie)
+                    .and("progressivo", progressivo)) == 0) {
                 sendMail(anno, serie, progressivo);
                 ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
             } else {
