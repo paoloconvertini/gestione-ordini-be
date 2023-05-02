@@ -8,6 +8,7 @@ import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -44,6 +45,9 @@ public class ArticoloService {
         ResponseOrdineDettaglio response = new ResponseOrdineDettaglio();
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
+        if(StringUtils.isBlank(ordineDTO.getStatus())) {
+            filtro.setFlDaConsegnare(null);
+        }
         list = OrdineDettaglio.findArticoliById(filtro);
         Double aDouble = OrdineDettaglio.find("SELECT SUM(o.prezzo*o.quantita) FROM OrdineDettaglio o " +
                         "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo"
