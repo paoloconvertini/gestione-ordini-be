@@ -46,7 +46,9 @@ public class ArticoloService {
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
         if(StringUtils.isBlank(ordineDTO.getStatus()) ||
-                StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(ordineDTO.getStatus())) {
+                StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(ordineDTO.getStatus()) ||
+                StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(ordineDTO.getStatus())
+        ) {
             filtro.setFlDaConsegnare(null);
         }
         list = OrdineDettaglio.findArticoliById(filtro);
