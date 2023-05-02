@@ -46,7 +46,7 @@ public class OrdineService {
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
         Map<String, Object> map = new HashMap<>();
         if (StringUtils.isBlank(status)) {
-            query += "WHERE o.geStatus is null and o.dataOrdine >= :dataConfig and o.provvisorio <> 'S'";
+            query += "WHERE ( o.geStatus is null OR o.geStatus = '') and o.dataOrdine >= :dataConfig and o.provvisorio <> 'S'";
              map.put("dataConfig",sdf.parse(dataCongig));
         } else {
             query += "WHERE o.geStatus = :status ";
