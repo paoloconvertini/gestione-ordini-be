@@ -154,13 +154,13 @@ public class OrdineDettaglio extends PanacheEntityBase {
         }
         if (filtro.getFlDaConsegnare() != null) {
             if (filtro.getFlDaConsegnare()) {
-                query += " AND o.geFlagConsegnato = 'F' ";
+                query += " AND (o.geFlagConsegnato = 'F' OR o.geFlagConsegnato IS NULL OR o.geFlagConsegnato = '')";
             } else {
                 query += " AND o.geFlagConsegnato = 'T' ";
             }
         }
         if (filtro.getFlDaRiservare() != null && filtro.getFlDaRiservare()) {
-                query += " AND o.geFlagRiservato = 'F' ";
+                query += " AND (o.geFlagRiservato = 'F' OR o.geFlagRiservato IS NULL OR o.geFlagRiservato = '')";
         }
         return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie())
                 .and("progressivo", filtro.getProgressivo())).project(OrdineDettaglioDto.class).list();
