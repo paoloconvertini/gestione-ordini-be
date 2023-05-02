@@ -8,6 +8,7 @@ import it.calolenoci.dto.OrdineDettaglioDto;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
+import org.jfree.util.Log;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -162,6 +163,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
         if (filtro.getFlDaRiservare() != null && filtro.getFlDaRiservare()) {
                 query += " AND (o.geFlagRiservato = 'F' OR o.geFlagRiservato IS NULL OR o.geFlagRiservato = '')";
         }
+        Log.info("Query articoli: " + query);
         return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie())
                 .and("progressivo", filtro.getProgressivo())).project(OrdineDettaglioDto.class).list();
 
