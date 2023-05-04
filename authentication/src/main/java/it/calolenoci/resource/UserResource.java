@@ -96,20 +96,16 @@ public class UserResource {
         users.forEach(u -> {
             UserResponseDTO dto = new UserResponseDTO();
             dto.setFullname(u.getFullName());
+            dto.setChecked(Boolean.FALSE);
             if(StringUtils.isNotBlank(u.codVenditore)) {
                 dto.setCodVenditore(u.codVenditore);
-                if(codVenditore.equals(u.codVenditore)) {
-                    dto.setChecked(Boolean.TRUE);
-                } else {
-                    dto.setChecked(Boolean.FALSE);
-                }
             }
             if(StringUtils.isNotBlank(u.email)) {
                 dto.setEmail(u.email);
             }
             result.add(dto);
         });
-        result.add(new UserResponseDTO("tutti", "", "", Boolean.FALSE));
+        result.add(new UserResponseDTO("tutti", "", "", Boolean.TRUE));
         return Response.ok(result).build();
     }
 

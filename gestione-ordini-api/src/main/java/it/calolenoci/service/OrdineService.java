@@ -11,6 +11,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import io.quarkus.logging.Log;
 
 import javax.transaction.Transactional;
 import java.text.ParseException;

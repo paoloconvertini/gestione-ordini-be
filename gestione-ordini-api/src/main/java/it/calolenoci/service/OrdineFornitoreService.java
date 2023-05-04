@@ -66,6 +66,7 @@ public class OrdineFornitoreService {
                     ordineFornitore.setCodicePagamento(articoloDto.getCodPagamento());
                     ordineFornitore.setBancaPagamento(articoloDto.getBanca());
                     ordineFornitore.setCreateUser(user);
+                    ordineFornitore.setProvvisorio("T");
                     fornitoreList.add(ordineFornitore);
                 }
                 for (ArticoloDto a : articoloDtoList) {
@@ -95,14 +96,14 @@ public class OrdineFornitoreService {
                 }
                 index++;
             }
-      /*      long count = OrdineDettaglio.count("geFlagNonDisponibile = 'T' and anno = :anno " +
+           long count = OrdineDettaglio.count("geFlagNonDisponibile = 'T' and anno = :anno " +
                     " and serie = :serie and progressivo = :progressivo ", Parameters.with("anno", anno)
                     .and("serie", serie).and("progressivo", progressivo));
             if (count == 0) {
-                Ordine.update("geStatus = 'INCOMPLETO' where anno = :anno " +
+                Ordine.update("geUserLock = null, geLocked = 'F', geStatus = 'INCOMPLETO' where anno = :anno " +
                         " and serie = :serie and progressivo = :progressivo", Parameters.with("anno", anno)
                         .and("serie", serie).and("progressivo", progressivo));
-            }*/
+            }
             OrdineFornitoreDettaglio.persist(ordineFornitoreDettaglios);
             OrdineFornitore.persist(fornitoreList);
         } catch (Exception e) {

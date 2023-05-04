@@ -56,13 +56,4 @@ public class OAFArticoloResource {
         return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore approvato", false)).build();
     }
 
-    @Operation(summary = "Richiedi approvazione ordine a fornitore")
-    @GET
-    @RolesAllowed({AMMINISTRATIVO, ADMIN})
-    @Path("/richiediApprovazione/{anno}/{serie}/{progressivo}")
-    public Response richiediApprovazione(Integer anno, String serie, Integer progressivo) {
-        this.articoloService.richiediApprovazione(anno, serie, progressivo);
-        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", false)).build();
-    }
-
 }
