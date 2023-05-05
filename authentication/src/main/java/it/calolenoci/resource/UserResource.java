@@ -95,7 +95,7 @@ public class UserResource {
         List<UserResponseDTO> result = new ArrayList<>();
         users.forEach(u -> {
             UserResponseDTO dto = new UserResponseDTO();
-            dto.setFullname(u.getFullName());
+            dto.setFullname(u.name);
             dto.setChecked(Boolean.FALSE);
             if(StringUtils.isNotBlank(u.codVenditore)) {
                 dto.setCodVenditore(u.codVenditore);
