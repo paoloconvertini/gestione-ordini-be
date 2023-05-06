@@ -96,4 +96,11 @@ public class OrdineDettaglioDto implements Serializable {
         this.qtaDaConsegnare = qtaDaConsegnare;
         this.flBolla = flBolla;
     }
+
+    public OrdineDettaglioDto (Integer anno, String serie, Integer progressivo, Integer rigo) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.rigo = rigo;
+    }
 }

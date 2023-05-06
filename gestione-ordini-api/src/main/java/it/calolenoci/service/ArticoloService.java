@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
@@ -15,10 +16,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -75,17 +73,27 @@ public class ArticoloService {
     public Integer updateArticoliBolle(List<FatturaDto> list) {
         AtomicReference<Integer> aggiornati = new AtomicReference<>(0);
         list.forEach(e -> {
-                    aggiornati.updateAndGet(v -> v + OrdineDettaglio.update("qtaConsegnatoSenzaBolla = CASE WHEN (quantita - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END, geFlagConsegnato = CASE WHEN (quantita - :qta) = 0 THEN 'T' ELSE 'F' END, qtaDaConsegnare = (quantita - :qta), " +
+                    aggiornati.updateAndGet(v -> v + OrdineDettaglio.update("qtaConsegnatoSenzaBolla = " +
+                            " CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV " +
+                            " THEN CASE WHEN (quantitaV - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END " +
+                            " ELSE CASE WHEN (quantita - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END END, " +
+                            " geFlagConsegnato = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV" +
+                            " THEN CASE WHEN (quantitaV - :qta) = 0 THEN 'T' ELSE 'F' END " +
+                            " ELSE CASE WHEN (quantita - :qta) = 0 THEN 'T' ELSE 'F' END END, " +
+                            " qtaDaConsegnare = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV THEN (quantitaV - :qta)" +
+                            " ELSE (quantita - :qta) END, " +
                             "flBolla = 'T' WHERE progrGenerale = :progrGenerale and geFlagConsegnato <> 'T'", Parameters.with("qta", e.getQta())
                             .and("progrGenerale", e.getProgrOrdCli())));
 
-                    OrdineDettaglio ordineDettaglio = OrdineDettaglio.find("progrGenerale = :progrGenerale",
-                            Parameters.with("progrGenerale", e.getProgrOrdCli())).singleResult();
-                    if (ordineDettaglio.getQtaConsegnatoSenzaBolla() == null || ordineDettaglio.getQtaConsegnatoSenzaBolla() == 0) {
-                        Ordine.update("geWarnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
-                                Parameters.with("anno", ordineDettaglio.getAnno())
-                                        .and("serie", ordineDettaglio.getSerie())
-                                        .and("progressivo", ordineDettaglio.getProgressivo()));
+                    Optional<OrdineDettaglio> opt = OrdineDettaglio.find("progrGenerale = :progrGenerale",
+                            Parameters.with("progrGenerale", e.getProgrOrdCli())).singleResultOptional();
+                    if (opt.isPresent()) {
+                        if (opt.get().getQtaConsegnatoSenzaBolla() == null || opt.get().getQtaConsegnatoSenzaBolla() == 0) {
+                            Ordine.update("geWarnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
+                                    Parameters.with("anno", opt.get().getAnno())
+                                            .and("serie", opt.get().getSerie())
+                                            .and("progressivo", opt.get().getProgressivo()));
+                        }
                     }
                 }
         );
@@ -96,6 +104,21 @@ public class ArticoloService {
         return OrdineDettaglio.count("anno = :anno AND serie = :serie AND progressivo = :progressivo " +
                         "AND geFlagConsegnato = 'F'",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) == 0;
+    }
+
+    public void checkNoBolle() {
+
+        OrdineDettaglio.find("select o.anno, o.serie, o.progressivo, o.rigo  FROM OrdineDettaglio o " +
+                        "LEFT JOIN FattureDettaglio f2 ON f2.progrOrdCli = o.progrGenerale " +
+                        "WHERE f2.anno is null AND o.flBolla = 'T'")
+                .project(OrdineDettaglioDto.class)
+                .stream().forEach(a -> OrdineDettaglio.update("geFlagConsegnato = 'F', qtaDaConsegnare = null, flBolla = 'F' " +
+                                "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo and rigo =:rigo"
+                        , Parameters.with("anno", a.getAnno())
+                                .and("serie", a.getSerie())
+                                .and("progressivo", a.getProgressivo())
+                                .and("rigo", a.getRigo())));
+
     }
 
     @Transactional
@@ -145,7 +168,9 @@ public class ArticoloService {
                         dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDesczrizione()
                         , dto.getRigo(), null, null));
             }
-            warnNoBolla.set(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0);
+            if (!warnNoBolla.get()) {
+                warnNoBolla.set(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0);
+            }
             mapper.fromDtoToEntity(ordineDettaglio, dto);
             ordineDettaglioList.add(ordineDettaglio);
         });

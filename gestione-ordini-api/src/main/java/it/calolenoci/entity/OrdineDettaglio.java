@@ -70,8 +70,8 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(name = "QTA_CONS_NO_BOLLA")
     private Double qtaConsegnatoSenzaBolla;
 
-    @Column
-    private Float quantitaV;
+    @Column(name = "QUANTITAV")
+    private Double quantitaV;
 
     @Column
     private Float quantita2;

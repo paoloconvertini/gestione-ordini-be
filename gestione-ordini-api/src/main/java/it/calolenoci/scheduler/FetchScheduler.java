@@ -39,6 +39,9 @@ public class FetchScheduler {
                 ordineService.checkConsegnati();
             }
         }
+        articoloService.checkNoBolle();
+
+
     }
 
 }
