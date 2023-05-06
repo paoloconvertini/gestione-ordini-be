@@ -45,7 +45,7 @@ public class ArticoloService {
         ResponseOrdineDettaglio response = new ResponseOrdineDettaglio();
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
-        if(StringUtils.isBlank(ordineDTO.getStatus()) ||
+        if (StringUtils.isBlank(ordineDTO.getStatus()) ||
                 StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(ordineDTO.getStatus()) ||
                 StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(ordineDTO.getStatus())
         ) {
@@ -53,8 +53,8 @@ public class ArticoloService {
         }
         list = OrdineDettaglio.findArticoliById(filtro);
         Double aDouble = OrdineDettaglio.find("SELECT SUM(o.prezzo*o.quantita) FROM OrdineDettaglio o " +
-                        "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo"
-                ,                 Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie()).and("progressivo", filtro.getProgressivo()))
+                                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo"
+                        , Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie()).and("progressivo", filtro.getProgressivo()))
                 .project(Double.class).singleResult();
         response.setTotale(aDouble);
         response.setIntestazione(ordineDTO.getIntestazione());
@@ -75,10 +75,19 @@ public class ArticoloService {
     public Integer updateArticoliBolle(List<FatturaDto> list) {
         AtomicReference<Integer> aggiornati = new AtomicReference<>(0);
         list.forEach(e -> {
-            aggiornati.updateAndGet(v -> v + OrdineDettaglio.update("geFlagConsegnato = CASE WHEN (quantita - :qta) = 0 THEN 'T' ELSE 'F' END, qtaDaConsegnare = (quantita - :qta), " +
-                    "flBolla = 'T' WHERE progrGenerale = :progrGenerale and geFlagConsegnato <> 'T'", Parameters.with("qta", e.getQta())
-                    .and("progrGenerale", e.getProgrOrdCli())));
-        });
+                    aggiornati.updateAndGet(v -> v + OrdineDettaglio.update("qtaConsegnatoSenzaBolla = CASE WHEN (quantita - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END, geFlagConsegnato = CASE WHEN (quantita - :qta) = 0 THEN 'T' ELSE 'F' END, qtaDaConsegnare = (quantita - :qta), " +
+                            "flBolla = 'T' WHERE progrGenerale = :progrGenerale and geFlagConsegnato <> 'T'", Parameters.with("qta", e.getQta())
+                            .and("progrGenerale", e.getProgrOrdCli())));
+
+                    OrdineDettaglio ordineDettaglio = OrdineDettaglio.find("progrGenerale = :progrGenerale").singleResult();
+                    if (ordineDettaglio.getQtaConsegnatoSenzaBolla() == null || ordineDettaglio.getQtaConsegnatoSenzaBolla() == 0) {
+                        Ordine.update("geWarnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
+                                Parameters.with("anno", ordineDettaglio.getAnno())
+                                        .and("serie", ordineDettaglio.getSerie())
+                                        .and("progressivo", ordineDettaglio.getProgressivo()));
+                    }
+                }
+        );
         return aggiornati.get();
     }
 
@@ -135,7 +144,6 @@ public class ArticoloService {
                         dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDesczrizione()
                         , dto.getRigo(), null, null));
             }
-            if(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0)
             warnNoBolla.set(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0);
             mapper.fromDtoToEntity(ordineDettaglio, dto);
             ordineDettaglioList.add(ordineDettaglio);
@@ -217,7 +225,7 @@ public class ArticoloService {
             fornitoreArticolo.setCreateDate(new Date());
             fornitoreArticolo.persist();
             return true;
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.error("Errore nella creazione del FornitoreArticolo ", e);
             return false;
         }
