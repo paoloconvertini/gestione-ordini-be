@@ -79,7 +79,8 @@ public class ArticoloService {
                             "flBolla = 'T' WHERE progrGenerale = :progrGenerale and geFlagConsegnato <> 'T'", Parameters.with("qta", e.getQta())
                             .and("progrGenerale", e.getProgrOrdCli())));
 
-                    OrdineDettaglio ordineDettaglio = OrdineDettaglio.find("progrGenerale = :progrGenerale").singleResult();
+                    OrdineDettaglio ordineDettaglio = OrdineDettaglio.find("progrGenerale = :progrGenerale",
+                            Parameters.with("progrGenerale", e.getProgrOrdCli())).singleResult();
                     if (ordineDettaglio.getQtaConsegnatoSenzaBolla() == null || ordineDettaglio.getQtaConsegnatoSenzaBolla() == 0) {
                         Ordine.update("geWarnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
                                 Parameters.with("anno", ordineDettaglio.getAnno())
