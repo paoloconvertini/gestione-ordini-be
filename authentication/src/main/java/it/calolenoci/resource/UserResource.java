@@ -2,6 +2,8 @@ package it.calolenoci.resource;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Sort;
+import it.calolenoci.dto.ResponseDTO;
+import it.calolenoci.dto.UserDto;
 import it.calolenoci.dto.UserResponseDTO;
 import it.calolenoci.entity.Role;
 import it.calolenoci.entity.User;
@@ -120,6 +122,18 @@ public class UserResource {
     }
 
     @PUT
+    @Path("/{username}")
+    @Transactional
+    @PermitAll
+    @APIResponse(responseCode = "404", description = "User non trovato")
+    @APIResponse(responseCode = "200", description = "User aggiornato con successo")
+    public Response updatePassword(String username, UserDto dto) {
+        User entity = findUserByName(username);
+        entity.password = cryptoService.encrypt(dto.getPassword());
+        return Response.ok().entity(new ResponseDTO("Password aggoirnata!", false)).build();
+    }
+
+    @PUT
     @Path("/{id}")
     @Transactional
     @RolesAllowed({ADMIN, USER})
@@ -154,6 +168,14 @@ public class UserResource {
 
     private User findUserById(Long id) {
         User entity = User.findById(id);
+        if (entity == null) {
+            throw new NotFoundException();
+        }
+        return entity;
+    }
+
+    private User findUserByName(String username) {
+        User entity = User.findByUsername(username);
         if (entity == null) {
             throw new NotFoundException();
         }
