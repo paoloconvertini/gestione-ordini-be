@@ -5,6 +5,7 @@ import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.StatoOrdineEnum;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -14,6 +15,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.quarkus.logging.Log;
 
 import javax.transaction.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -25,6 +29,9 @@ public class OrdineService {
     String dataCongig;
 
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+    @ConfigProperty(name = "ordini.path")
+    String path;
 
     @Inject
     ArticoloService articoloService;
@@ -84,6 +91,17 @@ public class OrdineService {
         ordineList.forEach(o -> {
             if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getGeWarnNoBolla()) {
                 o.setGeStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
+                String filename = "ordine_" + o.getAnno() + "_" + o.getSerie() + "_" + o.getProgressivo() + ".pdf";
+                File fileSrc = new File(path + filename);
+                File folderDest = new File(path + "archiviato/" + o.getAnno() + "/" + o.getSerie());
+                if(folderDest.mkdirs()){
+                    try {
+                        FileUtils.moveFile(fileSrc, new File(folderDest.getAbsolutePath() + "/" + filename), StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+
                 o.persist();
             }
         });
