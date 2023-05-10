@@ -44,6 +44,7 @@ public class OrdineReportDto implements Serializable {
 	private String NOME;
 	private Integer FCOLLI;
 	private String FILENAME;
+	private String firmaVenditore;
 	private String NUMEROCONFERMA;
 	private Date DATAORDINE;
 	private Date DATACONFERMA;

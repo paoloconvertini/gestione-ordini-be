@@ -8,6 +8,8 @@ import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.*;
 import net.sf.jasperreports.engine.JRException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -49,11 +51,18 @@ public class OrdineResource {
     @ConfigProperty(name = "firma.store.path")
     String pathFirma;
 
+    @ConfigProperty(name = "firma.venditore.path")
+    String pathFirmaVendtore;
+
     @Inject
     ArticoloService articoloService;
 
     @Inject
     FetchScheduler scheduler;
+
+    @Inject
+    @Claim(standard = Claims.nickname)
+    String codVenditore;
 
     @Operation(summary = "Returns all the roles from the database")
     @POST
@@ -68,6 +77,7 @@ public class OrdineResource {
         final Integer progressivo = Integer.valueOf(data.orderId.split("_")[2]);
         String filename = "firma_" + data.orderId + ".png";
         String name = pathFirma + filename;
+        String firmaVenditore = pathFirmaVendtore + codVenditore + ".png";
         firmaService.save(anno, serie, progressivo, filename);
 
         String encodedImage = data.file.split(",")[1];
@@ -85,7 +95,7 @@ public class OrdineResource {
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
         if (ordineDTO != null) {
             ResponseOrdineDettaglio responseOrdineDettaglio = articoloService.findById(new FiltroArticoli(anno, serie, progressivo));
-            List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, responseOrdineDettaglio.getArticoli(), name);
+            List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, responseOrdineDettaglio.getArticoli(), name, firmaVenditore);
             if (!dtoList.isEmpty()) {
                 try {
                     service.createReport(dtoList);

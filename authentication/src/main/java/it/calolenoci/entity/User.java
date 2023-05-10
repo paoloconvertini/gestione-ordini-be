@@ -4,6 +4,7 @@ package it.calolenoci.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.panache.common.Parameters;
+import it.calolenoci.dto.UserResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.hibernate.Hibernate;

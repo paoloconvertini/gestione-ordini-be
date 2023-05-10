@@ -34,10 +34,9 @@ public class JasperService {
     @Inject
     OrdineClienteReportMapper mapper;
 
-    public List<OrdineReportDto> getOrdiniReport(OrdineDTO dto, List<OrdineDettaglioDto> articoli, String filename) {
+    public List<OrdineReportDto> getOrdiniReport(OrdineDTO dto, List<OrdineDettaglioDto> articoli, String filename, String firmaVenditore) {
         List<OrdineReportDto> dtoList = new ArrayList<>();
-        articoli.forEach(a -> dtoList.add(mapper.fromEntityToDto(dto, a, filename)));
-
+        articoli.forEach(a -> dtoList.add(mapper.fromEntityToDto(dto, a, filename, firmaVenditore)));
         return dtoList;
     }
 

@@ -1,9 +1,9 @@
 package it.calolenoci.resource;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.ResponseDTO;
-import it.calolenoci.dto.UserDto;
+import it.calolenoci.dto.SuperUserDTO;
 import it.calolenoci.dto.UserResponseDTO;
 import it.calolenoci.entity.Role;
 import it.calolenoci.entity.User;
@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import static it.calolenoci.constant.Ruolo.ADMIN;
 import static it.calolenoci.constant.Ruolo.USER;
@@ -48,7 +48,7 @@ public class UserResource {
 
     @POST
     @Transactional
-    @RolesAllowed({ADMIN, USER})
+    @RolesAllowed({ADMIN})
     @APIResponse(responseCode = "200", description = "User salvato con successo")
     public Response saveUser(User user) {
         User entity = new User();
@@ -66,7 +66,7 @@ public class UserResource {
 
     @GET
     @Path("/{idUser}")
-    @RolesAllowed({ADMIN, USER})
+    @RolesAllowed({ADMIN})
     public Response getUser(Long idUser) {
         User entity = findUserById(idUser);
         return Response.ok(entity).build();
@@ -74,11 +74,11 @@ public class UserResource {
 
     @Operation(summary = "Returns all the roles from the database")
     @GET
-    @RolesAllowed({ADMIN, USER})
+    @RolesAllowed({ADMIN})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Users")
     public Response getAllUsers() {
-        return Response.ok(User.listAll(Sort.ascending("name", "lastname"))).build();
+        return Response.ok(User.find("SELECT u.id, u.username, u.name, u.lastname FROM User u", Sort.ascending("username")).project(SuperUserDTO.class).list()).build();
     }
 
     @Operation(summary = "Returns all the roles from the database")
@@ -127,7 +127,7 @@ public class UserResource {
     @PermitAll
     @APIResponse(responseCode = "404", description = "User non trovato")
     @APIResponse(responseCode = "200", description = "User aggiornato con successo")
-    public Response updatePassword(String username, UserDto dto) {
+    public Response updatePassword(String username, UserResponseDTO dto) {
         User entity = findUserByName(username);
         entity.password = cryptoService.encrypt(dto.getPassword());
         return Response.ok().entity(new ResponseDTO("Password aggoirnata!", false)).build();
@@ -136,7 +136,7 @@ public class UserResource {
     @PUT
     @Path("/{id}")
     @Transactional
-    @RolesAllowed({ADMIN, USER})
+    @RolesAllowed({ADMIN})
     @APIResponse(responseCode = "404", description = "User non trovato")
     @APIResponse(responseCode = "200", description = "User aggiornato con successo")
     public Response update(Long id, User user) {

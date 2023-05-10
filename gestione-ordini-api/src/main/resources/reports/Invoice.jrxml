@@ -238,6 +238,7 @@ AND c.contocliente = pc.sottoconto]]>
 		<property name="com.jaspersoft.studio.field.tree.path" value="FIRMAORDINECLIENTE"/>
 	</field>
 	<field name="valoreTotale" class="java.lang.Double"/>
+	<field name="firmaVenditore" class="java.lang.String"/>
 	<title>
 		<band height="201" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -736,7 +737,7 @@ Tel 0831-377180   Fax 0831-383047
 		</band>
 	</detail>
 	<pageFooter>
-		<band height="123">
+		<band height="124">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<rectangle>
 				<reportElement x="0" y="13" width="554" height="102" uuid="23808a9e-c599-486b-90b2-c49935fc6a0a"/>
@@ -773,6 +774,10 @@ Tel 0831-377180   Fax 0831-383047
 				</textElement>
 				<textFieldExpression><![CDATA[" di " + $V{PAGE_NUMBER}]]></textFieldExpression>
 			</textField>
+			<image onErrorType="Blank">
+				<reportElement x="105" y="20" width="147" height="59" uuid="3b1553d8-99f8-4e9d-ac0a-6945f64e1510"/>
+				<imageExpression><![CDATA[$F{firmaVenditore}]]></imageExpression>
+			</image>
 		</band>
 	</pageFooter>
 	<lastPageFooter>
@@ -892,6 +897,10 @@ PER ACCETTAZIONE: CALOʼ LENOCI FRANCESCO SRL
 				</textElement>
 				<textFieldExpression><![CDATA[String.format("%.2f", (double)$P{totaleImponibile})]]></textFieldExpression>
 			</textField>
+			<image onErrorType="Blank">
+				<reportElement x="110" y="183" width="146" height="59" uuid="ac1dd758-264e-418c-9b1c-52710d00be56"/>
+				<imageExpression><![CDATA[$F{firmaVenditore}]]></imageExpression>
+			</image>
 		</band>
 	</lastPageFooter>
 </jasperReport>

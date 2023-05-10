@@ -3,13 +3,14 @@ package it.calolenoci.mapper;
 import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.OrdineReportDto;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class OrdineClienteReportMapper {
 
-    public OrdineReportDto fromEntityToDto(OrdineDTO ordineDTO, OrdineDettaglioDto a, String filename) {
+    public OrdineReportDto fromEntityToDto(OrdineDTO ordineDTO, OrdineDettaglioDto a, String filename, String firmaVenditore) {
         OrdineReportDto dto = new OrdineReportDto();
         dto.setTIPORIGO(a.getTipoRigo());
         if (!"C".equals(a.getTipoRigo())) {
@@ -51,6 +52,9 @@ public class OrdineClienteReportMapper {
         dto.setPROVINCIA(ordineDTO.getProvincia());
         dto.setTELEFONO(ordineDTO.getTelefono());
         dto.setFILENAME(filename);
+        if(StringUtils.isNotBlank(firmaVenditore)){
+            dto.setFirmaVenditore(firmaVenditore);
+        }
         dto.setDATAORDINE(ordineDTO.getDataOrdine());
         dto.setDATACONFERMA(ordineDTO.getDataConferma());
         dto.setNUMEROCONFERMA(ordineDTO.getNumeroConferma());
