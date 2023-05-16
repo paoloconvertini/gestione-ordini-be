@@ -2,6 +2,7 @@ package it.calolenoci.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 import javax.persistence.*;
 import java.util.Collection;
@@ -10,7 +11,12 @@ import java.util.Set;
 
 @Entity
 @Table(name="ROLE")
-public class Role extends PanacheEntity {
+public class Role extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "role_seq")
+    @SequenceGenerator(name = "role_seq", sequenceName = "role_sequence",initialValue = 7)
+    public Long id;
 
     @Column(unique = true, nullable = false)
     public String name;

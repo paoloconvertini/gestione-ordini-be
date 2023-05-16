@@ -3,6 +3,8 @@ package it.calolenoci.scheduler;
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
 import it.calolenoci.dto.FatturaDto;
+import it.calolenoci.dto.OrdineDTO;
+import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.service.ArticoloService;
 import it.calolenoci.service.FatturaService;
 import it.calolenoci.service.OrdineService;
@@ -10,6 +12,7 @@ import it.calolenoci.service.OrdineService;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.text.ParseException;
 import java.util.List;
 
 @ApplicationScoped
@@ -40,8 +43,14 @@ public class FetchScheduler {
             }
         }
         articoloService.checkNoBolle();
-
-
+    }
+    @Scheduled(every = "${cron.expr.nuovi.ordini:10m}")
+    @Transactional
+    public void findNuoviOrdini() throws ParseException {
+        List<OrdineDTO> allNuoviOrdini = ordineService.findAllNuoviOrdini();
+        ordineService.updateStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+        allNuoviOrdini.forEach(o -> articoloService
+                .changeAllStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.DA_PROCESSARE));
     }
 
 }

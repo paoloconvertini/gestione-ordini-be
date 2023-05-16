@@ -16,4 +16,8 @@ public class EmailDto {
 
     private String serie;
 
+    private String sottoConto;
+
+    private boolean update = false;
+
 }

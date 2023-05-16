@@ -6,5 +6,9 @@ ALTER TABLE ORDCLI ADD
 
     GE_LOCKED char(1) default 0,
 
-    GE_USER_LOCK varchar(100);
+    GE_USER_LOCK varchar(100),
+
+    NOTE varchar(2000),
+
+    HAS_FIRMA char(1) default 0;
 

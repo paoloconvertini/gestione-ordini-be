@@ -44,6 +44,10 @@ public class ArticoloResource {
     @Claim(standard = Claims.upn)
     String user;
 
+    @Inject
+    @Claim(standard = Claims.email)
+    String email;
+
     @Operation(summary = "Returns all the articoli from the database")
     @POST
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
@@ -76,7 +80,7 @@ public class ArticoloResource {
     @RolesAllowed({ADMIN, MAGAZZINIERE, AMMINISTRATIVO})
     public Response saveArticoli(List<OrdineDettaglioDto> list) {
         if (!list.isEmpty()) {
-            articoloService.save(list, user);
+            articoloService.save(list, user, email);
             return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
         }
         return Response.status(Response.Status.OK).entity(new ResponseDto("lista vuota", true)).build();
@@ -88,7 +92,7 @@ public class ArticoloResource {
     @Path("/chiudi")
     public Response chiudi(List<OrdineDettaglioDto> list) {
         if (!list.isEmpty()) {
-            return Response.status(Response.Status.CREATED).entity(new ResponseDto(articoloService.save(list, user, true), false)).build();
+            return Response.status(Response.Status.CREATED).entity(new ResponseDto(articoloService.save(list, user, true, email), false)).build();
         }
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("lista vuota", true)).build();
     }

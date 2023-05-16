@@ -1,12 +1,15 @@
 package it.calolenoci.resource;
 
 import io.quarkus.mailer.MailTemplate;
+import io.quarkus.panache.common.Parameters;
 import io.quarkus.qute.CheckedTemplate;
 import io.smallrye.mutiny.Uni;
 import it.calolenoci.dto.EmailDto;
 import it.calolenoci.dto.InlineAttachment;
 import it.calolenoci.dto.MailAttachment;
+import it.calolenoci.entity.PianoConti;
 import it.calolenoci.service.MailService;
+import it.calolenoci.service.PianoContiService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
@@ -14,6 +17,7 @@ import org.eclipse.microprofile.jwt.Claims;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -43,6 +47,11 @@ public class MailingResource {
     @Inject
     MailService service;
 
+    @Inject
+    PianoContiService pianoContiService;
+
+
+
     @CheckedTemplate
     static class Templates {
         public static native MailTemplate.MailTemplateInstance ordine(String venditore, Integer anno, String serie, Integer progressivo);
@@ -52,13 +61,16 @@ public class MailingResource {
     @Produces(APPLICATION_JSON)
     @RolesAllowed({ADMIN, VENDITORE})
     @Path("/confermato")
-    public Uni<Response> send(EmailDto dto) {
+    public Response send(EmailDto dto) {
         File f = new File(pathReport + "/ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
         MailAttachment attachment = new MailAttachment(f.getName(), f, "application/pdf");
         String subject = "Ordine confermato!";
         InlineAttachment inlineAttach = new InlineAttachment("logo.jpg", new File(logoPath + "/logo.jpg"),
                 "image/jpg", "<logo@calolenoci>");
         MailTemplate.MailTemplateInstance ordine = Templates.ordine(fullName, dto.getAnno(), dto.getSerie(), dto.getProgressivo());
+        if(dto.isUpdate()){
+            pianoContiService.update(dto);
+        }
         return service.send(ordine, attachment, subject, inlineAttach, dto.getTo());
     }
 

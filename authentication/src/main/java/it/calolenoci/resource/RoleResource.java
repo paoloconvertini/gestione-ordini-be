@@ -1,7 +1,9 @@
 package it.calolenoci.resource;
 
 import io.quarkus.panache.common.Sort;
+import it.calolenoci.dto.ResponseDTO;
 import it.calolenoci.entity.Role;
+import it.calolenoci.entity.RoleDto;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -27,13 +29,11 @@ public class RoleResource {
     @POST
     @Transactional
     @APIResponse(responseCode = "200", description = "Role salvato con successo")
-    public Response saveRole(String ruolo) {
+    public Response saveRole(RoleDto ruolo) {
         Role entity = new Role();
-        entity.name = ruolo;
-
-
+        entity.name = ruolo.getName();
         entity.persist();
-        return Response.status(Response.Status.CREATED).entity(entity).build();
+        return Response.status(Response.Status.CREATED).entity(new ResponseDTO("Ruolo salvato", false)).build();
     }
 
     @GET
@@ -52,21 +52,22 @@ public class RoleResource {
     }
 
     @DELETE
+    @Transactional
     @Path("/{idRole}")
     public Response delete(Long idRole) {
         this.findById(idRole).delete();
-        return Response.ok().build();
+        return Response.ok().entity(new ResponseDTO("Ruolo eliminato", false)).build();
     }
 
     @PUT
     @Path("/{id}")
     @APIResponse(responseCode = "404", description = "Role non trovato")
     @APIResponse(responseCode = "200", description = "Role aggiornato con successo")
-    public Response update(Long id, @RequestBody String ruolo){
+    @Transactional
+    public Response update(Long id, RoleDto ruolo){
         Role role = findById(id);
-        role.name = ruolo;
-
-        return Response.status(Response.Status.CREATED).entity(role).build();
+        role.name = ruolo.getName();
+        return Response.status(Response.Status.CREATED).entity(new ResponseDTO("Ruolo aggiornato", false)).build();
     }
 
     private Role findById(Long id) {

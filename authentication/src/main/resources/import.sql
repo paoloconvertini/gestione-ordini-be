@@ -1,27 +1,27 @@
 INSERT INTO auth.USER (id,email, lastname, name, password, username)
 VALUES (1, 'paolo.convertini@gmail.com',  'convertini', 'paolo', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'pconvertini');
 INSERT INTO auth.USER (id, email, lastname, name, password, username, codVenditore)
-VALUES (2,'paolo.convertini@gmail.com',  'calolenoci', 'damiano', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'dcalolenoci', '11');
+VALUES (2,'damiano@calolenocifrancesco.it',  'calolenoci', 'damiano', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'dcalolenoci', '11');
 INSERT INTO auth.USER (id, email, lastname, name, password, username)
 VALUES (3, '', 'amministrazione', 'franco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'franco');
 INSERT INTO auth.USER (id, email, lastname, name, password, username)
 VALUES (4, '', 'magazzino', 'francesco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'francesco');
 INSERT INTO auth.USER (id, email, lastname, name, password, username, codVenditore)
-VALUES (5, '', 'calolenoci', 'piero', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'pcalolenoci', '01');
+VALUES (5, 'piero@calolenocifrancesco.it', 'calolenoci', 'piero', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'pcalolenoci', '01');
 INSERT INTO auth.USER (id,  email, lastname, name, password, username)
-VALUES (6, 'paolo.convertini@gmail.com', 'logistica', 'daniele', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'daniele');
+VALUES (6, '', 'logistica', 'daniele', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'daniele');
 INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
-VALUES (7, 'paolo.convertini@gmail.com', 'scialpi', 'lorenzo', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'lscialpi', '03');
+VALUES (7, 'piero@calolenocifrancesco.it', 'scialpi', 'lorenzo', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'lscialpi', '03');
 INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
-VALUES (8, 'paolo.convertini@gmail.com', 'fumarola', 'antonianna', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'afumarola', '08');
+VALUES (8, 'antonianna@calolenocifrancesco.it', 'fumarola', 'antonianna', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'afumarola', '08');
 INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
-VALUES (9, 'paolo.convertini@gmail.com', 'calolenoci', 'rocco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'rcalolenoci', '10');
+VALUES (9, 'roccocalolenoci@gmail.com', 'calolenoci', 'rocco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'rcalolenoci', '10');
 INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
-VALUES (10, 'paolo.convertini@gmail.com', 'devincienti', 'francesco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'fdevincienti', '13');
+VALUES (10, 'calolenoci.fra@gmail.com', 'devincienti', 'francesco', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'fdevincienti', '13');
 INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
-VALUES (11, 'paolo.convertini@gmail.com', 'semeraro', 'angela', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'asemeraro', '15');
+VALUES (11, 'greece@calolenocifrancesco.it', 'semeraro', 'angela', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'asemeraro', '15');
 INSERT INTO auth.USER (id,  email, lastname, name, password, username, codVenditore)
-VALUES (12, 'paolo.convertini@gmail.com', '', 'mariagrazia', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'mariagrazia', '16');
+VALUES (12, 'info@calolenocifrancesco.it', '', 'mariagrazia', 'W54q1QK2gVP+cG6Hc4P4kQ==', 'mariagrazia', '16');
 
 
 

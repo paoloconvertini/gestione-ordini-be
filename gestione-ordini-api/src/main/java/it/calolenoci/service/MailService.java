@@ -27,13 +27,10 @@ import static javax.transaction.Transactional.TxType.SUPPORTS;
 public class MailService {
 
 
-    @ConfigProperty(name = "email.to")
-    String to;
-
     @Inject
     Mailer mailer;
 
-    public Uni<Response> send(MailTemplate.MailTemplateInstance template, MailAttachment attachment, String subject, InlineAttachment inlineAttachment, String... to) {
+    public Response send(MailTemplate.MailTemplateInstance template, MailAttachment attachment, String subject, InlineAttachment inlineAttachment, String... to) {
         try {
             Mail m = new Mail();
             if (inlineAttachment != null) {
@@ -45,7 +42,7 @@ public class MailService {
             if (attachment != null) {
                 m.addAttachment(attachment.getName(), attachment.getFile(), attachment.getContentType());
             }
-            Uni<Response> uni = template
+            template
                     .mail(m)
                     .send()
                     .map(a -> Response.ok(new ResponseDto("Mail inviata correttamente", false)).build())
@@ -55,14 +52,14 @@ public class MailService {
                         return Response.serverError().build();
                     });
             Log.debug("Invio corretto!");
-            return uni;
+            return  Response.ok(new ResponseDto("Mail inviata correttamente", false)).build();
         } catch (Exception e) {
             Log.error("Errore invio mail", e);
-            return null;
+            return Response.serverError().build();
         }
     }
 
-    public void sendMailOrdineCompleto(File f, OrdineDTO dto) {
+    public void sendMailOrdineCompleto(File f, OrdineDTO dto, String email) {
         try {
             String body = "<div style=\"font-family:Arial,sans-serif\">" +
                           " <span>L'ordine n. " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo() + " è completo e quindi è pronto per essere consegnato.</span> " +
@@ -74,12 +71,7 @@ public class MailService {
                           " </ul>" +
                           "</div>";
             MailAttachment attachment = new MailAttachment(f.getName(), f, "application/pdf");
-            String[] split = to.split(",");
-            List<String> strings = new ArrayList<>(Arrays.stream(split).toList());
-            strings.remove(0);
-            String [] result = strings.toArray(new String[0]);
-            mailer.send(Mail.withHtml(split[0], "Ordine completo!", body)
-                    .addTo(result)
+            mailer.send(Mail.withHtml(email, "Ordine completo!", body)
                     .addAttachment(attachment.getName(), attachment.getFile(), attachment.getContentType()));
         } catch (Exception e) {
             Log.error("Errore invio mail", e);

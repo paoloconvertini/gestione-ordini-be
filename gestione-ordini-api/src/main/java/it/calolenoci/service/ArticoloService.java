@@ -127,12 +127,12 @@ public class ArticoloService {
     }
 
     @Transactional
-    public void save(List<OrdineDettaglioDto> list, String user) {
-        save(list, user, false);
+    public void save(List<OrdineDettaglioDto> list, String user, String email) {
+        save(list, user, false, email);
     }
 
     @Transactional
-    public String save(List<OrdineDettaglioDto> list, String user, Boolean chiudi) {
+    public String save(List<OrdineDettaglioDto> list, String user, Boolean chiudi, String email) {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
         AtomicBoolean warnNoBolla = new AtomicBoolean(false);
@@ -187,14 +187,14 @@ public class ArticoloService {
                     Parameters.with("anno", ordineDettaglio.getAnno())
                             .and("serie", ordineDettaglio.getSerie())
                             .and("progressivo", ordineDettaglio.getProgressivo()));
-            String stato = chiudi(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo());
+            String stato = chiudi(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo(), email);
             OrdineDettaglio.updateStatus(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo(), stato);
             return stato;
         }
         return null;
     }
 
-    private String chiudi(Integer anno, String serie, Integer progressivo) {
+    private String chiudi(Integer anno, String serie, Integer progressivo, String email) {
         Ordine ordine = Ordine.findByOrdineId(anno, serie, progressivo);
         final String result = ordine.getGeStatus();
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
@@ -203,7 +203,7 @@ public class ArticoloService {
                     " and geFlagNonDisponibile = 'T'", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)) == 0) {
-                sendMail(anno, serie, progressivo);
+                sendMail(anno, serie, progressivo, email);
                 ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
             } else {
                 ordine.setGeStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
@@ -215,14 +215,14 @@ public class ArticoloService {
         }
 
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
-            sendMail(anno, serie, progressivo);
+            sendMail(anno, serie, progressivo, email);
             ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
         }
         ordine.persist();
         return ordine.getGeStatus();
     }
 
-    private void sendMail(Integer anno, String serie, Integer progressivo) {
+    private void sendMail(Integer anno, String serie, Integer progressivo, String email) {
         File f = new File(pathReport + "/ordine_" + anno + "_" + serie + "_" + progressivo + ".pdf");
         OrdineDTO dto = Ordine.find("SELECT p.intestazione, p.localita, p.provincia, p.telefono, p.email " +
                                 " FROM Ordine o " +
@@ -233,7 +233,7 @@ public class ArticoloService {
         dto.setAnno(anno);
         dto.setSerie(serie);
         dto.setProgressivo(progressivo);
-        mailService.sendMailOrdineCompleto(f, dto);
+        mailService.sendMailOrdineCompleto(f, dto, email);
     }
 
     @Transactional

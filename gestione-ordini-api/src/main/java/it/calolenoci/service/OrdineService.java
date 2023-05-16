@@ -36,32 +36,24 @@ public class OrdineService {
     @Inject
     ArticoloService articoloService;
 
-    public List<OrdineDTO> findAllByStatus(String status, String venditore) throws ParseException {
-        if (StringUtils.isNotBlank(status)){
-            if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(status) &&
-                    !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
-                checkStatusDettaglio();
-            }
-            if (!StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
-                checkConsegnati();
-            }
+    public List<OrdineDTO> findAllByStatus(String status, String venditore) {
+        if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(status) &&
+                !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
+            checkStatusDettaglio();
+        }
+        if (!StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
+            checkConsegnati();
         }
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, " +
-                "o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla " +
+                "o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla, o.hasFirma, o.note " +
                 "FROM Ordine o " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto ";
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.geStatus = :status ";
         Map<String, Object> map = new HashMap<>();
-        if (StringUtils.isBlank(status)) {
-            query += "WHERE ( o.geStatus is null OR o.geStatus = '') and o.dataOrdine >= :dataConfig and o.provvisorio <> 'S'";
-             map.put("dataConfig",sdf.parse(dataCongig));
-        } else {
-            query += "WHERE o.geStatus = :status ";
-            map.put("status", status);
-        }
-        if(StringUtils.isNotBlank(venditore)) {
-            query +=  " and o.serie = :venditore";
+        map.put("status", status);
+        if (StringUtils.isNotBlank(venditore)) {
+            query += " and o.serie = :venditore";
             map.put("venditore", venditore);
         }
         return Ordine.find(query, Sort.descending("dataOrdine"), map).project(OrdineDTO.class).list();
@@ -94,13 +86,14 @@ public class OrdineService {
                 String filename = "ordine_" + o.getAnno() + "_" + o.getSerie() + "_" + o.getProgressivo() + ".pdf";
                 File fileSrc = new File(path + filename);
                 File folderDest = new File(path + "archiviato/" + o.getAnno() + "/" + o.getSerie());
-                if(folderDest.mkdirs()){
+                if (folderDest.mkdirs()) {
                     try {
                         FileUtils.moveFile(fileSrc, new File(folderDest.getAbsolutePath() + "/" + filename), StandardCopyOption.REPLACE_EXISTING);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                };
+                }
+                ;
 
                 o.persist();
             }
@@ -123,6 +116,17 @@ public class OrdineService {
         Ordine.update("geStatus =:stato where anno = :anno and progressivo = :progressivo and serie = :serie",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)
                         .and("stato", status));
+    }
+
+    @Transactional
+    public void updateStatus(String stato) throws ParseException {
+        Ordine.update("geStatus = :stato WHERE (geStatus is null OR geStatus = '') and dataOrdine >= :dataConfig and provvisorio <> 'S'",
+                Parameters.with("dataConfig", sdf.parse(dataCongig)).and("stato", stato));
+    }
+
+    public List<OrdineDTO> findAllNuoviOrdini() throws ParseException {
+        return Ordine.find("SELECT o.anno, o.serie, o.progressivo FROM Ordine o WHERE (o.geStatus is null OR o.geStatus = '') and o.dataOrdine >= :dataConfig and o.provvisorio <> 'S'",
+                Parameters.with("dataConfig", sdf.parse(dataCongig))).project(OrdineDTO.class).list();
     }
 
 }

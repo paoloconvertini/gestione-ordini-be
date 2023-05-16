@@ -84,6 +84,13 @@ public class Ordine extends PanacheEntityBase {
     @Column(length = 100, name= "GE_USER_LOCK")
     private String geUserLock;
 
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Column(length = 1, name = "HAS_FIRMA", columnDefinition = "CHAR(1)")
+    private Boolean hasFirma;
+
+    @Column(length = 2000)
+    private String note;
+
     public static List<Ordine> findOrdiniByStatus(List<String> param) {
         return list("geStatus in (:param)", Parameters.with("param", param));
     }

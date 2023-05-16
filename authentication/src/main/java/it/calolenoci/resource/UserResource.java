@@ -15,6 +15,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import javax.annotation.security.PermitAll;
@@ -48,25 +49,39 @@ public class UserResource {
 
     @POST
     @Transactional
-    @RolesAllowed({ADMIN})
+    //@RolesAllowed({ADMIN})
+    @PermitAll
     @APIResponse(responseCode = "200", description = "User salvato con successo")
-    public Response saveUser(User user) {
+    public Response saveUser(UserResponseDTO user) {
         User entity = new User();
-        entity.username = user.username;
-        entity.name = user.name;
-        entity.lastname = user.lastname;
-        entity.password = cryptoService.encrypt(user.password);
-        entity.dataNascita = user.dataNascita;
-        entity.email = user.email;
-        List<Role> collect = user.roles.stream().map(r -> Role.findByName(r.name)).toList();
-        entity.roles.addAll(collect);
+        int count = 1;
+        boolean exists = true;
+        while (exists || count == user.getName().length()) {
+            entity.username = StringUtils.truncate(user.getName(), count) + user.getLastname();
+            count++;
+            exists = (User.findByUsername(entity.username) != null);
+        }
+        entity.name = user.getName();
+        entity.lastname = user.getLastname();
+        entity.password = cryptoService.encrypt(user.getPassword());
+        if (user.getDataNascita() != null) {
+            entity.dataNascita = user.getDataNascita();
+        }
+        if (StringUtils.isNotBlank(user.getEmail())) {
+            entity.email = user.getEmail();
+        }
+        if (!user.getRoles().isEmpty()) {
+            List<Role> collect = user.getRoles().stream().map(r -> Role.findByName(r.name)).toList();
+            entity.roles.addAll(collect);
+        }
         entity.persist();
         return Response.status(Response.Status.CREATED).entity(user).build();
     }
 
     @GET
     @Path("/{idUser}")
-    @RolesAllowed({ADMIN})
+    //@RolesAllowed({ADMIN})
+    @PermitAll
     public Response getUser(Long idUser) {
         User entity = findUserById(idUser);
         return Response.ok(entity).build();
@@ -91,18 +106,18 @@ public class UserResource {
 
         List<User> list = User.listAll();
         List<User> users = list.stream().filter(u ->
-                u.roles.stream().anyMatch(r ->
-                        ruoli.stream().anyMatch(role ->  r.name.equals(role))))
+                        u.roles.stream().anyMatch(r ->
+                                ruoli.stream().anyMatch(role -> r.name.equals(role))))
                 .toList();
         List<UserResponseDTO> result = new ArrayList<>();
         users.forEach(u -> {
             UserResponseDTO dto = new UserResponseDTO();
             dto.setFullname(u.name);
             dto.setChecked(Boolean.FALSE);
-            if(StringUtils.isNotBlank(u.codVenditore)) {
+            if (StringUtils.isNotBlank(u.codVenditore)) {
                 dto.setCodVenditore(u.codVenditore);
             }
-            if(StringUtils.isNotBlank(u.email)) {
+            if (StringUtils.isNotBlank(u.email)) {
                 dto.setEmail(u.email);
             }
             result.add(dto);
@@ -118,7 +133,7 @@ public class UserResource {
     @RolesAllowed(ADMIN)
     public Response delete(Long idUser) {
         findUserById(idUser).delete();
-        return Response.ok().build();
+        return Response.ok().entity(new ResponseDTO("Dipendente eliminato!", false)).build();
     }
 
     @PUT
@@ -130,40 +145,41 @@ public class UserResource {
     public Response updatePassword(String username, UserResponseDTO dto) {
         User entity = findUserByName(username);
         entity.password = cryptoService.encrypt(dto.getPassword());
-        return Response.ok().entity(new ResponseDTO("Password aggoirnata!", false)).build();
+        return Response.ok().entity(new ResponseDTO("Password aggiornata!", false)).build();
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/update/{id}")
     @Transactional
-    @RolesAllowed({ADMIN})
+    //@RolesAllowed({ADMIN})
+    @PermitAll
     @APIResponse(responseCode = "404", description = "User non trovato")
     @APIResponse(responseCode = "200", description = "User aggiornato con successo")
-    public Response update(Long id, User user) {
+    public Response update(Long id, UserResponseDTO user) {
         User entity = findUserById(id);
 
-        if (StringUtils.isNotBlank(user.name)) {
-            entity.name = user.name;
+        if (StringUtils.isNotBlank(user.getName())) {
+            entity.name = user.getName();
         }
-        if (StringUtils.isNotBlank(user.lastname)) {
-            entity.lastname = user.lastname;
+        if (StringUtils.isNotBlank(user.getLastname())) {
+            entity.lastname = user.getLastname();
         }
-        if (user.dataNascita != null) {
-            entity.dataNascita = user.dataNascita;
+        if (user.getDataNascita() != null) {
+            entity.dataNascita = user.getDataNascita();
         }
-        if(user.email != null) {
-            entity.email = user.email;
+        if (user.getEmail() != null) {
+            entity.email = user.getEmail();
         }
-        if (user.roles != null && !user.roles.isEmpty()) {
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             entity.roles = new LinkedHashSet<>();
-            List<Role> collect = user.roles.stream().map(r -> Role.findByName(r.name)).toList();
+            List<Role> collect = user.getRoles().stream().map(r -> Role.findByName(r.name)).toList();
             entity.roles.addAll(collect);
         }
-        if (StringUtils.isNotBlank(user.password)) {
-            entity.password = cryptoService.encrypt(user.password);
+        if (StringUtils.isNotBlank(user.getPassword())) {
+            entity.password = cryptoService.encrypt(user.getPassword());
         }
 
-        return Response.ok().build();
+        return Response.ok().entity(new ResponseDTO("Utente aggiornato!", false)).build();
     }
 
     private User findUserById(Long id) {

@@ -81,7 +81,7 @@ public class OrdineFornitoreService {
                     fornitoreDettaglio.setPid(a.getProgrGenerale());
                     fornitoreDettaglio.setOArticolo(a.getArticolo());
                     fornitoreDettaglio.setODescrArticolo(a.getDescrArticolo());
-                    fornitoreDettaglio.setOPrezzo(a.getPrezzoBase());
+                    fornitoreDettaglio.setOPrezzo(a.getCostoBase());
                     fornitoreDettaglio.setOQuantita(a.getQuantita());
                     fornitoreDettaglio.setOUnitaMisura(a.getUnitaMisura());
                     fornitoreDettaglio.setOColli(a.getColli());

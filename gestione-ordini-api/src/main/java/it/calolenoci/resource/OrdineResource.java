@@ -70,6 +70,7 @@ public class OrdineResource {
     @Consumes(MULTIPART_FORM_DATA)
     @Path("/upload")
     @RolesAllowed({ADMIN, VENDITORE})
+    @Transactional
     public Response upload(MultipartBody data) {
 
         final Integer anno = Integer.valueOf(data.orderId.split("_")[0]);
@@ -93,14 +94,14 @@ public class OrdineResource {
         }
 
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
+        Ordine.update("hasFirma = 'T' WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
         if (ordineDTO != null) {
             ResponseOrdineDettaglio responseOrdineDettaglio = articoloService.findById(new FiltroArticoli(anno, serie, progressivo));
             List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, responseOrdineDettaglio.getArticoli(), name, firmaVenditore);
             if (!dtoList.isEmpty()) {
                 try {
                     service.createReport(dtoList);
-                    ordineService.changeStatus(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-                    articoloService.changeAllStatus(anno, serie, progressivo, StatoOrdineEnum.DA_PROCESSARE);
                 } catch (JRException | IOException e) {
                     Log.error("Errore nella creazione del report per l'ordine " + data.orderId, e);
                     throw new RuntimeException(e);
@@ -113,23 +114,24 @@ public class OrdineResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
+    @Path("/{status}")
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
-    public Response getAllOrdini(@QueryParam("status") String status) throws ParseException {
+    public Response getAllOrdini(String status) {
         return Response.ok(ordineService.findAllByStatus(status, null)).build();
     }
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
-    @Path("/{venditore}")
+    @Path("/{venditore}/{status}")
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
-    public Response getAllOrdiniByVenditore(@QueryParam("status") String status, String venditore) throws ParseException {
-        return Response.ok(ordineService.findAllByStatus(status, venditore)).build();
+    public Response getAllOrdiniByVenditore(String venditore, String status) {
+        return Response.ok(ordineService.findAllByStatus(venditore, status)).build();
     }
 
     @Consumes(APPLICATION_JSON)
@@ -147,8 +149,9 @@ public class OrdineResource {
 
     @GET
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
-    @Path("/updateConsegne")
-    public Response updateConsegne(@QueryParam("status") String status) throws ParseException {
+    @Path("/{status}/aggiornaListaOrdini")
+    public Response aggiornaListaOrdini(String status) throws ParseException {
+        scheduler.findNuoviOrdini();
         scheduler.update();
         return Response.ok(ordineService.findAllByStatus(status, null)).build();
     }
@@ -160,5 +163,19 @@ public class OrdineResource {
         ordineService.changeStatus(anno, serie, progressivo, status);
         return Response.ok(new ResponseDto("Ordine riaperto", false)).build();
     }
+
+    @POST
+    @Path("/addNotes")
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @Transactional
+    @Consumes(APPLICATION_JSON)
+    public Response addNotes(OrdineDTO dto){
+        Ordine.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
+                Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
+                        .and("serie", dto.getSerie())
+                        .and("progressivo", dto.getProgressivo()));
+        return Response.ok(new ResponseDto("Nota aggiunta", false)).build();
+    }
+
 
 }
