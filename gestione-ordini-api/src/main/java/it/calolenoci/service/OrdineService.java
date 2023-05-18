@@ -81,7 +81,7 @@ public class OrdineService {
         list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
         List<Ordine> ordineList = Ordine.findOrdiniByStatus(list);
         ordineList.forEach(o -> {
-            if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getGeWarnNoBolla()) {
+            if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getGeWarnNoBolla() && o.getHasFirma()) {
                 o.setGeStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
                 String filename = "ordine_" + o.getAnno() + "_" + o.getSerie() + "_" + o.getProgressivo() + ".pdf";
                 File fileSrc = new File(path + filename);
