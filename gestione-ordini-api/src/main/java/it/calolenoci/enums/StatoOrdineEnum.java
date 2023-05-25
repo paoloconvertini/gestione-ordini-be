@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum StatoOrdineEnum {
 
+    TUTTI ("TUTTI"),
     DA_PROCESSARE("DA_PROCESSARE"),
 
     DA_ORDINARE("DA_ORDINARE"),

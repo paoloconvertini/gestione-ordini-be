@@ -2,6 +2,8 @@ package it.calolenoci.service;
 
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
+import it.calolenoci.dto.FiltroOrdini;
+import it.calolenoci.dto.FiltroStati;
 import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.StatoOrdineEnum;
@@ -21,6 +23,7 @@ import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class OrdineService {
@@ -36,12 +39,12 @@ public class OrdineService {
     @Inject
     ArticoloService articoloService;
 
-    public List<OrdineDTO> findAllByStatus(String status, String venditore) {
-        if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(status) &&
-                !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
+    public List<OrdineDTO> findAllByStatus(FiltroOrdini filtro) {
+        if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
+                !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
             checkStatusDettaglio();
         }
-        if (!StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(status)) {
+        if (!StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
             checkConsegnati();
         }
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
@@ -49,12 +52,16 @@ public class OrdineService {
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, " +
                 "o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla, o.hasFirma, o.note " +
                 "FROM Ordine o " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.geStatus = :status ";
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE 1=1 ";
+
         Map<String, Object> map = new HashMap<>();
-        map.put("status", status);
-        if (StringUtils.isNotBlank(venditore)) {
+        if(StringUtils.isNotBlank(filtro.getStatus())) {
+            query += " AND o.geStatus = :status";
+            map.put("status", filtro.getStatus());
+        }
+        if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
-            map.put("venditore", venditore);
+            map.put("venditore", filtro.getCodVenditore());
         }
         return Ordine.find(query, Sort.descending("dataOrdine"), map).project(OrdineDTO.class).list();
     }
@@ -129,4 +136,12 @@ public class OrdineService {
                 Parameters.with("dataConfig", sdf.parse(dataCongig))).project(OrdineDTO.class).list();
     }
 
+    public List<FiltroStati> getStati() {
+        return Arrays.stream(StatoOrdineEnum.values()).map(s -> {
+            if (s.getDescrizione().equals(StatoOrdineEnum.TUTTI.getDescrizione())) {
+                return new FiltroStati(s.getDescrizione(), "", true);
+            }
+            return new FiltroStati(s.getDescrizione(), s.getDescrizione(), false);
+        }) .collect(Collectors.toList());
+    }
 }

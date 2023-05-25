@@ -111,27 +111,25 @@ public class OrdineResource {
         return Response.ok().entity(new ResponseDto("Firma creata con successo!", false)).build();
     }
 
-
     @Operation(summary = "Returns all the ordini from the database")
-    @GET
-    @Path("/{status}")
+    @POST
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
-    public Response getAllOrdini(String status) {
-        return Response.ok(ordineService.findAllByStatus(status, null)).build();
+    public Response getAllOrdini(FiltroOrdini filtro) {
+        return Response.ok(ordineService.findAllByStatus(filtro)).build();
     }
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
-    @Path("/{venditore}/{status}")
+    @Path("/getStati")
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
-    public Response getAllOrdiniByVenditore(String venditore, String status) {
-        return Response.ok(ordineService.findAllByStatus(venditore, status)).build();
+    public Response getStati() {
+        return Response.ok(ordineService.getStati()).build();
     }
 
     @Consumes(APPLICATION_JSON)
@@ -149,11 +147,11 @@ public class OrdineResource {
 
     @GET
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
-    @Path("/{status}/aggiornaListaOrdini")
-    public Response aggiornaListaOrdini(String status) throws ParseException {
+    @Path("/aggiornaListaOrdini")
+    public Response aggiornaListaOrdini() throws ParseException {
         scheduler.findNuoviOrdini();
         scheduler.update();
-        return Response.ok(ordineService.findAllByStatus(status, null)).build();
+        return Response.ok(ordineService.findAllByStatus(new FiltroOrdini())).build();
     }
 
     @GET
