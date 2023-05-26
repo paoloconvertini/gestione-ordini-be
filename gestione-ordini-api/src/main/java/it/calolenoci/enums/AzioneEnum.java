@@ -13,7 +13,10 @@ public enum AzioneEnum {
 
     CONSEGNATO("CONSEGNATO"),
     QUANTITA("QUANTITA"),
+    QTA_RISERVATA("QTA_RISERVATA"),
+    QTA_PRONTO_CONSEGNA("QTA_PRONTO_CONSEGNA"),
     TONO("TONO"),
+    PRONTO_CONSEGNA("PRONTO_CONSEGNA"),
     ORDINATO("ORDINATO");
 
     private final String desczrizione;

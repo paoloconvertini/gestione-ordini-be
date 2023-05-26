@@ -43,12 +43,6 @@ public class ArticoloService {
         ResponseOrdineDettaglio response = new ResponseOrdineDettaglio();
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
-        if (StringUtils.isBlank(ordineDTO.getStatus()) ||
-                StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(ordineDTO.getStatus()) ||
-                StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(ordineDTO.getStatus())
-        ) {
-            filtro.setFlDaConsegnare(null);
-        }
         list = OrdineDettaglio.findArticoliById(filtro);
         Double aDouble = OrdineDettaglio.find("SELECT SUM(o.prezzo*o.quantita) FROM OrdineDettaglio o " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo"
@@ -80,6 +74,15 @@ public class ArticoloService {
                             " geFlagConsegnato = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV" +
                             " THEN CASE WHEN (quantitaV - :qta) = 0 THEN 'T' ELSE 'F' END " +
                             " ELSE CASE WHEN (quantita - :qta) = 0 THEN 'T' ELSE 'F' END END, " +
+                            " qtaProntoConsegna = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV " +
+                            " THEN CASE WHEN (quantitaV - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaProntoConsegna END" +
+                            " ELSE CASE WHEN (quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaProntoConsegna END END, " +
+                            " flProntoConsegna = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV " +
+                            " THEN CASE WHEN (quantitaV - qtaDaConsegnare) <> :qta THEN 'F' ELSE 'T' END" +
+                            " ELSE CASE WHEN (quantita - qtaDaConsegnare) <> :qta THEN 'F' ELSE 'T' END END, " +
+                            " qtaRiservata = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV " +
+                            " THEN CASE WHEN (quantitaV - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaRiservata END" +
+                            " ELSE CASE WHEN (quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaRiservata END END, " +
                             " qtaDaConsegnare = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV THEN (quantitaV - :qta)" +
                             " ELSE (quantita - :qta) END, " +
                             "flBolla = 'T' WHERE progrGenerale = :progrGenerale and geFlagConsegnato <> 'T'", Parameters.with("qta", e.getQta())
@@ -141,32 +144,42 @@ public class ArticoloService {
             if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDesczrizione(),
-                        dto.getRigo(), null, dto.getQuantita()));
+                        dto.getRigo(), null, dto.getQuantita(), null, null));
             }
             if (!Objects.equals(ordineDettaglio.getGeTono(), dto.getGeTono())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.TONO.getDesczrizione(),
-                        dto.getRigo(), dto.getGeTono(), null));
+                        dto.getRigo(), dto.getGeTono(), null, null, null));
             }
             if (!Objects.equals(dto.getGeFlagRiservato(), ordineDettaglio.getGeFlagRiservato())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.RISERVATO.getDesczrizione()
-                        , dto.getRigo(), null, null));
+                        , dto.getRigo(), null, null, null, null));
             }
             if (!Objects.equals(dto.getGeFlagOrdinato(), ordineDettaglio.getGeFlagOrdinato())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.ORDINATO.getDesczrizione()
-                        , dto.getRigo(), null, null));
+                        , dto.getRigo(), null, null, null, null));
             }
             if (!Objects.equals(dto.getGeFlagNonDisponibile(), ordineDettaglio.getGeFlagNonDisponibile())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.NON_DISPONIBILE.getDesczrizione()
-                        , dto.getRigo(), null, null));
+                        , dto.getRigo(), null, null, null, null));
             }
             if (!Objects.equals(dto.getGeFlagConsegnato(), ordineDettaglio.getGeFlagConsegnato())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDesczrizione()
-                        , dto.getRigo(), null, null));
+                        , dto.getRigo(), null, null, null, null));
+            }
+            if (!Objects.equals(dto.getFlProntoConsegna(), ordineDettaglio.getFlProntoConsegna())) {
+                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                        dto.getProgressivo(), user, AzioneEnum.PRONTO_CONSEGNA.getDesczrizione()
+                        , dto.getRigo(), null, null, null, dto.getQtaProntoConsegna()));
+            }
+            if (!Objects.equals(ordineDettaglio.getQtaRiservata(), dto.getQtaRiservata())) {
+                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                        dto.getProgressivo(), user, AzioneEnum.QTA_RISERVATA.getDesczrizione(),
+                        dto.getRigo(), null, null, dto.getQtaRiservata(), null));
             }
             if (!warnNoBolla.get()) {
                 warnNoBolla.set(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0);

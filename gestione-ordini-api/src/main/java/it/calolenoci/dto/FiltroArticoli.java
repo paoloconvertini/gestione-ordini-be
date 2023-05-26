@@ -15,7 +15,7 @@ public class FiltroArticoli implements Serializable {
 
     private Boolean flNonDisponibile;
 
-    private Boolean flDaConsegnare;
+    private Integer flConsegna;
 
     private Boolean flDaRiservare;
 

@@ -51,6 +51,12 @@ public class RegistroAzioni extends PanacheEntityBase {
     @Column(length = 20, name= "tono")
     private String tono;
 
+    @Column(name = "qtaRiservata")
+    private Double qtaRiservata;
+
+    @Column(name = "qtaProntoConsegna")
+    private Double qtaProntoConsegna;
+
 
 
 }

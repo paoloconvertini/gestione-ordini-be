@@ -116,6 +116,10 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 1, name = "GE_FLAG_CONSEGNATO", columnDefinition = "CHAR(1)")
     private Boolean geFlagConsegnato;
 
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Column(length = 1, name = "FLAG_PRONTO_CONSEGNA", columnDefinition = "CHAR(1)")
+    private Boolean flProntoConsegna;
+
     @Column(length = 20, name = "GE_TONO")
     private String geTono;
 
@@ -125,6 +129,15 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Type(type = "org.hibernate.type.TrueFalseType")
     @Column(length = 1, name = "HAS_BOLLA", columnDefinition = "CHAR(1)")
     private Boolean flBolla;
+
+    @Column(length = 2000)
+    private String note;
+
+    @Column(name = "QTA_RISERVATA")
+    private Double qtaRiservata;
+
+    @Column(name = "QTA_PRONTO_CONSEGNA")
+    private Double qtaProntoConsegna;
 
     public static void updateStatus(Integer anno, String serie, Integer progressivo, String stato) {
         update("geStatus = :stato where anno = :anno AND serie = :serie AND progressivo = :progressivo",
@@ -143,7 +156,8 @@ public class OrdineDettaglio extends PanacheEntityBase {
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo,  o.fUnitaMisura,  " +
                 "o.geFlagRiservato, o.geFlagNonDisponibile, o.geFlagOrdinato, o.geFlagConsegnato,  o.geTono, a.fornitoreArticoloId.articolo, " +
                 "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF,  " +
-                "o.qtaConsegnatoSenzaBolla, (CASE WHEN o.qtaDaConsegnare IS NULL THEN o.quantita ELSE o.qtaDaConsegnare END) as qtaDaConsegnare, o.flBolla, pc.intestazione  " +
+                "o.qtaConsegnatoSenzaBolla, (CASE WHEN o.qtaDaConsegnare IS NULL THEN o.quantita ELSE o.qtaDaConsegnare END) as qtaDaConsegnare, o.flBolla, pc.intestazione, " +
+                "o.note, o.qtaRiservata, o.flProntoConsegna, o.qtaProntoConsegna  " +
                 "FROM OrdineDettaglio o " +
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON " +
                 "f2.nota like CONCAT('Riferimento n. ', trim(str(o.anno)), '/', o.serie, '/', trim(str(o.progressivo)), '-', trim(str(o.rigo))) " +
@@ -154,11 +168,12 @@ public class OrdineDettaglio extends PanacheEntityBase {
         if (filtro.getFlNonDisponibile() != null && filtro.getFlNonDisponibile()) {
             query += " AND o.geFlagNonDisponibile = 'T' ";
         }
-        if (filtro.getFlDaConsegnare() != null) {
-            if (filtro.getFlDaConsegnare()) {
-                query += " AND (o.geFlagConsegnato = 'F' OR o.geFlagConsegnato IS NULL OR o.geFlagConsegnato = '')";
-            } else {
-                query += " AND o.geFlagConsegnato = 'T' ";
+        switch (filtro.getFlConsegna()) {
+            case 0 ->
+                    query += " AND (o.geFlagConsegnato = 'F' OR o.geFlagConsegnato IS NULL OR o.geFlagConsegnato = '')";
+            case 1 -> query += " AND o.geFlagConsegnato = 'T' ";
+            case 2 -> query += " AND o.flProntoConsegna = 'T' ";
+            default -> {
             }
         }
         if (filtro.getFlDaRiservare() != null && filtro.getFlDaRiservare()) {

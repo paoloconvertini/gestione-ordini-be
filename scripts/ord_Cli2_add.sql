@@ -8,5 +8,9 @@ ALTER TABLE ORDCLI2 ADD
     GE_TONO varchar(20) NULL,
     QUANTITA_DA_CONSEGNARE float NULL,
     QTA_CONS_NO_BOLLA float NULL,
-    HAS_BOLLA char(1) default 0
+    HAS_BOLLA char(1) default 0,
+    NOTE varchar(2000),
+    QTA_RISERVATA float NULL,
+    FLAG_PRONTO_CONSEGNA char(1) default 0,
+    QTA_PRONTO_CONSEGNA float NULL
 ;

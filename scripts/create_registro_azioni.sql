@@ -10,6 +10,8 @@ create table REGISTROAZIONI
     azione      varchar(30)  not null,
     quantita float null,
     tono varchar(20) null,
+    qtaRiservata float null,
+    qtaProntoConsegna float null,
     constraint REGISTROAZIONI_pk
         primary key (id)
     );

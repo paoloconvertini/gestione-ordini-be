@@ -67,6 +67,14 @@ public class OrdineDettaglioDto implements Serializable {
 
     private String intestazione;
 
+    private String note;
+
+    private Double qtaProntoConsegna;
+
+    private Double qtaRiservata;
+
+    private Boolean flProntoConsegna;
+
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo,
                               String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, String fUnitaMisura,
                               Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato,
@@ -130,6 +138,44 @@ public class OrdineDettaglioDto implements Serializable {
         this.qtaDaConsegnare = qtaDaConsegnare;
         this.flBolla = flBolla;
         this.intestazione = intestazione;
+    }
+
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo,
+                              String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, String fUnitaMisura,
+                              Boolean geFlagRiservato, Boolean geFlagNonDisponibile, Boolean geFlagOrdinato, Boolean geFlagConsegnato,
+                              String geTono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
+                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla, String intestazione,
+                              String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna) {
+        this.anno = anno;
+        this.progressivo = progressivo;
+        this.progrGenerale = progrGenerale;
+        this.tipoRigo = tipoRigo;
+        this.rigo = rigo;
+        this.serie = serie;
+        this.fArticolo = fArticolo;
+        this.codArtFornitore = codArtFornitore;
+        this.fDescrArticolo = fDescrArticolo;
+        this.quantita = quantita;
+        this.prezzo = prezzo;
+        this.fUnitaMisura = fUnitaMisura;
+        this.geFlagRiservato = geFlagRiservato;
+        this.geFlagNonDisponibile = geFlagNonDisponibile;
+        this.geFlagOrdinato = geFlagOrdinato;
+        this.geFlagConsegnato = geFlagConsegnato;
+        this.geTono = geTono;
+        this.articolo = articolo;
+        this.annoOAF = annoOAF;
+        this.serieOAF = serieOAF;
+        this.progressivoOAF = progressivoOAF;
+        this.dataOrdineOAF = dataOrdineOAF;
+        this.qtaConsegnatoSenzaBolla = qtaConsegnatoSenzaBolla;
+        this.qtaDaConsegnare = qtaDaConsegnare;
+        this.flBolla = flBolla;
+        this.intestazione = intestazione;
+        this.note = note;
+        this.qtaRiservata = qtaRiservata;
+        this.flProntoConsegna = flProntoConsegna;
+        this.qtaProntoConsegna = qtaProntoConsegna;
     }
 
     public OrdineDettaglioDto (Integer anno, String serie, Integer progressivo, Integer rigo) {

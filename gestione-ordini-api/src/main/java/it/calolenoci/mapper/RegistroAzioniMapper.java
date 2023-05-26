@@ -10,7 +10,7 @@ import java.util.Date;
 @ApplicationScoped
 public class RegistroAzioniMapper {
 
-    public RegistroAzioni fromDtoToEntity(Integer anno, String serie, Integer progressivo, String username, String azione, Integer rigo, String tono, Double quantita) {
+    public RegistroAzioni fromDtoToEntity(Integer anno, String serie, Integer progressivo, String username, String azione, Integer rigo, String tono, Double quantita, Double qtaRiservata, Double qtaProntoConsegna) {
         RegistroAzioni r = new RegistroAzioni();
         r.setAnno(anno);
         r.setProgressivo(progressivo);
@@ -26,6 +26,12 @@ public class RegistroAzioniMapper {
         }
         if (StringUtils.isNotBlank(tono)) {
             r.setTono(tono);
+        }
+        if(qtaProntoConsegna != null) {
+            r.setQtaProntoConsegna(qtaProntoConsegna);
+        }
+        if(qtaRiservata != null) {
+            r.setQtaRiservata(qtaRiservata);
         }
         return r;
     }

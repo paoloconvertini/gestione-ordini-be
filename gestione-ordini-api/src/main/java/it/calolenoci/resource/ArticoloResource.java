@@ -1,10 +1,7 @@
 package it.calolenoci.resource;
 
 import io.quarkus.panache.common.Parameters;
-import it.calolenoci.dto.FiltroArticoli;
-import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.dto.PianoContiDto;
-import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
@@ -107,6 +104,20 @@ public class ArticoloResource {
             return Response.status(Response.Status.OK).entity(new ResponseDto("Errore! Non è stato possibile aggiungere il fornitore " + dto.getIntestazione() + " all'articolo " + dto.getCodiceArticolo(), true)).build();
         }
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("Fornitore aggiunto all'articolo " + dto.getCodiceArticolo(), false)).build();
+    }
+
+    @POST
+    @Path("/addNotes")
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @Transactional
+    @Consumes(APPLICATION_JSON)
+    public Response addNotes(OrdineDettaglioDto dto){
+        OrdineDettaglio.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo and rigo = :rigo",
+                Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
+                        .and("serie", dto.getSerie())
+                        .and("progressivo", dto.getProgressivo())
+                        .and("rigo", dto.getRigo()));
+        return Response.ok(new ResponseDto("Nota aggiunta", false)).build();
     }
 
 }

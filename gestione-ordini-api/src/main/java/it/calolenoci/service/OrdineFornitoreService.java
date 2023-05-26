@@ -5,23 +5,23 @@ import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.ArticoloDto;
 import it.calolenoci.dto.OrdineFornitoreDto;
-import it.calolenoci.entity.Ordine;
-import it.calolenoci.entity.OrdineDettaglio;
-import it.calolenoci.entity.OrdineFornitore;
-import it.calolenoci.entity.OrdineFornitoreDettaglio;
+import it.calolenoci.entity.*;
+import it.calolenoci.enums.AzioneEnum;
+import it.calolenoci.mapper.RegistroAzioniMapper;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.time.Year;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class OrdineFornitoreService {
+
+    @Inject
+    RegistroAzioniMapper registroAzioniMapper;
 
     @Transactional
     public List<String> save(Integer anno, String serie, Integer progressivo, String user) throws Exception {
@@ -46,6 +46,7 @@ public class OrdineFornitoreService {
             int index = 1;
             Integer progressivoForn = OrdineFornitore.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM OrdineFornitore o").project(Integer.class).firstResult();
             Integer progressivoFornDettaglio = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM OrdineFornitoreDettaglio o").project(Integer.class).firstResult();
+            List<RegistroAzioni> registroAzioniList = new ArrayList<>();
             for (String sottoConto : mapArticoli.keySet()) {
                 List<ArticoloDto> articoloDtoList = mapArticoli.get(sottoConto);
                 Log.debug("Trovati " + articoloDtoList.size() + " articoli per il fornitore " + sottoConto);
@@ -93,9 +94,13 @@ public class OrdineFornitoreService {
                     OrdineDettaglio.update("geFlagNonDisponibile = 'F', geFlagOrdinato = 'T' where anno = :anno " +
                             "and serie = :serie and progressivo = :progressivo and rigo = :rigo", Parameters.with("anno", anno)
                             .and("serie", serie).and("progressivo", progressivo).and("rigo", a.getRigo()));
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(anno, serie,
+                                progressivo, user, AzioneEnum.ORDINATO.getDesczrizione()
+                                , a.getRigo(), null, null, null, null));
                 }
                 index++;
             }
+            RegistroAzioni.persist(registroAzioniList);
            long count = OrdineDettaglio.count("geFlagNonDisponibile = 'T' and anno = :anno " +
                     " and serie = :serie and progressivo = :progressivo ", Parameters.with("anno", anno)
                     .and("serie", serie).and("progressivo", progressivo));
