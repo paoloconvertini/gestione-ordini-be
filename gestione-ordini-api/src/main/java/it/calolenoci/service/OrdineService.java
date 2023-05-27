@@ -39,7 +39,7 @@ public class OrdineService {
     @Inject
     ArticoloService articoloService;
 
-    public List<OrdineDTO> findAllByStatus(FiltroOrdini filtro) {
+    public List<OrdineDTO> findAllByStatus(FiltroOrdini filtro) throws ParseException {
         if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
                 !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
             checkStatusDettaglio();
@@ -55,7 +55,7 @@ public class OrdineService {
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataOrdine >= :dataConfig and o.provvisorio <> 'S' ";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", dataCongig);
+        map.put("dataConfig",  sdf.parse(dataCongig));
         if(StringUtils.isNotBlank(filtro.getStatus())) {
             query += " AND o.geStatus = :status";
             map.put("status", filtro.getStatus());
