@@ -52,9 +52,10 @@ public class OrdineService {
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, " +
                 "o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla, o.hasFirma, o.note " +
                 "FROM Ordine o " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE 1=1 ";
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataOrdine >= :dataConfig and o.provvisorio <> 'S' ";
 
         Map<String, Object> map = new HashMap<>();
+        map.put("dataConfig", dataCongig);
         if(StringUtils.isNotBlank(filtro.getStatus())) {
             query += " AND o.geStatus = :status";
             map.put("status", filtro.getStatus());
