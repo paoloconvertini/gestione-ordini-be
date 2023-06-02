@@ -35,22 +35,27 @@ public class FetchScheduler {
         Log.info("INIZIO UPDATE CHECK BOLLE");
         Integer update;
         List<FatturaDto> list = fatturaService.getBolle();
-        if(list != null && !list.isEmpty()){
+        if (list != null && !list.isEmpty()) {
             update = articoloService.updateArticoliBolle(list);
-            if(update != null){
-                Log.debug("Aggiornati " + update + " articoli");
+            Log.debug("Aggiornati " + update + " articoli");
+            if (update != null && update != 0) {
                 ordineService.checkConsegnati();
             }
         }
         articoloService.checkNoBolle();
     }
+
     @Scheduled(every = "${cron.expr.nuovi.ordini:10m}")
     @Transactional
     public void findNuoviOrdini() throws ParseException {
-        List<OrdineDTO> allNuoviOrdini = ordineService.findAllNuoviOrdini();
         ordineService.updateStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-        allNuoviOrdini.forEach(o -> articoloService
-                .changeAllStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.DA_PROCESSARE));
+       /* List<OrdineDTO> allNuoviOrdini = ordineService.findAllNuoviOrdini();
+        if (!allNuoviOrdini.isEmpty()) {
+            ordineService.updateStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+            allNuoviOrdini.forEach(o -> articoloService
+                    .changeAllStatus(o.getAnno(), o.getSerie(), o.getProgressivo(), StatoOrdineEnum.DA_PROCESSARE));
+
+        }*/
     }
 
 }

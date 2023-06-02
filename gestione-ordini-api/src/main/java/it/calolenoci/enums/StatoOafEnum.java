@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum StatoOafEnum {
 
-    DA_PROCESSARE("DA_PROCESSARE"),
+    SOSPESO("SOSPESO"),
     DA_APPROVARE("DA_ORDINARE"),
     APPROVATO("INCOMPLETO");
 

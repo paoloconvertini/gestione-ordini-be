@@ -14,6 +14,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -70,6 +71,16 @@ public class ArticoloResource {
     @Path("/getBolle/{progrCliente}")
     public Response getBolle(Integer progrCliente) {
         return Response.ok(fatturaService.getBolle(progrCliente)).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @GET
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Path("/getAcconti/{sottoConto}")
+    public Response getAcconti(String sottoConto) {
+        return Response.ok(fatturaService.getAcconti(sottoConto)).build();
     }
 
     @Operation(summary = "Save dettaglio ordine")

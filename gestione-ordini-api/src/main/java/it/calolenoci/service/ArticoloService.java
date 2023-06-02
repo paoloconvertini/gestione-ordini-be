@@ -85,7 +85,9 @@ public class ArticoloService {
                             " ELSE CASE WHEN (quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaRiservata END END, " +
                             " qtaDaConsegnare = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV THEN (quantitaV - :qta)" +
                             " ELSE (quantita - :qta) END, " +
-                            "flBolla = 'T' WHERE progrGenerale = :progrGenerale and geFlagConsegnato <> 'T'", Parameters.with("qta", e.getQta())
+                            "flBolla = 'T' WHERE progrGenerale = :progrGenerale and geFlagConsegnato <> 'T'" +
+                            " AND qtaDaConsegnare <>  (CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV THEN (quantitaV - :qta) " +
+                            " ELSE (quantita - :qta) END)", Parameters.with("qta", e.getQta())
                             .and("progrGenerale", e.getProgrOrdCli())));
 
                     Optional<OrdineDettaglio> opt = OrdineDettaglio.find("progrGenerale = :progrGenerale",

@@ -57,8 +57,10 @@ public class OrdineService {
         Map<String, Object> map = new HashMap<>();
         map.put("dataConfig",  sdf.parse(dataCongig));
         if(StringUtils.isNotBlank(filtro.getStatus())) {
-            query += " AND o.geStatus = :status";
+            query += " AND o.geStatus = :status ";
             map.put("status", filtro.getStatus());
+        } else {
+            query += " AND o.geStatus <> 'ARCHIVIATO' AND o.geStatus IS NOT NULL AND o.geStatus <> '' ";
         }
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
@@ -101,7 +103,6 @@ public class OrdineService {
                         throw new RuntimeException(e);
                     }
                 }
-                ;
 
                 o.persist();
             }

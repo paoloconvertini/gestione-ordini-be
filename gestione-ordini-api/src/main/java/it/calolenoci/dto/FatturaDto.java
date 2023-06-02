@@ -22,6 +22,8 @@ import java.util.Date;
 public class FatturaDto implements Serializable {
     private Integer progrOrdCli;
     private Double qta;
+
+    private Double prezzo;
     private String numeroBolla;
     private Date dataBolla;
 

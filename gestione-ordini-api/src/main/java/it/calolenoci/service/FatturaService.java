@@ -1,24 +1,26 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Parameters;
+import it.calolenoci.dto.AccontoDto;
 import it.calolenoci.dto.FatturaDto;
-import it.calolenoci.entity.Fatture;
 import it.calolenoci.entity.FattureDettaglio;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 import java.util.List;
-import java.util.stream.DoubleStream;
 
 @ApplicationScoped
 public class FatturaService {
 
+    @Inject
+    EntityManager em;
+
     public List<FatturaDto> getBolle(){
         return FattureDettaglio
-                .find("Select f.progrOrdCli, SUM(f.quantita) as qta FROM FattureDettaglio f WHERE f.progrOrdCli <> 0 GROUP BY f.progrOrdCli ")
+                .find("Select f.progrOrdCli, SUM(f.quantita) as qta " +
+                        "FROM FattureDettaglio f " +
+                        "WHERE f.progrOrdCli <> 0 GROUP BY f.progrOrdCli")
                 .project(FatturaDto.class)
                 .list();
     }
@@ -32,4 +34,7 @@ public class FatturaService {
                 .list();
     }
 
+    public List<AccontoDto> getAcconti(String sottoConto) {
+        return em.createNamedQuery("AccontoDto").setParameter("sottoConto", sottoConto).getResultList();
+    }
 }
