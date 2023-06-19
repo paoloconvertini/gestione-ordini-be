@@ -130,10 +130,10 @@ public class OrdineService {
         }).collect(Collectors.toList());
     }
 
-    public void addNuoviOrdini() {
+    public void addNuoviOrdini() throws ParseException {
         List<Ordine> list = Ordine.find("SELECT o FROM Ordine o " +
-                "WHERE NOT EXISTS (SELECT 1 FROM GoOrdine god WHERE god.anno =  o.anno" +
-                " AND god.serie = o.serie AND god.progressivo = o.progressivo)").list();
+                "WHERE o.dataOrdine >= :dataConfig and o.provvisorio <> 'S' AND NOT EXISTS (SELECT 1 FROM GoOrdine god WHERE god.anno =  o.anno" +
+                " AND god.serie = o.serie AND god.progressivo = o.progressivo)", Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
         if (!list.isEmpty()) {
             List<GoOrdine> listToSave = new ArrayList<>();
             list.forEach(o -> listToSave.add(goOrdineMapper.fromOrdineToGoOrdine(o)));
