@@ -2,6 +2,7 @@ package it.calolenoci.resource;
 
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
+import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
@@ -54,7 +55,7 @@ public class ArticoloResource {
     @Transactional
     public Response getArticoliByIdOrdine(FiltroArticoli filtro) {
         if(!filtro.getView()){
-            Ordine.update("geLocked = 'T', geUserLock = :user where " +
+            GoOrdine.update("locked = 'T', userLock = :user where " +
                             "anno =:anno and serie =:serie and progressivo = :progressivo",
                     Parameters.with("user", user).and("anno", filtro.getAnno())
                             .and("serie", filtro.getSerie())

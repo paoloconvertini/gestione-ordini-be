@@ -1,6 +1,7 @@
 package it.calolenoci.resource;
 
 import it.calolenoci.dto.OrdineDettaglioDto;
+import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
@@ -54,6 +55,39 @@ public class OAFArticoloResource {
     public Response approva(Integer anno, String serie, Integer progressivo) {
         this.articoloService.approva(anno, serie, progressivo);
         return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore approvato", false)).build();
+    }
+
+    @Operation(summary = "Richiedi approvazione ordine a fornitore")
+    @POST
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/richiediApprovazione/{anno}/{serie}/{progressivo}")
+    public Response richiediApprovazione(Integer anno, String serie, Integer progressivo, List<OrdineFornitoreDettaglioDto> list) {
+        if (!list.isEmpty()) {
+            articoloService.save(list);
+            this.articoloService.richiediApprovazione(anno, serie, progressivo);
+            return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
+        }
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", false)).build();
+    }
+
+    @Operation(summary = "Richiedi approvazione ordine a fornitore")
+    @POST
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/salvaRigo/{anno}/{serie}/{progressivo}")
+    public Response salvaRigo(Integer anno, String serie, Integer progressivo, OrdineFornitoreDettaglioDto dto) {
+            articoloService.save(anno, serie, progressivo, dto);
+            return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
+    }
+
+    @Operation(summary = "Save dettaglio ordine")
+    @PUT
+    @RolesAllowed({ADMIN, MAGAZZINIERE, AMMINISTRATIVO})
+    public Response saveArticoli(List<OrdineFornitoreDettaglioDto> list) {
+        if (!list.isEmpty()) {
+            articoloService.save(list);
+            return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
+        }
+        return Response.status(Response.Status.OK).entity(new ResponseDto("lista vuota", true)).build();
     }
 
 }

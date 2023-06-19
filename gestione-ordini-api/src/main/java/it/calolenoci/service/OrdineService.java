@@ -1,21 +1,21 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.FiltroOrdini;
 import it.calolenoci.dto.FiltroStati;
 import it.calolenoci.dto.OrdineDTO;
+import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.StatoOrdineEnum;
+import it.calolenoci.mapper.GoOrdineMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import io.quarkus.logging.Log;
-
 import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class OrdineService {
 
+    @Inject
+    GoOrdineMapper goOrdineMapper;
     @ConfigProperty(name = "data.inizio")
     String dataCongig;
 
@@ -49,18 +51,19 @@ public class OrdineService {
         }
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
-                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, " +
-                "o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla, o.hasFirma, o.note " +
+                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.note " +
                 "FROM Ordine o " +
+                "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataOrdine >= :dataConfig and o.provvisorio <> 'S' ";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig",  sdf.parse(dataCongig));
-        if(StringUtils.isNotBlank(filtro.getStatus())) {
-            query += " AND o.geStatus = :status ";
+        map.put("dataConfig", sdf.parse(dataCongig));
+        if (StringUtils.isNotBlank(filtro.getStatus())) {
+            query += " AND go.status = :status ";
             map.put("status", filtro.getStatus());
         } else {
-            query += " AND o.geStatus <> 'ARCHIVIATO' AND o.geStatus IS NOT NULL AND o.geStatus <> '' ";
+            query += " AND go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '' ";
         }
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
@@ -74,10 +77,10 @@ public class OrdineService {
         List<String> list = new ArrayList<>();
         list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
         list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
-        List<Ordine> ordineList = Ordine.findOrdiniByStatus(list);
+        List<GoOrdine> ordineList = GoOrdine.findOrdiniByStatus(list);
         ordineList.forEach(o -> {
             if (articoloService.findAnyNoStatus(o.getAnno(), o.getSerie(), o.getProgressivo())) {
-                o.setGeStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+                o.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
                 o.persist();
             }
 
@@ -89,21 +92,10 @@ public class OrdineService {
         List<String> list = new ArrayList<>();
         list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
         list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
-        List<Ordine> ordineList = Ordine.findOrdiniByStatus(list);
+        List<GoOrdine> ordineList = GoOrdine.findOrdiniByStatus(list);
         ordineList.forEach(o -> {
-            if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getGeWarnNoBolla() && o.getHasFirma()) {
-                o.setGeStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
-                String filename = "ordine_" + o.getAnno() + "_" + o.getSerie() + "_" + o.getProgressivo() + ".pdf";
-                File fileSrc = new File(path + filename);
-                File folderDest = new File(path + "archiviato/" + o.getAnno() + "/" + o.getSerie());
-                if (folderDest.mkdirs()) {
-                    try {
-                        FileUtils.moveFile(fileSrc, new File(folderDest.getAbsolutePath() + "/" + filename), StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
+            if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getWarnNoBolla() && (o.getHasFirma() != null && o.getHasFirma())) {
+                o.setStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
                 o.persist();
             }
         });
@@ -112,8 +104,9 @@ public class OrdineService {
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
         return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
                                 "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
-                                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  o.geStatus, o.geLocked as locked, o.geUserLock as userLock, o.geWarnNoBolla as warnBolla " +
+                                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, go.locked, go.userLock, go.warnNoBolla " +
                                 "FROM Ordine o " +
+                                "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo",
                         Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo))
@@ -122,21 +115,11 @@ public class OrdineService {
 
     @Transactional
     public void changeStatus(Integer anno, String serie, Integer progressivo, String status) {
-        Ordine.update("geStatus =:stato where anno = :anno and progressivo = :progressivo and serie = :serie",
+        GoOrdine.update("status =:stato where anno = :anno and progressivo = :progressivo and serie = :serie",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)
                         .and("stato", status));
     }
 
-    @Transactional
-    public void updateStatus(String stato) throws ParseException {
-        Ordine.update("geStatus = :stato WHERE (geStatus is null OR geStatus = '') and dataOrdine >= :dataConfig and provvisorio <> 'S'",
-                Parameters.with("dataConfig", sdf.parse(dataCongig)).and("stato", stato));
-    }
-
-    public List<OrdineDTO> findAllNuoviOrdini() throws ParseException {
-        return Ordine.find("SELECT o.anno, o.serie, o.progressivo FROM Ordine o WHERE (o.geStatus is null OR o.geStatus = '') and o.dataOrdine >= :dataConfig and o.provvisorio <> 'S'",
-                Parameters.with("dataConfig", sdf.parse(dataCongig))).project(OrdineDTO.class).list();
-    }
 
     public List<FiltroStati> getStati() {
         return Arrays.stream(StatoOrdineEnum.values()).map(s -> {
@@ -144,6 +127,17 @@ public class OrdineService {
                 return new FiltroStati(s.getDescrizione(), "", true);
             }
             return new FiltroStati(s.getDescrizione(), s.getDescrizione(), false);
-        }) .collect(Collectors.toList());
+        }).collect(Collectors.toList());
+    }
+
+    public void addNuoviOrdini() {
+        List<Ordine> list = Ordine.find("SELECT o FROM Ordine o " +
+                "WHERE NOT EXISTS (SELECT 1 FROM GoOrdine god WHERE god.anno =  o.anno" +
+                " AND god.serie = o.serie AND god.progressivo = o.progressivo)").list();
+        if (!list.isEmpty()) {
+            List<GoOrdine> listToSave = new ArrayList<>();
+            list.forEach(o -> listToSave.add(goOrdineMapper.fromOrdineToGoOrdine(o)));
+            GoOrdine.persist(listToSave);
+        }
     }
 }

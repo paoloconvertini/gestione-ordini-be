@@ -40,10 +40,10 @@ public class JasperService {
         return dtoList;
     }
 
-    public void createReport(List<OrdineReportDto> articoli) throws JRException, IOException {
+    public void createReport(List<OrdineReportDto> articoli, String sottoConto) throws JRException, IOException {
 
         OrdineReportDto ordineReportDto = articoli.stream().findAny().get();
-        String ordineId = ordineReportDto.getANNO() + "_" + ordineReportDto.getSERIE() + "_" + ordineReportDto.getPROGRESSIVO();
+        String ordineId = sottoConto + "_" +  ordineReportDto.getANNO() + "_" + ordineReportDto.getSERIE() + "_" + ordineReportDto.getPROGRESSIVO();
 
         // 1. compile template ".jrxml" file
         JasperReport jasperReport = compileReport();
@@ -55,7 +55,11 @@ public class JasperService {
         JRDataSource dataSource = getDataSource(articoli);
 
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
-        String destFileName = "ordine_" + ordineId + ".pdf";
+        String destFileName = ordineId + ".pdf";
+        File folderDest = new File(pathReport + ordineReportDto.getANNO() + "/" + ordineReportDto.getSERIE());
+        if (!folderDest.mkdirs()) {
+            Log.error("Errore creazione sotto cartelle report");
+        }
         File f = new File(destFileName);
         if(!f.exists()) {
             try {
@@ -67,7 +71,7 @@ public class JasperService {
             }
         }
         JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
-        Files.move(f.getAbsoluteFile().toPath(), Path.of(pathReport + "/" + destFileName), StandardCopyOption.REPLACE_EXISTING);
+        Files.move(f.getAbsoluteFile().toPath(), Path.of(folderDest + "/" + destFileName), StandardCopyOption.REPLACE_EXISTING);
     }
 
     private JasperReport compileReport() {

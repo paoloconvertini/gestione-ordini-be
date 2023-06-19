@@ -1,7 +1,12 @@
 package it.calolenoci.resource;
 
 import io.quarkus.panache.common.Parameters;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.file.OpenOptions;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.core.file.AsyncFile;
 import it.calolenoci.dto.*;
+import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.scheduler.FetchScheduler;
@@ -17,12 +22,15 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.jfree.util.Log;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
@@ -37,6 +45,9 @@ import static it.calolenoci.enums.Ruolo.*;
 @Path("api/ordini-clienti")
 @RequestScoped
 public class OrdineResource {
+
+    @Inject
+    Vertx vertx;
 
     @Inject
     JasperService service;
@@ -63,6 +74,9 @@ public class OrdineResource {
     @Inject
     @Claim(standard = Claims.nickname)
     String codVenditore;
+
+    @ConfigProperty(name = "ordini.path")
+    String pathReport;
 
     @Operation(summary = "Returns all the roles from the database")
     @POST
@@ -94,14 +108,14 @@ public class OrdineResource {
         }
 
         OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
-        Ordine.update("hasFirma = 'T' WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo",
+        GoOrdine.update("hasFirma = 'T' WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
         if (ordineDTO != null) {
-            ResponseOrdineDettaglio responseOrdineDettaglio = articoloService.findById(new FiltroArticoli(anno, serie, progressivo));
+            ResponseOrdineDettaglio responseOrdineDettaglio = articoloService.findById(new FiltroArticoli(anno, serie, progressivo, 0));
             List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, responseOrdineDettaglio.getArticoli(), name, firmaVenditore);
             if (!dtoList.isEmpty()) {
                 try {
-                    service.createReport(dtoList);
+                    service.createReport(dtoList, ordineDTO.getSottoConto());
                 } catch (JRException | IOException e) {
                     Log.error("Errore nella creazione del report per l'ordine " + data.orderId, e);
                     throw new RuntimeException(e);
@@ -138,7 +152,7 @@ public class OrdineResource {
     @GET
     @Transactional
     public Response unlock(Integer anno, String serie, Integer progressivo) {
-        Ordine.update("geLocked = 'F', geUserLock = null where anno =:anno and serie =:serie and progressivo = :progressivo",
+        GoOrdine.update("locked = 'F', userLock = null where anno =:anno and serie =:serie and progressivo = :progressivo",
                 Parameters.with("anno", anno)
                         .and("serie", serie)
                         .and("progressivo", progressivo));
@@ -168,11 +182,32 @@ public class OrdineResource {
     @Transactional
     @Consumes(APPLICATION_JSON)
     public Response addNotes(OrdineDTO dto){
-        Ordine.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
+        GoOrdine.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
                 Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
                         .and("serie", dto.getSerie())
                         .and("progressivo", dto.getProgressivo()));
         return Response.ok(new ResponseDto("Nota aggiunta", false)).build();
+    }
+
+
+    // we need a Vertx instance for accessing filesystem
+
+    @GET
+    @Path("/downloadOrdine/{sottoConto}/{anno}/{serie}/{progressivo}")
+    @Produces(MediaType.TEXT_PLAIN)
+    @PermitAll
+    public Uni<Response> streamDataFromFile(String sottoConto, Integer anno, String serie, Integer progressivo)
+    {
+        final OpenOptions openOptions = (new OpenOptions()).setCreate(false).setWrite(false);
+        String ordineId = sottoConto + "_" +  anno + "_" + serie + "_" + progressivo + ".pdf";
+
+        Uni<AsyncFile> uni1 = vertx.fileSystem()
+                .open(pathReport + anno + "/" + serie + "/" + ordineId , openOptions);
+
+        return uni1.onItem()
+                .transform(asyncFile -> Response.ok(asyncFile)
+                        .header("Content-Disposition", "attachment;filename=" + ordineId)
+                        .build());
     }
 
 

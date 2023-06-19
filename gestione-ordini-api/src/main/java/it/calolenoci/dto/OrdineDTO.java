@@ -39,16 +39,33 @@ public class OrdineDTO implements Serializable {
 
     private String sottoConto;
 
-    private Boolean warnNoBolla;
+    private Boolean warnNoBolla = Boolean.FALSE;
 
-    private Boolean locked;
+    private Boolean locked= Boolean.FALSE;
 
     private String userLock;
 
-    private Boolean hasFirma;
+    private Boolean hasFirma= Boolean.FALSE;
 
     private String note;
 
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma,
+                     String intestazione, String status, String sottoConto, Boolean warnNoBolla,
+                     Boolean locked, String userLock, Boolean hasFirma, String note) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataOrdine = dataOrdine;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.status = status;
+        this.sottoConto = sottoConto;
+        this.warnNoBolla = warnNoBolla;
+        this.locked = locked;
+        this.userLock = userLock;
+        this.hasFirma = hasFirma;
+        this.note = note;
+    }
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma,
                      String intestazione, String sottoConto, String continuaIntest, String indirizzo,
@@ -117,6 +134,15 @@ public class OrdineDTO implements Serializable {
         this.provincia = provincia;
         this.telefono = telefono;
         this.email = email;
+    }
+
+    public OrdineDTO(String intestazione, String localita, String provincia, String telefono, String email, String sottoConto) {
+        this.intestazione = intestazione;
+        this.localita = localita;
+        this.provincia = provincia;
+        this.telefono = telefono;
+        this.email = email;
+        this.sottoConto = sottoConto;
     }
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo) {

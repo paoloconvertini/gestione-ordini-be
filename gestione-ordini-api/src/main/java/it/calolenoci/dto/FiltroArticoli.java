@@ -32,4 +32,11 @@ public class FiltroArticoli implements Serializable {
         this.serie = serie;
         this.progressivo = progressivo;
     }
+
+    public FiltroArticoli(Integer anno, String serie, Integer progressivo, Integer flConsegna) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.flConsegna = flConsegna;
+    }
 }

@@ -45,11 +45,23 @@ public class OrdineFornitoreDettaglio extends PanacheEntityBase {
     @Column(length = 50)
     private String oDescrArticolo;
 
+    @Column(length = 2, name = "TIPORIGOOAF")
+    private String tipoRigo;
+
     @Column
     private Double oQuantita;
 
     @Column
     private Float oPrezzo;
+
+    @Column
+    private Double scontoF1;
+
+    @Column
+    private Double scontoF2;
+
+    @Column
+    private Double fScontoP;
 
     @Column(length = 2)
     private String oUnitaMisura;

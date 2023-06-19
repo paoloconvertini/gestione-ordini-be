@@ -1,6 +1,7 @@
 package it.calolenoci.mapper;
 
 import it.calolenoci.dto.OrdineDettaglioDto;
+import it.calolenoci.entity.GoOrdineDettaglio;
 import it.calolenoci.entity.OrdineDettaglio;
 import org.apache.commons.lang3.StringUtils;
 
@@ -10,13 +11,12 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ArticoloMapper {
 
-    public void fromDtoToEntity (OrdineDettaglio o, OrdineDettaglioDto dto) {
-        o.setGeTono(dto.getGeTono());
-        o.setGeFlagNonDisponibile(dto.getGeFlagNonDisponibile());
-        o.setQuantita(dto.getQuantita());
-        o.setGeFlagOrdinato(dto.getGeFlagOrdinato());
-        o.setGeFlagRiservato(dto.getGeFlagRiservato());
-        o.setGeFlagConsegnato(dto.getGeFlagConsegnato());
+    public void fromDtoToEntity (GoOrdineDettaglio o, OrdineDettaglioDto dto) {
+        o.setTono(dto.getTono());
+        o.setFlagNonDisponibile(dto.getFlagNonDisponibile());
+        o.setFlagOrdinato(dto.getFlagOrdinato());
+        o.setFlagRiservato(dto.getFlagRiservato());
+        o.setFlagConsegnato(dto.getFlagConsegnato());
         o.setQtaDaConsegnare(dto.getQtaDaConsegnare());
         o.setFlProntoConsegna(dto.getFlProntoConsegna());
         if(dto.getQtaConsegnatoSenzaBolla() != null) {

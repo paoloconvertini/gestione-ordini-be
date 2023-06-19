@@ -1,6 +1,9 @@
 package it.calolenoci.entity;
 
+import io.quarkus.arc.All;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.Column;
@@ -8,6 +11,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 @Setter
 public class FornitoreDettaglioId implements Serializable {
 

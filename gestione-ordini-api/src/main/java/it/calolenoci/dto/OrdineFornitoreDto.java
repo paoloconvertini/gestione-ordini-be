@@ -26,6 +26,13 @@ public class OrdineFornitoreDto implements Serializable {
 
     private String intestazione;
 
+    public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, String conto) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.conto = conto;
+    }
+
     public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, Date dataOrdine, String intestazione, Date dataConfOrdine, String numConfOrdine, String provvisorio) {
         this.anno = anno;
         this.serie = serie;

@@ -9,7 +9,6 @@ import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -19,6 +18,8 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @ApplicationScoped
 public class ArticoloService {
@@ -58,77 +59,71 @@ public class ArticoloService {
     }
 
     public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
-        return OrdineDettaglio.count("anno = :anno AND serie = :serie AND progressivo = :progressivo " +
-                        "AND geStatus is null",
-                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) > 0;
+        return !OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o" +
+                        " WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo " +
+                        " AND NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE god.anno = o.anno" +
+                        " AND god.serie = o.serie AND god.progressivo = o.progressivo and god.rigo = o.rigo)",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
     }
 
     @Transactional
-    public Integer updateArticoliBolle(List<FatturaDto> list) {
+    public Integer updateArticoliBolle(List<OrdineDettaglioDto> list) {
         AtomicReference<Integer> aggiornati = new AtomicReference<>(0);
         list.forEach(e -> {
-                    aggiornati.updateAndGet(v -> v + OrdineDettaglio.update("qtaConsegnatoSenzaBolla = " +
-                            " CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV " +
-                            " THEN CASE WHEN (quantitaV - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END " +
-                            " ELSE CASE WHEN (quantita - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END END, " +
-                            " geFlagConsegnato = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV" +
-                            " THEN CASE WHEN (quantitaV - :qta) = 0 THEN 'T' ELSE 'F' END " +
-                            " ELSE CASE WHEN (quantita - :qta) = 0 THEN 'T' ELSE 'F' END END, " +
-                            " qtaProntoConsegna = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV " +
-                            " THEN CASE WHEN (quantitaV - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaProntoConsegna END" +
-                            " ELSE CASE WHEN (quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaProntoConsegna END END, " +
-                            " flProntoConsegna = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV " +
-                            " THEN CASE WHEN (quantitaV - qtaDaConsegnare) <> :qta THEN 'F' ELSE 'T' END" +
-                            " ELSE CASE WHEN (quantita - qtaDaConsegnare) <> :qta THEN 'F' ELSE 'T' END END, " +
-                            " qtaRiservata = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV " +
-                            " THEN CASE WHEN (quantitaV - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaRiservata END" +
-                            " ELSE CASE WHEN (quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaRiservata END END, " +
-                            " qtaDaConsegnare = CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV THEN (quantitaV - :qta)" +
-                            " ELSE (quantita - :qta) END, " +
-                            "flBolla = 'T' WHERE progrGenerale = :progrGenerale and geFlagConsegnato <> 'T'" +
-                            " AND qtaDaConsegnare <>  (CASE WHEN quantitaV IS NOT NULL AND quantita <> quantitaV THEN (quantitaV - :qta) " +
-                            " ELSE (quantita - :qta) END)", Parameters.with("qta", e.getQta())
-                            .and("progrGenerale", e.getProgrOrdCli())));
+            Optional<GoOrdineDettaglio> optional = GoOrdineDettaglio.getById(e.getAnno(), e.getSerie(), e.getProgressivo(), e.getRigo());
+            if (optional.isPresent()) {
+                GoOrdineDettaglio goOrdineDettaglio = optional.get();
+                aggiornati.updateAndGet(v -> v + GoOrdineDettaglio.update(
+                        " qtaConsegnatoSenzaBolla = CASE WHEN (:quantita - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END, " +
+                                " flagConsegnato = CASE WHEN (:quantita - :qta) = 0 THEN 'T' ELSE 'F' END, " +
+                                " qtaProntoConsegna = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaProntoConsegna END, " +
+                                " flProntoConsegna = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN 'F' ELSE 'T' END, " +
+                                " qtaRiservata = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaRiservata END, " +
+                                " qtaDaConsegnare = (:quantita - :qta), " +
+                                " flBolla = 'T' WHERE anno=:anno AND serie=:serie AND progressivo =:progressivo and rigo =:rigo" +
+                                " AND qtaDaConsegnare <> (:quantita - :qta)",
+                        Parameters.with("qta", e.getQtaBolla()).and("anno", e.getAnno()).and("rigo", e.getRigo())
+                                .and("serie", e.getSerie()).and("progressivo", e.getProgressivo()).and("quantita", e.getQuantita())));
 
-                    Optional<OrdineDettaglio> opt = OrdineDettaglio.find("progrGenerale = :progrGenerale",
-                            Parameters.with("progrGenerale", e.getProgrOrdCli())).singleResultOptional();
-                    if (opt.isPresent()) {
-                        if (opt.get().getQtaConsegnatoSenzaBolla() == null || opt.get().getQtaConsegnatoSenzaBolla() == 0) {
-                            Ordine.update("geWarnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
-                                    Parameters.with("anno", opt.get().getAnno())
-                                            .and("serie", opt.get().getSerie())
-                                            .and("progressivo", opt.get().getProgressivo()));
-                        }
-                    }
+                if (goOrdineDettaglio.getQtaConsegnatoSenzaBolla() == null || goOrdineDettaglio.getQtaConsegnatoSenzaBolla() == 0) {
+                    GoOrdine.update("warnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
+                            Parameters.with("anno", e.getAnno())
+                                    .and("serie", e.getSerie())
+                                    .and("progressivo", e.getProgressivo()));
                 }
-        );
+            }
+        });
         return aggiornati.get();
     }
 
     public boolean findNoConsegnati(Integer anno, String serie, Integer progressivo) {
-        return OrdineDettaglio.count("anno = :anno AND serie = :serie AND progressivo = :progressivo " +
-                        "AND geFlagConsegnato = 'F'",
-                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) == 0;
+        return OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o" +
+                        " LEFT JOIN GoOrdineDettaglio god ON god.anno = o.anno " +
+                        " AND god.serie = o.serie AND god.progressivo = o.progressivo " +
+                        " WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
+                        " and (god.flagConsegnato = false OR god.flagConsegnato IS NULL)",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
     }
 
     public void checkNoBolle() {
 
-        OrdineDettaglio.find("select o.anno, o.serie, o.progressivo, o.rigo  FROM OrdineDettaglio o " +
-                        "LEFT JOIN FattureDettaglio f2 ON f2.progrOrdCli = o.progrGenerale " +
-                        "WHERE f2.anno is null AND o.flBolla = 'T'")
-                .project(OrdineDettaglioDto.class)
-                .stream().forEach(a -> OrdineDettaglio.update("geFlagConsegnato = 'F', qtaDaConsegnare = null, flBolla = 'F' " +
-                                "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo and rigo =:rigo"
-                        , Parameters.with("anno", a.getAnno())
-                                .and("serie", a.getSerie())
-                                .and("progressivo", a.getProgressivo())
-                                .and("rigo", a.getRigo())));
+        List<OrdineDettaglioDto> list = GoOrdineDettaglio.find("select god.anno, god.serie, god.progressivo, god.rigo  FROM GoOrdineDettaglio god " +
+                        "INNER JOIN OrdineDettaglio o ON o.anno = god.anno AND o.serie = god.serie AND " +
+                        "o.progressivo = god.progressivo AND o.rigo = god.rigo " +
+                        "WHERE NOT EXISTS (SELECT 1 FROM FattureDettaglio f2 WHERE f2.progrOrdCli = o.progrGenerale) " +
+                        "AND god.flBolla = 'T' ")
+                .project(OrdineDettaglioDto.class).list();
+        if (!list.isEmpty()) {
+            list.forEach(a -> GoOrdineDettaglio.update("flagConsegnato = 'F', qtaDaConsegnare = null," +
+                            " flBolla = 'F' WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo " +
+                            " and rigo =:rigo"
+                    , Parameters.with("anno", a.getAnno())
+                            .and("serie", a.getSerie())
+                            .and("progressivo", a.getProgressivo())
+                            .and("rigo", a.getRigo())));
+        }
 
-    }
 
-    @Transactional
-    public void changeAllStatus(Integer anno, String serie, Integer progressivo, StatoOrdineEnum statoOrdineEnum) {
-        OrdineDettaglio.updateStatus(anno, serie, progressivo, statoOrdineEnum.getDescrizione());
     }
 
     @Transactional
@@ -140,45 +135,58 @@ public class ArticoloService {
     public String save(List<OrdineDettaglioDto> list, String user, Boolean chiudi, String email) {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
+        List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();
         AtomicBoolean warnNoBolla = new AtomicBoolean(false);
         list.forEach(dto -> {
+            GoOrdineDettaglio goOrdineDettaglio = new GoOrdineDettaglio();
             OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
+            Optional<GoOrdineDettaglio> goOrdineDettaglioOptional = GoOrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
+            if (goOrdineDettaglioOptional.isPresent()) {
+                goOrdineDettaglio = goOrdineDettaglioOptional.get();
+            } else {
+                goOrdineDettaglio.setAnno(dto.getAnno());
+                goOrdineDettaglio.setSerie(dto.getSerie());
+                goOrdineDettaglio.setProgressivo(dto.getProgressivo());
+                goOrdineDettaglio.setRigo(dto.getRigo());
+            }
             if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDesczrizione(),
                         dto.getRigo(), null, dto.getQuantita(), null, null));
+                ordineDettaglio.setQuantita(dto.getQuantita());
+                ordineDettaglioList.add(ordineDettaglio);
             }
-            if (!Objects.equals(ordineDettaglio.getGeTono(), dto.getGeTono())) {
+            if (!Objects.equals(goOrdineDettaglio.getTono(), dto.getTono())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.TONO.getDesczrizione(),
-                        dto.getRigo(), dto.getGeTono(), null, null, null));
+                        dto.getRigo(), dto.getTono(), null, null, null));
             }
-            if (!Objects.equals(dto.getGeFlagRiservato(), ordineDettaglio.getGeFlagRiservato())) {
+            if (!Objects.equals(dto.getFlagRiservato(), goOrdineDettaglio.getFlagRiservato())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.RISERVATO.getDesczrizione()
                         , dto.getRigo(), null, null, null, null));
             }
-            if (!Objects.equals(dto.getGeFlagOrdinato(), ordineDettaglio.getGeFlagOrdinato())) {
+            if (!Objects.equals(dto.getFlagOrdinato(), goOrdineDettaglio.getFlagOrdinato())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.ORDINATO.getDesczrizione()
                         , dto.getRigo(), null, null, null, null));
             }
-            if (!Objects.equals(dto.getGeFlagNonDisponibile(), ordineDettaglio.getGeFlagNonDisponibile())) {
+            if (!Objects.equals(dto.getFlagNonDisponibile(), goOrdineDettaglio.getFlagNonDisponibile())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.NON_DISPONIBILE.getDesczrizione()
                         , dto.getRigo(), null, null, null, null));
             }
-            if (!Objects.equals(dto.getGeFlagConsegnato(), ordineDettaglio.getGeFlagConsegnato())) {
+            if (!Objects.equals(dto.getFlagConsegnato(), goOrdineDettaglio.getFlagConsegnato())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDesczrizione()
                         , dto.getRigo(), null, null, null, null));
             }
-            if (!Objects.equals(dto.getFlProntoConsegna(), ordineDettaglio.getFlProntoConsegna())) {
+            if (!Objects.equals(dto.getFlProntoConsegna(), goOrdineDettaglio.getFlProntoConsegna())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.PRONTO_CONSEGNA.getDesczrizione()
                         , dto.getRigo(), null, null, null, dto.getQtaProntoConsegna()));
             }
-            if (!Objects.equals(ordineDettaglio.getQtaRiservata(), dto.getQtaRiservata())) {
+            if (!Objects.equals(goOrdineDettaglio.getQtaRiservata(), dto.getQtaRiservata())) {
                 registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                         dto.getProgressivo(), user, AzioneEnum.QTA_RISERVATA.getDesczrizione(),
                         dto.getRigo(), null, null, dto.getQtaRiservata(), null));
@@ -186,65 +194,70 @@ public class ArticoloService {
             if (!warnNoBolla.get()) {
                 warnNoBolla.set(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0);
             }
-            mapper.fromDtoToEntity(ordineDettaglio, dto);
-            ordineDettaglioList.add(ordineDettaglio);
+
+            mapper.fromDtoToEntity(goOrdineDettaglio, dto);
+            goOrdineDettaglioList.add(goOrdineDettaglio);
         });
-        OrdineDettaglio ordineDettaglio = ordineDettaglioList.get(0);
-        Ordine.update("geWarnNoBolla =:warn where anno =:anno and serie =:serie and progressivo = :progressivo",
-                Parameters.with("anno", ordineDettaglio.getAnno())
-                        .and("serie", ordineDettaglio.getSerie())
-                        .and("progressivo", ordineDettaglio.getProgressivo())
-                        .and("warn", warnNoBolla.get()));
-        OrdineDettaglio.persist(ordineDettaglioList);
+        OrdineDettaglioDto dto = list.get(0);
+        GoOrdine.update("warnNoBolla =:warn where anno =:anno and serie =:serie and progressivo = :progressivo",
+                Parameters.with("anno", dto.getAnno())
+                                .and("serie", dto.getSerie())
+                                .and("progressivo", dto.getProgressivo())
+                                .and("warn", warnNoBolla.get()));
+        if (!ordineDettaglioList.isEmpty()) {
+            OrdineDettaglio.persist(ordineDettaglioList);
+        }
+        GoOrdineDettaglio.persist(goOrdineDettaglioList);
         RegistroAzioni.persist(registroAzioniList);
         if (chiudi) {
-            Ordine.update("geLocked = 'F', geUserLock = null where anno =:anno and serie =:serie and progressivo = :progressivo",
-                    Parameters.with("anno", ordineDettaglio.getAnno())
-                            .and("serie", ordineDettaglio.getSerie())
-                            .and("progressivo", ordineDettaglio.getProgressivo()));
-            String stato = chiudi(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo(), email);
-            OrdineDettaglio.updateStatus(ordineDettaglio.getAnno(), ordineDettaglio.getSerie(), ordineDettaglio.getProgressivo(), stato);
+            GoOrdine.update("locked = 'F', userLock = null where anno =:anno and serie =:serie and progressivo = :progressivo",
+                    Parameters.with("anno", dto.getAnno())
+                            .and("serie", dto.getSerie())
+                            .and("progressivo", dto.getProgressivo()));
+            String stato = chiudi(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), email);
+            GoOrdineDettaglio.updateStatus(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), stato);
             return stato;
         }
         return null;
     }
 
     private String chiudi(Integer anno, String serie, Integer progressivo, String email) {
-        Ordine ordine = Ordine.findByOrdineId(anno, serie, progressivo);
-        final String result = ordine.getGeStatus();
+        GoOrdine ordine = GoOrdine.findByOrdineId(anno, serie, progressivo);
+
+        final String result = ordine.getStatus();
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
-            if (OrdineDettaglio.count("anno = :anno and serie =:serie" +
+            if (GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
-                    " and geFlagNonDisponibile = 'T'", Parameters.with("anno", anno)
+                    " and flagNonDisponibile = 'T'", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)) == 0) {
                 sendMail(anno, serie, progressivo, email);
-                ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
+                ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
             } else {
-                ordine.setGeStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
+                ordine.setStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             }
         }
 
         if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(result)) {
-            ordine.setGeStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+            ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
         }
 
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
             sendMail(anno, serie, progressivo, email);
-            ordine.setGeStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
+            ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
         }
         ordine.persist();
-        return ordine.getGeStatus();
+        return ordine.getStatus();
     }
 
     private void sendMail(Integer anno, String serie, Integer progressivo, String email) {
-        File f = new File(pathReport + "/ordine_" + anno + "_" + serie + "_" + progressivo + ".pdf");
-        OrdineDTO dto = Ordine.find("SELECT p.intestazione, p.localita, p.provincia, p.telefono, p.email " +
+        OrdineDTO dto = Ordine.find("SELECT p.intestazione, p.localita, p.provincia, p.telefono, p.email, p.sottoConto " +
                                 " FROM Ordine o " +
                                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo",
                         Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo))
                 .project(OrdineDTO.class).firstResult();
+        File f = new File(pathReport + "/" + anno + "/" + serie + "/" + dto.getSottoConto() + "_" + anno + "_" + serie + "_" + progressivo + ".pdf");
         dto.setAnno(anno);
         dto.setSerie(serie);
         dto.setProgressivo(progressivo);

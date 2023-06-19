@@ -26,4 +26,6 @@ public class RegistroAzioniDto implements Serializable {
     private String azione;
     private Double quantita;
     private String tono;
+    private Double qtaRiservata;
+    private Double qtaProntoConsegna;
 }

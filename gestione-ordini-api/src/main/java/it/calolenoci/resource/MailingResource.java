@@ -62,7 +62,7 @@ public class MailingResource {
     @RolesAllowed({ADMIN, VENDITORE})
     @Path("/confermato")
     public Response send(EmailDto dto) {
-        File f = new File(pathReport + "/ordine_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
+        File f = new File(pathReport + "/" + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getSottoConto() + "_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
         MailAttachment attachment = new MailAttachment(f.getName(), f, "application/pdf");
         String subject = "Ordine confermato!";
         InlineAttachment inlineAttach = new InlineAttachment("logo.jpg", new File(logoPath + "/logo.jpg"),
