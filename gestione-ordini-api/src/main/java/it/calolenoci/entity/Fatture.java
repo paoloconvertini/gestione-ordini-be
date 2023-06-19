@@ -31,7 +31,7 @@ import java.util.List;
 
                         + " AND f2.FARTICOLO = '*ACC'"
                         + " and f2.PREZZO <> 0"
-                        + " and f.CONTOCLIENTE = :sottoConto"
+                        + " and f.CONTOCLIENTE = :sottoConto and f2f.PROGRORDCLI = 0"
                         + " UNION"
 
                         + " select distinct f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura"
