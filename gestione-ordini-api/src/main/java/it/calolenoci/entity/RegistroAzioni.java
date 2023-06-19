@@ -10,7 +10,7 @@ import java.util.Date;
 
 
 @Entity
-@Table(name = "REGISTROAZIONI")
+@Table(name = "GO_REGISTROAZIONI")
 @Getter
 @Setter
 public class RegistroAzioni extends PanacheEntityBase {

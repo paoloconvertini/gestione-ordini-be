@@ -14,7 +14,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
-@Table(name = "FIRMAORDINECLIENTE")
+@Table(name = "GO_FIRMAORDINECLIENTE")
 @IdClass(OrdineId.class)
 @Getter
 @Setter
