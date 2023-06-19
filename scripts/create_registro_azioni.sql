@@ -1,4 +1,4 @@
-create table REGISTROAZIONI
+create table GO_REGISTROAZIONI
 (
     id          varchar(36)          not null,
     anno        int          null,
@@ -12,9 +12,9 @@ create table REGISTROAZIONI
     tono varchar(20) null,
     qtaRiservata float null,
     qtaProntoConsegna float null,
-    constraint REGISTROAZIONI_pk
+    constraint GO_REGISTROAZIONI_pk
         primary key (id)
     );
 
-create unique index REGISTROAZIONI_id_uindex
-    on REGISTROAZIONI (id);
+create unique index GO_REGISTROAZIONI_id_uindex
+    on GO_REGISTROAZIONI (id);
