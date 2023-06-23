@@ -154,6 +154,7 @@ public class ArticoloService {
                         dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDesczrizione(),
                         dto.getRigo(), null, dto.getQuantita(), null, null));
                 ordineDettaglio.setQuantita(dto.getQuantita());
+                ordineDettaglio.setQuantitaV(dto.getQuantita());
                 ordineDettaglioList.add(ordineDettaglio);
             }
             if (!Objects.equals(goOrdineDettaglio.getTono(), dto.getTono())) {
