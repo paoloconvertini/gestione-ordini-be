@@ -54,6 +54,7 @@ public class ArticoloService {
         response.setSottoConto(ordineDTO.getSottoConto());
         response.setLocked(ordineDTO.getLocked());
         response.setUserLock(ordineDTO.getUserLock());
+        response.setTelefono(ordineDTO.getTelefono());
         response.setArticoli(list);
         return response;
     }

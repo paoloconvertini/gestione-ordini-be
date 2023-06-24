@@ -14,6 +14,7 @@ import java.util.List;
 public class ResponseOrdineDettaglio {
     private String intestazione;
     private String sottoConto;
+    private String telefono;
     private String userLock;
     private Boolean locked;
     private Double totale;
