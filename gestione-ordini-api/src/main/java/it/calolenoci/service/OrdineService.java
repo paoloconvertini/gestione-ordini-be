@@ -1,6 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.FiltroOrdini;
@@ -10,16 +9,12 @@ import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.GoOrdineMapper;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -48,11 +43,12 @@ public class OrdineService {
         }
         if (!StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
             checkConsegnati();
+            checkNoProntaConegna();
         }
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
-                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.note " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataOrdine >= :dataConfig and o.provvisorio <> 'S' ";
@@ -96,6 +92,22 @@ public class OrdineService {
         ordineList.forEach(o -> {
             if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getWarnNoBolla() && (o.getHasFirma() != null && o.getHasFirma())) {
                 o.setStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
+                o.persist();
+            }
+        });
+    }
+
+    @Transactional
+    public void checkNoProntaConegna() {
+        List<String> list = new ArrayList<>();
+        list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+        list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+        list.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
+        list.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+        List<GoOrdine> ordineList = GoOrdine.findOrdiniByStatus(list);
+        ordineList.forEach(o -> {
+            if (articoloService.findNoProntaConsegna(o.getAnno(), o.getSerie(), o.getProgressivo())) {
+                o.setHasProntoConsegna(Boolean.FALSE);
                 o.persist();
             }
         });

@@ -48,6 +48,11 @@ public class GoOrdine extends PanacheEntityBase {
     @Column(length = 1, name = "HAS_FIRMA", columnDefinition = "CHAR(1)")
     private Boolean hasFirma;
 
+
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Column(length = 1, name = "HAS_PRONTO_CONSEGNA", columnDefinition = "CHAR(1)")
+    private Boolean hasProntoConsegna;
+
     @Column(length = 2000, name = "NOTE")
     private String note;
 

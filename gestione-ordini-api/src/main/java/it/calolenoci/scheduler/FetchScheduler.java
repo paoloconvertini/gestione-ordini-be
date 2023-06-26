@@ -44,6 +44,7 @@ public class FetchScheduler {
             }
         }
         articoloService.checkNoBolle();
+        ordineService.checkNoProntaConegna();
     }
 
     @Scheduled(every = "${cron.expr.nuovi.ordini:10m}")

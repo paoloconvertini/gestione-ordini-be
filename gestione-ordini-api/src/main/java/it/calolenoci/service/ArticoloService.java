@@ -1,6 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
@@ -18,8 +17,6 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @ApplicationScoped
 public class ArticoloService {
@@ -97,11 +94,15 @@ public class ArticoloService {
         return aggiornati.get();
     }
 
+    public boolean findNoProntaConsegna(Integer anno, String serie, Integer progressivo) {
+        return GoOrdineDettaglio.count("anno = :anno AND serie = :serie AND progressivo = :progressivo " +
+                        " and flProntoConsegna = true",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) == 0;
+    }
+
     public boolean findNoConsegnati(Integer anno, String serie, Integer progressivo) {
-        return OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o" +
-                        " LEFT JOIN GoOrdineDettaglio god ON god.anno = o.anno " +
-                        " AND god.serie = o.serie AND god.progressivo = o.progressivo " +
-                        " WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
+        return GoOrdineDettaglio.find("SELECT god FROM GoOrdineDettaglio god " +
+                        " WHERE god.anno = :anno AND god.serie = :serie AND god.progressivo = :progressivo " +
                         " and (god.flagConsegnato = false OR god.flagConsegnato IS NULL)",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
     }
@@ -138,7 +139,11 @@ public class ArticoloService {
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
         List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();
         AtomicBoolean warnNoBolla = new AtomicBoolean(false);
+        AtomicBoolean hasProntoConsegna = new AtomicBoolean(false);
         list.forEach(dto -> {
+            if(!hasProntoConsegna.get() && dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna()) {
+                hasProntoConsegna.getAndSet(Boolean.TRUE);
+            }
             GoOrdineDettaglio goOrdineDettaglio = new GoOrdineDettaglio();
             OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
             Optional<GoOrdineDettaglio> goOrdineDettaglioOptional = GoOrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
@@ -201,11 +206,12 @@ public class ArticoloService {
             goOrdineDettaglioList.add(goOrdineDettaglio);
         });
         OrdineDettaglioDto dto = list.get(0);
-        GoOrdine.update("warnNoBolla =:warn where anno =:anno and serie =:serie and progressivo = :progressivo",
+        GoOrdine.update("warnNoBolla =:warn, hasProntoConsegna =:pc where anno =:anno and serie =:serie and progressivo = :progressivo",
                 Parameters.with("anno", dto.getAnno())
                                 .and("serie", dto.getSerie())
                                 .and("progressivo", dto.getProgressivo())
-                                .and("warn", warnNoBolla.get()));
+                                .and("warn", warnNoBolla.get())
+                        .and("pc", hasProntoConsegna.get()));
         if (!ordineDettaglioList.isEmpty()) {
             OrdineDettaglio.persist(ordineDettaglioList);
         }

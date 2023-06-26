@@ -47,6 +47,8 @@ public class OrdineDTO implements Serializable {
 
     private Boolean hasFirma= Boolean.FALSE;
 
+    private Boolean hasProntoConsegna = Boolean.FALSE;
+
     private String note;
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma,
@@ -101,7 +103,7 @@ public class OrdineDTO implements Serializable {
                      String intestazione, String sottoConto, String continuaIntest, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
-                     Boolean locked, String userLock, Boolean warnNoBolla, Boolean hasFirma, String note) {
+                     Boolean locked, String userLock, Boolean warnNoBolla, Boolean hasFirma, Boolean hasProntoConsegna, String note) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
@@ -125,6 +127,7 @@ public class OrdineDTO implements Serializable {
         this.userLock = userLock;
         this.warnNoBolla = warnNoBolla;
         this.hasFirma = hasFirma;
+        this.hasProntoConsegna = hasProntoConsegna;
         this.note = note;
     }
 

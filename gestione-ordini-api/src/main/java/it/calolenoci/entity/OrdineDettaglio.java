@@ -120,12 +120,14 @@ public class OrdineDettaglio extends PanacheEntityBase {
         if (filtro.getFlNonDisponibile() != null && filtro.getFlNonDisponibile()) {
             query += " AND god.flagNonDisponibile = 'T' ";
         }
-        switch (filtro.getFlConsegna()) {
-            case 0 ->
-                    query += " AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
-            case 1 -> query += " AND god.flagConsegnato = 'T' ";
-            case 2 -> query += " AND god.flProntoConsegna = 'T' ";
-            default -> {
+        if(filtro.getFlConsegna() != null) {
+            switch (filtro.getFlConsegna()) {
+                case 0 ->
+                        query += " AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
+                case 1 -> query += " AND god.flagConsegnato = 'T' ";
+                case 2 -> query += " AND god.flProntoConsegna = 'T' ";
+                default -> {
+                }
             }
         }
         if (filtro.getFlDaRiservare() != null && filtro.getFlDaRiservare()) {

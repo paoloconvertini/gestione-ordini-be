@@ -165,17 +165,17 @@ public class OrdineFornitoreService {
 
     public List<OrdineFornitoreDto> findAllByStatus(String status) {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
-                "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio " +
+                "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate " +
                 "FROM OrdineFornitore o " +
                 "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto ";
         if (StringUtils.isNotBlank(status)) {
             query += " where o.provvisorio =:stato";
-            return OrdineFornitore.find(query, Sort.descending("dataOrdine")
+            return OrdineFornitore.find(query, Sort.descending("o.updateDate",  "dataOrdine")
                             , Parameters.with("stato", status))
                     .project(OrdineFornitoreDto.class).list();
         } else {
             query += " where o.provvisorio is null";
-            return OrdineFornitore.find(query, Sort.descending("dataOrdine"))
+            return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"))
                     .project(OrdineFornitoreDto.class).list();
         }
     }
