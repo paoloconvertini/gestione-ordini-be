@@ -23,16 +23,16 @@ public class OrdineClienteReportMapper {
             } else {
                 dto.setValoreTotale(0D);
             }
-            if(a.getScontoArticolo() != null && a.getScontoArticolo() != 0) {
+            if (a.getScontoArticolo() != null && a.getScontoArticolo() != 0) {
                 dto.setSCONTOARTICOLO(a.getScontoArticolo());
             }
-            if(a.getScontoC1() != null && a.getScontoC1() != 0) {
+            if (a.getScontoC1() != null && a.getScontoC1() != 0) {
                 dto.setSCONTOC1(a.getScontoC1());
             }
-            if(a.getScontoC2() != null && a.getScontoC2() != 0) {
+            if (a.getScontoC2() != null && a.getScontoC2() != 0) {
                 dto.setSCONTOC2(a.getScontoC2());
             }
-            if(a.getScontoP() != null && a.getScontoP() != 0) {
+            if (a.getScontoP() != null && a.getScontoP() != 0) {
                 dto.setSCONTOP(a.getScontoP());
             }
             dto.setFCODICEIVA(a.getFCodiceIva());
@@ -51,8 +51,10 @@ public class OrdineClienteReportMapper {
         dto.setCAP(ordineDTO.getCap());
         dto.setPROVINCIA(ordineDTO.getProvincia());
         dto.setTELEFONO(ordineDTO.getTelefono());
-        dto.setFILENAME(filename);
-        if(StringUtils.isNotBlank(firmaVenditore)){
+        if (StringUtils.isNotBlank(filename)) {
+            dto.setFILENAME(filename);
+        }
+        if (StringUtils.isNotBlank(firmaVenditore)) {
             dto.setFirmaVenditore(firmaVenditore);
         }
         dto.setDATAORDINE(ordineDTO.getDataOrdine());

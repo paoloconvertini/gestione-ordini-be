@@ -236,4 +236,26 @@ public class OrdineDettaglioDto implements Serializable {
         this.rigo = rigo;
         this.quantita = quantita;
     }
+
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, String fUnitaMisura,
+                              Integer fColli, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva) {
+        this.anno = anno;
+        this.progressivo = progressivo;
+        this.progrGenerale = progrGenerale;
+        this.tipoRigo = tipoRigo;
+        this.rigo = rigo;
+        this.serie = serie;
+        this.fArticolo = fArticolo;
+        this.codArtFornitore = codArtFornitore;
+        this.fDescrArticolo = fDescrArticolo;
+        this.quantita = quantita;
+        this.prezzo = prezzo;
+        this.fUnitaMisura = fUnitaMisura;
+        this.fColli = fColli;
+        this.scontoArticolo = scontoArticolo;
+        this.scontoC1 = scontoC1;
+        this.scontoC2 = scontoC2;
+        this.scontoP = scontoP;
+        this.fCodiceIva = fCodiceIva;
+    }
 }

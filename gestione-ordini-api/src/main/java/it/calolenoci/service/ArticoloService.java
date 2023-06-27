@@ -56,6 +56,10 @@ public class ArticoloService {
         return response;
     }
 
+    public List<OrdineDettaglioDto> findForReport(Integer anno, String serie, Integer progressivo) {
+        return OrdineDettaglio.findArticoliForReport(anno, serie, progressivo);
+    }
+
     public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
         return !OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o" +
                         " WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo " +

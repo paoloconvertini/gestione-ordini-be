@@ -107,15 +107,15 @@ public class OrdineResource {
             throw new RuntimeException(e);
         }
 
-        OrdineDTO ordineDTO = ordineService.findById(anno, serie, progressivo);
+        OrdineDTO ordineDTO = ordineService.findForReport(anno, serie, progressivo);
         GoOrdine.update("hasFirma = 'T' WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
         if (ordineDTO != null) {
-            ResponseOrdineDettaglio responseOrdineDettaglio = articoloService.findById(new FiltroArticoli(anno, serie, progressivo, 0));
-            List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, responseOrdineDettaglio.getArticoli(), name, firmaVenditore);
+            List<OrdineDettaglioDto> articoli = articoloService.findForReport(anno, serie, progressivo);
+            List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, articoli, name, firmaVenditore);
             if (!dtoList.isEmpty()) {
                 try {
-                    service.createReport(dtoList, ordineDTO.getSottoConto());
+                    service.createReport(dtoList, ordineDTO.getSottoConto(), anno, serie, progressivo);
                 } catch (JRException | IOException e) {
                     Log.error("Errore nella creazione del report per l'ordine " + data.orderId, e);
                     throw new RuntimeException(e);

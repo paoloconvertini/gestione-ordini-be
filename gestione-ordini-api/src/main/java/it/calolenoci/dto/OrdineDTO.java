@@ -51,6 +51,30 @@ public class OrdineDTO implements Serializable {
 
     private String note;
 
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
+                     String intestazione, String sottoConto, String continuaIntest, String indirizzo, String localita, String cap, String provincia,
+                     String statoResidenza, String statoEstero, String telefono, String cellulare, String email, String pec) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataOrdine = dataOrdine;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.continuaIntest = continuaIntest;
+        this.indirizzo = indirizzo;
+        this.localita = localita;
+        this.cap = cap;
+        this.provincia = provincia;
+        this.statoResidenza = statoResidenza;
+        this.statoEstero = statoEstero;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.email = email;
+        this.pec = pec;
+        this.sottoConto = sottoConto;
+    }
+
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma,
                      String intestazione, String status, String sottoConto, Boolean warnNoBolla,
                      Boolean locked, String userLock, Boolean hasFirma, String note) {

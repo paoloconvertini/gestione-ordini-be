@@ -139,4 +139,15 @@ public class OrdineDettaglio extends PanacheEntityBase {
 
     }
 
+    public static List<OrdineDettaglioDto> findArticoliForReport(Integer anno, String serie, Integer progressivo) {
+        String query = "SELECT o.anno,  o.progressivo, o.progrGenerale,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
+                "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo,  o.fUnitaMisura, o.fColli, o.scontoArticolo," +
+                "o.scontoC1, o.scontoC2, o.scontoP, o.fCodiceIva " +
+                "FROM OrdineDettaglio o " +
+                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo";
+        return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
+                .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
+
+    }
+
 }

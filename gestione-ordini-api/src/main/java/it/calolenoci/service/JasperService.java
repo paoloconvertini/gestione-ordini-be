@@ -40,10 +40,9 @@ public class JasperService {
         return dtoList;
     }
 
-    public void createReport(List<OrdineReportDto> articoli, String sottoConto) throws JRException, IOException {
+    public void createReport(List<OrdineReportDto> articoli, String sottoConto, Integer anno, String serie, Integer progressivo) throws JRException, IOException {
 
-        OrdineReportDto ordineReportDto = articoli.stream().findAny().get();
-        String ordineId = sottoConto + "_" +  ordineReportDto.getANNO() + "_" + ordineReportDto.getSERIE() + "_" + ordineReportDto.getPROGRESSIVO();
+        String ordineId = sottoConto + "_" + anno + "_" + serie + "_" + progressivo;
 
         // 1. compile template ".jrxml" file
         JasperReport jasperReport = compileReport();
@@ -56,14 +55,16 @@ public class JasperService {
 
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
         String destFileName = ordineId + ".pdf";
-        File folderDest = new File(pathReport + ordineReportDto.getANNO() + "/" + ordineReportDto.getSERIE());
-        if (!folderDest.mkdirs()) {
-            Log.error("Errore creazione sotto cartelle report");
+        File folderDest = new File(pathReport + anno + "/" + serie);
+        if (!folderDest.exists()) {
+            if (!folderDest.mkdirs()) {
+                Log.error("Errore creazione sotto cartelle report");
+            }
         }
         File f = new File(destFileName);
-        if(!f.exists()) {
+        if (!f.exists()) {
             try {
-                if(!f.createNewFile()) {
+                if (!f.createNewFile()) {
                     Log.info("File " + f.getName() + " already exists");
                 }
             } catch (IOException ex) {
@@ -81,21 +82,21 @@ public class JasperService {
             jasperReport = JasperCompileManager.compileReport(reportStream);
             JRSaver.saveObject(jasperReport, "Invoice.jrxml".replace(".jrxml", ".jasper"));
         } catch (JRException ex) {
-           //
+            //
         }
         return jasperReport;
     }
 
-    private static Map<String, Object> getParameters(List<OrdineReportDto> articoli){
+    private static Map<String, Object> getParameters(List<OrdineReportDto> articoli) {
         Map<String, Object> map = new HashMap<>();
-        map.put("totaleImponibile" , articoli.stream().filter(a-> !"C".equals(a.getTIPORIGO())).mapToDouble(OrdineReportDto::getValoreTotale).sum());
-        map.put("totaleIVA" , (Double)map.get("totaleImponibile")*22/100);
-        map.put("totaleDocumento" , (Double)map.get("totaleImponibile") + (Double)map.get("totaleIVA"));
-        map.put("totaleNetto" , map.get("totaleDocumento"));
+        map.put("totaleImponibile", articoli.stream().filter(a -> !"C".equals(a.getTIPORIGO())).mapToDouble(OrdineReportDto::getValoreTotale).sum());
+        map.put("totaleIVA", (Double) map.get("totaleImponibile") * 22 / 100);
+        map.put("totaleDocumento", (Double) map.get("totaleImponibile") + (Double) map.get("totaleIVA"));
+        map.put("totaleNetto", map.get("totaleDocumento"));
         return map;
     }
 
-    private static JRDataSource getDataSource(List<OrdineReportDto> articoli){
+    private static JRDataSource getDataSource(List<OrdineReportDto> articoli) {
         return new JRBeanCollectionDataSource(articoli);
     }
 }
