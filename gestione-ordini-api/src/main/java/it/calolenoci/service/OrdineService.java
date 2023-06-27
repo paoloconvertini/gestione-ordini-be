@@ -45,13 +45,13 @@ public class OrdineService {
             checkConsegnati();
             checkNoProntaConegna();
         }
-        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
+        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
                 "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataOrdine >= :dataConfig and o.provvisorio <> 'S' ";
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' ";
 
         Map<String, Object> map = new HashMap<>();
         map.put("dataConfig", sdf.parse(dataCongig));
@@ -65,7 +65,7 @@ public class OrdineService {
             query += " and o.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());
         }
-        return Ordine.find(query, Sort.descending("dataOrdine"), map).project(OrdineDTO.class).list();
+        return Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
     }
 
     @Transactional
@@ -114,7 +114,7 @@ public class OrdineService {
     }
 
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
-        return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  o.numeroConferma,  " +
+        return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                                 "p.intestazione, p.sottoConto,  p.continuaIntest,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, go.locked, go.userLock, go.warnNoBolla " +
                                 "FROM Ordine o " +
@@ -144,7 +144,7 @@ public class OrdineService {
 
     public void addNuoviOrdini() throws ParseException {
         List<Ordine> list = Ordine.find("SELECT o FROM Ordine o " +
-                "WHERE o.dataOrdine >= :dataConfig and o.provvisorio <> 'S' AND NOT EXISTS (SELECT 1 FROM GoOrdine god WHERE god.anno =  o.anno" +
+                "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' AND NOT EXISTS (SELECT 1 FROM GoOrdine god WHERE god.anno =  o.anno" +
                 " AND god.serie = o.serie AND god.progressivo = o.progressivo)", Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
         if (!list.isEmpty()) {
             List<GoOrdine> listToSave = new ArrayList<>();
