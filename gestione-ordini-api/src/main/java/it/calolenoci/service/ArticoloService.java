@@ -145,76 +145,78 @@ public class ArticoloService {
         AtomicBoolean warnNoBolla = new AtomicBoolean(false);
         AtomicBoolean hasProntoConsegna = new AtomicBoolean(false);
         list.forEach(dto -> {
-            if(!hasProntoConsegna.get() && dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna()) {
-                hasProntoConsegna.getAndSet(Boolean.TRUE);
-            }
-            GoOrdineDettaglio goOrdineDettaglio = new GoOrdineDettaglio();
-            OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
-            Optional<GoOrdineDettaglio> goOrdineDettaglioOptional = GoOrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
-            if (goOrdineDettaglioOptional.isPresent()) {
-                goOrdineDettaglio = goOrdineDettaglioOptional.get();
-            } else {
-                goOrdineDettaglio.setAnno(dto.getAnno());
-                goOrdineDettaglio.setSerie(dto.getSerie());
-                goOrdineDettaglio.setProgressivo(dto.getProgressivo());
-                goOrdineDettaglio.setRigo(dto.getRigo());
-            }
-            if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
-                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDesczrizione(),
-                        dto.getRigo(), null, dto.getQuantita(), null, null));
-                ordineDettaglio.setQuantita(dto.getQuantita());
-                ordineDettaglio.setQuantitaV(dto.getQuantita());
-                ordineDettaglioList.add(ordineDettaglio);
-            }
-            if (!Objects.equals(goOrdineDettaglio.getTono(), dto.getTono())) {
-                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), user, AzioneEnum.TONO.getDesczrizione(),
-                        dto.getRigo(), dto.getTono(), null, null, null));
-            }
-            if (!Objects.equals(dto.getFlagRiservato(), goOrdineDettaglio.getFlagRiservato())) {
-                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), user, AzioneEnum.RISERVATO.getDesczrizione()
-                        , dto.getRigo(), null, null, null, null));
-            }
-            if (!Objects.equals(dto.getFlagOrdinato(), goOrdineDettaglio.getFlagOrdinato())) {
-                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), user, AzioneEnum.ORDINATO.getDesczrizione()
-                        , dto.getRigo(), null, null, null, null));
-            }
-            if (!Objects.equals(dto.getFlagNonDisponibile(), goOrdineDettaglio.getFlagNonDisponibile())) {
-                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), user, AzioneEnum.NON_DISPONIBILE.getDesczrizione()
-                        , dto.getRigo(), null, null, null, null));
-            }
-            if (!Objects.equals(dto.getFlagConsegnato(), goOrdineDettaglio.getFlagConsegnato())) {
-                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDesczrizione()
-                        , dto.getRigo(), null, null, null, null));
-            }
-            if (!Objects.equals(dto.getFlProntoConsegna(), goOrdineDettaglio.getFlProntoConsegna())) {
-                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), user, AzioneEnum.PRONTO_CONSEGNA.getDesczrizione()
-                        , dto.getRigo(), null, null, null, dto.getQtaProntoConsegna()));
-            }
-            if (!Objects.equals(goOrdineDettaglio.getQtaRiservata(), dto.getQtaRiservata())) {
-                registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                        dto.getProgressivo(), user, AzioneEnum.QTA_RISERVATA.getDesczrizione(),
-                        dto.getRigo(), null, null, dto.getQtaRiservata(), null));
-            }
-            if (!warnNoBolla.get()) {
-                warnNoBolla.set(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0);
-            }
+            if (!"C".equals(dto.getTipoRigo())) {
+                if (!hasProntoConsegna.get() && dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna()) {
+                    hasProntoConsegna.getAndSet(Boolean.TRUE);
+                }
+                GoOrdineDettaglio goOrdineDettaglio = new GoOrdineDettaglio();
+                OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
+                Optional<GoOrdineDettaglio> goOrdineDettaglioOptional = GoOrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
+                if (goOrdineDettaglioOptional.isPresent()) {
+                    goOrdineDettaglio = goOrdineDettaglioOptional.get();
+                } else {
+                    goOrdineDettaglio.setAnno(dto.getAnno());
+                    goOrdineDettaglio.setSerie(dto.getSerie());
+                    goOrdineDettaglio.setProgressivo(dto.getProgressivo());
+                    goOrdineDettaglio.setRigo(dto.getRigo());
+                }
+                if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDesczrizione(),
+                            dto.getRigo(), null, dto.getQuantita(), null, null));
+                    ordineDettaglio.setQuantita(dto.getQuantita());
+                    ordineDettaglio.setQuantitaV(dto.getQuantita());
+                    ordineDettaglioList.add(ordineDettaglio);
+                }
+                if (!Objects.equals(goOrdineDettaglio.getTono(), dto.getTono())) {
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), user, AzioneEnum.TONO.getDesczrizione(),
+                            dto.getRigo(), dto.getTono(), null, null, null));
+                }
+                if (!Objects.equals(dto.getFlagRiservato(), goOrdineDettaglio.getFlagRiservato())) {
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), user, AzioneEnum.RISERVATO.getDesczrizione()
+                            , dto.getRigo(), null, null, null, null));
+                }
+                if (!Objects.equals(dto.getFlagOrdinato(), goOrdineDettaglio.getFlagOrdinato())) {
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), user, AzioneEnum.ORDINATO.getDesczrizione()
+                            , dto.getRigo(), null, null, null, null));
+                }
+                if (!Objects.equals(dto.getFlagNonDisponibile(), goOrdineDettaglio.getFlagNonDisponibile())) {
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), user, AzioneEnum.NON_DISPONIBILE.getDesczrizione()
+                            , dto.getRigo(), null, null, null, null));
+                }
+                if (!Objects.equals(dto.getFlagConsegnato(), goOrdineDettaglio.getFlagConsegnato())) {
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDesczrizione()
+                            , dto.getRigo(), null, null, null, null));
+                }
+                if (!Objects.equals(dto.getFlProntoConsegna(), goOrdineDettaglio.getFlProntoConsegna())) {
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), user, AzioneEnum.PRONTO_CONSEGNA.getDesczrizione()
+                            , dto.getRigo(), null, null, null, dto.getQtaProntoConsegna()));
+                }
+                if (!Objects.equals(goOrdineDettaglio.getQtaRiservata(), dto.getQtaRiservata())) {
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), user, AzioneEnum.QTA_RISERVATA.getDesczrizione(),
+                            dto.getRigo(), null, null, dto.getQtaRiservata(), null));
+                }
+                if (!warnNoBolla.get()) {
+                    warnNoBolla.set(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0);
+                }
 
-            mapper.fromDtoToEntity(goOrdineDettaglio, dto);
-            goOrdineDettaglioList.add(goOrdineDettaglio);
+                mapper.fromDtoToEntity(goOrdineDettaglio, dto);
+                goOrdineDettaglioList.add(goOrdineDettaglio);
+            }
         });
         OrdineDettaglioDto dto = list.get(0);
         GoOrdine.update("warnNoBolla =:warn, hasProntoConsegna =:pc where anno =:anno and serie =:serie and progressivo = :progressivo",
                 Parameters.with("anno", dto.getAnno())
-                                .and("serie", dto.getSerie())
-                                .and("progressivo", dto.getProgressivo())
-                                .and("warn", warnNoBolla.get())
+                        .and("serie", dto.getSerie())
+                        .and("progressivo", dto.getProgressivo())
+                        .and("warn", warnNoBolla.get())
                         .and("pc", hasProntoConsegna.get()));
         if (!ordineDettaglioList.isEmpty()) {
             OrdineDettaglio.persist(ordineDettaglioList);
