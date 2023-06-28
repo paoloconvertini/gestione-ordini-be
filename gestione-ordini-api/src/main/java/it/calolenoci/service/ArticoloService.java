@@ -62,7 +62,7 @@ public class ArticoloService {
 
     public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
         return !OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o" +
-                        " WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo " +
+                        " WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo and (tipoRigo <> 'C' OR tipoRigo <> 'AC')" +
                         " AND NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE god.anno = o.anno" +
                         " AND god.serie = o.serie AND god.progressivo = o.progressivo and god.rigo = o.rigo)",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
