@@ -3,6 +3,7 @@ package it.calolenoci.resource;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.GoOrdine;
+import it.calolenoci.entity.GoOrdineDettaglio;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
@@ -145,7 +146,7 @@ public class ArticoloResource {
     @Transactional
     @Consumes(APPLICATION_JSON)
     public Response addNotes(OrdineDettaglioDto dto){
-        OrdineDettaglio.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo and rigo = :rigo",
+        GoOrdineDettaglio.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo and rigo = :rigo",
                 Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
                         .and("serie", dto.getSerie())
                         .and("progressivo", dto.getProgressivo())
