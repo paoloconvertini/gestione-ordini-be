@@ -1,9 +1,6 @@
 package it.calolenoci.mapper;
 
-import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
-import it.calolenoci.entity.FornitoreArticolo;
-import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.entity.OrdineFornitoreDettaglio;
 
 import javax.enterprise.context.ApplicationScoped;

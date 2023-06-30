@@ -17,4 +17,6 @@ public class FiltroOrdini implements Serializable {
 
     private String status;
 
+    private Boolean prontoConsegna = Boolean.FALSE;
+
 }

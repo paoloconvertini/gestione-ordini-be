@@ -8,6 +8,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.Date;
 
 @Entity
 @Table(name = "ARTICOLI_TAB")
@@ -39,4 +40,16 @@ public class Articolo extends PanacheEntityBase {
 
     @Column(length = 3)
     private String classeA1;
+
+    @Column(name = "SYS_CREATEDATE")
+    private Date createDate;
+
+    @Column(name = "SYS_UPDATEDATE")
+    private Date updateDate;
+
+    @Column(name = "SYS_CREATEUSER")
+    private String createUser;
+
+    @Column(name = "SYS_UPDATEUSER")
+    private String updateUser;
 }

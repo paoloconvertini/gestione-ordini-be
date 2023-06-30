@@ -35,6 +35,9 @@ public class Ordine extends PanacheEntityBase {
     @Column(length = 6)
     private String contoCliente;
 
+    @Column(length = 80)
+    private String riferimento;
+
     @Column
     private Integer gruppoFattura;
 

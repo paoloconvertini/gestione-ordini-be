@@ -47,6 +47,27 @@ public class ArticoloResource {
     @Claim(standard = Claims.email)
     String email;
 
+    @Operation(summary = "Crea ordine a fornitore")
+    @POST
+    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @Path("/codificaArticoli")
+    public Response codificaArticoli(List<OrdineDettaglioDto> list) {
+        try {
+            if(!list.isEmpty()) {
+                List<String> errors = articoloService.codificaArticoli(list, user);
+                if(!errors.isEmpty()) {
+                    return Response.status(Response.Status.CREATED).entity(errors).build();
+                } else {
+                    return Response.status(Response.Status.CREATED).entity(new ResponseDto("Articoli codificati ", false)).build();
+                }
+            } else {
+                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun elemento salvato!", false)).build();
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
+        }
+    }
+
     @Operation(summary = "Returns all the articoli from the database")
     @POST
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})

@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
@@ -8,6 +9,7 @@ import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -160,6 +162,14 @@ public class ArticoloService {
                     goOrdineDettaglio.setProgressivo(dto.getProgressivo());
                     goOrdineDettaglio.setRigo(dto.getRigo());
                 }
+                if (!Objects.equals(ordineDettaglio.getFDescrArticolo(), dto.getFDescrArticolo())) {
+                    ordineDettaglio.setFDescrArticolo(dto.getFDescrArticolo());
+                    ordineDettaglioList.add(ordineDettaglio);
+                }
+                if (!Objects.equals(ordineDettaglio.getCodArtFornitore(), dto.getCodArtFornitore())) {
+                    ordineDettaglio.setCodArtFornitore(dto.getCodArtFornitore());
+                    ordineDettaglioList.add(ordineDettaglio);
+                }
                 if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                             dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDesczrizione(),
@@ -297,5 +307,95 @@ public class ArticoloService {
             Log.error("Errore nella creazione del FornitoreArticolo ", e);
             return false;
         }
+    }
+
+    @Transactional
+    public List<String> codificaArticoli(List<OrdineDettaglioDto> list, String user) {
+        List<String> errors = new ArrayList<>();
+        for (OrdineDettaglioDto dto : list) {
+            if(StringUtils.isBlank(dto.getFDescrArticolo()) || !dto.getFDescrArticolo().contains("*")){
+                Log.error("Articolo " + dto.getFDescrArticolo() + ": Fornitore senza *");
+                errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore senza *");
+                continue;
+            }
+            String nomeFornitore = StringUtils.substringBetween(dto.getFDescrArticolo(), "*");
+            if(StringUtils.isBlank(nomeFornitore)){
+                Log.error("Articolo " + dto.getFDescrArticolo() + ": Fornitore non codificato correttamente");
+                errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore non codificato correttamente");
+                continue;
+            }
+            Optional<ArticoloClasseFornitore> fornitore = ArticoloClasseFornitore.find("descrizione like '%:nome%' OR descrUser = :nome", Parameters.with("nome", nomeFornitore)).firstResultOptional();
+            if(fornitore.isEmpty()){
+                Log.error("Articolo " + dto.getFDescrArticolo() + ": Fornitore non trovato in TCA1");
+                errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore non trovato in TCA1");
+                continue;
+            }
+
+            if(StringUtils.isBlank(fornitore.get().getDescrUser2())){
+                Log.error("Articolo " + dto.getFDescrArticolo() + ": Sottoconto Fornitore non presente in TCA1");
+                errors.add("Articolo " + dto.getFDescrArticolo() + ": Sottoconto Fornitore non presente in TCA1");
+                continue;
+            }
+
+            String classeFornitore = fornitore.get().getCodice();
+            String codiceArticolo = StringUtils.deleteWhitespace(dto.getCodArtFornitore());
+
+            //Crea articolo
+            Articolo articolo = new Articolo();
+            articolo.setArticolo(this.creaId(codiceArticolo, classeFornitore));
+            articolo.setCreateDate(new Date());
+            articolo.setUpdateDate(new Date());
+            articolo.setCreateUser(user);
+            articolo.setUpdateUser(user);
+            articolo.setDescrArticolo(this.pulisciDescrizione(dto.getFDescrArticolo(), nomeFornitore));
+            articolo.setDescrArtSuppl(codiceArticolo);
+            articolo.setUnitaMisura(dto.getFUnitaMisura());
+            articolo.setClasseA1(classeFornitore);
+            articolo.persist();
+
+            //Crea fornitore alternativo
+            FornitoreArticolo fornitoreArticolo = new FornitoreArticolo();
+            fornitoreArticolo.setTempoConsegna(0);
+            fornitoreArticolo.setCoefPrezzo(0f);
+            fornitoreArticolo.setPrezzo(0f);
+            fornitoreArticolo.setFDefault("S");
+            fornitoreArticolo.setCreateUser(user);
+            fornitoreArticolo.setUpdateUser(user);
+            fornitoreArticolo.setFornitoreArticoloId(new FornitoreArticoloId(articolo.getArticolo(), 2351, fornitore.get().getDescrUser2()));
+            fornitoreArticolo.setUpdateDate(new Date());
+            fornitoreArticolo.setCreateDate(new Date());
+            fornitoreArticolo.persist();
+
+            //Aggiorno ordine cliente
+            OrdineDettaglio.update("fArticolo =:fArticolo, codArtFornitore =:codArtFornitore, fDescrArticolo =:fDescrArticolo " +
+                    "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo AND rigo =:rigo",
+                    Parameters.with("fArticolo", articolo.getArticolo()).and("codArtFornitore", codiceArticolo)
+                            .and("fDescrArticolo", articolo.getDescrArticolo()).and("anno", dto.getAnno())
+                            .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo())
+                            .and("rigo", dto.getRigo()));
+
+        }
+        return errors;
+
+    }
+
+    private String pulisciDescrizione(String fDescrArticolo, String nomeFornitore) {
+        String remove = StringUtils.remove(fDescrArticolo, "*");
+        return StringUtils.remove(remove, nomeFornitore);
+    }
+
+    private String creaId(String codiceArticolo, String classeFornitore) {
+        String id = classeFornitore + codiceArticolo;
+        int length = StringUtils.length(id);
+        if(length == 13){
+            return id;
+        }
+        String result;
+        if(length>13){
+            result = StringUtils.truncate(id, 13);
+        } else {
+            result = classeFornitore + StringUtils.leftPad(codiceArticolo, 10, '0');
+        }
+        return result;
     }
 }
