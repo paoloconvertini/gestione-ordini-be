@@ -1,13 +1,10 @@
  package it.calolenoci.entity;
 
-import lombok.*;
-import org.junit.jupiter.params.shadow.com.univocity.parsers.conversions.IntegerConversion;
+ import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.Id;
-import java.io.Serializable;
-import java.util.Objects;
+ import javax.persistence.Column;
+ import javax.persistence.Embeddable;
+ import java.io.Serializable;
 
 @Getter
 @Setter
