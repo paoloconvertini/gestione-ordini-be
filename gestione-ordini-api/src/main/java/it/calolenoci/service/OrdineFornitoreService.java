@@ -1,10 +1,12 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.ArticoloDto;
+import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
 import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
@@ -25,26 +27,31 @@ public class OrdineFornitoreService {
     RegistroAzioniMapper registroAzioniMapper;
 
     @Transactional
-    public List<String> save(Integer anno, String serie, Integer progressivo, String user) throws Exception {
+    public List<String> save(List<OrdineDettaglio> articoli, String user) throws Exception {
         List<String> fornitori = new ArrayList<>();
         try {
             List<OrdineFornitoreDettaglio> ordineFornitoreDettaglios = new ArrayList<>();
             List<OrdineFornitore> fornitoreList = new ArrayList<>();
-            Map<String, List<ArticoloDto>> mapArticoli = OrdineDettaglio.find("select pcc.intestazione as intestazioneCliente, pc.intestazione, a.articolo , " +
+            List<ArticoloDto> articoloDtos = new ArrayList<>();
+            final Integer anno = articoli.get(0).getAnno();
+            final String serie = articoli.get(0).getSerie();
+            final Integer progressivo = articoli.get(0).getProgressivo();
+            articoli.forEach(a -> OrdineDettaglio.find("select pcc.intestazione as intestazioneCliente, pc.intestazione, a.articolo , " +
                             " a.descrArticolo, a.descrArtSuppl, a.unitaMisura, a.prezzoBase, a.costoBase, " +
                             " fa.fornitoreArticoloId.gruppo as gruppoConto, fa.fornitoreArticoloId.conto as sottoConto,pc.codPagamento," +
                             " pc.banca, o.progrGenerale, o.rigo, o.quantita, o.fColli " +
                             " from OrdineDettaglio o " +
-                            " INNER JOIN GoOrdineDettaglio god ON god.anno = o.anno AND god.serie = o.serie AND god.progressivo = o.progressivo AND o.rigo = god.rigo " +
                             " inner join Ordine o2 ON  o2.anno = o.anno AND o2.serie = o.serie AND o2.progressivo = o.progressivo " +
                             " inner join PianoConti pcc ON  pcc.gruppoConto =  o2.gruppoCliente AND pcc.sottoConto = o2.contoCliente " +
                             " inner join Articolo a ON a.articolo = o.fArticolo " +
                             " inner join FornitoreArticolo fa ON  o.fArticolo = fa.fornitoreArticoloId.articolo " +
                             " inner JOIN PianoConti pc ON fa.fornitoreArticoloId.gruppo = pc.gruppoConto and fa.fornitoreArticoloId.conto = pc.sottoConto " +
-                            " where o.progressivo = :progressivo and o.anno = :anno and o.serie = :serie and god.flagNonDisponibile = 'T' " +
-                            " group by pcc.intestazione, pc.intestazione, a.articolo , a.descrArticolo, a.descrArtSuppl, a.unitaMisura, a.prezzoBase, a.costoBase, " +
-                            "                    fa.fornitoreArticoloId.gruppo, fa.fornitoreArticoloId.conto,pc.codPagamento, pc.banca, o.progrGenerale, o.rigo, o.quantita, o.fColli",
-                    Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).project(ArticoloDto.class).stream().collect(Collectors.groupingBy(ArticoloDto::getIntestazione));
+                            " where o.progressivo = :progressivo and o.anno = :anno and o.serie = :serie and o.rigo = :rigo ",
+                    Parameters.with("anno", a.getAnno()).and("serie", a.getSerie()).and("progressivo", a.getProgressivo()).and("rigo", a.getRigo()))
+                    .project(ArticoloDto.class)
+                    .singleResultOptional()
+                    .ifPresent(articoloDtos::add));
+            Map<String, List<ArticoloDto>> mapArticoli = articoloDtos.stream().collect(Collectors.groupingBy(ArticoloDto::getIntestazione));
             if (mapArticoli.isEmpty()) {
                 return fornitori;
             }
@@ -60,7 +67,7 @@ public class OrdineFornitoreService {
                 String serieOAF = "B";
                 if (!articoloDtoList.isEmpty()) {
                     ArticoloDto articoloDto = articoloDtoList.get(0);
-                    Optional<OrdineFornitoreDto> optOrdine = OrdineFornitore.find("Select f.anno, f.serie, f.progressivo, f.conto FROM OrdineFornitore f " +
+                    /*Optional<OrdineFornitoreDto> optOrdine = OrdineFornitore.find("Select f.anno, f.serie, f.progressivo, f.conto FROM OrdineFornitore f " +
                                     "WHERE (f.provvisorio IS NULL OR f.provvisorio = '') and f.conto = :sottoconto ORDER BY f.progressivo DESC",
                             Parameters.with("sottoconto", articoloDto.getSottoConto())).project(OrdineFornitoreDto.class).firstResultOptional();
                     if(optOrdine.isPresent()) {
@@ -70,7 +77,7 @@ public class OrdineFornitoreService {
                         OrdineFornitore.update("updateDate = :date, dataModifica = :date WHERE anno =:anno AND serie = :serie AND " +
                                 " progressivo =:progressivo", Parameters.with("anno", ordineFornitoreDto.getAnno()).and("date", new Date())
                                 .and("serie", ordineFornitoreDto.getSerie()).and("progressivo", ordineFornitoreDto.getProgressivo()));
-                    } else {
+                    } else {*/
                         OrdineFornitore ordineFornitore = new OrdineFornitore();
                         ordineFornitore.setProgressivo(prog);
                         ordineFornitore.setAnno(Year.now().getValue());
@@ -87,7 +94,7 @@ public class OrdineFornitoreService {
                         ordineFornitore.setBancaPagamento(articoloDto.getBanca());
                         ordineFornitore.setCreateUser(user);
                         fornitoreList.add(ordineFornitore);
-                    }
+                    //}
                     for (ArticoloDto a : articoloDtoList) {
                         Log.debug("Creo ordine per articolo: " + a.getArticolo() + " - " + a.getDescrArticolo());
                         OrdineFornitoreDettaglio fornitoreDettaglio = new OrdineFornitoreDettaglio();
@@ -95,15 +102,20 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setProgrGenerale(++progressivoFornDettaglio);
                         fornitoreDettaglio.setAnno(Year.now().getValue());
                         fornitoreDettaglio.setSerie(serieOAF);
-                        Integer rigo = articoloDtoList.indexOf(a);
-                        if(optOrdine.isPresent()) {
+                       //Integer rigo = articoloDtoList.indexOf(a);
+                      /*  if(optOrdine.isPresent()) {
                              rigo = findRigo(serieOAF, prog);
-                        }
-                        fornitoreDettaglio.setRigo(rigo + 1);
+                        }*/
+                        fornitoreDettaglio.setRigo(articoloDtoList.indexOf(a) + 1);
                         fornitoreDettaglio.setPid(a.getProgrGenerale());
                         fornitoreDettaglio.setOArticolo(a.getArticolo());
                         fornitoreDettaglio.setODescrArticolo(a.getDescrArticolo());
-                        fornitoreDettaglio.setOPrezzo(a.getCostoBase());
+                        Magazzino.find("Select valoreUnitario FROM Magazzino " +
+                                        "WHERE mArticolo = :codArticolo ORDER BY dataMagazzino",
+                                        Parameters.with("codArticolo", a.getArticolo()))
+                                .project(Double.class)
+                                .firstResultOptional()
+                                .ifPresent(fornitoreDettaglio::setOPrezzo);
                         fornitoreDettaglio.setOQuantita(a.getQuantita());
                         fornitoreDettaglio.setOUnitaMisura(a.getUnitaMisura());
                         fornitoreDettaglio.setOColli(a.getColli());
@@ -138,15 +150,48 @@ public class OrdineFornitoreService {
             OrdineFornitoreDettaglio.persist(ordineFornitoreDettaglios);
             OrdineFornitore.persist(fornitoreList);
         } catch (Exception e) {
+            Log.error("Errore creazione ordine a fornitore: " + e.getMessage());
             throw new Exception(e.getMessage());
         }
         return fornitori;
     }
 
-    private Integer findRigo(String serie, Integer progressivo) {
+    @Transactional
+    public void unisciOrdini(List<OrdineFornitoreDto> dtoList){
+        try {
+            OrdineFornitoreDto ordineDaTenere = dtoList.get(0);
+            Integer ultimoRigo = findRigo(ordineDaTenere.getAnno(), ordineDaTenere.getSerie(), ordineDaTenere.getProgressivo());
+            List<OrdineFornitoreDto> ordiniDaUnire = dtoList.stream().skip(1).toList();
+            int count = ultimoRigo + 1;
+            int update = 0;
+            List<OrdineFornitoreDettaglio> list = new ArrayList<>();
+            ordiniDaUnire.forEach(dto ->
+                list.addAll(OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                                Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo()))
+                        .list()));
+            for (OrdineFornitoreDettaglio o : list) {
+                update += OrdineFornitoreDettaglio.update("rigo = :nuovoRigo, progressivo =: nuovoProgressivo " +
+                                "WHERE anno = :anno and serie =:serie and progressivo =:progressivo and rigo=:rigo",
+                        Parameters.with("anno", o.getAnno()).and("serie", o.getSerie())
+                                .and("progressivo", o.getProgressivo()).and("rigo", o.getRigo())
+                                .and("nuovoRigo", count).and("nuovoProgressivo", ordineDaTenere.getProgressivo()));
+                count++;
+            }
+            if (update != 0) {
+                Log.info("Aggiornati " + update + "articoli");
+                ordiniDaUnire.forEach(o -> OrdineFornitore.deleteById(new FornitoreId(o.getAnno(), o.getSerie(), o.getProgressivo())));
+            }
+
+        } catch (Exception e) {
+            Log.error("Errore nell'unione degli OAF: " + e.getMessage());
+        }
+
+    }
+
+    private Integer findRigo(Integer anno, String serie, Integer progressivo) {
        return OrdineFornitoreDettaglio.find("SELECT MAX(f.rigo) FROM OrdineFornitoreDettaglio f " +
                                 " WHERE f.anno = :anno AND f.serie = :serie AND f.progressivo = :progressivo ",
-                        Parameters.with("anno", Year.now().getValue())
+                        Parameters.with("anno", anno)
                                 .and("serie", serie).and("progressivo", progressivo))
                 .project(Integer.class).singleResult();
     }

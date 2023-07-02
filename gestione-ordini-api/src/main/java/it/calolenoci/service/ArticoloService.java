@@ -338,50 +338,59 @@ public class ArticoloService {
             }
 
             String classeFornitore = fornitore.get().getCodice();
-            String codiceArticolo = StringUtils.deleteWhitespace(dto.getCodArtFornitore());
-
-            //Crea articolo
+            String codArtFornitore = StringUtils.deleteWhitespace(dto.getCodArtFornitore());
+            String codiceArticolo = this.creaId(codArtFornitore, classeFornitore);
+            Optional<Articolo> optArticolo =  Articolo.find("descrArtSuppl = :codArt OR descrArticolo LIKE '%:codArt%'",
+                    Parameters.with("codArt", codArtFornitore)).firstResultOptional();
             Articolo articolo = new Articolo();
-            articolo.setArticolo(this.creaId(codiceArticolo, classeFornitore));
-            articolo.setCreateDate(new Date());
-            articolo.setUpdateDate(new Date());
-            articolo.setCreateUser(user);
-            articolo.setUpdateUser(user);
-            articolo.setDescrArticolo(this.pulisciDescrizione(dto.getFDescrArticolo(), nomeFornitore));
-            articolo.setDescrArtSuppl(codiceArticolo);
-            articolo.setUnitaMisura(dto.getFUnitaMisura());
-            articolo.setClasseA1(classeFornitore);
-            articolo.persist();
+            if(optArticolo.isPresent()){
+                Log.info("Articolo: " + dto.getFDescrArticolo() + " già presente");
+                articolo = optArticolo.get();
+            } else {
+                //Crea articolo
+                articolo.setArticolo(codiceArticolo);
+                articolo.setCreateDate(new Date());
+                articolo.setUpdateDate(new Date());
+                articolo.setCreateUser(user);
+                articolo.setUpdateUser(user);
+                articolo.setDescrArticolo(this.pulisciDescrizione(dto.getFDescrArticolo()));
+                articolo.setDescrArtSuppl(codArtFornitore);
+                articolo.setUnitaMisura(dto.getFUnitaMisura());
+                articolo.setClasseA1(classeFornitore);
+                articolo.setCodiceIva("22");
+                articolo.setFlTrattato("S");
+                articolo.persist();
 
-            //Crea fornitore alternativo
-            FornitoreArticolo fornitoreArticolo = new FornitoreArticolo();
-            fornitoreArticolo.setTempoConsegna(0);
-            fornitoreArticolo.setCoefPrezzo(0f);
-            fornitoreArticolo.setPrezzo(0f);
-            fornitoreArticolo.setFDefault("S");
-            fornitoreArticolo.setCreateUser(user);
-            fornitoreArticolo.setUpdateUser(user);
-            fornitoreArticolo.setFornitoreArticoloId(new FornitoreArticoloId(articolo.getArticolo(), 2351, fornitore.get().getDescrUser2()));
-            fornitoreArticolo.setUpdateDate(new Date());
-            fornitoreArticolo.setCreateDate(new Date());
-            fornitoreArticolo.persist();
+                //Crea fornitore alternativo
+                FornitoreArticolo fornitoreArticolo = new FornitoreArticolo();
+                fornitoreArticolo.setTempoConsegna(0);
+                fornitoreArticolo.setCoefPrezzo(0f);
+                fornitoreArticolo.setPrezzo(0f);
+                fornitoreArticolo.setFDefault("S");
+                fornitoreArticolo.setCreateUser(user);
+                fornitoreArticolo.setUpdateUser(user);
+                FornitoreArticoloId fornitoreArticoloId = new FornitoreArticoloId(articolo.getArticolo(), 2351, fornitore.get().getDescrUser2());
+                fornitoreArticolo.setFornitoreArticoloId(fornitoreArticoloId);
+                fornitoreArticolo.setUpdateDate(new Date());
+                fornitoreArticolo.setCreateDate(new Date());
+                fornitoreArticolo.persist();
+                Log.info(FornitoreArticolo.findById(fornitoreArticoloId).toString());
+            }
 
             //Aggiorno ordine cliente
             OrdineDettaglio.update("fArticolo =:fArticolo, codArtFornitore =:codArtFornitore, fDescrArticolo =:fDescrArticolo " +
                     "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo AND rigo =:rigo",
-                    Parameters.with("fArticolo", articolo.getArticolo()).and("codArtFornitore", codiceArticolo)
+                    Parameters.with("fArticolo", articolo.getArticolo()).and("codArtFornitore", articolo.getDescrArtSuppl())
                             .and("fDescrArticolo", articolo.getDescrArticolo()).and("anno", dto.getAnno())
                             .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo())
                             .and("rigo", dto.getRigo()));
-
         }
         return errors;
 
     }
 
-    private String pulisciDescrizione(String fDescrArticolo, String nomeFornitore) {
-        String remove = StringUtils.remove(fDescrArticolo, "*");
-        return StringUtils.remove(remove, nomeFornitore);
+    private String pulisciDescrizione(String fDescrArticolo) {
+        return StringUtils.remove(fDescrArticolo, "*");
     }
 
     private String creaId(String codiceArticolo, String classeFornitore) {

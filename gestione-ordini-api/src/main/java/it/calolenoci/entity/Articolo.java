@@ -41,6 +41,12 @@ public class Articolo extends PanacheEntityBase {
     @Column(length = 3)
     private String classeA1;
 
+    @Column(length = 3)
+    private String codiceIva;
+
+    @Column(length = 1, name = "FLTRATTATO")
+    private String flTrattato;
+
     @Column(name = "SYS_CREATEDATE")
     private Date createDate;
 

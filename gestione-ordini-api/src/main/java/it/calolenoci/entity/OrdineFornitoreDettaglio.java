@@ -52,7 +52,7 @@ public class OrdineFornitoreDettaglio extends PanacheEntityBase {
     private Double oQuantita;
 
     @Column
-    private Float oPrezzo;
+    private Double oPrezzo;
 
     @Column
     private Double scontoF1;

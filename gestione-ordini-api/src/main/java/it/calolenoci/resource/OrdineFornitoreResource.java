@@ -3,6 +3,7 @@ package it.calolenoci.resource;
 import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.Ordine;
+import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.OrdineFornitoreService;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
@@ -39,17 +40,35 @@ public class OrdineFornitoreResource {
     String user;
 
     @Operation(summary = "Crea ordine a fornitore")
-    @GET
+    @POST
     @RolesAllowed({ADMIN, AMMINISTRATIVO})
-    @Path("/{anno}/{serie}/{progressivo}")
-    public Response createOAF(Integer anno, String serie, Integer progressivo) {
+    public Response createOAF(List<OrdineDettaglio> articoli) {
         try {
-            List<String> list = service.save(anno, serie, progressivo, user);
+            if(articoli.isEmpty()){
+                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun articolo da ordinare!", false)).build();
+            }
+            List<String> list = service.save(articoli, user);
             if(!list.isEmpty()) {
                 return Response.status(Response.Status.CREATED).entity(list).build();
             } else {
                 return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun elemento salvato!", false)).build();
             }
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
+        }
+    }
+
+    @Operation(summary = "Unisci ordine a fornitore")
+    @POST
+    @Path("/unisciOrdini")
+    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    public Response unisciOrdini(List<OrdineFornitoreDto> ordini) {
+        try {
+            if(ordini.isEmpty()){
+                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun ordine presente!", false)).build();
+            }
+            service.unisciOrdini(ordini);
+            return Response.status(Response.Status.CREATED).entity(new ResponseDto("Ordini unificati!", false)).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
         }

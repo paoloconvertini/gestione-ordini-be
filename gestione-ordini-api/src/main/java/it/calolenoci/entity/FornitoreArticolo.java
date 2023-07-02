@@ -40,4 +40,10 @@ public class FornitoreArticolo extends PanacheEntityBase {
     @Column(name = "SYS_UPDATEUSER")
     private String updateUser;
 
+    @Override
+    public String toString() {
+        return "FornitoreArticolo{" +
+                "fornitoreArticoloId=" + fornitoreArticoloId.getArticolo() + "-" + fornitoreArticoloId.getConto() +
+                '}';
+    }
 }

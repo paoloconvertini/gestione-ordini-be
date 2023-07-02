@@ -28,7 +28,7 @@ public class OrdineFornitoreDettaglioDto implements Serializable {
     private String oArticolo;
     private String oDescrArticolo;
     private Double oQuantita;
-    private Float oPrezzo;
+    private Double oPrezzo;
     private String oUnitaMisura;
     private Integer oColli;
     private String oCodiceIva;
@@ -41,7 +41,7 @@ public class OrdineFornitoreDettaglioDto implements Serializable {
 
     private String noteOrdCli;
 
-    public OrdineFornitoreDettaglioDto(Integer anno, String serie, Integer progressivo, Integer rigo, String nota, String oArticolo, String oDescrArticolo, Double oQuantita, Float oPrezzo, String oUnitaMisura) {
+    public OrdineFornitoreDettaglioDto(Integer anno, String serie, Integer progressivo, Integer rigo, String nota, String oArticolo, String oDescrArticolo, Double oQuantita, Double oPrezzo, String oUnitaMisura) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
@@ -55,7 +55,7 @@ public class OrdineFornitoreDettaglioDto implements Serializable {
     }
 
     public OrdineFornitoreDettaglioDto(Integer anno, String serie, Integer progressivo, Integer rigo, String nota,
-                                       String oArticolo, String oDescrArticolo, Double oQuantita, Float oPrezzo,
+                                       String oArticolo, String oDescrArticolo, Double oQuantita, Double oPrezzo,
                                        String oUnitaMisura, Double scontoF1, Double scontoF2, Double fScontoP, String tipoRigo) {
         this.anno = anno;
         this.serie = serie;
@@ -74,7 +74,7 @@ public class OrdineFornitoreDettaglioDto implements Serializable {
     }
 
     public OrdineFornitoreDettaglioDto(Integer anno, String serie, Integer progressivo, Integer rigo, String nota,
-                                       String oArticolo, String oDescrArticolo, Double oQuantita, Float oPrezzo,
+                                       String oArticolo, String oDescrArticolo, Double oQuantita, Double oPrezzo,
                                        String oUnitaMisura, Double scontoF1, Double scontoF2, Double fScontoP,
                                        String tipoRigo, String noteOrdCli) {
         this.anno = anno;

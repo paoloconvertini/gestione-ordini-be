@@ -32,7 +32,7 @@ public class OAFArticoloService {
         List<OrdineFornitoreDettaglioDto> list = OrdineFornitoreDettaglio.find("select o.anno, o.serie, o.progressivo, o.rigo, o.nota, o.oArticolo, " +
                 " o.oDescrArticolo,  o.oQuantita, o.oPrezzo, o.oUnitaMisura, o.scontoF1, o.scontoF2, o.fScontoP, o.tipoRigo, oc.noteOrdCli" +
                 " FROM OrdineFornitoreDettaglio o " +
-                " INNER JOIN OrdineDettaglio oc ON o.nota like CONCAT('Riferimento n. ', trim(str(oc.anno)), '/', oc.serie, '/', trim(str(oc.progressivo)), '-', trim(str(oc.rigo)))" +
+                " LEFT JOIN OrdineDettaglio oc ON o.nota like CONCAT('Riferimento n. ', trim(str(oc.anno)), '/', oc.serie, '/', trim(str(oc.progressivo)), '-', trim(str(oc.rigo)))" +
                 " WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ORDER BY o.rigo",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo))
                 .project(OrdineFornitoreDettaglioDto.class).list();
