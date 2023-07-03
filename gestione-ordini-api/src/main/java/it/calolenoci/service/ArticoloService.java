@@ -346,6 +346,10 @@ public class ArticoloService {
             if(optArticolo.isPresent()){
                 Log.info("Articolo: " + dto.getFDescrArticolo() + " già presente");
                 articolo = optArticolo.get();
+                if(articolo.getFlTrattato() == null || "N".equals(articolo.getFlTrattato())){
+                    articolo.setFlTrattato("S");
+                    articolo.persist();
+                }
             } else {
                 //Crea articolo
                 articolo.setArticolo(codiceArticolo);
