@@ -111,7 +111,7 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setOArticolo(a.getArticolo());
                         fornitoreDettaglio.setODescrArticolo(a.getDescrArticolo());
                         Magazzino.find("Select valoreUnitario FROM Magazzino " +
-                                        "WHERE mArticolo = :codArticolo ORDER BY dataMagazzino",
+                                        "WHERE mArticolo = :codArticolo ORDER BY dataMagazzino desc",
                                         Parameters.with("codArticolo", a.getArticolo()))
                                 .project(Double.class)
                                 .firstResultOptional()
