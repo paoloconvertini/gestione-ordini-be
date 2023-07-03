@@ -134,7 +134,8 @@ public class OrdineFornitoreService {
                                 progressivo, user, AzioneEnum.ORDINATO.getDesczrizione()
                                 , a.getRigo(), null, null, null, null));
                     }
-                    ordineFornitoreDettaglios.add(createRigoRiferimento(serieOAF, prog, articoloDto.getIntestazioneCliente(), ordineFornitoreDettaglios.get(ordineFornitoreDettaglios.size()-1).getRigo()));
+                    ordineFornitoreDettaglios.add(createRigoRiferimento(serieOAF, prog, articoloDto.getIntestazioneCliente(),
+                            ordineFornitoreDettaglios.get(ordineFornitoreDettaglios.size()-1).getRigo(), progressivoFornDettaglio));
                 }
 
                 index++;
@@ -197,7 +198,7 @@ public class OrdineFornitoreService {
                 .project(Integer.class).singleResult();
     }
 
-    private OrdineFornitoreDettaglio createRigoRiferimento(String serie, Integer progressivo, String intestazione, Integer rigo) {
+    private OrdineFornitoreDettaglio createRigoRiferimento(String serie, Integer progressivo, String intestazione, Integer rigo, Integer progrGenerale) {
         OrdineFornitoreDettaglio ordineFornitoreDettaglio = new OrdineFornitoreDettaglio();
         ordineFornitoreDettaglio.setTipoRigo("C");
         ordineFornitoreDettaglio.setRigo(rigo +1);
@@ -205,8 +206,7 @@ public class OrdineFornitoreService {
         ordineFornitoreDettaglio.setSerie(serie);
         ordineFornitoreDettaglio.setProgressivo(progressivo);
         ordineFornitoreDettaglio.setODescrArticolo("Rif. " +  intestazione);
-        Integer progressivoFornDettaglio = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM OrdineFornitoreDettaglio o").project(Integer.class).firstResult();
-        ordineFornitoreDettaglio.setProgrGenerale(progressivoFornDettaglio + 1);
+        ordineFornitoreDettaglio.setProgrGenerale(progrGenerale + 1);
         return ordineFornitoreDettaglio;
     }
 
