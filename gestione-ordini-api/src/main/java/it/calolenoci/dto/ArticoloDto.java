@@ -35,6 +35,8 @@ public class ArticoloDto implements Serializable {
     private Integer progrGeneraleFornitore;
     private Double quantita;
 
+    private Double quantitaV;
+
     private Integer colli;
 
     public ArticoloDto(String intestazione, String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura, Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento, String banca, Integer progrGenerale, Integer rigo, Double quantita, Integer colli) {
@@ -57,7 +59,7 @@ public class ArticoloDto implements Serializable {
     public ArticoloDto(String intestazioneCliente, String intestazione, String articolo, String descrArticolo,
                        String descrArtSuppl, String unitaMisura,
                        Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento,
-                       String banca, Integer progrGenerale, Integer rigo, Double quantita, Integer colli) {
+                       String banca, Integer progrGenerale, Integer rigo, Double quantita, Double quantitaV, Integer colli) {
         this.intestazioneCliente = intestazioneCliente;
         this.intestazione = intestazione;
         this.articolo = articolo;
@@ -73,6 +75,7 @@ public class ArticoloDto implements Serializable {
         this.progrGenerale = progrGenerale;
         this.rigo = rigo;
         this.quantita = quantita;
+        this.quantitaV = quantitaV;
         this.colli = colli;
     }
 }

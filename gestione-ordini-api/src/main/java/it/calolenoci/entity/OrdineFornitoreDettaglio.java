@@ -51,6 +51,9 @@ public class OrdineFornitoreDettaglio extends PanacheEntityBase {
     @Column
     private Double oQuantita;
 
+    @Column(name = "OQUANTITAV")
+    private Double oQuantitaV;
+
     @Column
     private Double oPrezzo;
 

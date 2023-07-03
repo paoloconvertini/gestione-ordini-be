@@ -39,7 +39,7 @@ public class OrdineFornitoreService {
             articoli.forEach(a -> OrdineDettaglio.find("select pcc.intestazione as intestazioneCliente, pc.intestazione, a.articolo , " +
                             " a.descrArticolo, a.descrArtSuppl, a.unitaMisura, a.prezzoBase, a.costoBase, " +
                             " fa.fornitoreArticoloId.gruppo as gruppoConto, fa.fornitoreArticoloId.conto as sottoConto,pc.codPagamento," +
-                            " pc.banca, o.progrGenerale, o.rigo, o.quantita, o.fColli " +
+                            " pc.banca, o.progrGenerale, o.rigo, o.quantita, o.quantitaV, o.fColli " +
                             " from OrdineDettaglio o " +
                             " inner join Ordine o2 ON  o2.anno = o.anno AND o2.serie = o.serie AND o2.progressivo = o.progressivo " +
                             " inner join PianoConti pcc ON  pcc.gruppoConto =  o2.gruppoCliente AND pcc.sottoConto = o2.contoCliente " +
@@ -117,6 +117,7 @@ public class OrdineFornitoreService {
                                 .firstResultOptional()
                                 .ifPresent(fornitoreDettaglio::setOPrezzo);
                         fornitoreDettaglio.setOQuantita(a.getQuantita());
+                        fornitoreDettaglio.setOQuantitaV(a.getQuantitaV());
                         fornitoreDettaglio.setOUnitaMisura(a.getUnitaMisura());
                         fornitoreDettaglio.setOColli(a.getColli());
                         fornitoreDettaglio.setOCodiceIva("22");
