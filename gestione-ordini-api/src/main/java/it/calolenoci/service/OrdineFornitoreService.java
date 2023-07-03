@@ -204,7 +204,8 @@ public class OrdineFornitoreService {
         ordineFornitoreDettaglio.setSerie(serie);
         ordineFornitoreDettaglio.setProgressivo(progressivo);
         ordineFornitoreDettaglio.setODescrArticolo("Rif. " +  intestazione);
-        ordineFornitoreDettaglio.setProgrGenerale(0);
+        Integer progressivoFornDettaglio = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM OrdineFornitoreDettaglio o").project(Integer.class).firstResult();
+        ordineFornitoreDettaglio.setProgrGenerale(progressivoFornDettaglio + 1);
         return ordineFornitoreDettaglio;
     }
 
