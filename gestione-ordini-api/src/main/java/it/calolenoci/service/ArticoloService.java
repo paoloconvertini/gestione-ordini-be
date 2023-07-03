@@ -263,7 +263,13 @@ public class ArticoloService {
         }
 
         if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(result)) {
-            ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+            if (GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
+                    " and progressivo =:progressivo" +
+                    " and flagNonDisponibile = 'T'", Parameters.with("anno", anno)
+                    .and("serie", serie)
+                    .and("progressivo", progressivo)) == 0) {
+                ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+            }
         }
 
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
