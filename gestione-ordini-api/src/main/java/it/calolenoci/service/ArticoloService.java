@@ -250,6 +250,7 @@ public class ArticoloService {
 
         final String result = ordine.getStatus();
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
+            ordine.setStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             if (GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
                     " and flagNonDisponibile = 'T'", Parameters.with("anno", anno)
@@ -257,8 +258,13 @@ public class ArticoloService {
                     .and("progressivo", progressivo)) == 0) {
                 sendMail(anno, serie, progressivo, email);
                 ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
-            } else {
-                ordine.setStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
+            }
+            if(GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
+                    " and progressivo =:progressivo" +
+                    " and flagOrdinato = 'T'", Parameters.with("anno", anno)
+                    .and("serie", serie)
+                    .and("progressivo", progressivo)) > 0) {
+                ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             }
         }
 
