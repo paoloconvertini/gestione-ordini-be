@@ -7,6 +7,7 @@ import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class OafArticoloMapper {
+
     public void viewToEntity(OrdineFornitoreDettaglio entity, OrdineFornitoreDettaglioDto dto) {
        entity.setOQuantita(dto.getOQuantita());
        entity.setOPrezzo(dto.getOPrezzo());
@@ -31,7 +32,8 @@ public class OafArticoloMapper {
         entity.setScontoF1(dto.getScontoF1());
         entity.setScontoF2(dto.getScontoF2());
         entity.setFScontoP(dto.getFScontoP());
-        entity.setProgrGenerale(0);
+        Integer progrGenerale = OrdineFornitoreDettaglio.find("SELECT MAX(progrGenerale) FROM OrdineFornitoreDettaglio").project(Integer.class).singleResult();
+        entity.setProgrGenerale(progrGenerale + 1);
         return entity;
     }
 }
