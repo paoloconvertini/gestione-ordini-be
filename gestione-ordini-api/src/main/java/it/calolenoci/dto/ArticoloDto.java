@@ -21,7 +21,7 @@ public class ArticoloDto implements Serializable {
     private String descrArticolo;
     private String descrArtSuppl;
     private String unitaMisura;
-    private Float prezzoBase;
+    private Double prezzoBase;
     private Float costoBase;
     private Integer gruppoConto;
     private String sottoConto;
@@ -39,7 +39,14 @@ public class ArticoloDto implements Serializable {
 
     private Integer colli;
 
-    public ArticoloDto(String intestazione, String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura, Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento, String banca, Integer progrGenerale, Integer rigo, Double quantita, Integer colli) {
+
+    public ArticoloDto(String articolo, String descrArticolo, String unitaMisura) {
+        this.articolo = articolo;
+        this.descrArticolo = descrArticolo;
+        this.unitaMisura = unitaMisura;
+    }
+
+    public ArticoloDto(String intestazione, String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura, Double prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento, String banca, Integer progrGenerale, Integer rigo, Double quantita, Integer colli) {
         this.intestazione = intestazione;
         this.articolo = articolo;
         this.descrArticolo = descrArticolo;
@@ -58,7 +65,7 @@ public class ArticoloDto implements Serializable {
     }
     public ArticoloDto(String intestazioneCliente, String intestazione, String articolo, String descrArticolo,
                        String descrArtSuppl, String unitaMisura,
-                       Float prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento,
+                       Double prezzoBase, Float costoBase, Integer gruppoConto, String sottoConto, String codPagamento,
                        String banca, Integer progrGenerale, Integer rigo, Double quantita, Double quantitaV, Integer colli) {
         this.intestazioneCliente = intestazioneCliente;
         this.intestazione = intestazione;

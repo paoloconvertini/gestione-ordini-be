@@ -2,17 +2,15 @@ package it.calolenoci.service;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
-import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
-import it.calolenoci.dto.OrdineFornitoreDto;
-import it.calolenoci.dto.ResponseOAFDettaglioDTO;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.mapper.OafArticoloMapper;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @ApplicationScoped
 public class OAFArticoloService {
@@ -30,9 +28,9 @@ public class OAFArticoloService {
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo))
         .project(OrdineFornitoreDto.class).singleResultOptional();
         List<OrdineFornitoreDettaglioDto> list = OrdineFornitoreDettaglio.find("select o.anno, o.serie, o.progressivo, o.rigo, o.nota, o.oArticolo, " +
-                " o.oDescrArticolo,  o.oQuantita, o.oPrezzo, o.oUnitaMisura, o.scontoF1, o.scontoF2, o.fScontoP, o.tipoRigo, oc.noteOrdCli" +
+                " o.oDescrArticolo,  o.oQuantita, o.oPrezzo, o.oUnitaMisura, o.scontoF1, o.scontoF2, o.fScontoP, o.tipoRigo" +
                 " FROM OrdineFornitoreDettaglio o " +
-                " LEFT JOIN OrdineDettaglio oc ON o.nota like CONCAT('Riferimento n. ', trim(str(oc.anno)), '/', oc.serie, '/', trim(str(oc.progressivo)), '-', trim(str(oc.rigo)))" +
+                //" LEFT JOIN OrdineDettaglio oc ON o.nota like CONCAT('Riferimento n. ', trim(str(oc.anno)), '/', oc.serie, '/', trim(str(oc.progressivo)), '-', trim(str(oc.rigo)))" +
                 " WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ORDER BY o.rigo",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo))
                 .project(OrdineFornitoreDettaglioDto.class).list();
@@ -69,5 +67,27 @@ public class OAFArticoloService {
     public void save(Integer anno, String serie, Integer progressivo, OrdineFornitoreDettaglioDto dto) {
         OrdineFornitoreDettaglio ordineFornitoreDettaglio = mapper.viewToEntity(anno, serie, progressivo, dto);
         ordineFornitoreDettaglio.persist();
+    }
+
+    public List<ArticoloDto> cercaArticoli(FiltroArticoli filtro){
+        String query = "SELECT a.articolo, a.descrArticolo, a.unitaMisura FROM Articolo a " +
+                " WHERE 1=1 ";
+        Map<String, String> parameters = new HashMap<>();
+        if(StringUtils.isNotBlank(filtro.getCodice())) {
+            query += " AND a.articolo LIKE '%codice%' ";
+            parameters.put("codice", filtro.getCodice());
+        }
+        if(StringUtils.isNotBlank(filtro.getDescrizione())) {
+            query += " AND a.descrArticolo LIKE '%descrizione%' ";
+            parameters.put("descrizione", filtro.getDescrizione());
+        }
+        List<ArticoloDto> list = Articolo.find(query, parameters).project(ArticoloDto.class).list();
+        list.forEach(e -> Magazzino.find("Select valoreUnitario FROM Magazzino " +
+                                "WHERE mArticolo = :codArticolo ORDER BY dataMagazzino desc",
+                        Parameters.with("codArticolo", e.getArticolo()))
+                .project(Double.class)
+                .firstResultOptional()
+                .ifPresent(e::setPrezzoBase));
+        return list;
     }
 }

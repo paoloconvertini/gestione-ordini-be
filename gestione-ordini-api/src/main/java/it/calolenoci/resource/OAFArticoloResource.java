@@ -1,11 +1,13 @@
 package it.calolenoci.resource;
 
+import it.calolenoci.dto.FiltroArticoli;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
 import it.calolenoci.service.OAFArticoloService;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -79,6 +81,18 @@ public class OAFArticoloResource {
             return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
     }
 
+    @Operation(summary = "Cerca articoli")
+    @POST
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/cercaArticoli")
+    public Response cercaArticoli(FiltroArticoli filtro) {
+        if(StringUtils.isBlank(filtro.getCodice()) && StringUtils.isBlank(filtro.getDescrizione())) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ResponseDto("Nessun filtro i ricerca presente", true)).build();
+        }
+        return Response.status(Response.Status.CREATED).entity(articoloService.cercaArticoli(filtro)).build();
+    }
+
     @Operation(summary = "Save dettaglio ordine")
     @PUT
     @RolesAllowed({ADMIN, MAGAZZINIERE, AMMINISTRATIVO})
@@ -87,7 +101,7 @@ public class OAFArticoloResource {
             articoloService.save(list);
             return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
         }
-        return Response.status(Response.Status.OK).entity(new ResponseDto("lista vuota", true)).build();
+        return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseDto("lista vuota", true)).build();
     }
 
 }

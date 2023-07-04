@@ -1,11 +1,12 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
-import it.calolenoci.entity.GoOrdine;
-import it.calolenoci.entity.Ordine;
+import it.calolenoci.entity.*;
 import it.calolenoci.enums.StatoOrdineEnum;
+import it.calolenoci.mapper.GoOrdineDettaglioMapper;
 import it.calolenoci.mapper.GoOrdineMapper;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +29,10 @@ public class OrdineService {
 
     @Inject
     GoOrdineMapper goOrdineMapper;
+
+    @Inject
+    GoOrdineDettaglioMapper goOrdineDettaglioMapper;
+
     @ConfigProperty(name = "data.inizio")
     String dataCongig;
 
@@ -101,6 +106,7 @@ public class OrdineService {
         List<String> list = new ArrayList<>();
         list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
         list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+        list.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
         List<GoOrdine> ordineList = GoOrdine.findOrdiniByStatus(list);
         ordineList.forEach(o -> {
             if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getWarnNoBolla()) {
@@ -172,8 +178,17 @@ public class OrdineService {
                 " AND god.serie = o.serie AND god.progressivo = o.progressivo)", Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
         if (!list.isEmpty()) {
             List<GoOrdine> listToSave = new ArrayList<>();
-            list.forEach(o -> listToSave.add(goOrdineMapper.fromOrdineToGoOrdine(o)));
+            List<GoOrdineDettaglio> listDettaglioToSave = new ArrayList<>();
+            list.forEach(o -> {
+                listToSave.add(goOrdineMapper.fromOrdineToGoOrdine(o));
+                List<OrdineDettaglio> dettaglioList = OrdineDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                        Parameters.with("anno", o.getAnno()).and("serie", o.getSerie())
+                                .and("progressivo", o.getProgressivo())).list();
+                dettaglioList.forEach(d -> listDettaglioToSave.add(goOrdineDettaglioMapper.fromOrdineDettaglioToGoOrdineDettaglio(d)));
+
+            });
             GoOrdine.persist(listToSave);
+            GoOrdineDettaglio.persist(listDettaglioToSave);
 
             creaReport(list);
         }
