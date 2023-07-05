@@ -111,6 +111,9 @@ public class OrdineService {
         ordineList.forEach(o -> {
             if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getWarnNoBolla()) {
                 o.setStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
+                if(o.getHasProntoConsegna() != null && o.getHasProntoConsegna()){
+                    o.setHasProntoConsegna(Boolean.FALSE);
+                }
                 o.persist();
             }
         });
