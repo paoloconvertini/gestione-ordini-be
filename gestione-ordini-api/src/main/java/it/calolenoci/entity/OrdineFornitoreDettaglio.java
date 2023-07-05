@@ -78,4 +78,10 @@ public class OrdineFornitoreDettaglio extends PanacheEntityBase {
     @Column(length = 3)
     private String oCodiceIva;
 
+    @Column(length = 25, name = "CAMPOUSER5")
+    private String campoUser5;
+
+    @Column(length = 1)
+    private String provenienza;
+
 }

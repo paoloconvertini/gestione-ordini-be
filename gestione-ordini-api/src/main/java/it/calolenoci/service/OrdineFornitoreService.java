@@ -109,6 +109,8 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setOUnitaMisura(a.getUnitaMisura());
                         fornitoreDettaglio.setOColli(a.getColli());
                         fornitoreDettaglio.setOCodiceIva("22");
+                        fornitoreDettaglio.setProvenienza("C");
+                        fornitoreDettaglio.setCampoUser5("VS.ART." + a.getDescrArtSuppl());
                         String nota = "Riferimento n. " + anno + "/" + serie + "/" + progressivo + "-" + a.getRigo();
                         fornitoreDettaglio.setNota(nota);
 

@@ -407,7 +407,8 @@ public class ArticoloService {
     }
 
     private String pulisciDescrizione(String fDescrArticolo) {
-        return StringUtils.remove(fDescrArticolo, "*");
+        String remove = StringUtils.remove(fDescrArticolo, "*");
+        return StringUtils.truncate(remove, 50);
     }
 
     private String creaId(String codiceArticolo, String classeFornitore) {
