@@ -185,7 +185,7 @@ public class OrdineService {
             list.forEach(o -> {
                 listToSave.add(goOrdineMapper.fromOrdineToGoOrdine(o));
                 List<OrdineDettaglio> dettaglioList = OrdineDettaglio
-                        .find("anno = :anno AND serie = :serie AND progressivo = :progressivo and (tipoRigo <> 'C' OR tipoRigo <> 'AC')",
+                        .find("anno = :anno AND serie = :serie AND progressivo = :progressivo and (tipoRigo <> 'C' AND tipoRigo <> 'AC')",
                         Parameters.with("anno", o.getAnno()).and("serie", o.getSerie())
                                 .and("progressivo", o.getProgressivo())).list();
                 dettaglioList.forEach(d -> listDettaglioToSave.add(goOrdineDettaglioMapper.fromOrdineDettaglioToGoOrdineDettaglio(d)));
