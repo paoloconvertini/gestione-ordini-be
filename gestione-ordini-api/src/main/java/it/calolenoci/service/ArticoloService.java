@@ -78,14 +78,15 @@ public class ArticoloService {
             if (optional.isPresent()) {
                 GoOrdineDettaglio goOrdineDettaglio = optional.get();
                 aggiornati.updateAndGet(v -> v + GoOrdineDettaglio.update(
-                        " qtaConsegnatoSenzaBolla = CASE WHEN (:quantita - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END, " +
+                          " qtaConsegnatoSenzaBolla = CASE WHEN (:quantita - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END, " +
                                 " flagConsegnato = CASE WHEN (:quantita - :qta) = 0 THEN 'T' ELSE 'F' END, " +
                                 " qtaProntoConsegna = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaProntoConsegna END, " +
                                 " flProntoConsegna = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN 'F' ELSE 'T' END, " +
                                 " qtaRiservata = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaRiservata END, " +
                                 " qtaDaConsegnare = (:quantita - :qta), " +
-                                " flBolla = 'T' WHERE anno=:anno AND serie=:serie AND progressivo =:progressivo and rigo =:rigo" +
-                                " AND qtaDaConsegnare <> (:quantita - :qta)",
+                                " flBolla = 'T' " +
+                                " WHERE anno=:anno AND serie=:serie AND progressivo =:progressivo and rigo =:rigo" +
+                                " AND (qtaDaConsegnare IS NULL OR qtaDaConsegnare <> (:quantita - :qta))",
                         Parameters.with("qta", e.getQtaBolla()).and("anno", e.getAnno()).and("rigo", e.getRigo())
                                 .and("serie", e.getSerie()).and("progressivo", e.getProgressivo()).and("quantita", e.getQuantita())));
 

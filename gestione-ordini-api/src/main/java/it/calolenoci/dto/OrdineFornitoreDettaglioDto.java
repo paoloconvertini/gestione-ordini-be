@@ -33,6 +33,7 @@ public class OrdineFornitoreDettaglioDto implements Serializable {
     private Integer oColli;
     private String oCodiceIva;
 
+    private Double fScontoArticolo;
     private Double scontoF1;
 
     private Double scontoF2;
@@ -54,7 +55,7 @@ public class OrdineFornitoreDettaglioDto implements Serializable {
 
     public OrdineFornitoreDettaglioDto(Integer anno, String serie, Integer progressivo, Integer rigo, String nota,
                                        String oArticolo, String oDescrArticolo, Double oQuantita, Double oPrezzo,
-                                       String oUnitaMisura, Double scontoF1, Double scontoF2, Double fScontoP, String tipoRigo) {
+                                       String oUnitaMisura, Double fScontoArticolo, Double scontoF1, Double scontoF2, Double fScontoP, String tipoRigo) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
@@ -65,6 +66,7 @@ public class OrdineFornitoreDettaglioDto implements Serializable {
         this.oQuantita = oQuantita;
         this.oPrezzo = oPrezzo;
         this.oUnitaMisura = oUnitaMisura;
+        this.fScontoArticolo = fScontoArticolo;
         this.scontoF1 = scontoF1;
         this.scontoF2 = scontoF2;
         this.fScontoP = fScontoP;
