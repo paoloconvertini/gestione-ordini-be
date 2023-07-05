@@ -36,7 +36,7 @@ public class Articolo extends PanacheEntityBase {
     private Float costoBase;
 
     @Column
-    private Float prezzoBase;
+    private Double prezzoBase;
 
     @Column(length = 3)
     private String classeA1;

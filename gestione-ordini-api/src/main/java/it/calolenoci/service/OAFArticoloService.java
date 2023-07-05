@@ -6,6 +6,7 @@ import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.mapper.OafArticoloMapper;
 import org.apache.commons.lang3.StringUtils;
+import org.jfree.util.Log;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -64,9 +65,26 @@ public class OAFArticoloService {
     }
 
     @Transactional
-    public void save(Integer anno, String serie, Integer progressivo, OrdineFornitoreDettaglioDto dto) {
-        OrdineFornitoreDettaglio ordineFornitoreDettaglio = mapper.viewToEntity(anno, serie, progressivo, dto);
-        ordineFornitoreDettaglio.persist();
+    public boolean save(Integer anno, String serie, Integer progressivo, OrdineFornitoreDettaglioDto dto) {
+        try {
+            List<OrdineFornitoreDettaglio> list = OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie" +
+                            " AND progressivo = :progressivo and rigo >=:rigo",
+                    Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo).and("rigo", dto.getRigo())).list();
+
+            OrdineFornitoreDettaglio rigoDaAggiornare = OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie" +
+                            " AND progressivo = :progressivo and rigo =:rigo",
+                    Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo).and("rigo", dto.getRigo())).singleResult();
+
+            mapper.aggiornaRigo(rigoDaAggiornare, dto);
+
+            list.forEach(e-> e.setRigo(e.getRigo()+1));
+            list.add(rigoDaAggiornare);
+            OrdineFornitoreDettaglio.persist(list);
+            return true;
+        } catch (Exception e) {
+            Log.error("Errore nella creazione del rigo, " + e.getMessage());
+            return false;
+        }
     }
 
     public List<ArticoloDto> cercaArticoli(FiltroArticoli filtro){
