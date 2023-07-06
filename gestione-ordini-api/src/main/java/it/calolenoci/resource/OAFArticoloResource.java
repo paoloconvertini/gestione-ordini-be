@@ -75,13 +75,13 @@ public class OAFArticoloResource {
     @Operation(summary = "Richiedi approvazione ordine a fornitore")
     @POST
     @RolesAllowed({AMMINISTRATIVO, ADMIN})
-    @Path("/salvaRigo/{anno}/{serie}/{progressivo}")
-    public Response salvaRigo(Integer anno, String serie, Integer progressivo, OrdineFornitoreDettaglioDto dto) {
-        //boolean save = articoloService.save(anno, serie, progressivo, dto);
-        //if(!save){
+    @Path("/salvaRigo")
+    public Response salvaRigo(OrdineFornitoreDettaglioDto dto) {
+        boolean save = articoloService.save(dto);
+        if(!save){
             return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Errore Salvataggio !", true)).build();
-        //}
-        //return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
+        }
+        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
     }
 
     @Operation(summary = "Cerca articoli")

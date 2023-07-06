@@ -19,8 +19,12 @@ public class OafArticoloMapper {
        entity.setFScontoP(dto.getFScontoP());
     }
 
-    public void aggiornaRigo(OrdineFornitoreDettaglio entity, OrdineFornitoreDettaglioDto dto) {
-
+    public OrdineFornitoreDettaglio fromDtoToEntity(OrdineFornitoreDettaglioDto dto) {
+        OrdineFornitoreDettaglio entity = new OrdineFornitoreDettaglio();
+        entity.setAnno(dto.getAnno());
+        entity.setSerie(dto.getSerie());
+        entity.setProgressivo(dto.getProgressivo());
+        entity.setRigo(dto.getRigo());
         entity.setTipoRigo(dto.getTipoRigo());
         entity.setOArticolo(StringUtils.isNotBlank(dto.getOArticolo())?dto.getOArticolo():"");
         entity.setODescrArticolo(dto.getODescrArticolo());
@@ -38,5 +42,6 @@ public class OafArticoloMapper {
         entity.setFScontoP(dto.getFScontoP());
         Integer progrGenerale = OrdineFornitoreDettaglio.find("SELECT MAX(progrGenerale) FROM OrdineFornitoreDettaglio").project(Integer.class).singleResult();
         entity.setProgrGenerale(progrGenerale + 1);
+        return entity;
     }
 }

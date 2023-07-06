@@ -65,21 +65,13 @@ public class OAFArticoloService {
     }
 
     @Transactional
-    public boolean save(Integer anno, String serie, Integer progressivo, OrdineFornitoreDettaglioDto dto) {
+    public boolean save(OrdineFornitoreDettaglioDto dto) {
         try {
-            List<OrdineFornitoreDettaglio> list = OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie" +
+            OrdineFornitoreDettaglio.update("rigo = (rigo+1) WHERE anno = :anno AND serie = :serie" +
                             " AND progressivo = :progressivo and rigo >=:rigo",
-                    Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo).and("rigo", dto.getRigo())).list();
-
-            OrdineFornitoreDettaglio rigoDaAggiornare = OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie" +
-                            " AND progressivo = :progressivo and rigo =:rigo",
-                    Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo).and("rigo", dto.getRigo())).singleResult();
-
-            mapper.aggiornaRigo(rigoDaAggiornare, dto);
-
-            list.forEach(e-> e.setRigo(e.getRigo()+1));
-            list.add(rigoDaAggiornare);
-            OrdineFornitoreDettaglio.persist(list);
+                    Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
+                            .and("progressivo", dto.getProgressivo()).and("rigo", dto.getRigo()));
+            mapper.fromDtoToEntity(dto).persist();
             return true;
         } catch (Exception e) {
             Log.error("Errore nella creazione del rigo, " + e.getMessage());
