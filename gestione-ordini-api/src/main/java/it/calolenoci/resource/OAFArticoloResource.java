@@ -73,7 +73,15 @@ public class OAFArticoloResource {
     }
 
     @Operation(summary = "Richiedi approvazione ordine a fornitore")
-    @POST
+    @DELETE
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/eliminaArticolo/{anno}/{serie}/{progressivo}/{rigo}")
+    public Response eliminaArticolo(Integer anno, String serie, Integer progressivo, Integer rigo) {
+        return Response.status(Response.Status.OK).entity(articoloService.eliminaArticolo(anno, serie, progressivo, rigo)).build();
+    }
+
+    @Operation(summary = "Cancella articolo dall'ordine a fornitore")
+    @DELETE
     @RolesAllowed({AMMINISTRATIVO, ADMIN})
     @Path("/salvaRigo")
     public Response salvaRigo(OrdineFornitoreDettaglioDto dto) {

@@ -45,7 +45,7 @@ public class OAFArticoloService {
 
     @Transactional
     public void approva(Integer anno, String serie, Integer progressivo) {
-        OrdineFornitore.update("provvisorio = 'F' where anno = :anno AND serie = :serie AND progressivo = :progressivo",
+        OrdineFornitore.update("provvisorio = null where anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
     }
 
@@ -99,5 +99,40 @@ public class OAFArticoloService {
                 .firstResultOptional()
                 .ifPresent(e::setPrezzoBase));
         return list;
+    }
+
+    @Transactional
+    public ResponseDto eliminaArticolo(Integer anno, String serie, Integer progressivo, Integer rigo) {
+        ResponseDto dto = new ResponseDto();
+        OrdineFornitoreDettaglio articolo = OrdineFornitoreDettaglio.findById(new FornitoreDettaglioId(anno, serie, progressivo, rigo));
+        if(articolo == null){
+            Log.error("articolo fornitore non trovato al rigo = " + rigo);
+            dto.setError(Boolean.TRUE);
+            dto.setMsg("articolo fornitore non trovato al rigo = " + rigo);
+            return dto;
+        }
+        Integer progrGeneraleCliente = articolo.getPid();
+        if(progrGeneraleCliente != null && progrGeneraleCliente != 0) {
+            Optional<OrdineDettaglio> optArticoloCliente = OrdineDettaglio.find("progrGenerale =:pid",
+                    Parameters.with("pid", progrGeneraleCliente)).singleResultOptional();
+            if(optArticoloCliente.isEmpty()) {
+                Log.error("articolo cliente non trovato con progrGenerale = " + progrGeneraleCliente);
+                dto.setError(Boolean.TRUE);
+                dto.setMsg("articolo cliente non trovato con progrGenerale = " + progrGeneraleCliente);
+                return dto;
+            }
+            OrdineDettaglio o = optArticoloCliente.get();
+            GoOrdineDettaglio.update("flagOrdinato = 'F', flagNonDisponibile = 'T' " +
+                            "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo and rigo =:rigo",
+                    Parameters.with("anno", o.getAnno()).and("serie", o.getSerie())
+                            .and("progressivo", o.getProgressivo()).and("rigo", o.getRigo()));
+            GoOrdine.update("status='DA_ORDINARE' WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo and status not in ('DA_ORDINARE','DA_PROCESSARE', 'ARCHIVIATO')",
+                    Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo()));
+
+        }
+        OrdineFornitoreDettaglio.deleteById(new FornitoreDettaglioId(anno, serie, progressivo, rigo));
+        dto.setError(Boolean.FALSE);
+        dto.setMsg("Articolo eliminato");
+        return dto;
     }
 }

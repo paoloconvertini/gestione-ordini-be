@@ -58,6 +58,22 @@ public class OrdineFornitoreResource {
         }
     }
 
+    @GET
+    @Path("/apriOrdine/{anno}/{serie}/{progressivo}")
+    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    public Response apriOrdine(Integer anno, String serie, Integer progressivo){
+        service.changeStatus(anno, serie, progressivo);
+        return Response.ok(new ResponseDto("Ordine riaperto", false)).build();
+    }
+
+    @Operation(summary = "Richiedi approvazione ordine a fornitore")
+    @DELETE
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/eliminaOrdine/{anno}/{serie}/{progressivo}")
+    public Response eliminaOrdine(Integer anno, String serie, Integer progressivo) {
+        return Response.status(Response.Status.OK).entity(service.eliminaOrdine(anno, serie, progressivo)).build();
+    }
+
     @Operation(summary = "Unisci ordine a fornitore")
     @POST
     @Path("/unisciOrdini")

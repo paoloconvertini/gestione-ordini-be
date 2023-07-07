@@ -8,6 +8,7 @@ import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.ArticoloDto;
 import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
 import it.calolenoci.dto.OrdineFornitoreDto;
+import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.mapper.RegistroAzioniMapper;
@@ -25,6 +26,9 @@ public class OrdineFornitoreService {
 
     @Inject
     RegistroAzioniMapper registroAzioniMapper;
+
+    @Inject
+    OAFArticoloService articoloService;
 
     @Transactional
     public List<String> save(List<OrdineDettaglio> articoli, String user) throws Exception {
@@ -82,6 +86,7 @@ public class OrdineFornitoreService {
                     ordineFornitore.setCodicePagamento(articoloDto.getCodPagamento());
                     ordineFornitore.setBancaPagamento(articoloDto.getBanca());
                     ordineFornitore.setCreateUser(user);
+                    ordineFornitore.setProvvisorio("F");
                     fornitoreList.add(ordineFornitore);
                     for (ArticoloDto a : articoloDtoList) {
                         Log.debug("Creo ordine per articolo: " + a.getArticolo() + " - " + a.getDescrArticolo());
@@ -228,6 +233,39 @@ public class OrdineFornitoreService {
     @Transactional
     public void richiediApprovazione(List<OrdineFornitoreDto> list) {
         list.forEach(o -> this.richiediApprovazione(o.getAnno(), o.getSerie(), o.getProgressivo()));
+    }
+    @Transactional
+    public void changeStatus(Integer anno, String serie, Integer progressivo) {
+        OrdineFornitore.update("provvisorio = 'F' where anno = :anno and progressivo = :progressivo and serie = :serie",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
+    }
+
+    @Transactional
+    public ResponseDto eliminaOrdine(Integer anno, String serie, Integer progressivo) {
+        ResponseDto dto = new ResponseDto();
+        try {
+        OrdineFornitore ordine = OrdineFornitore.findById(new FornitoreId(anno, serie, progressivo));
+        if(ordine == null){
+            Log.error("ordine fornitore non trovato");
+            dto.setError(Boolean.TRUE);
+            dto.setMsg("ordine fornitore non trovato");
+            return dto;
+        }
+        List<OrdineFornitoreDettaglio> list = OrdineFornitoreDettaglio.find("anno =:anno AND serie =:serie AND progressivo =:progressivo",
+                Parameters.with("anno", ordine.getAnno()).and("serie", ordine.getSerie()).and("progressivo", ordine.getProgressivo())).list();
+
+        for (OrdineFornitoreDettaglio dettaglio : list) {
+            articoloService.eliminaArticolo(dettaglio.getAnno(), dettaglio.getSerie(), dettaglio.getProgressivo(), dettaglio.getRigo());
+        }
+        OrdineFornitore.deleteById(new FornitoreId(anno, serie, progressivo));
+        dto.setError(Boolean.FALSE);
+        dto.setMsg("Articolo eliminato");
+        } catch (Exception e) {
+            Log.error("Errore elimina ordine fornitore ", e);
+            dto.setError(Boolean.TRUE);
+            dto.setMsg("Errore elimina ordine fornitore");
+        }
+        return dto;
     }
 
 }
