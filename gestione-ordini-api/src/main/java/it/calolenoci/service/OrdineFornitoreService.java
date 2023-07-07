@@ -13,10 +13,13 @@ import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.mapper.RegistroAzioniMapper;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Year;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +32,11 @@ public class OrdineFornitoreService {
 
     @Inject
     OAFArticoloService articoloService;
+
+    @ConfigProperty(name = "data.inizio")
+    String dataCongig;
+
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     @Transactional
     public List<String> save(List<OrdineDettaglio> articoli, String user) throws Exception {
@@ -207,19 +215,22 @@ public class OrdineFornitoreService {
         return ordineFornitoreDettaglio;
     }
 
-    public List<OrdineFornitoreDto> findAllByStatus(String status) {
+    public List<OrdineFornitoreDto> findAllByStatus(String status) throws ParseException {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
                 "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate " +
                 "FROM OrdineFornitore o " +
-                "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto ";
+                "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto WHERE o.dataOrdine >= :dataConfig";
+        Map<String, Object> map = new HashMap<>();
+        map.put("dataConfig", sdf.parse(dataCongig));
         if (StringUtils.isNotBlank(status)) {
-            query += " where o.provvisorio =:stato";
+            query += " AND  o.provvisorio =:stato";
+            map.put("stato", status);
             return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine")
-                            , Parameters.with("stato", status))
+                            , map)
                     .project(OrdineFornitoreDto.class).list();
         } else {
-            query += " where o.provvisorio is null OR o.provvisorio = ''";
-            return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"))
+            query += " AND  o.provvisorio is null OR o.provvisorio = ''";
+            return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"), map)
                     .project(OrdineFornitoreDto.class).list();
         }
     }
