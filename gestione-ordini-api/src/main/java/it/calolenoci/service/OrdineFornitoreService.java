@@ -218,7 +218,7 @@ public class OrdineFornitoreService {
                             , Parameters.with("stato", status))
                     .project(OrdineFornitoreDto.class).list();
         } else {
-            query += " where o.provvisorio is null";
+            query += " where o.provvisorio is null OR o.provvisorio = ''";
             return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"))
                     .project(OrdineFornitoreDto.class).list();
         }
