@@ -123,7 +123,8 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setOColli(a.getColli());
                         fornitoreDettaglio.setOCodiceIva("22");
                         fornitoreDettaglio.setProvenienza("C");
-                        fornitoreDettaglio.setCampoUser5("VS.ART." + a.getDescrArtSuppl());
+                        String campoUser5 = "VS.ART." + a.getDescrArtSuppl();
+                        fornitoreDettaglio.setCampoUser5(StringUtils.truncate(campoUser5, 25));
                         String nota = "Riferimento n. " + anno + "/" + serie + "/" + progressivo + "-" + a.getRigo();
                         fornitoreDettaglio.setNota(nota);
 
@@ -215,22 +216,25 @@ public class OrdineFornitoreService {
         return ordineFornitoreDettaglio;
     }
 
-    public List<OrdineFornitoreDto> findAllByStatus(String status) throws ParseException {
+    public List<OrdineFornitoreDto> findAllByStatus(String status) {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
-                "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate " +
-                "FROM OrdineFornitore o " +
-                "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto WHERE o.dataOrdine >= :dataConfig";
-        Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", sdf.parse(dataCongig));
+                "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate";
+        if (StringUtils.isBlank(status)) {
+            query +=  " , go.flInviato, go.note, go.dataInvio ";
+        }
+        query +=" FROM OrdineFornitore o " +
+                "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto ";
+        if (StringUtils.isBlank(status)) {
+            query += " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = o.progressivo ";
+        }
         if (StringUtils.isNotBlank(status)) {
-            query += " AND  o.provvisorio =:stato";
-            map.put("stato", status);
+            query += " WHERE  o.provvisorio =:stato";
             return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine")
-                            , map)
+                            , Parameters.with("stato", status))
                     .project(OrdineFornitoreDto.class).list();
         } else {
             query += " AND  o.provvisorio is null OR o.provvisorio = ''";
-            return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"), map)
+            return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"))
                     .project(OrdineFornitoreDto.class).list();
         }
     }
@@ -247,8 +251,10 @@ public class OrdineFornitoreService {
     }
     @Transactional
     public void changeStatus(Integer anno, String serie, Integer progressivo) {
-        OrdineFornitore.update("provvisorio = 'F' where anno = :anno and progressivo = :progressivo and serie = :serie",
+        int update = OrdineFornitore.update("provvisorio = 'F' where anno = :anno and progressivo = :progressivo and serie = :serie",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
+        if(update > 0)
+            GoOrdineFornitore.deleteById(new FornitoreId(anno, serie, progressivo));
     }
 
     @Transactional
@@ -269,6 +275,7 @@ public class OrdineFornitoreService {
             articoloService.eliminaArticolo(dettaglio.getAnno(), dettaglio.getSerie(), dettaglio.getProgressivo(), dettaglio.getRigo());
         }
         OrdineFornitore.deleteById(new FornitoreId(anno, serie, progressivo));
+        GoOrdineFornitore.deleteById(new FornitoreId(anno, serie, progressivo));
         dto.setError(Boolean.FALSE);
         dto.setMsg("Articolo eliminato");
         } catch (Exception e) {
@@ -279,4 +286,13 @@ public class OrdineFornitoreService {
         return dto;
     }
 
+    @Transactional
+    public void inviato(List<OrdineFornitoreDto> list) {
+        list.forEach(e ->
+        GoOrdineFornitore.update("flInviato =:flInv" +
+                        " WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo",
+                Parameters.with("anno", e.getAnno()).and("serie", e.getSerie())
+                        .and("progressivo", e.getProgressivo())
+                        .and("flInv", e.getFlInviato())));
+    }
 }

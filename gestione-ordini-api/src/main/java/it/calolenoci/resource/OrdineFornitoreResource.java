@@ -1,9 +1,10 @@
 package it.calolenoci.resource;
 
+import io.quarkus.panache.common.Parameters;
+import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.dto.ResponseDto;
-import it.calolenoci.entity.Ordine;
-import it.calolenoci.entity.OrdineDettaglio;
+import it.calolenoci.entity.*;
 import it.calolenoci.service.OrdineFornitoreService;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
@@ -17,6 +18,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
@@ -97,7 +99,7 @@ public class OrdineFornitoreResource {
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
-    public Response getAllOrdini(String status) throws ParseException {
+    public Response getAllOrdini(String status) {
         return Response.ok(service.findAllByStatus(status)).build();
     }
 
@@ -106,7 +108,7 @@ public class OrdineFornitoreResource {
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
-    public Response getAllOrdini() throws ParseException {
+    public Response getAllOrdini() {
         return Response.ok(service.findAllByStatus(null)).build();
     }
 
@@ -129,6 +131,31 @@ public class OrdineFornitoreResource {
         }
         this.service.richiediApprovazione(list);
         return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", false)).build();
+    }
+
+    @Operation(summary = "Richiedi approvazione ordine a fornitore")
+    @PUT
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/inviato")
+    public Response inviato(List<OrdineFornitoreDto> list) {
+        if(list.isEmpty()){
+            return Response.status(Response.Status.OK).entity(new ResponseDto("Lista vuota", true)).build();
+        }
+        this.service.inviato(list);
+        return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", false)).build();
+    }
+
+    @POST
+    @Path("/addNotes")
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @Transactional
+    @Consumes(APPLICATION_JSON)
+    public Response addNotes(OrdineFornitoreDto dto){
+        GoOrdineFornitore.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
+                Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
+                        .and("serie", dto.getSerie())
+                        .and("progressivo", dto.getProgressivo()));
+        return Response.ok(new ResponseDto("Nota aggiunta", false)).build();
     }
 
 

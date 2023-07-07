@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
+import it.calolenoci.mapper.GoOrdineFornitoreMapper;
 import it.calolenoci.mapper.OafArticoloMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.jfree.util.Log;
@@ -18,6 +19,9 @@ public class OAFArticoloService {
 
     @Inject
     OafArticoloMapper mapper;
+
+    @Inject
+    GoOrdineFornitoreMapper goOrdineFornitoreMapper;
 
 
     public ResponseOAFDettaglioDTO findById(Integer anno, String serie, Integer progressivo) {
@@ -47,6 +51,8 @@ public class OAFArticoloService {
     public void approva(Integer anno, String serie, Integer progressivo) {
         OrdineFornitore.update("provvisorio = '' where anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
+        GoOrdineFornitore goOrdineFornitore = goOrdineFornitoreMapper.creaEntity(anno, serie, progressivo);
+        goOrdineFornitore.persist();
     }
 
     @Transactional
