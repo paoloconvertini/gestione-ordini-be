@@ -52,9 +52,8 @@ public class OrdineFornitoreResource {
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
     @Consumes(APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
-    @Path("/scaricaOrdine")
-    @RolesAllowed({ADMIN, VENDITORE})
-    @Transactional
+    @Path("/scaricaOrdine/{anno}/{serie}/{progressivo}")
+    @RolesAllowed({ADMIN, AMMINISTRATIVO, MAGAZZINIERE, VENDITORE})
     public Response scaricaOrdine(Integer anno, String serie, Integer progressivo) {
 
         OrdineDTO ordineDTO = service.findForReport(anno, serie, progressivo);
