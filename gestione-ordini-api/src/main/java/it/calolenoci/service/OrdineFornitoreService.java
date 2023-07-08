@@ -224,8 +224,9 @@ public class OrdineFornitoreService {
         if (StringUtils.isBlank(status)) {
             query += " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = go.progressivo ";
         }
+        query += " WHERE o.anno >= 2023 ";
         if (StringUtils.isNotBlank(status)) {
-            query += " WHERE  o.provvisorio =:stato";
+            query += " AND  o.provvisorio =:stato";
             return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine")
                             , Parameters.with("stato", status))
                     .project(OrdineFornitoreDto.class).list();
