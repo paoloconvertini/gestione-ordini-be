@@ -222,7 +222,7 @@ public class OrdineFornitoreService {
         query +=" FROM OrdineFornitore o " +
                 "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto ";
         if (StringUtils.isBlank(status)) {
-            query += " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = o.progressivo ";
+            query += " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = go.progressivo ";
         }
         if (StringUtils.isNotBlank(status)) {
             query += " WHERE  o.provvisorio =:stato";
