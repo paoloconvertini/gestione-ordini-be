@@ -48,4 +48,6 @@ public class FattureDettaglio extends PanacheEntityBase {
     @Column
     private Double prezzo;
 
+    @Column(name = "FCODICEIVA", length = 3)
+    private String iva;
 }

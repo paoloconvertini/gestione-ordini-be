@@ -22,7 +22,7 @@ import java.util.List;
         query =
                 "select distinct f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura," +
                         "f2f.FDESCRARTICOLO as rifOrdCliente, "
-                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo"
+                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva "
 
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO"
@@ -36,7 +36,7 @@ import java.util.List;
 
                         + " select distinct f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura"
                         + " , concat('ns.ordine n.', o.anno,'/', o.serie,'/',  o.PROGRESSIVO, ' del ', FORMAT(o.DATAORDINE, 'dd.MM.yyyy')) as rifOrdCli"
-                        + " , f4.FDESCRARTICOLO as operazione, f4.PREZZO as prezzo"
+                        + " , f4.FDESCRARTICOLO as operazione, f4.PREZZO as prezzo, f4.FCODICEIVA as iva "
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f4 ON f.ANNO = f4.ANNO AND f.SERIE = f4.SERIE AND f.PROGRESSIVO = f4.PROGRESSIVO"
                         + " JOIN FATTURE2 f5 ON f5.ANNO = f4.ANNO AND f5.SERIE = f4.SERIE AND f.PROGRESSIVO = f5.PROGRESSIVO"
@@ -61,7 +61,8 @@ import java.util.List;
                         @ColumnResult(name = "numeroFattura"),
                         @ColumnResult(name = "rifOrdCliente"),
                         @ColumnResult(name = "operazione"),
-                        @ColumnResult(name = "prezzo")
+                        @ColumnResult(name = "prezzo"),
+                        @ColumnResult(name = "iva")
                 }
         )
 )

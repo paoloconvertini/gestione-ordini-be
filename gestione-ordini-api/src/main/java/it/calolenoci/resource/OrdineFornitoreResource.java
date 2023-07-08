@@ -129,7 +129,7 @@ public class OrdineFornitoreResource {
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
-    public Response getAllOrdini(String status) {
+    public Response getAllOrdini(String status) throws ParseException {
         return Response.ok(service.findAllByStatus(status)).build();
     }
 
@@ -138,7 +138,7 @@ public class OrdineFornitoreResource {
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
-    public Response getAllOrdini() {
+    public Response getAllOrdini() throws ParseException {
         return Response.ok(service.findAllByStatus(null)).build();
     }
 

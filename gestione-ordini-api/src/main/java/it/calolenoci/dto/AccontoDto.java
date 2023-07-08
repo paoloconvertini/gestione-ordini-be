@@ -31,9 +31,11 @@ public class AccontoDto {
 
     private Double prezzo;
 
+    private String iva;
+
     public AccontoDto(String contoCliente, Integer anno,String serie, Integer progressivo,
                       Date dataFattura, String numeroFattura, String rifOrdCliente,
-                      String operazione, Double prezzo) {
+                      String operazione, Double prezzo, String iva) {
         this.contoCliente = contoCliente;
         this.anno = anno;
         this.serie = serie;
@@ -43,5 +45,6 @@ public class AccontoDto {
         this.rifOrdCliente = rifOrdCliente;
         this.operazione = operazione;
         this.prezzo = prezzo;
+        this.iva = iva;
     }
 }

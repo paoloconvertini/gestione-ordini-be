@@ -213,7 +213,7 @@ public class OrdineFornitoreService {
         return ordineFornitoreDettaglio;
     }
 
-    public List<OrdineFornitoreDto> findAllByStatus(String status) {
+    public List<OrdineFornitoreDto> findAllByStatus(String status) throws ParseException {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
                 "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate";
         if (StringUtils.isBlank(status)) {
@@ -224,15 +224,18 @@ public class OrdineFornitoreService {
         if (StringUtils.isBlank(status)) {
             query += " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = go.progressivo ";
         }
-        query += " WHERE o.anno >= 2023 ";
+        query += " WHERE o.dataOrdine >= :dataConfig ";
+        Map<String, Object> params = new HashMap<>();
+        params.put("dataConfig", sdf.parse(dataCongig));
         if (StringUtils.isNotBlank(status)) {
             query += " AND  o.provvisorio =:stato";
+            params.put("stato", status);
             return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine")
-                            , Parameters.with("stato", status))
+                            , params)
                     .project(OrdineFornitoreDto.class).list();
         } else {
-            query += " AND  o.provvisorio is null OR o.provvisorio = ''";
-            return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"))
+            query += " AND  (o.provvisorio is null OR o.provvisorio = '')";
+            return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"), params)
                     .project(OrdineFornitoreDto.class).list();
         }
     }
