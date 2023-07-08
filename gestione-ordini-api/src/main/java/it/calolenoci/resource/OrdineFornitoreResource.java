@@ -48,7 +48,7 @@ public class OrdineFornitoreResource {
     String user;
 
     @Operation(summary = "Returns all the roles from the database")
-    @POST
+    @GET
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
     @Consumes(APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
