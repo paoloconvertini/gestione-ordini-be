@@ -5,10 +5,7 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
-import it.calolenoci.dto.ArticoloDto;
-import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
-import it.calolenoci.dto.OrdineFornitoreDto;
-import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.mapper.RegistroAzioniMapper;
@@ -294,5 +291,11 @@ public class OrdineFornitoreService {
                 Parameters.with("anno", e.getAnno()).and("serie", e.getSerie())
                         .and("progressivo", e.getProgressivo())
                         .and("flInv", e.getFlInviato())));
+    }
+
+    public OrdineDTO findForReport(Integer anno, String serie, Integer progressivo) {
+        OrdineFornitore.find("SELECT f FROM OrdineFornitore " +
+                " JOIN OrdineFornitoreDettaglio");
+        return null;
     }
 }

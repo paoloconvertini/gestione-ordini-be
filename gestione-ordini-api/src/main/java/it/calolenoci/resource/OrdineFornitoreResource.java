@@ -1,11 +1,10 @@
 package it.calolenoci.resource;
 
 import io.quarkus.panache.common.Parameters;
-import it.calolenoci.dto.OrdineDTO;
-import it.calolenoci.dto.OrdineFornitoreDto;
-import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.service.OrdineFornitoreService;
+import net.sf.jasperreports.engine.JRException;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -14,20 +13,26 @@ import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.jfree.util.Log;
 
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.ParseException;
+import java.util.Base64;
 import java.util.List;
 
 import static it.calolenoci.enums.Ruolo.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static it.calolenoci.enums.Ruolo.*;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
@@ -41,6 +46,32 @@ public class OrdineFornitoreResource {
     @Inject
     @Claim(standard = Claims.upn)
     String user;
+
+    @Operation(summary = "Returns all the roles from the database")
+    @POST
+    @APIResponse(responseCode = "200", description = "Pdf generato con successo")
+    @Consumes(APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/scaricaOrdine")
+    @RolesAllowed({ADMIN, VENDITORE})
+    @Transactional
+    public Response scaricaOrdine(Integer anno, String serie, Integer progressivo) {
+
+        OrdineDTO ordineDTO = service.findForReport(anno, serie, progressivo);
+        if (ordineDTO != null) {
+            //List<OrdineDettaglioDto> articoli = articoloService.findForReport(anno, serie, progressivo);
+            //List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, articoli, name, firmaVenditore);
+/*            if (!dtoList.isEmpty()) {
+                try {
+                   // service.createReport(dtoList, ordineDTO.getSottoConto(), anno, serie, progressivo);
+                } catch (JRException | IOException e) {
+                    Log.error("Errore nella creazione del report per l'ordine " + data.orderId, e);
+                    throw new RuntimeException(e);
+                }
+            }*/
+        }
+        return Response.ok().entity(new ResponseDto("Firma creata con successo!", false)).build();
+    }
 
     @Operation(summary = "Crea ordine a fornitore")
     @POST

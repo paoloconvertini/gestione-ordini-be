@@ -72,7 +72,7 @@ public class OAFArticoloResource {
         return Response.status(Response.Status.OK).entity(new ResponseDto("Ordine a fornitore invio richiesta", false)).build();
     }
 
-    @Operation(summary = "Richiedi approvazione ordine a fornitore")
+    @Operation(summary = "Elimina articolo da OAF")
     @DELETE
     @RolesAllowed({AMMINISTRATIVO, ADMIN})
     @Path("/eliminaArticolo/{anno}/{serie}/{progressivo}/{rigo}")
@@ -80,8 +80,8 @@ public class OAFArticoloResource {
         return Response.status(Response.Status.OK).entity(articoloService.eliminaArticolo(anno, serie, progressivo, rigo)).build();
     }
 
-    @Operation(summary = "Cancella articolo dall'ordine a fornitore")
-    @DELETE
+    @Operation(summary = "Aggiungi rigo ")
+    @POST
     @RolesAllowed({AMMINISTRATIVO, ADMIN})
     @Path("/salvaRigo")
     public Response salvaRigo(OrdineFornitoreDettaglioDto dto) {
