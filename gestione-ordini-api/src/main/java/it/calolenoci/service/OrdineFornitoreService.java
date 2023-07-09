@@ -9,12 +9,14 @@ import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.mapper.RegistroAzioniMapper;
+import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Year;
@@ -297,9 +299,44 @@ public class OrdineFornitoreService {
                         .and("flInv", e.getFlInviato())));
     }
 
-    public OrdineDTO findForReport(Integer anno, String serie, Integer progressivo) {
-        OrdineFornitore.find("SELECT f FROM OrdineFornitore " +
-                " JOIN OrdineFornitoreDettaglio");
-        return null;
+    public List<OrdineFornitoreDto> findForReport(Integer anno, String serie, Integer progressivo) {
+        List<OrdineFornitoreDto> list = OrdineFornitore.find("select f.anno, f.serie, f.progressivo, f.dataOrdine, f.numConfOrdine, f.dataConfOrdine, f2.oArticolo, f2.oDescrArticolo, f2.campoUser5, f2.nota, " +
+                " f2.oPrezzo, f2.oUnitaMisura,f2.oQuantita, f2.fScontoArticolo, f2.scontoF1, f2.scontoF2, f2.fScontoP, f2.oCodiceIva, " +
+                " b.descrBanca, b.abiBanca, pa.codice, pa.descrizione, f.createUser as user, a.descrArtSuppl, " +
+                " p.intestazione, p.telefono, p.fax, p.indirizzo, p.localita, p.cap, p.provincia, f2.tipoRigo" +
+                " from OrdineFornitore f " +
+                " JOIN OrdineFornitoreDettaglio f2 ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
+                " JOIN PianoConti p ON f.gruppo = p.gruppoConto ANd f.conto = p.sottoConto " +
+                " JOIN InfoBanca b ON f.bancaPagamento = b.bancaPres " +
+                " JOIN ModalitaPagamento pa ON f.codicePagamento = pa.codice " +
+                " LEFT JOIN Articolo a ON a.articolo = f2.oArticolo " +
+                " WHERE f.anno =:anno AND f.serie =:serie AND f.progressivo =:progressivo",
+                Parameters.with("anno", anno).and("serie", serie)
+                        .and("progressivo", progressivo)).project(OrdineFornitoreDto.class).list();
+        list.forEach(e-> {
+            if(StringUtils.isEmpty(e.getTipoRigo())) {
+                e.setValoreTotale(calcolaValoreTotale(e));
+            }
+        });
+        return list;
     }
+
+    private Double calcolaValoreTotale(OrdineFornitoreDto dto) {
+        double valoreTotale = dto.getQuantita() * dto.getPrezzo();
+        if (dto.getScontoArticolo() != null && dto.getScontoArticolo() != 0) {
+            valoreTotale -= (valoreTotale * dto.getScontoArticolo() / 100);
+        }
+        if (dto.getScontoF1() != null && dto.getScontoF1() != 0) {
+            valoreTotale -= (valoreTotale * dto.getScontoF1() / 100);
+        }
+        if (dto.getScontoF2() != null && dto.getScontoF2() != 0) {
+            valoreTotale -= (valoreTotale * dto.getScontoF2() / 100);
+        }
+        if (dto.getScontoP() != null && dto.getScontoP() != 0) {
+            valoreTotale -= (valoreTotale * dto.getScontoP() / 100);
+        }
+
+        return valoreTotale;
+    }
+
 }

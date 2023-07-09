@@ -52,6 +52,9 @@ public class PianoConti extends PanacheEntityBase {
     @Column(length = 30)
     private String telefono;
 
+    @Column(length = 25)
+    private String fax;
+
     @Column(length = 30)
     private String cellulare;
 

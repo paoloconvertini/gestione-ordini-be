@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Invoice" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="4eedbb89-b4f6-4469-9ab6-f642a1688cf7">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OAF" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="4eedbb89-b4f6-4469-9ab6-f642a1688cf7">
 	<property name="com.jaspersoft.studio.data.sql.tables" value="b3JkY2xpMiAsMTUsMTUsM2ZkMGMyMTctOGVkMi00ZmIzLWEwZGItNDU1ZGRmNWUzYzg4Ow=="/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mysql.jrdax"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter.jrdax"/>
 	<style name="Title" forecolor="#FFFFFF" fontName="Times New Roman" fontSize="50" isBold="false" pdfFontName="Times-Bold"/>
 	<style name="SubTitle" forecolor="#CCCCCC" fontName="Times New Roman" fontSize="18" isBold="false" pdfFontName="Times-Roman"/>
 	<style name="Column header" forecolor="#666666" fontName="Times New Roman" fontSize="14" isBold="true"/>
@@ -60,190 +60,147 @@
 	</subDataset>
 	<parameter name="totaleImponibile" class="java.lang.Double"/>
 	<parameter name="totaleIVA" class="java.lang.Double"/>
-	<parameter name="totaleNetto" class="java.lang.Double"/>
 	<parameter name="totaleDocumento" class="java.lang.Double"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT *, 0 as valoreTotale
-FROM ORDCLI2 c2
-inner join ORDCLI c ON c.anno = c2.anno AND c.serie = c2.serie
-AND c.progressivo = c2.progressivo
-left join PIANOCONTI pc ON pc.gruppoconto = c.gruppocliente
-left join FIRMAORDINECLIENTE f ON c.anno = f.anno AND c.serie = f.serie
-AND c.progressivo = f.progressivo
-AND c.contocliente = pc.sottoconto]]>
+FROM ORDFOR2 f2
+inner join ORDFOR f ON f.anno = f2.anno AND f.serie = f2.serie
+AND f.progressivo = f2.progressivo
+left join PIANOCONTI pc ON pc.gruppoconto = f.gruppocliente
+join TEBA t ON f.bancaPagamento = t.bancaPres
+join ARTICOLI_TAB a ON a.articolo = f.oArticolo
+join TGCP g ON g.CODICEPAGAMENTO = f.OCODCIEPAGAMENT]]>
 	</queryString>
 	<field name="nota" class="java.lang.String"/>
-	<field name="NUMEROCONFERMA" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="NUMEROCONFERMA"/>
-		<property name="com.jaspersoft.studio.field.label" value="NUMEROCONFERMA"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI"/>
+	<field name="numConfOrdine" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="numConfOrdine"/>
+		<property name="com.jaspersoft.studio.field.label" value="numConfOrdine"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR"/>
 	</field>
-	<field name="DATACONFERMA" class="java.util.Date">
-		<property name="com.jaspersoft.studio.field.name" value="DATACONFERMA"/>
-		<property name="com.jaspersoft.studio.field.label" value="DATACONFERMA"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI"/>
+	<field name="dataConfOrdine" class="java.util.Date">
+		<property name="com.jaspersoft.studio.field.name" value="dataConfOrdine"/>
+		<property name="com.jaspersoft.studio.field.label" value="dataConfOrdine"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR"/>
 	</field>
-	<field name="DATAORDINE" class="java.util.Date">
+	<field name="dataOrdine" class="java.util.Date">
 		<property name="com.jaspersoft.studio.field.name" value="DATAORDINE"/>
 		<property name="com.jaspersoft.studio.field.label" value="DATAORDINE"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR"/>
 	</field>
-	<field name="ANNO" class="java.lang.Integer">
+	<field name="anno" class="java.lang.Integer">
 		<property name="com.jaspersoft.studio.field.name" value="ANNO"/>
 		<property name="com.jaspersoft.studio.field.label" value="ANNO"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="SERIE" class="java.lang.String">
+	<field name="serie" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="SERIE"/>
 		<property name="com.jaspersoft.studio.field.label" value="SERIE"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="PROGRESSIVO" class="java.lang.Integer">
+	<field name="progressivo" class="java.lang.Integer">
 		<property name="com.jaspersoft.studio.field.name" value="PROGRESSIVO"/>
 		<property name="com.jaspersoft.studio.field.label" value="PROGRESSIVO"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="RIGO" class="java.lang.Integer">
-		<property name="com.jaspersoft.studio.field.name" value="RIGO"/>
-		<property name="com.jaspersoft.studio.field.label" value="RIGO"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="articolo" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="oArticolo"/>
+		<property name="com.jaspersoft.studio.field.label" value="oArticolo"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="PROGRGENERALE" class="java.lang.Integer">
-		<property name="com.jaspersoft.studio.field.name" value="PROGRGENERALE"/>
-		<property name="com.jaspersoft.studio.field.label" value="PROGRGENERALE"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="descrArtSuppl" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="descrArtSuppl"/>
+		<property name="com.jaspersoft.studio.field.label" value="descrArtSuppl"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ARTICOLI_TAB"/>
 	</field>
-	<field name="TIPORIGO" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="TIPORIGO"/>
-		<property name="com.jaspersoft.studio.field.label" value="TIPORIGO"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="descrArticolo" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="oDescrArticolo"/>
+		<property name="com.jaspersoft.studio.field.label" value="oDescrArticolo"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="FARTICOLO" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="FARTICOLO"/>
-		<property name="com.jaspersoft.studio.field.label" value="FARTICOLO"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="quantita" class="java.lang.Double">
+		<property name="com.jaspersoft.studio.field.name" value="oQuantita"/>
+		<property name="com.jaspersoft.studio.field.label" value="oQuantita"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="CODARTFORNITORE" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="CODARTFORNITORE"/>
-		<property name="com.jaspersoft.studio.field.label" value="CODARTFORNITORE"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="prezzo" class="java.lang.Double">
+		<property name="com.jaspersoft.studio.field.name" value="OPREZZO"/>
+		<property name="com.jaspersoft.studio.field.label" value="OPREZZO"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="FDESCRARTICOLO" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="FDESCRARTICOLO"/>
-		<property name="com.jaspersoft.studio.field.label" value="FDESCRARTICOLO"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="unitaMisura" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="OUNITAMISURA"/>
+		<property name="com.jaspersoft.studio.field.label" value="OUNITAMISURA"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="QUANTITA" class="java.lang.Double">
-		<property name="com.jaspersoft.studio.field.name" value="QUANTITA"/>
-		<property name="com.jaspersoft.studio.field.label" value="QUANTITA"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="scontoArticolo" class="java.lang.Double">
+		<property name="com.jaspersoft.studio.field.name" value="fScontoArticolo"/>
+		<property name="com.jaspersoft.studio.field.label" value="fScontoArticolo"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="PREZZO" class="java.lang.Float">
-		<property name="com.jaspersoft.studio.field.name" value="PREZZO"/>
-		<property name="com.jaspersoft.studio.field.label" value="PREZZO"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="scontoF1" class="java.lang.Double">
+		<property name="com.jaspersoft.studio.field.name" value="scontoF1"/>
+		<property name="com.jaspersoft.studio.field.label" value="scontoF1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="FUNITAMISURA" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="FUNITAMISURA"/>
-		<property name="com.jaspersoft.studio.field.label" value="FUNITAMISURA"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="scontoF2" class="java.lang.Double">
+		<property name="com.jaspersoft.studio.field.name" value="scontoF2"/>
+		<property name="com.jaspersoft.studio.field.label" value="scontoF2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="SCONTOARTICOLO" class="java.lang.Float">
-		<property name="com.jaspersoft.studio.field.name" value="SCONTOARTICOLO"/>
-		<property name="com.jaspersoft.studio.field.label" value="SCONTOARTICOLO"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="scontoP" class="java.lang.Double">
+		<property name="com.jaspersoft.studio.field.name" value="fScontoP"/>
+		<property name="com.jaspersoft.studio.field.label" value="fScontoP"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="SCONTOC1" class="java.lang.Float">
-		<property name="com.jaspersoft.studio.field.name" value="SCONTOC1"/>
-		<property name="com.jaspersoft.studio.field.label" value="SCONTOC1"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
+	<field name="codiceIva" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="oCodiceIva"/>
+		<property name="com.jaspersoft.studio.field.label" value="oCodiceIva"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="ORDFOR2"/>
 	</field>
-	<field name="SCONTOC2" class="java.lang.Float">
-		<property name="com.jaspersoft.studio.field.name" value="SCONTOC2"/>
-		<property name="com.jaspersoft.studio.field.label" value="SCONTOC2"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
-	</field>
-	<field name="SCONTOP" class="java.lang.Float">
-		<property name="com.jaspersoft.studio.field.name" value="SCONTOP"/>
-		<property name="com.jaspersoft.studio.field.label" value="SCONTOP"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
-	</field>
-	<field name="FCODICEIVA" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="FCODICEIVA"/>
-		<property name="com.jaspersoft.studio.field.label" value="FCODICEIVA"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
-	</field>
-	<field name="INTESTAZIONE" class="java.lang.String">
+	<field name="intestazione" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="INTESTAZIONE"/>
 		<property name="com.jaspersoft.studio.field.label" value="INTESTAZIONE"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
 	</field>
-	<field name="INDIRIZZO" class="java.lang.String">
+	<field name="indirizzo" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="INDIRIZZO"/>
 		<property name="com.jaspersoft.studio.field.label" value="INDIRIZZO"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
 	</field>
-	<field name="LOCALITA" class="java.lang.String">
+	<field name="localita" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="LOCALITA"/>
 		<property name="com.jaspersoft.studio.field.label" value="LOCALITA"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
 	</field>
-	<field name="CAP" class="java.lang.String">
+	<field name="cap" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="CAP"/>
 		<property name="com.jaspersoft.studio.field.label" value="CAP"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
 	</field>
-	<field name="PROVINCIA" class="java.lang.String">
+	<field name="provincia" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="PROVINCIA"/>
 		<property name="com.jaspersoft.studio.field.label" value="PROVINCIA"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
 	</field>
-	<field name="TELEFONO" class="java.lang.String">
+	<field name="telefono" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="TELEFONO"/>
 		<property name="com.jaspersoft.studio.field.label" value="TELEFONO"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
 	</field>
-	<field name="EMAIL" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="EMAIL"/>
-		<property name="com.jaspersoft.studio.field.label" value="EMAIL"/>
+	<field name="fax" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="FAX"/>
+		<property name="com.jaspersoft.studio.field.label" value="FAX"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
-	</field>
-	<field name="PARTITAIVA" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="PARTITAIVA"/>
-		<property name="com.jaspersoft.studio.field.label" value="PARTITAIVA"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
-	</field>
-	<field name="CODICEFISCALE" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="CODICEFISCALE"/>
-		<property name="com.jaspersoft.studio.field.label" value="CODICEFISCALE"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
-	</field>
-	<field name="COGNOME" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="COGNOME"/>
-		<property name="com.jaspersoft.studio.field.label" value="COGNOME"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
-	</field>
-	<field name="NOME" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="NOME"/>
-		<property name="com.jaspersoft.studio.field.label" value="NOME"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="PIANOCONTI"/>
-	</field>
-	<field name="FCOLLI" class="java.lang.Integer">
-		<property name="com.jaspersoft.studio.field.name" value="FCOLLI"/>
-		<property name="com.jaspersoft.studio.field.label" value="FCOLLI"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
-	</field>
-	<field name="FILENAME" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="FILENAME"/>
-		<property name="com.jaspersoft.studio.field.label" value="FILENAME"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="FIRMAORDINECLIENTE"/>
 	</field>
 	<field name="valoreTotale" class="java.lang.Double"/>
 	<field name="campoUser5" class="java.lang.String"/>
-	<field name="firmaVenditore" class="java.lang.String"/>
-	<field name="codicePagamento" class="java.lang.String"/>
+	<field name="descrizione" class="java.lang.String"/>
+	<field name="descrBanca" class="java.lang.String"/>
+	<field name="user" class="java.lang.String"/>
+	<field name="abiBanca" class="java.lang.String"/>
+	<field name="codice" class="java.lang.String"/>
 	<title>
-		<band height="201" splitType="Stretch">
+		<band height="226" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<rectangle>
 				<reportElement x="0" y="97" width="280" height="39" uuid="dc0a8222-de58-4fcc-ae73-8df6a10fc67e"/>
@@ -268,14 +225,14 @@ AND c.contocliente = pc.sottoconto]]>
 				<textElement>
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{DATAORDINE}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{dataOrdine}]]></textFieldExpression>
 			</textField>
 			<textField pattern="EEEEE dd MMMMM yyyy">
 				<reportElement x="54" y="115" width="65" height="19" uuid="3836ce65-eca3-4cad-a6de-b1818def0a2b"/>
 				<textElement>
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{NUMEROCONFERMA}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{numConfOrdine}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="1" y="115" width="53" height="19" uuid="0b3f9342-da78-4cfa-9fc5-2301c4749678"/>
@@ -301,7 +258,7 @@ Tel. 0831 377180 / Fax 0831 383047 www.calolenocifrancesco.it
 PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="290" y="97" width="265" height="104" uuid="3e59e8bb-3d48-47fa-8a3b-493919d4b5b0"/>
+				<reportElement x="290" y="97" width="265" height="113" uuid="3e59e8bb-3d48-47fa-8a3b-493919d4b5b0"/>
 				<graphicElement>
 					<pen lineWidth="1.0"/>
 				</graphicElement>
@@ -315,52 +272,52 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<text><![CDATA[Spett.le]]></text>
 			</staticText>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="299" y="130" width="190" height="20" uuid="0c6195a6-3288-4171-a563-04c23ab6e15f">
+				<reportElement style="Detail" positionType="Float" x="299" y="125" width="190" height="20" uuid="0c6195a6-3288-4171-a563-04c23ab6e15f">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="0e47472d-643c-4d4a-9b66-244b23685bea"/>
 				</reportElement>
 				<textElement>
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{INTESTAZIONE}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{intestazione}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="298" y="161" width="190" height="10" uuid="acd4f1c4-e0ca-44ff-a4f0-6a0c8777ad55">
+				<reportElement style="Detail" positionType="Float" x="299" y="147" width="190" height="10" uuid="acd4f1c4-e0ca-44ff-a4f0-6a0c8777ad55">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ea5f5dcd-2391-4b5e-9e13-3c79a38be9de"/>
 				</reportElement>
 				<textElement>
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{INDIRIZZO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{indirizzo}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="298" y="184" width="52" height="10" uuid="984ddf15-b806-4fef-8e48-155726a83845">
+				<reportElement style="Detail" positionType="Float" x="298" y="162" width="52" height="10" uuid="984ddf15-b806-4fef-8e48-155726a83845">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="2fef6b76-0e87-49b5-910b-e8c14d144ab4"/>
 				</reportElement>
 				<textElement>
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{CAP}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{cap}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="349" y="184" width="107" height="10" uuid="50184bdc-34e8-434d-a954-1334b8d3edc1">
+				<reportElement style="Detail" positionType="Float" x="349" y="162" width="107" height="10" uuid="50184bdc-34e8-434d-a954-1334b8d3edc1">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c7342999-59eb-4810-8ce1-0edb5b6e8caf"/>
 				</reportElement>
 				<textElement>
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{LOCALITA}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{localita}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="456" y="184" width="31" height="10" uuid="11f78853-e506-4152-b54f-107d5d3af4ae">
+				<reportElement style="Detail" positionType="Float" x="456" y="162" width="31" height="10" uuid="11f78853-e506-4152-b54f-107d5d3af4ae">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="20bbab5e-d53d-403b-aa99-d99dec83042d"/>
 				</reportElement>
 				<textElement>
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{PROVINCIA}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{provincia}]]></textFieldExpression>
 			</textField>
 			<rectangle>
-				<reportElement x="0" y="140" width="280" height="61" uuid="06bf15b9-fce1-43a5-b655-421235f39179"/>
+				<reportElement x="0" y="140" width="280" height="70" uuid="06bf15b9-fce1-43a5-b655-421235f39179"/>
 			</rectangle>
 			<staticText>
 				<reportElement x="0" y="141" width="280" height="16" uuid="33274f5d-5b7e-4be2-a2ff-65d452a618ed"/>
@@ -372,7 +329,7 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="184" width="54" height="15" uuid="1d3045ed-03d6-4253-a959-aeeb491b73ca"/>
+				<reportElement x="0" y="190" width="54" height="16" uuid="1d3045ed-03d6-4253-a959-aeeb491b73ca"/>
 				<box leftPadding="2"/>
 				<textElement verticalAlignment="Bottom">
 					<font fontName="SansSerif" size="8"/>
@@ -384,7 +341,7 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<textElement>
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{SERIE}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{serie}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="145" y="114" width="21" height="20" uuid="2235b7dd-47e2-4eda-8a58-30f499b21c7d"/>
@@ -398,7 +355,7 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<textElement markup="rtf">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{DATACONFERMA}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{dataConfOrdine}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="220" y="99" width="22" height="15" uuid="9277b898-b60c-4357-9118-e7c77a69f17e"/>
@@ -431,14 +388,65 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<textElement>
 					<font size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{PROGRESSIVO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{progressivo}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="100" y="99" width="45" height="15" uuid="de6dc571-7438-49ff-84cf-f854f22827f4"/>
 				<textElement>
 					<font size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{ANNO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{anno}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="298" y="176" width="100" height="23" uuid="ca1b5ae2-1d83-4d59-a0bc-b236240762b1"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{telefono}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="400" y="176" width="88" height="23" uuid="9a01d321-57ab-43df-80fa-fe4c2f685f92"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{fax}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="157" width="52" height="15" uuid="0d2ba203-abd7-4954-bc04-4475ae81ee90"/>
+				<box leftPadding="2"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{codice}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="52" y="157" width="226" height="15" uuid="ce34cc6c-0c15-48ef-b3e2-2a44d93748c8"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{descrizione}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="172" width="90" height="18" uuid="5b462523-7d66-4a88-86c5-0b1b6daf9075"/>
+				<box leftPadding="2"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{abiBanca}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="90" y="172" width="188" height="18" uuid="54db0b2d-468d-4f3b-b6fd-15878f83a1d4"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{descrBanca}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="54" y="190" width="224" height="16" uuid="da2358dd-1940-4e3b-9d29-859013a8eb9a"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{user}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -542,57 +550,60 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="170">
+		<band height="61">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="50" y="20" width="92" height="20" uuid="976822c3-b4ee-44c9-af7d-a8495ab467a5">
+				<reportElement style="Detail" positionType="Float" x="0" y="0" width="50" height="30" uuid="976822c3-b4ee-44c9-af7d-a8495ab467a5">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="404bf98a-1a13-47a9-876c-205f650771ce"/>
 				</reportElement>
-				<box leftPadding="3"/>
-				<textElement>
-					<font fontName="SansSerif" size="8" isBold="false"/>
+				<box leftPadding="3">
+					<pen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="7" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{FARTICOLO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{articolo}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="0" y="0" width="50" height="20" uuid="94782d03-9f2c-4719-b4d0-f6dd2fce65f1">
+				<reportElement style="Detail" positionType="Float" x="50" y="31" width="69" height="29" uuid="94782d03-9f2c-4719-b4d0-f6dd2fce65f1">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="dfdde74f-3c12-4c1c-a71f-6d23a721dd55"/>
 				</reportElement>
-				<box topPadding="5" leftPadding="3">
-					<leftPen lineWidth="0.5"/>
-					<rightPen lineWidth="0.5"/>
+				<box topPadding="5" leftPadding="5">
+					<leftPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
 				</box>
 				<textElement>
-					<font fontName="SansSerif" size="8" isBold="false"/>
+					<font fontName="SansSerif" size="6" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{CODARTFORNITORE}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{descrArtSuppl}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="50" y="0" width="202" height="20" uuid="52c68fdc-4dab-49c5-935e-8378317612f1">
+				<reportElement style="Detail" positionType="Float" x="50" y="0" width="202" height="30" uuid="52c68fdc-4dab-49c5-935e-8378317612f1">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c51a8015-3a21-415b-9f9d-e1a57df3e8ac"/>
 				</reportElement>
-				<box topPadding="5" leftPadding="3">
+				<box topPadding="5" leftPadding="5">
 					<rightPen lineWidth="0.0"/>
 				</box>
 				<textElement>
-					<font fontName="SansSerif" size="8" isBold="false"/>
+					<font fontName="SansSerif" size="9" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{FDESCRARTICOLO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{descrArticolo}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="289" y="0" width="73" height="40" uuid="7931126a-da0e-4160-9a7f-d1295ef72961">
+				<reportElement style="Detail" positionType="Float" x="289" y="0" width="73" height="60" uuid="7931126a-da0e-4160-9a7f-d1295ef72961">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="0cfdeaae-a6a2-4944-a070-f72a85c72edc"/>
 				</reportElement>
-				<box topPadding="5" rightPadding="2">
+				<box topPadding="5" rightPadding="5">
 					<rightPen lineWidth="0.0"/>
 				</box>
-				<textElement textAlignment="Right" markup="none">
+				<textElement textAlignment="Right" verticalAlignment="Top" markup="none">
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{QUANTITA}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{quantita}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="362" y="0" width="37" height="40" uuid="4591b751-db7d-4d97-aff5-a82e22e25e83">
+				<reportElement style="Detail" positionType="Float" x="362" y="0" width="37" height="60" uuid="4591b751-db7d-4d97-aff5-a82e22e25e83">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="16fa1ba9-d137-4200-a49d-822529c6dbba"/>
 				</reportElement>
 				<box topPadding="5" rightPadding="2">
@@ -601,22 +612,23 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<textElement textAlignment="Right">
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{PREZZO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{prezzo}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="252" y="0" width="37" height="40" uuid="546f4602-2aa2-4a2a-a4a3-edd4940936b6">
+				<reportElement style="Detail" positionType="Float" x="252" y="0" width="37" height="60" uuid="546f4602-2aa2-4a2a-a4a3-edd4940936b6">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ec864bc1-82d1-453a-97e5-f6efab4ec2ea"/>
 				</reportElement>
 				<box topPadding="5" leftPadding="3">
+					<leftPen lineWidth="0.5"/>
 					<rightPen lineWidth="0.5"/>
 				</box>
 				<textElement>
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{FUNITAMISURA}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{unitaMisura}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="399" y="0" width="19" height="40" uuid="ec009829-dc8a-4571-8f7b-3ad2a0197bfc">
+				<reportElement style="Detail" positionType="Float" x="399" y="0" width="19" height="60" uuid="ec009829-dc8a-4571-8f7b-3ad2a0197bfc">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ca68259a-83b9-4d74-8aa0-f77577ca6d0e"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -626,10 +638,10 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<textElement textAlignment="Center">
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{SCONTOARTICOLO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{scontoArticolo}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="475" y="0" width="55" height="40" uuid="4aff443c-85ff-4ead-8e95-0817e412b93b">
+				<reportElement x="475" y="0" width="55" height="60" uuid="4aff443c-85ff-4ead-8e95-0817e412b93b">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d51540ba-80fd-4617-8777-31baef65aa6b"/>
 				</reportElement>
 				<box topPadding="5" leftPadding="3" bottomPadding="0" rightPadding="2">
@@ -641,7 +653,7 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<textFieldExpression><![CDATA[String.format("%.2f", (double)$F{valoreTotale})]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="418" y="0" width="19" height="40" uuid="413046bc-eedb-4727-bc97-59657d095d1f">
+				<reportElement style="Detail" positionType="Float" x="418" y="0" width="19" height="60" uuid="413046bc-eedb-4727-bc97-59657d095d1f">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ca68259a-83b9-4d74-8aa0-f77577ca6d0e"/>
 				</reportElement>
 				<box topPadding="5">
@@ -651,10 +663,10 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<textElement textAlignment="Center">
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{SCONTOC1}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{scontoF1}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="437" y="0" width="19" height="40" uuid="1a9bd206-b8ad-4be1-823a-8fa0dd140838">
+				<reportElement style="Detail" positionType="Float" x="437" y="0" width="19" height="60" uuid="1a9bd206-b8ad-4be1-823a-8fa0dd140838">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ca68259a-83b9-4d74-8aa0-f77577ca6d0e"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -664,10 +676,10 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<textElement textAlignment="Center">
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{SCONTOC2}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{scontoF2}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="Detail" positionType="Float" x="456" y="0" width="19" height="40" uuid="30c55970-9986-41ba-9b3f-dc818052e58b">
+				<reportElement style="Detail" positionType="Float" x="456" y="0" width="19" height="60" uuid="30c55970-9986-41ba-9b3f-dc818052e58b">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ca68259a-83b9-4d74-8aa0-f77577ca6d0e"/>
 				</reportElement>
 				<box topPadding="5">
@@ -676,32 +688,38 @@ PEC: CaloLenociFrancescoTradingsrl@pec.it e.mail: calolenoci@libero.it]]></text>
 				<textElement textAlignment="Center">
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{SCONTOP}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{scontoP}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="530" y="0" width="25" height="40" uuid="75bbd791-6e10-46ab-b31e-9112910d6531"/>
+				<reportElement x="530" y="0" width="25" height="60" uuid="75bbd791-6e10-46ab-b31e-9112910d6531"/>
 				<box topPadding="5" leftPadding="2">
 					<rightPen lineWidth="0.5"/>
 				</box>
 				<textElement>
 					<font size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{FCODICEIVA}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{codiceIva}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement x="0" y="20" width="50" height="20" uuid="c32f4f65-7b02-48cf-bad0-2f3c67a8df38">
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="31" width="50" height="29" uuid="c32f4f65-7b02-48cf-bad0-2f3c67a8df38">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="e2d90485-63cf-41c1-bbe8-5040b9aa5453"/>
 				</reportElement>
+				<box leftPadding="2">
+					<leftPen lineWidth="0.5"/>
+				</box>
 				<textElement>
-					<font size="8"/>
+					<font size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{campoUser5}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement x="142" y="20" width="110" height="20" uuid="d1b0c9f8-26db-4705-a257-19a7b0f0c99a">
+			<textField isBlankWhenNull="true">
+				<reportElement x="119" y="31" width="133" height="29" uuid="d1b0c9f8-26db-4705-a257-19a7b0f0c99a">
 					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d52e3711-1404-474c-96ac-d55190fa4ef0"/>
 				</reportElement>
-				<textElement>
+				<box>
+					<pen lineWidth="0.0"/>
+				</box>
+				<textElement verticalAlignment="Middle">
 					<font size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{nota}]]></textFieldExpression>

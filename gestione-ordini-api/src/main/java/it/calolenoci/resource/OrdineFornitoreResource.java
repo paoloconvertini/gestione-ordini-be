@@ -1,8 +1,13 @@
 package it.calolenoci.resource;
 
 import io.quarkus.panache.common.Parameters;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.file.OpenOptions;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.core.file.AsyncFile;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
+import it.calolenoci.service.JasperService;
 import it.calolenoci.service.OrdineFornitoreService;
 import net.sf.jasperreports.engine.JRException;
 import org.eclipse.microprofile.jwt.Claim;
@@ -15,16 +20,19 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.jfree.util.Log;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
@@ -44,32 +52,33 @@ public class OrdineFornitoreResource {
     OrdineFornitoreService service;
 
     @Inject
+    Vertx vertx;
+
+    @Inject
     @Claim(standard = Claims.upn)
     String user;
+
+    @Inject
+    JasperService jasperService;
 
     @Operation(summary = "Returns all the roles from the database")
     @GET
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
     @Consumes(APPLICATION_JSON)
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces("application/pdf")
     @Path("/scaricaOrdine/{anno}/{serie}/{progressivo}")
-    @RolesAllowed({ADMIN, AMMINISTRATIVO, MAGAZZINIERE, VENDITORE})
-    public Response scaricaOrdine(Integer anno, String serie, Integer progressivo) {
+    @PermitAll
+    //@RolesAllowed({ADMIN, AMMINISTRATIVO, MAGAZZINIERE, VENDITORE})
+    public Response scaricaOrdine(Integer anno, String serie, Integer progressivo) throws JRException, FileNotFoundException {
 
-        OrdineDTO ordineDTO = service.findForReport(anno, serie, progressivo);
-        if (ordineDTO != null) {
-            //List<OrdineDettaglioDto> articoli = articoloService.findForReport(anno, serie, progressivo);
-            //List<OrdineReportDto> dtoList = service.getOrdiniReport(ordineDTO, articoli, name, firmaVenditore);
-/*            if (!dtoList.isEmpty()) {
-                try {
-                   // service.createReport(dtoList, ordineDTO.getSottoConto(), anno, serie, progressivo);
-                } catch (JRException | IOException e) {
-                    Log.error("Errore nella creazione del report per l'ordine " + data.orderId, e);
-                    throw new RuntimeException(e);
-                }
-            }*/
+        File report = jasperService.createReport(anno, serie, progressivo);
+        if(report == null) {
+            return Response.status(Response.Status.NO_CONTENT).entity(new ResponseDto("Errore report non creato", true)).build();
         }
-        return Response.ok().entity(new ResponseDto("Firma creata con successo!", false)).build();
+
+        Response.ResponseBuilder response = Response.ok(report);
+        response.header("Content-Disposition", "attachment; filename="+report.getName());
+        return response.build();
     }
 
     @Operation(summary = "Crea ordine a fornitore")
@@ -77,11 +86,11 @@ public class OrdineFornitoreResource {
     @RolesAllowed({ADMIN, AMMINISTRATIVO})
     public Response createOAF(List<OrdineDettaglio> articoli) {
         try {
-            if(articoli.isEmpty()){
+            if (articoli.isEmpty()) {
                 return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun articolo da ordinare!", false)).build();
             }
             List<String> list = service.save(articoli, user);
-            if(!list.isEmpty()) {
+            if (!list.isEmpty()) {
                 return Response.status(Response.Status.CREATED).entity(list).build();
             } else {
                 return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun elemento salvato!", false)).build();
@@ -94,7 +103,7 @@ public class OrdineFornitoreResource {
     @GET
     @Path("/apriOrdine/{anno}/{serie}/{progressivo}")
     @RolesAllowed({ADMIN, AMMINISTRATIVO})
-    public Response apriOrdine(Integer anno, String serie, Integer progressivo){
+    public Response apriOrdine(Integer anno, String serie, Integer progressivo) {
         service.changeStatus(anno, serie, progressivo);
         return Response.ok(new ResponseDto("Ordine riaperto", false)).build();
     }
@@ -113,7 +122,7 @@ public class OrdineFornitoreResource {
     @RolesAllowed({ADMIN, AMMINISTRATIVO})
     public Response unisciOrdini(List<OrdineFornitoreDto> ordini) {
         try {
-            if(ordini.isEmpty()){
+            if (ordini.isEmpty()) {
                 return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun ordine presente!", false)).build();
             }
             service.unisciOrdini(ordini);
@@ -156,7 +165,7 @@ public class OrdineFornitoreResource {
     @RolesAllowed({AMMINISTRATIVO, ADMIN})
     @Path("/richiediApprovazione")
     public Response richiediApprovazione(List<OrdineFornitoreDto> list) {
-        if(list.isEmpty()){
+        if (list.isEmpty()) {
             return Response.status(Response.Status.OK).entity(new ResponseDto("Lista vuota", true)).build();
         }
         this.service.richiediApprovazione(list);
@@ -168,7 +177,7 @@ public class OrdineFornitoreResource {
     @RolesAllowed({AMMINISTRATIVO, ADMIN})
     @Path("/inviato")
     public Response inviato(List<OrdineFornitoreDto> list) {
-        if(list.isEmpty()){
+        if (list.isEmpty()) {
             return Response.status(Response.Status.OK).entity(new ResponseDto("Lista vuota", true)).build();
         }
         this.service.inviato(list);
@@ -180,7 +189,7 @@ public class OrdineFornitoreResource {
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @Transactional
     @Consumes(APPLICATION_JSON)
-    public Response addNotes(OrdineFornitoreDto dto){
+    public Response addNotes(OrdineFornitoreDto dto) {
         GoOrdineFornitore.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
                 Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
                         .and("serie", dto.getSerie())
