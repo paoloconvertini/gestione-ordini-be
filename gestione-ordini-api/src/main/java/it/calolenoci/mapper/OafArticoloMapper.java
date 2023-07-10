@@ -12,6 +12,7 @@ public class OafArticoloMapper {
     public void viewToEntity(OrdineFornitoreDettaglio entity, OrdineFornitoreDettaglioDto dto) {
         entity.setODescrArticolo(dto.getODescrArticolo());
         entity.setOQuantita(dto.getOQuantita());
+        entity.setOQuantitaV(dto.getOQuantita());
        entity.setOPrezzo(dto.getOPrezzo());
        entity.setFScontoArticolo(dto.getFScontoArticolo());
        entity.setScontoF1(dto.getScontoF1());
@@ -34,6 +35,7 @@ public class OafArticoloMapper {
             entity.setNota(null);
         }
         entity.setOQuantita(dto.getOQuantita());
+        entity.setOQuantitaV(dto.getOQuantita());
         entity.setOUnitaMisura(dto.getOUnitaMisura());
         entity.setOPrezzo(dto.getOPrezzo());
         entity.setFScontoArticolo(dto.getFScontoArticolo());
