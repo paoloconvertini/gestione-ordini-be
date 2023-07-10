@@ -79,11 +79,17 @@ public class OrdineFornitoreResource {
     //@RolesAllowed({ADMIN, AMMINISTRATIVO, MAGAZZINIERE, VENDITORE})
     public Response scaricaOrdine(Integer anno, String serie, Integer progressivo) {
 
-        jasperService.createReport(anno, serie, progressivo);
-        File report = new File(tmpFolder + anno + "_" + serie + "_" + progressivo + ".pdf");
-        Response.ResponseBuilder response = Response.ok(report);
-        response.header("Content-Disposition", "attachment; filename=" + report.getName());
-        return response.build();
+        try {
+            jasperService.createReport(anno, serie, progressivo);
+            File report = new File(tmpFolder + anno + "_" + serie + "_" + progressivo + ".pdf");
+            Response.ResponseBuilder response = Response.ok(report);
+            response.header("Content-Disposition", "attachment; filename=" + report.getName());
+            return response.build();
+        } catch (Exception e) {
+            Log.error("Errore scarica Ordine a fornitore ", e);
+            return Response.status(Response.Status.NO_CONTENT).build();
+        }
+
     }
 
     @Operation(summary = "Crea ordine a fornitore")
