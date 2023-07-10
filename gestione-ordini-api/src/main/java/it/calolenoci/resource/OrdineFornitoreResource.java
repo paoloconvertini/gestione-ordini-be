@@ -75,8 +75,7 @@ public class OrdineFornitoreResource {
     @Consumes(APPLICATION_JSON)
     @Produces("application/pdf")
     @Path("/scaricaOrdine/{anno}/{serie}/{progressivo}")
-    @PermitAll
-    //@RolesAllowed({ADMIN, AMMINISTRATIVO, MAGAZZINIERE, VENDITORE})
+    @RolesAllowed({ADMIN, AMMINISTRATIVO, MAGAZZINIERE, VENDITORE, LOGISTICA})
     public Response scaricaOrdine(Integer anno, String serie, Integer progressivo) {
 
         try {
