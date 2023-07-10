@@ -1,10 +1,19 @@
 package it.calolenoci.service;
 
-import javax.enterprise.context.ApplicationScoped;
+import io.quarkus.logging.Log;
+import it.calolenoci.dto.OrdineDTO;
+import it.calolenoci.dto.OrdineDettaglioDto;
+import it.calolenoci.dto.OrdineFornitoreDto;
+import it.calolenoci.dto.OrdineReportDto;
+import it.calolenoci.mapper.OrdineClienteReportMapper;
+import net.sf.jasperreports.engine.*;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.util.JRSaver;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -14,19 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import io.quarkus.logging.Log;
-import io.smallrye.mutiny.Uni;
-import it.calolenoci.dto.OrdineDTO;
-import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.dto.OrdineFornitoreDto;
-import it.calolenoci.dto.OrdineReportDto;
-import it.calolenoci.mapper.OrdineClienteReportMapper;
-import net.sf.jasperreports.engine.*;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.util.JRSaver;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Singleton
 public class JasperService {
@@ -39,6 +35,9 @@ public class JasperService {
 
     @Inject
     OrdineFornitoreService service;
+
+    @ConfigProperty(name = "ordini.tmp")
+    String tmpFolder;
 
     public List<OrdineReportDto> getOrdiniReport(OrdineDTO dto, List<OrdineDettaglioDto> articoli, String filename, String firmaVenditore) {
         List<OrdineReportDto> dtoList = new ArrayList<>();
@@ -81,8 +80,8 @@ public class JasperService {
         Files.move(f.getAbsoluteFile().toPath(), Path.of(folderDest + "/" + destFileName), StandardCopyOption.REPLACE_EXISTING);
     }
 
-    public File createReport(Integer anno, String serie, Integer progressivo) throws JRException {
-        List<OrdineFornitoreDto> dtoList =  service.findForReport(anno, serie, progressivo);
+    public void createReport(Integer anno, String serie, Integer progressivo) {
+        List<OrdineFornitoreDto> dtoList = service.findForReport(anno, serie, progressivo);
         if (dtoList != null && !dtoList.isEmpty()) {
             try {
                 String ordineId = anno + "_" + serie + "_" + progressivo;
@@ -100,13 +99,15 @@ public class JasperService {
                 String destFileName = ordineId + ".pdf";
                 File f = new File(destFileName);
                 JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
-                return f;
+                Files.move(f.getAbsoluteFile().toPath(), java.nio.file.Path.of(tmpFolder + f.getName()), StandardCopyOption.REPLACE_EXISTING);
             } catch (JRException e) {
-                org.jfree.util.Log.error("Errore nella creazione del report per l'ordine a fornitore " + anno + "/" + serie + "/" + progressivo, e);
+                Log.error("Errore nella creazione del report per l'ordine a fornitore " + anno + "/" + serie + "/" + progressivo, e);
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                Log.error("Errore nello spostamento del report " + anno + "/" + serie + "/" + progressivo, e);
                 throw new RuntimeException(e);
             }
         }
-            return null;
     }
 
     private JasperReport compileReport(String reportName) {

@@ -10,6 +10,8 @@ import it.calolenoci.entity.*;
 import it.calolenoci.service.JasperService;
 import it.calolenoci.service.OrdineFornitoreService;
 import net.sf.jasperreports.engine.JRException;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -33,6 +35,8 @@ import javax.ws.rs.core.StreamingOutput;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
@@ -61,6 +65,10 @@ public class OrdineFornitoreResource {
     @Inject
     JasperService jasperService;
 
+    @ConfigProperty(name = "ordini.tmp")
+    String tmpFolder;
+
+
     @Operation(summary = "Returns all the roles from the database")
     @GET
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
@@ -69,15 +77,12 @@ public class OrdineFornitoreResource {
     @Path("/scaricaOrdine/{anno}/{serie}/{progressivo}")
     @PermitAll
     //@RolesAllowed({ADMIN, AMMINISTRATIVO, MAGAZZINIERE, VENDITORE})
-    public Response scaricaOrdine(Integer anno, String serie, Integer progressivo) throws JRException, FileNotFoundException {
+    public Response scaricaOrdine(Integer anno, String serie, Integer progressivo) {
 
-        File report = jasperService.createReport(anno, serie, progressivo);
-        if(report == null) {
-            return Response.status(Response.Status.NO_CONTENT).entity(new ResponseDto("Errore report non creato", true)).build();
-        }
-
+        jasperService.createReport(anno, serie, progressivo);
+        File report = new File(tmpFolder + anno + "_" + serie + "_" + progressivo + ".pdf");
         Response.ResponseBuilder response = Response.ok(report);
-        response.header("Content-Disposition", "attachment; filename="+report.getName());
+        response.header("Content-Disposition", "attachment; filename=" + report.getName());
         return response.build();
     }
 
