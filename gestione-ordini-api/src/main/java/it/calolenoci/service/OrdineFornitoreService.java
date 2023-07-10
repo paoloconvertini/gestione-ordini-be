@@ -314,7 +314,7 @@ public class OrdineFornitoreService {
                 Parameters.with("anno", anno).and("serie", serie)
                         .and("progressivo", progressivo)).project(OrdineFornitoreDto.class).list();
         list.forEach(e-> {
-            if(StringUtils.isEmpty(e.getTipoRigo())) {
+            if(StringUtils.isBlank(e.getTipoRigo())) {
                 e.setValoreTotale(calcolaValoreTotale(e));
             }
         });

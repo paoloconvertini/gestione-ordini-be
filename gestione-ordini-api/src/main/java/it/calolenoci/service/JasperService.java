@@ -9,6 +9,7 @@ import it.calolenoci.mapper.OrdineClienteReportMapper;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRSaver;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.inject.Inject;
@@ -133,7 +134,7 @@ public class JasperService {
 
     private static Map<String, Object> getParametersOAF(List<OrdineFornitoreDto> articoli) {
         Map<String, Object> map = new HashMap<>();
-        map.put("totaleImponibile", articoli.stream().filter(a -> !"C".equals(a.getTipoRigo())).mapToDouble(OrdineFornitoreDto::getValoreTotale).sum());
+        map.put("totaleImponibile", articoli.stream().filter(a -> StringUtils.isBlank(a.getTipoRigo())).mapToDouble(OrdineFornitoreDto::getValoreTotale).sum());
         map.put("totaleIVA", (Double) map.get("totaleImponibile") * 22 / 100);
         map.put("totaleDocumento", (Double) map.get("totaleImponibile") + (Double) map.get("totaleIVA"));
         return map;
