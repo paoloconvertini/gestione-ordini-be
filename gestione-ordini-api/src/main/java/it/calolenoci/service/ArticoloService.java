@@ -282,7 +282,7 @@ public class ArticoloService {
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
             if(GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
-                    " and (flagOrdinato = 'T' AND flagRiservato = 'F')", Parameters.with("anno", anno)
+                    " and (flagOrdinato = 'T' AND (flagRiservato = 'F' OR flagRiservato is null) )", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)) == 0) {
                 sendMail(anno, serie, progressivo, email);
