@@ -44,7 +44,7 @@ public class ArticoloService {
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
         list = OrdineDettaglio.findArticoliById(filtro);
-        Double aDouble = OrdineDettaglio.find("SELECT SUM(o.prezzo*o.quantita) FROM OrdineDettaglio o " +
+        Double aDouble = OrdineDettaglio.find("SELECT SUM((prezzo*(CASE WHEN quantita=0 then 1 else quantita end))*(1-scontoArticolo/100)*(1-scontoC1/100)*(1-scontoC2/100)*(1-scontoP/100)) FROM OrdineDettaglio o " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo"
                         , Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie()).and("progressivo", filtro.getProgressivo()))
                 .project(Double.class).singleResult();

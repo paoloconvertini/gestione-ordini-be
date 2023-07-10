@@ -25,6 +25,8 @@ public class OrdineDettaglioDto implements Serializable {
     private  String fDescrArticolo;
     private  Double quantita;
     private  Float prezzo;
+
+    private  Float prezzoScontato;
     private  String fUnitaMisura;
 
     private Float scontoArticolo;
@@ -182,7 +184,7 @@ public class OrdineDettaglioDto implements Serializable {
     }
 
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo,
-                              String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, String fUnitaMisura,
+                              String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, Float prezzoScontato, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
                               Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla, String intestazione,
@@ -198,6 +200,7 @@ public class OrdineDettaglioDto implements Serializable {
         this.fDescrArticolo = fDescrArticolo;
         this.quantita = quantita;
         this.prezzo = prezzo;
+        this.prezzoScontato = prezzoScontato;
         this.fUnitaMisura = fUnitaMisura;
         this.flagRiservato = flagRiservato;
         this.flagNonDisponibile = flagNonDisponibile;
