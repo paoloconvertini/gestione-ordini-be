@@ -2,10 +2,7 @@ package it.calolenoci.scheduler;
 
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
-import it.calolenoci.dto.FatturaDto;
-import it.calolenoci.dto.OrdineDTO;
 import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.service.ArticoloService;
 import it.calolenoci.service.FatturaService;
 import it.calolenoci.service.OrdineService;

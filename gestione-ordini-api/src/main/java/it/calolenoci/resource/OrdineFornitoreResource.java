@@ -1,26 +1,23 @@
 package it.calolenoci.resource;
 
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
-import io.smallrye.mutiny.Uni;
-import io.vertx.core.file.OpenOptions;
 import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.core.file.AsyncFile;
-import it.calolenoci.dto.*;
-import it.calolenoci.entity.*;
+import it.calolenoci.dto.OrdineFornitoreDto;
+import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.entity.GoOrdineFornitore;
+import it.calolenoci.entity.Ordine;
+import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.JasperService;
 import it.calolenoci.service.OrdineFornitoreService;
-import net.sf.jasperreports.engine.JRException;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.jfree.util.Log;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -28,23 +25,13 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.io.File;
 import java.text.ParseException;
-import java.util.Base64;
 import java.util.List;
 
 import static it.calolenoci.enums.Ruolo.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static it.calolenoci.enums.Ruolo.*;
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
@@ -54,9 +41,6 @@ public class OrdineFornitoreResource {
 
     @Inject
     OrdineFornitoreService service;
-
-    @Inject
-    Vertx vertx;
 
     @Inject
     @Claim(standard = Claims.upn)
