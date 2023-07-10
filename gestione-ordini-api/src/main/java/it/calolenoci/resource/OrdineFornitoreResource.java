@@ -81,8 +81,13 @@ public class OrdineFornitoreResource {
         try {
             jasperService.createReport(anno, serie, progressivo);
             File report = new File(tmpFolder + anno + "_" + serie + "_" + progressivo + ".pdf");
+            if(!report.exists()){
+                Log.error("Errore: Report non trovato!");
+                return Response.noContent().build();
+            }
             Response.ResponseBuilder response = Response.ok(report);
             response.header("Content-Disposition", "attachment; filename=" + report.getName());
+            Log.info("report OK");
             return response.build();
         } catch (Exception e) {
             Log.error("Errore scarica Ordine a fornitore ", e);
