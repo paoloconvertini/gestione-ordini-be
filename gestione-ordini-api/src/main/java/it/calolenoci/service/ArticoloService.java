@@ -280,8 +280,15 @@ public class ArticoloService {
         }
 
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
-            sendMail(anno, serie, progressivo, email);
-            ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
+            if(GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
+                    " and progressivo =:progressivo" +
+                    " and (flagOrdinato = 'T' AND flagRiservato = 'F')", Parameters.with("anno", anno)
+                    .and("serie", serie)
+                    .and("progressivo", progressivo)) == 0) {
+                sendMail(anno, serie, progressivo, email);
+                ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
+            }
+
         }
         ordine.persist();
         return ordine.getStatus();
