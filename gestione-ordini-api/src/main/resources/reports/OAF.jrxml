@@ -227,7 +227,7 @@ join TGCP g ON g.CODICEPAGAMENTO = f.OCODCIEPAGAMENT]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{dataOrdine}]]></textFieldExpression>
 			</textField>
-			<textField pattern="EEEEE dd MMMMM yyyy">
+			<textField pattern="EEEEE dd MMMMM yyyy" isBlankWhenNull="true">
 				<reportElement x="54" y="115" width="65" height="19" uuid="3836ce65-eca3-4cad-a6de-b1818def0a2b"/>
 				<textElement>
 					<font fontName="SansSerif" size="8"/>
