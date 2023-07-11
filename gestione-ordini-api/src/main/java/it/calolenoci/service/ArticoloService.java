@@ -1,6 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
@@ -72,6 +71,7 @@ public class ArticoloService {
 
     @Transactional
     public Integer updateArticoliBolle(List<OrdineDettaglioDto> list) {
+        long inizio = System.currentTimeMillis();
         AtomicReference<Integer> aggiornati = new AtomicReference<>(0);
         list.forEach(e -> {
             Optional<GoOrdineDettaglio> optional = GoOrdineDettaglio.getById(e.getAnno(), e.getSerie(), e.getProgressivo(), e.getRigo());
@@ -98,6 +98,8 @@ public class ArticoloService {
                 }
             }
         });
+        long fine = System.currentTimeMillis();
+        Log.info("UpdateArticoliBolle: " + (fine - inizio)/1000 + " sec");
         return aggiornati.get();
     }
 
@@ -115,7 +117,7 @@ public class ArticoloService {
     }
 
     public void checkNoBolle() {
-
+        long inizio = System.currentTimeMillis();
         List<OrdineDettaglioDto> list = GoOrdineDettaglio.find("select god.anno, god.serie, god.progressivo, god.rigo  FROM GoOrdineDettaglio god " +
                         "INNER JOIN OrdineDettaglio o ON o.anno = god.anno AND o.serie = god.serie AND " +
                         "o.progressivo = god.progressivo AND o.rigo = god.rigo " +
@@ -131,8 +133,8 @@ public class ArticoloService {
                             .and("progressivo", a.getProgressivo())
                             .and("rigo", a.getRigo())));
         }
-
-
+        long fine = System.currentTimeMillis();
+        Log.info("CheckNoBolle: " + (fine - inizio)/1000 + " sec");
     }
 
     @Transactional

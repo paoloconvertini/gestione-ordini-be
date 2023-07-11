@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.AccontoDto;
 import it.calolenoci.dto.FatturaDto;
@@ -24,6 +25,7 @@ public class FatturaService {
     EntityManager em;
 
     public List<OrdineDettaglioDto> getBolle()  {
+        long inizio = System.currentTimeMillis();
         List<OrdineDettaglioDto> list = OrdineDettaglio.find("select o2.anno,o2.serie,o2.progressivo," +
                         " o2.progrGenerale, o2.rigo, " +
                         " (CASE WHEN o2.quantitaV IS NOT NULL AND o2.quantita <> o2.quantitaV THEN o2.quantitaV ELSE o2.quantita END ) as quantita " +
@@ -42,14 +44,15 @@ public class FatturaService {
                         Parameters.with("list", integers))
                 .project(FatturaDto.class).list();
                fatturaDtos.forEach(fatturaDto -> map.put(fatturaDto.getProgrOrdCli(), fatturaDto.getQta()));
-
-        list.forEach(o -> {
+                  list.forEach(o -> {
             if(map.containsKey(o.getProgrGenerale())){
                 o.setQtaBolla(map.get(o.getProgrGenerale()));
             }
         });
-
+        long fine = System.currentTimeMillis();
+        Log.info("Query getBolle: " + (fine - inizio)/1000);
         return list;
+        //return fatturaDtos;
     }
 
     public List<FatturaDto> getBolle(Integer progrCliente){

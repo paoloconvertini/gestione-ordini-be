@@ -18,6 +18,9 @@ public class OafArticoloMapper {
        entity.setScontoF1(dto.getScontoF1());
        entity.setScontoF2(dto.getScontoF2());
        entity.setFScontoP(dto.getFScontoP());
+        if(dto.getOQuantita() != null && dto.getOPrezzo() != null){
+            entity.setValoreTotale(dto.getOQuantita()*dto.getOPrezzo());
+        }
     }
 
     public OrdineFornitoreDettaglio fromDtoToEntity(OrdineFornitoreDettaglioDto dto) {
@@ -33,6 +36,8 @@ public class OafArticoloMapper {
             entity.setPid(null);
             entity.setOCodiceIva(null);
             entity.setNota(null);
+        } else {
+            entity.setMagazzino("B");
         }
         entity.setOQuantita(dto.getOQuantita());
         entity.setOQuantitaV(dto.getOQuantita());
@@ -44,6 +49,9 @@ public class OafArticoloMapper {
         entity.setFScontoP(dto.getFScontoP());
         Integer progrGenerale = OrdineFornitoreDettaglio.find("SELECT MAX(progrGenerale) FROM OrdineFornitoreDettaglio").project(Integer.class).singleResult();
         entity.setProgrGenerale(progrGenerale + 1);
+        if(dto.getOQuantita() != null && dto.getOPrezzo() != null){
+            entity.setValoreTotale(dto.getOQuantita()*dto.getOPrezzo());
+        }
         return entity;
     }
 }

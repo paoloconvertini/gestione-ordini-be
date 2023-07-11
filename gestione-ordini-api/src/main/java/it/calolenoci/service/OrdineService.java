@@ -1,19 +1,19 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
-import it.calolenoci.entity.*;
+import it.calolenoci.entity.GoOrdine;
+import it.calolenoci.entity.GoOrdineDettaglio;
+import it.calolenoci.entity.Ordine;
+import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.GoOrdineDettaglioMapper;
 import it.calolenoci.mapper.GoOrdineMapper;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.jwt.Claim;
-import org.eclipse.microprofile.jwt.Claims;
-import org.jfree.util.Log;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -103,6 +103,7 @@ public class OrdineService {
 
     @Transactional
     public void checkConsegnati() {
+        long inizio = System.currentTimeMillis();
         List<String> list = new ArrayList<>();
         list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
         list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
@@ -117,10 +118,13 @@ public class OrdineService {
                 o.persist();
             }
         });
+        long fine = System.currentTimeMillis();
+        Log.info("FindNoConsegnati: " + (fine - inizio)/1000 + " sec");
     }
 
     @Transactional
     public void checkNoProntaConegna() {
+        long inizio = System.currentTimeMillis();
         List<String> list = new ArrayList<>();
         list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
         list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
@@ -133,6 +137,8 @@ public class OrdineService {
                 o.persist();
             }
         });
+        long fine = System.currentTimeMillis();
+        Log.info("Fine checkNoProntaConegna: " + (fine - inizio)/1000 + " sec");
     }
 
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
@@ -176,6 +182,7 @@ public class OrdineService {
     }
 
     public void addNuoviOrdini() throws ParseException {
+        long inizio = System.currentTimeMillis();
         List<Ordine> list = Ordine.find("SELECT o FROM Ordine o " +
                 "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' AND NOT EXISTS (SELECT 1 FROM GoOrdine god WHERE god.anno =  o.anno" +
                 " AND god.serie = o.serie AND god.progressivo = o.progressivo)", Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
@@ -193,12 +200,14 @@ public class OrdineService {
             });
             GoOrdine.persist(listToSave);
             GoOrdineDettaglio.persist(listDettaglioToSave);
-
+            long fine = System.currentTimeMillis();
+            Log.info("addNuoviOrdini: " + (fine - inizio)/1000 + " sec");
             creaReport(list);
         }
     }
 
     private void creaReport(List<Ordine> list) {
+        long inizio = System.currentTimeMillis();
         list.forEach(o -> {
             OrdineDTO ordineDTO = findForReport(o.getAnno(), o.getSerie(), o.getProgressivo());
             if (ordineDTO != null) {
@@ -215,5 +224,7 @@ public class OrdineService {
             }
 
         });
+        long fine = System.currentTimeMillis();
+        Log.info("Fine creaReport: " + (fine -inizio)/1000 + " sec");
     }
 }

@@ -122,6 +122,10 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setOColli(a.getColli());
                         fornitoreDettaglio.setOCodiceIva("22");
                         fornitoreDettaglio.setProvenienza("C");
+                        fornitoreDettaglio.setMagazzino("B");
+                        if(fornitoreDettaglio.getOQuantita() != null && fornitoreDettaglio.getOPrezzo() != null){
+                            fornitoreDettaglio.setValoreTotale(fornitoreDettaglio.getOQuantita()*fornitoreDettaglio.getOPrezzo());
+                        }
                         String campoUser5 = "VS.ART." + a.getDescrArtSuppl();
                         fornitoreDettaglio.setCampoUser5(StringUtils.truncate(campoUser5, 25));
                         String nota = "Riferimento n. " + anno + "/" + serie + "/" + progressivo + "-" + a.getRigo();

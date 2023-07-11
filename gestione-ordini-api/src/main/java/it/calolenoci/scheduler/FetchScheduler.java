@@ -1,6 +1,7 @@
 package it.calolenoci.scheduler;
 
 import io.quarkus.logging.Log;
+import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.scheduler.Scheduled;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.service.ArticoloService;
@@ -29,19 +30,22 @@ public class FetchScheduler {
 
     @Scheduled(every = "${cron.expr:1m}")
     @Transactional
+    @TransactionConfiguration(timeout = 500)
     public void update() throws ParseException {
-        Log.info("INIZIO UPDATE CHECK BOLLE");
+        long inizio = System.currentTimeMillis();
         Integer update;
         List<OrdineDettaglioDto> list = fatturaService.getBolle();
         if (list != null && !list.isEmpty()) {
             update = articoloService.updateArticoliBolle(list);
-            Log.debug("Aggiornati " + update + " articoli");
+            Log.info("Aggiornati " + update + " articoli");
             if (update != null && update != 0) {
                 ordineService.checkConsegnati();
             }
         }
         articoloService.checkNoBolle();
         ordineService.checkNoProntaConegna();
+        long fine = System.currentTimeMillis();
+        Log.info("FINE UPDATE CHECK BOLLE: " + (fine - inizio)/1000 + " sec");
     }
 
     @Scheduled(every = "${cron.expr.nuovi.ordini:10m}")

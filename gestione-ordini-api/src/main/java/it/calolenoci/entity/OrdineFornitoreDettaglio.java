@@ -84,4 +84,9 @@ public class OrdineFornitoreDettaglio extends PanacheEntityBase {
     @Column(length = 1)
     private String provenienza;
 
+    @Column(length = 3, name="OMAGAZZ")
+    private String magazzino;
+
+    @Column(name = "OVALORE")
+    private Double valoreTotale;
 }
