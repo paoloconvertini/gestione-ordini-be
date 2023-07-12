@@ -92,7 +92,7 @@ public class OrdineResource {
         final Integer progressivo = Integer.valueOf(data.orderId.split("_")[2]);
         String filename = "firma_" + data.orderId + ".png";
         String name = pathFirma + filename;
-        String firmaVenditore = pathFirmaVendtore + codVenditore + ".png";
+        String firmaVenditore = pathFirmaVendtore + serie + ".png";
         firmaService.save(anno, serie, progressivo, filename);
 
         String encodedImage = data.file.split(",")[1];
@@ -171,7 +171,7 @@ public class OrdineResource {
     @GET
     @Path("/apriOrdine/{anno}/{serie}/{progressivo}/{status}")
     @RolesAllowed({ADMIN, MAGAZZINIERE})
-    public Response apriOrdine(Integer anno, String serie, Integer progressivo, String status){
+    public Response apriOrdine(Integer anno, String serie, Integer progressivo, String status) {
         ordineService.changeStatus(anno, serie, progressivo, status);
         return Response.ok(new ResponseDto("Ordine riaperto", false)).build();
     }
@@ -181,7 +181,7 @@ public class OrdineResource {
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @Transactional
     @Consumes(APPLICATION_JSON)
-    public Response addNotes(OrdineDTO dto){
+    public Response addNotes(OrdineDTO dto) {
         GoOrdine.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
                 Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
                         .and("serie", dto.getSerie())
@@ -196,13 +196,12 @@ public class OrdineResource {
     @Path("/downloadOrdine/{sottoConto}/{anno}/{serie}/{progressivo}")
     @Produces(MediaType.TEXT_PLAIN)
     @PermitAll
-    public Uni<Response> streamDataFromFile(String sottoConto, Integer anno, String serie, Integer progressivo)
-    {
+    public Uni<Response> streamDataFromFile(String sottoConto, Integer anno, String serie, Integer progressivo) {
         final OpenOptions openOptions = (new OpenOptions()).setCreate(false).setWrite(false);
-        String ordineId = sottoConto + "_" +  anno + "_" + serie + "_" + progressivo + ".pdf";
+        String ordineId = sottoConto + "_" + anno + "_" + serie + "_" + progressivo + ".pdf";
 
         Uni<AsyncFile> uni1 = vertx.fileSystem()
-                .open(pathReport + anno + "/" + serie + "/" + ordineId , openOptions);
+                .open(pathReport + anno + "/" + serie + "/" + ordineId, openOptions);
 
         return uni1.onItem()
                 .transform(asyncFile -> Response.ok(asyncFile)
@@ -210,5 +209,20 @@ public class OrdineResource {
                         .build());
     }
 
+    @Transactional
+    @Operation(summary = "salva testata ordini")
+    @PUT
+    @Produces(APPLICATION_JSON)
+    @RolesAllowed({ADMIN})
+    @Consumes(APPLICATION_JSON)
+    public Response salva(OrdineDTO dto) {
+        if (dto == null) {
+            return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("lista vuota", true)).build();
+        }
+        GoOrdine.update("status =:status WHERE anno=:anno AND serie=:serie AND progressivo =:progressivo",
+                Parameters.with("status", dto.getStatus()).and("anno", dto.getAnno())
+                        .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo()));
+        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Lista salvata", false)).build();
+    }
 
 }
