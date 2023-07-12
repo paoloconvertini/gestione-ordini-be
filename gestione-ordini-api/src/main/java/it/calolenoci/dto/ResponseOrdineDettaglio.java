@@ -13,8 +13,10 @@ import java.util.List;
 @RegisterForReflection
 public class ResponseOrdineDettaglio {
     private String intestazione;
+    private String riferimento;
     private String sottoConto;
     private String telefono;
+    private String cellulare;
     private String userLock;
     private Boolean locked;
     private Double totale;

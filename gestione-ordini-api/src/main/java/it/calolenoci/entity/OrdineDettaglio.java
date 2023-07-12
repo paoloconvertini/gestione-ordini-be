@@ -109,14 +109,13 @@ public class OrdineDettaglio extends PanacheEntityBase {
                 "  o.fUnitaMisura,  " +
                 "god.flagRiservato, god.flagNonDisponibile, god.flagOrdinato, god.flagConsegnato,  god.tono, a.fornitoreArticoloId.articolo, " +
                 "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF,  " +
-                "god.qtaConsegnatoSenzaBolla, (CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, god.flBolla, pc.intestazione, " +
+                "god.qtaConsegnatoSenzaBolla, (CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, god.flBolla, " +
                 "god.note, god.qtaRiservata, god.flProntoConsegna, god.qtaProntoConsegna, o.noteOrdCli  " +
                 "FROM OrdineDettaglio o " +
                 "LEFT JOIN GoOrdineDettaglio god ON o.anno = god.anno AND o.serie = god.serie AND o.progressivo = god.progressivo AND o.rigo = god.rigo " +
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
                 "LEFT JOIN FornitoreArticolo a ON a.fornitoreArticoloId.articolo = o.fArticolo " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
-                "LEFT JOIN PianoConti pc ON f.gruppo = pc.gruppoConto AND f.conto = pc.sottoConto  " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo";
         if (filtro.getFlNonDisponibile() != null && filtro.getFlNonDisponibile()) {
             query += " AND god.flagNonDisponibile = 'T' ";

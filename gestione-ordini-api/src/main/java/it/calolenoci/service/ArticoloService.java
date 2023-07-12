@@ -39,6 +39,7 @@ public class ArticoloService {
     String pathReport;
 
     public ResponseOrdineDettaglio findById(FiltroArticoli filtro) {
+        long inizio = System.currentTimeMillis();
         ResponseOrdineDettaglio response = new ResponseOrdineDettaglio();
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
@@ -49,11 +50,15 @@ public class ArticoloService {
                 .project(Double.class).singleResult();
         response.setTotale(aDouble);
         response.setIntestazione(ordineDTO.getIntestazione());
+        response.setRiferimento(ordineDTO.getRiferimento());
         response.setSottoConto(ordineDTO.getSottoConto());
         response.setLocked(ordineDTO.getLocked());
         response.setUserLock(ordineDTO.getUserLock());
         response.setTelefono(ordineDTO.getTelefono());
+        response.setCellulare(ordineDTO.getCellulare());
         response.setArticoli(list);
+        long fine = System.currentTimeMillis();
+        Log.info("Get articoli ordine cliente: " + (fine - inizio)/1000 + " sec");
         return response;
     }
 

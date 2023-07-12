@@ -50,7 +50,7 @@ public class FatturaService {
             }
         });
         long fine = System.currentTimeMillis();
-        Log.info("Query getBolle: " + (fine - inizio)/1000);
+        Log.info("Query getBolle: " + (fine - inizio)/1000 + " sec");
         return list;
         //return fatturaDtos;
     }

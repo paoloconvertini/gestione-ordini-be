@@ -187,7 +187,7 @@ public class OrdineDettaglioDto implements Serializable {
                               String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, Float prezzoScontato, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla, String intestazione,
+                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
                               String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna, String noteOrdCli) {
         this.anno = anno;
         this.progressivo = progressivo;
@@ -215,7 +215,6 @@ public class OrdineDettaglioDto implements Serializable {
         this.qtaConsegnatoSenzaBolla = qtaConsegnatoSenzaBolla;
         this.qtaDaConsegnare = qtaDaConsegnare;
         this.flBolla = flBolla;
-        this.intestazione = intestazione;
         this.note = note;
         this.qtaRiservata = qtaRiservata;
         this.flProntoConsegna = flProntoConsegna;
