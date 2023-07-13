@@ -71,7 +71,7 @@ public class OAFArticoloService {
     }
 
     @Transactional
-    public boolean save(OrdineFornitoreDettaglioDto dto) {
+    public boolean save(ArticoloDto dto) {
         try {
             OrdineFornitoreDettaglio.update("rigo = (rigo+1) WHERE anno = :anno AND serie = :serie" +
                             " AND progressivo = :progressivo and rigo >=:rigo",
@@ -86,20 +86,28 @@ public class OAFArticoloService {
     }
 
     public List<ArticoloDto> cercaArticoli(FiltroArticoli filtro){
-        String query = "SELECT a.articolo, a.descrArticolo, a.unitaMisura FROM Articolo a " +
+        String query = "SELECT a.articolo, a.descrArticolo, a.descrArtSuppl, a.unitaMisura FROM Articolo a " +
                 " WHERE 1=1 ";
-        Map<String, String> parameters = new HashMap<>();
+        Map<String, Object> parameters = new HashMap<>();
         if(StringUtils.isNotBlank(filtro.getCodice())) {
-            query += " AND a.articolo LIKE '%codice%' ";
-            parameters.put("codice", filtro.getCodice());
+            query += " AND a.articolo LIKE :codice ";
+            parameters.put("codice", "%"+filtro.getCodice()+"%");
         }
         if(StringUtils.isNotBlank(filtro.getDescrizione())) {
-            query += " AND a.descrArticolo LIKE '%descrizione%' ";
-            parameters.put("descrizione", filtro.getDescrizione());
+            query += " AND a.descrArticolo LIKE :descrizione ";
+            parameters.put("descrizione", "%"+filtro.getDescrizione()+"%");
         }
+        if(StringUtils.isNotBlank(filtro.getDescrSuppl())) {
+            query += " AND a.descrArtSuppl LIKE :descrSuppl ";
+            parameters.put("descrSuppl", "%"+filtro.getDescrSuppl()+"%");
+        }
+
         List<ArticoloDto> list = Articolo.find(query, parameters).project(ArticoloDto.class).list();
         list.forEach(e -> Magazzino.find("Select valoreUnitario FROM Magazzino " +
-                                "WHERE mArticolo = :codArticolo ORDER BY dataMagazzino desc",
+                                " WHERE mArticolo = :codArticolo AND valoreUnitario <> null " +
+                                " and valoreUnitario <> '' " +
+                                " and valoreUnitario <> ' ' " +
+                                " ORDER BY dataMagazzino desc ",
                         Parameters.with("codArticolo", e.getArticolo()))
                 .project(Double.class)
                 .firstResultOptional()

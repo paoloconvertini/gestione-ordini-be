@@ -39,10 +39,22 @@ public class ArticoloDto implements Serializable {
 
     private Integer colli;
 
+    private Integer anno;
+    private String serie;
+    private Integer progressivo;
+    private String tipoRigo;
+    private Double fScontoArticolo;
+    private Double scontoF1;
 
-    public ArticoloDto(String articolo, String descrArticolo, String unitaMisura) {
+    private Double scontoF2;
+
+    private Double fScontoP;
+
+
+    public ArticoloDto(String articolo, String descrArticolo, String descrArtSuppl, String unitaMisura) {
         this.articolo = articolo;
         this.descrArticolo = descrArticolo;
+        this.descrArtSuppl = descrArtSuppl;
         this.unitaMisura = unitaMisura;
     }
 

@@ -31,6 +31,8 @@ public class FiltroArticoli implements Serializable {
 
     private String descrizione;
 
+    private String descrSuppl;
+
     public FiltroArticoli(Integer anno, String serie, Integer progressivo) {
         this.anno = anno;
         this.serie = serie;

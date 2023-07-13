@@ -1,9 +1,6 @@
 package it.calolenoci.resource;
 
-import it.calolenoci.dto.FiltroArticoli;
-import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
-import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
 import it.calolenoci.service.OAFArticoloService;
@@ -16,6 +13,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -84,7 +82,7 @@ public class OAFArticoloResource {
     @POST
     @RolesAllowed({AMMINISTRATIVO, ADMIN})
     @Path("/salvaRigo")
-    public Response salvaRigo(OrdineFornitoreDettaglioDto dto) {
+    public Response salvaRigo(ArticoloDto dto) {
         boolean save = articoloService.save(dto);
         if(!save){
             return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Errore Salvataggio !", true)).build();
@@ -94,10 +92,11 @@ public class OAFArticoloResource {
 
     @Operation(summary = "Cerca articoli")
     @POST
-    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    //@RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @PermitAll
     @Path("/cercaArticoli")
     public Response cercaArticoli(FiltroArticoli filtro) {
-        if(StringUtils.isBlank(filtro.getCodice()) && StringUtils.isBlank(filtro.getDescrizione())) {
+        if(StringUtils.isBlank(filtro.getCodice()) && StringUtils.isBlank(filtro.getDescrizione()) && StringUtils.isBlank(filtro.getDescrSuppl())) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(new ResponseDto("Nessun filtro i ricerca presente", true)).build();
         }

@@ -2,7 +2,6 @@ package it.calolenoci.resource;
 
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
-import io.vertx.mutiny.core.Vertx;
 import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.GoOrdineFornitore;
