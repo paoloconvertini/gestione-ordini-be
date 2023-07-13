@@ -186,10 +186,12 @@ public class ArticoloService {
                     ordineDettaglio.setQuantitaV(dto.getQuantita());
                     ordineDettaglioList.add(ordineDettaglio);
                 }
-                if (!Objects.equals(goOrdineDettaglio.getTono(), dto.getTono())) {
+                if (!Objects.equals(ordineDettaglio.getTono(), dto.getTono())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                             dto.getProgressivo(), user, AzioneEnum.TONO.getDesczrizione(),
                             dto.getRigo(), dto.getTono(), null, null, null));
+                    ordineDettaglio.setTono(dto.getTono());
+                    ordineDettaglioList.add(ordineDettaglio);
                 }
                 if (!Objects.equals(dto.getFlagRiservato(), goOrdineDettaglio.getFlagRiservato())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),

@@ -76,6 +76,9 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column
     private Integer fColli;
 
+    @Column(name = "LOTTOMAGF", length = 10)
+    private String tono;
+
     @Column(length = 2)
     private String fUnitaMisura;
 
@@ -107,7 +110,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
         String query = "SELECT o.anno,  o.progressivo, o.progrGenerale,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo, o.prezzo*(1-o.scontoArticolo/100)*(1-o.scontoC1/100)*(1-o.scontoC2/100)*(1-o.scontoP/100), " +
                 "  o.fUnitaMisura,  " +
-                "god.flagRiservato, god.flagNonDisponibile, god.flagOrdinato, god.flagConsegnato,  god.tono, a.fornitoreArticoloId.articolo, " +
+                "god.flagRiservato, god.flagNonDisponibile, god.flagOrdinato, god.flagConsegnato,  o.tono, a.fornitoreArticoloId.articolo, " +
                 "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF,  " +
                 "god.qtaConsegnatoSenzaBolla, (CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, god.flBolla, " +
                 "god.note, god.qtaRiservata, god.flProntoConsegna, god.qtaProntoConsegna, o.noteOrdCli  " +

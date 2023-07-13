@@ -35,6 +35,9 @@ public class GoOrdineDettaglio extends PanacheEntityBase {
     @Id
     private Integer progressivo;
 
+    @Column(name="PROGRGENERALE")
+    private Integer progrGenerale;
+
     @Column
     @Id
     private Integer rigo;

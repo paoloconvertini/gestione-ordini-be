@@ -12,7 +12,6 @@ import javax.enterprise.context.ApplicationScoped;
 public class ArticoloMapper {
 
     public void fromDtoToEntity (GoOrdineDettaglio o, OrdineDettaglioDto dto) {
-        o.setTono(dto.getTono());
         o.setFlagNonDisponibile(dto.getFlagNonDisponibile());
         o.setFlagOrdinato(dto.getFlagOrdinato());
         o.setFlagRiservato(dto.getFlagRiservato());
