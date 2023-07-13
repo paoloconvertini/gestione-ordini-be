@@ -123,6 +123,8 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setOCodiceIva("22");
                         fornitoreDettaglio.setProvenienza("C");
                         fornitoreDettaglio.setMagazzino("B");
+                        fornitoreDettaglio.setSaldo("");
+                        fornitoreDettaglio.setTipoRigo("");
                         if(fornitoreDettaglio.getOQuantita() != null && fornitoreDettaglio.getOPrezzo() != null){
                             fornitoreDettaglio.setValoreTotale(fornitoreDettaglio.getOQuantita()*fornitoreDettaglio.getOPrezzo());
                         }

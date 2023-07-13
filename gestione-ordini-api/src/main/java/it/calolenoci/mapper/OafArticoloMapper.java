@@ -42,6 +42,7 @@ public class OafArticoloMapper {
             entity.setProvenienza("C");
         }
         entity.setOQuantita(dto.getQuantita());
+        entity.setSaldo("");
         entity.setOQuantitaV(dto.getQuantita());
         entity.setOUnitaMisura(dto.getUnitaMisura());
         entity.setOPrezzo(dto.getPrezzoBase());
