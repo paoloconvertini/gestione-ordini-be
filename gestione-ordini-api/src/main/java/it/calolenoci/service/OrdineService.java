@@ -52,8 +52,10 @@ public class OrdineService {
 
 
     public List<OrdineDTO> findAllByStatus(FiltroOrdini filtro) throws ParseException {
+        long inizio = System.currentTimeMillis();
         if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
-                !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
+                !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus()) &&
+        !StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
             checkStatusDettaglio();
         }
         if (!StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
@@ -83,7 +85,10 @@ public class OrdineService {
             query += " and o.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());
         }
-        return Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
+        List<OrdineDTO> list = Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
+        long fine = System.currentTimeMillis();
+        Log.info("Find all ordini: " + (fine - inizio)/1000 + " sec");
+        return list;
     }
 
     @Transactional
