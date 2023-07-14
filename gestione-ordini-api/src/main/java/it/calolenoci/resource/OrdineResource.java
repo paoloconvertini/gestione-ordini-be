@@ -132,6 +132,9 @@ public class OrdineResource {
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
     public Response getAllOrdini(FiltroOrdini filtro) throws ParseException {
+        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
+            filtro.setStatus(null);
+        }
         return Response.ok(ordineService.findAllByStatus(filtro)).build();
     }
 

@@ -68,6 +68,10 @@ public class Ordine extends PanacheEntityBase {
     @Column
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataConfermaCli;
+
+    @Column(name = "FCODICEPAGAMENT", length = 3)
+    private String codicePagamento;
+
     public static Ordine findByOrdineId(Integer anno, String serie,  Integer progressivo) {
         return find("anno = :anno and progressivo = :progressivo and serie = :serie",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).firstResult();

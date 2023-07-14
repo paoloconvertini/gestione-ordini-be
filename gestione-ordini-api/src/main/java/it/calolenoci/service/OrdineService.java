@@ -142,11 +142,12 @@ public class OrdineService {
     }
 
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
-        return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
+        return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, pa.descrizione, " +
                                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, go.locked, go.userLock, go.warnNoBolla " +
                                 "FROM Ordine o " +
                                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
+                                "LEFT JOIN ModalitaPagamento pa ON o.codicePagamento = pa.codice " +
                                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo",
                         Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo))
@@ -173,12 +174,9 @@ public class OrdineService {
 
 
     public List<FiltroStati> getStati() {
-        return Arrays.stream(StatoOrdineEnum.values()).map(s -> {
-            if (s.getDescrizione().equals(StatoOrdineEnum.TUTTI.getDescrizione())) {
-                return new FiltroStati(s.getDescrizione(), "", true);
-            }
-            return new FiltroStati(s.getDescrizione(), s.getDescrizione(), false);
-        }).collect(Collectors.toList());
+        return Arrays.stream(StatoOrdineEnum.values())
+                .map(s -> new FiltroStati(s.getDescrizione(), s.getDescrizione()))
+                .collect(Collectors.toList());
     }
 
     public void addNuoviOrdini() throws ParseException {

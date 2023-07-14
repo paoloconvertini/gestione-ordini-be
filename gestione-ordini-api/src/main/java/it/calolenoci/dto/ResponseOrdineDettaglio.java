@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -20,6 +21,8 @@ public class ResponseOrdineDettaglio {
     private String userLock;
     private Boolean locked;
     private Double totale;
+    private Date dataOrdine;
+    private String modalitaPagamento;
     private List<OrdineDettaglioDto> articoli;
 
 }

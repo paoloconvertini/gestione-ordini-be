@@ -51,6 +51,8 @@ public class OrdineDTO implements Serializable {
 
     private String note;
 
+    private String modalitaPagamento;
+
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,
                      String statoResidenza, String statoEstero, String telefono, String cellulare, String email, String pec) {
@@ -93,7 +95,7 @@ public class OrdineDTO implements Serializable {
         this.note = note;
     }
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma, String modalitaPagamento,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
@@ -103,6 +105,7 @@ public class OrdineDTO implements Serializable {
         this.progressivo = progressivo;
         this.dataOrdine = dataOrdine;
         this.numeroConferma = numeroConferma;
+        this.modalitaPagamento = modalitaPagamento;
         this.intestazione = intestazione;
         this.sottoConto = sottoConto;
         this.riferimento = riferimento;

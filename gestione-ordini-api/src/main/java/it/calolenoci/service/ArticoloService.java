@@ -44,11 +44,11 @@ public class ArticoloService {
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
         list = OrdineDettaglio.findArticoliById(filtro);
-        Double aDouble = OrdineDettaglio.find("SELECT SUM((prezzo*(CASE WHEN quantita=0 then 1 else quantita end))*(1-scontoArticolo/100)*(1-scontoC1/100)*(1-scontoC2/100)*(1-scontoP/100)) FROM OrdineDettaglio o " +
+        Optional<Double> aDouble = OrdineDettaglio.find("SELECT SUM(((CaSE WHEN prezzo is null then 0 ELSE prezzo end)*(CASE WHEN quantita is null then 0 else quantita end))*(1-scontoArticolo/100)*(1-scontoC1/100)*(1-scontoC2/100)*(1-scontoP/100)) FROM OrdineDettaglio o " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo"
                         , Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie()).and("progressivo", filtro.getProgressivo()))
-                .project(Double.class).singleResult();
-        response.setTotale(aDouble);
+                .project(Double.class).firstResultOptional();
+        aDouble.ifPresent(response::setTotale);
         response.setIntestazione(ordineDTO.getIntestazione());
         response.setRiferimento(ordineDTO.getRiferimento());
         response.setSottoConto(ordineDTO.getSottoConto());
@@ -56,6 +56,8 @@ public class ArticoloService {
         response.setUserLock(ordineDTO.getUserLock());
         response.setTelefono(ordineDTO.getTelefono());
         response.setCellulare(ordineDTO.getCellulare());
+        response.setDataOrdine(ordineDTO.getDataOrdine());
+        response.setModalitaPagamento(ordineDTO.getModalitaPagamento());
         response.setArticoli(list);
         long fine = System.currentTimeMillis();
         Log.info("Get articoli ordine cliente: " + (fine - inizio)/1000 + " sec");

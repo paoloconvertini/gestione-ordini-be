@@ -10,8 +10,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FiltroStati implements Serializable {
-
     private String descrizione;
     private String codice;
-    private Boolean checked;
 }
