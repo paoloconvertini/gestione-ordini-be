@@ -371,50 +371,39 @@ public class ArticoloService {
             String classeFornitore = fornitore.get().getCodice();
             String codArtFornitore = StringUtils.deleteWhitespace(dto.getCodArtFornitore());
             String codiceArticolo = this.creaId(codArtFornitore, classeFornitore);
-            Optional<Articolo> optArticolo =  Articolo.find("descrArtSuppl = :codArt OR descrArticolo LIKE '%:codArt%'",
-                    Parameters.with("codArt", codArtFornitore)).firstResultOptional();
+            int length = StringUtils.length(codArtFornitore);
             Articolo articolo = new Articolo();
-            if(optArticolo.isPresent()){
-                Log.info("Articolo: " + dto.getFDescrArticolo() + " già presente");
-                articolo = optArticolo.get();
-                if(articolo.getFlTrattato() == null || "N".equals(articolo.getFlTrattato())){
-                    articolo.setFlTrattato("S");
-                    articolo.persist();
+            if(length >= 13){
+                Log.info("Codice articolo forn: " + codArtFornitore);
+                Log.info("Codice articolo interno: " + codiceArticolo);
+                Optional<Articolo> optArticolo =  Articolo.find("articolo = :codArt",
+                        Parameters.with("codArt", codiceArticolo)).firstResultOptional();
+                if(optArticolo.isPresent()){
+                    Log.info("Trovato un articolo con codice: " + codiceArticolo + ". Codifico eliminando le prime 3 lettere");
+                    codiceArticolo = this.creaId(StringUtils.truncate(codArtFornitore, 3,13), classeFornitore);
                 }
-            } else {
                 //Crea articolo
-                articolo.setArticolo(codiceArticolo);
-                articolo.setCreateDate(new Date());
-                articolo.setUpdateDate(new Date());
-                articolo.setCreateUser(user);
-                articolo.setUpdateUser(user);
-                articolo.setDescrArticolo(this.pulisciDescrizione(dto.getFDescrArticolo()));
-                articolo.setDescrArtSuppl(codArtFornitore);
-                articolo.setUnitaMisura(dto.getFUnitaMisura());
-                articolo.setClasseA1(classeFornitore);
-                articolo.setCodiceIva("22");
-                articolo.setFlTrattato("S");
-                articolo.persist();
-
-                //Crea fornitore alternativo
-                FornitoreArticolo fornitoreArticolo = new FornitoreArticolo();
-                fornitoreArticolo.setTempoConsegna(0);
-                fornitoreArticolo.setCoefPrezzo(0f);
-                fornitoreArticolo.setPrezzo(0f);
-                fornitoreArticolo.setFDefault("S");
-                fornitoreArticolo.setCreateUser(user);
-                fornitoreArticolo.setUpdateUser(user);
-                FornitoreArticoloId fornitoreArticoloId = new FornitoreArticoloId(articolo.getArticolo(), 2351, fornitore.get().getDescrUser2());
-                fornitoreArticolo.setFornitoreArticoloId(fornitoreArticoloId);
-                fornitoreArticolo.setUpdateDate(new Date());
-                fornitoreArticolo.setCreateDate(new Date());
-                fornitoreArticolo.persist();
-                Log.info(FornitoreArticolo.findById(fornitoreArticoloId).toString());
+                createArticolo(articolo, codiceArticolo, user, dto, codArtFornitore, classeFornitore);
+                salvaArticolo(user, errors, fornitore, articolo);
+            } else {
+                Optional<Articolo> optArticolo =  Articolo.find("descrArtSuppl = :codArt OR descrArticolo LIKE '%:codArt%'",
+                        Parameters.with("codArt", codArtFornitore)).firstResultOptional();
+                if(optArticolo.isPresent()){
+                    Log.info("Articolo: " + dto.getFDescrArticolo() + " già presente");
+                    articolo = optArticolo.get();
+                    if(articolo.getFlTrattato() == null || "N".equals(articolo.getFlTrattato())){
+                        articolo.setFlTrattato("S");
+                        articolo.persist();
+                    }
+                } else {
+                    //Crea articolo
+                    createArticolo(articolo, codiceArticolo, user, dto, codArtFornitore, classeFornitore);
+                    salvaArticolo(user, errors, fornitore, articolo);
+                }
             }
-
             //Aggiorno ordine cliente
             OrdineDettaglio.update("fArticolo =:fArticolo, codArtFornitore =:codArtFornitore, fDescrArticolo =:fDescrArticolo " +
-                    "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo AND rigo =:rigo",
+                            "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo AND rigo =:rigo",
                     Parameters.with("fArticolo", articolo.getArticolo()).and("codArtFornitore", articolo.getDescrArtSuppl())
                             .and("fDescrArticolo", articolo.getDescrArticolo()).and("anno", dto.getAnno())
                             .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo())
@@ -422,6 +411,49 @@ public class ArticoloService {
         }
         return errors;
 
+    }
+
+    private void salvaArticolo(String user, List<String> errors, Optional<ArticoloClasseFornitore> fornitore, Articolo articolo) {
+        Optional<Articolo> optARticolo = Articolo.findByIdOptional(articolo.getArticolo());
+        if(optARticolo.isEmpty()){
+            articolo.persist();
+            //Crea fornitore alternativo
+            FornitoreArticolo fornitoreArticolo = createFornArticolo(user, articolo, fornitore.get());
+            fornitoreArticolo.persist();
+            Log.info(FornitoreArticolo.findById(fornitoreArticolo.getFornitoreArticoloId()).toString());
+        } else {
+            Log.info("Impossibile salvare. Articolo già presente" + optARticolo.get().getArticolo());
+            errors.add("Impossibile salvare. Articolo già presente " + optARticolo.get().getArticolo());
+        }
+    }
+
+    private void createArticolo(Articolo articolo, String codiceArticolo, String user, OrdineDettaglioDto dto, String codArtFornitore, String classeFornitore){
+        articolo.setArticolo(codiceArticolo);
+        articolo.setCreateDate(new Date());
+        articolo.setUpdateDate(new Date());
+        articolo.setCreateUser(user);
+        articolo.setUpdateUser(user);
+        articolo.setDescrArticolo(this.pulisciDescrizione(dto.getFDescrArticolo()));
+        articolo.setDescrArtSuppl(codArtFornitore);
+        articolo.setUnitaMisura(dto.getFUnitaMisura());
+        articolo.setClasseA1(classeFornitore);
+        articolo.setCodiceIva("22");
+        articolo.setFlTrattato("S");
+    }
+
+    private FornitoreArticolo createFornArticolo(String user, Articolo articolo, ArticoloClasseFornitore fornitore){
+        FornitoreArticolo fornitoreArticolo = new FornitoreArticolo();
+        fornitoreArticolo.setTempoConsegna(0);
+        fornitoreArticolo.setCoefPrezzo(0f);
+        fornitoreArticolo.setPrezzo(0f);
+        fornitoreArticolo.setFDefault("S");
+        fornitoreArticolo.setCreateUser(user);
+        fornitoreArticolo.setUpdateUser(user);
+        FornitoreArticoloId fornitoreArticoloId = new FornitoreArticoloId(articolo.getArticolo(), 2351, fornitore.getDescrUser2());
+        fornitoreArticolo.setFornitoreArticoloId(fornitoreArticoloId);
+        fornitoreArticolo.setUpdateDate(new Date());
+        fornitoreArticolo.setCreateDate(new Date());
+        return fornitoreArticolo;
     }
 
     private String pulisciDescrizione(String fDescrArticolo) {
@@ -443,4 +475,5 @@ public class ArticoloService {
         }
         return result;
     }
+
 }
