@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -136,6 +137,17 @@ public class OrdineResource {
             filtro.setStatus(null);
         }
         return Response.ok(ordineService.findAllByStatus(filtro)).build();
+    }
+
+    @Operation(summary = "Returns all the ordini from the database")
+    @POST
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
+    @Consumes(APPLICATION_JSON)
+    @Path("/consegne")
+    public Response getAllOrdiniByStati(FiltroOrdini filtro) throws ParseException {
+        return Response.ok(ordineService.findAllByStati(filtro)).build();
     }
 
     @Operation(summary = "Returns all the ordini from the database")

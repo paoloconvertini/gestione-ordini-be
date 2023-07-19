@@ -297,12 +297,15 @@ public class OrdineFornitoreService {
 
     @Transactional
     public void inviato(List<OrdineFornitoreDto> list) {
-        list.forEach(e ->
-        GoOrdineFornitore.update("flInviato =:flInv" +
-                        " WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo",
-                Parameters.with("anno", e.getAnno()).and("serie", e.getSerie())
-                        .and("progressivo", e.getProgressivo())
-                        .and("flInv", e.getFlInviato())));
+        int update = 0;
+        for (OrdineFornitoreDto e : list) {
+            update += GoOrdineFornitore.update("flInviato =:flInv" +
+                            " WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo",
+                    Parameters.with("anno", e.getAnno()).and("serie", e.getSerie())
+                            .and("progressivo", e.getProgressivo())
+                            .and("flInv", e.getFlInviato()));
+        }
+        Log.info("FlInvio aggionati: " + update + " ordini");
     }
 
     public List<OrdineFornitoreDto> findForReport(Integer anno, String serie, Integer progressivo) {

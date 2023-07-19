@@ -6,6 +6,7 @@ import io.quarkus.scheduler.Scheduled;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.service.ArticoloService;
 import it.calolenoci.service.FatturaService;
+import it.calolenoci.service.MailService;
 import it.calolenoci.service.OrdineService;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -26,6 +27,9 @@ public class FetchScheduler {
 
     @Inject
     ArticoloService articoloService;
+
+    @Inject
+    MailService mailService;
 
 
     @Scheduled(every = "${cron.expr:1m}")
@@ -52,6 +56,12 @@ public class FetchScheduler {
     @Transactional
     public void findNuoviOrdini() throws ParseException {
         ordineService.addNuoviOrdini();
+    }
+
+    @Scheduled(cron= "${cron.expr.invio.mail}")
+    @Transactional
+    public void invioMail() {
+        mailService.invioMailOrdini();
     }
 
 }

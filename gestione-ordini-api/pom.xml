@@ -8,7 +8,7 @@
     <artifactId>gestione-ordini</artifactId>
   </parent>
   <artifactId>gestione-ordini-api</artifactId>
-  <version>3.0.2</version>
+  <version>3.1.0</version>
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
     <maven.compiler.target>17</maven.compiler.target>
@@ -49,6 +49,14 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-jwt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-rest-client-reactive-jackson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
     </dependency>
   </dependencies>
 </project>

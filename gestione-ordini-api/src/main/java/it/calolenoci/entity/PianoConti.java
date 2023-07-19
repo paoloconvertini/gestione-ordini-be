@@ -70,4 +70,10 @@ public class PianoConti extends PanacheEntityBase {
     @Column(length = 3, name = "DCODICEPAGAMENT")
     private String codPagamento;
 
+    @Column(name="LATITUDINE")
+    private Double latitudine;
+
+    @Column(name="LONGITUDINE")
+    private Double longitudine;
+
 }

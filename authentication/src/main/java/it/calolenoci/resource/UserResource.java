@@ -126,6 +126,30 @@ public class UserResource {
         return Response.ok(result).build();
     }
 
+    @Operation(summary = "Returns all the roles from the database")
+    @GET
+    @PermitAll
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Users")
+    @Path("/getVenditori")
+    public Response getVenditori() {
+
+        List<User> list = User.listAll();
+        List<User> users = list.stream().filter(u ->
+                        u.roles.stream().anyMatch(r -> r.name.equals("Venditore"))).toList();
+        List<UserResponseDTO> result = new ArrayList<>();
+        users.forEach(u -> {
+            UserResponseDTO dto = new UserResponseDTO();
+            dto.setFullname(u.name);
+            dto.setCodVenditore(u.codVenditore);
+            if (StringUtils.isNotBlank(u.email)) {
+                dto.setEmail(u.email);
+            }
+            result.add(dto);
+        });
+        return Response.ok(result).build();
+    }
+
 
     @DELETE
     @Path("/{idUser}")

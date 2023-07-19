@@ -76,7 +76,7 @@ public class OrdineService {
         } else {
             query += " AND go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '' ";
         }
-        if(filtro.getProntoConsegna()){
+        if (filtro.getProntoConsegna()) {
             query += " AND go.hasProntoConsegna = true ";
         }
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
@@ -112,14 +112,14 @@ public class OrdineService {
         ordineList.forEach(o -> {
             if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getWarnNoBolla()) {
                 o.setStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
-                if(o.getHasProntoConsegna() != null && o.getHasProntoConsegna()){
+                if (o.getHasProntoConsegna() != null && o.getHasProntoConsegna()) {
                     o.setHasProntoConsegna(Boolean.FALSE);
                 }
                 o.persist();
             }
         });
         long fine = System.currentTimeMillis();
-        Log.info("FindNoConsegnati: " + (fine - inizio)/1000 + " sec");
+        Log.info("FindNoConsegnati: " + (fine - inizio) / 1000 + " sec");
     }
 
     @Transactional
@@ -138,7 +138,7 @@ public class OrdineService {
             }
         });
         long fine = System.currentTimeMillis();
-        Log.info("Fine checkNoProntaConegna: " + (fine - inizio)/1000 + " sec");
+        Log.info("Fine checkNoProntaConegna: " + (fine - inizio) / 1000 + " sec");
     }
 
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
@@ -191,15 +191,15 @@ public class OrdineService {
                 listToSave.add(goOrdineMapper.fromOrdineToGoOrdine(o));
                 List<OrdineDettaglio> dettaglioList = OrdineDettaglio
                         .find("anno = :anno AND serie = :serie AND progressivo = :progressivo and (tipoRigo <> 'C' AND tipoRigo <> 'AC')",
-                        Parameters.with("anno", o.getAnno()).and("serie", o.getSerie())
-                                .and("progressivo", o.getProgressivo())).list();
+                                Parameters.with("anno", o.getAnno()).and("serie", o.getSerie())
+                                        .and("progressivo", o.getProgressivo())).list();
                 dettaglioList.forEach(d -> listDettaglioToSave.add(goOrdineDettaglioMapper.fromOrdineDettaglioToGoOrdineDettaglio(d)));
 
             });
             GoOrdine.persist(listToSave);
             GoOrdineDettaglio.persist(listDettaglioToSave);
             long fine = System.currentTimeMillis();
-            Log.info("addNuoviOrdini: " + (fine - inizio)/1000 + " sec");
+            Log.info("addNuoviOrdini: " + (fine - inizio) / 1000 + " sec");
             creaReport(list);
         }
     }
@@ -216,13 +216,37 @@ public class OrdineService {
                     try {
                         service.createReport(dtoList, ordineDTO.getSottoConto(), o.getAnno(), o.getSerie(), o.getProgressivo());
                     } catch (JRException | IOException e) {
-                        Log.error("Errore nella creazione del report per l'ordine " + o.getAnno() + '/' + o.getSerie()+ '/' + o.getProgressivo(), e);
+                        Log.error("Errore nella creazione del report per l'ordine " + o.getAnno() + '/' + o.getSerie() + '/' + o.getProgressivo(), e);
                     }
                 }
             }
 
         });
         long fine = System.currentTimeMillis();
-        Log.info("Fine creaReport: " + (fine -inizio)/1000 + " sec");
+        Log.info("Fine creaReport: " + (fine - inizio) / 1000 + " sec");
+    }
+
+    public List<OrdineDTO> findAllByStati(FiltroOrdini filtro) throws ParseException {
+        checkStatusDettaglio();
+        checkConsegnati();
+        checkNoProntaConegna();
+
+        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
+                "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
+                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note " +
+                "FROM Ordine o " +
+                "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'" +
+                " AND go.status IN ('INCOMPLETO', 'COMPLETO') ";
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("dataConfig", sdf.parse(dataCongig));
+        if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
+            query += " and o.serie = :venditore";
+            map.put("venditore", filtro.getCodVenditore());
+        }
+        return Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
+
     }
 }

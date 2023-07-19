@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,6 +17,8 @@ public class FiltroOrdini implements Serializable {
     private String codVenditore;
 
     private String status;
+
+    private List<String> stati;
 
     private Boolean prontoConsegna = Boolean.FALSE;
 

@@ -88,6 +88,17 @@ public class ArticoloResource {
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Transactional
+    @Path("/getArticoli/{anno}/{serie}/{progressivo}")
+    public Response getArticoli(Integer anno, String serie, Integer progressivo) {
+        return Response.ok(articoloService.getArticoli(anno, serie, progressivo)).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @GET
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")

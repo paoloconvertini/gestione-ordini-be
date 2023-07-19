@@ -37,6 +37,10 @@ public class OrdineDTO implements Serializable {
     private  String pec;
     private String status;
 
+    private Double latitudine;
+
+    private Double longitudine;
+
     private String sottoConto;
 
     private Boolean warnNoBolla = Boolean.FALSE;
@@ -126,7 +130,7 @@ public class OrdineDTO implements Serializable {
     }
 
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
@@ -134,7 +138,7 @@ public class OrdineDTO implements Serializable {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
-        this.dataOrdine = dataOrdine;
+        this.dataConferma = dataConferma;
         this.numeroConferma = numeroConferma;
         this.intestazione = intestazione;
         this.sottoConto = sottoConto;

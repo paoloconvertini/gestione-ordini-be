@@ -2,6 +2,7 @@ package it.calolenoci.service;
 
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
+import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
@@ -476,4 +477,17 @@ public class ArticoloService {
         return result;
     }
 
+    public List<OrdineDettaglioDto> getArticoli(Integer anno, String serie, Integer progressivo) {
+        String query = "SELECT o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
+                "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  " +
+                "  o.fUnitaMisura,  " +
+                "(CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, " +
+                "god.note " +
+                "FROM OrdineDettaglio o " +
+                "LEFT JOIN GoOrdineDettaglio god ON o.anno = god.anno AND o.serie = god.serie AND o.progressivo = god.progressivo AND o.rigo = god.rigo " +
+                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
+                "AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
+        return OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
+                .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
+    }
 }
