@@ -58,4 +58,10 @@ public class Articolo extends PanacheEntityBase {
 
     @Column(name = "SYS_UPDATEUSER")
     private String updateUser;
+
+    @Column(length = 1, name = "FLLOTTO")
+    private String flagLotto;
+
+    @Column(length = 1, name = "FLSCONTI")
+    private String flagSconti;
 }

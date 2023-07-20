@@ -440,6 +440,8 @@ public class ArticoloService {
         articolo.setClasseA1(classeFornitore);
         articolo.setCodiceIva("22");
         articolo.setFlTrattato("S");
+        articolo.setFlagLotto("S");
+        articolo.setFlagSconti("S");
     }
 
     private FornitoreArticolo createFornArticolo(String user, Articolo articolo, ArticoloClasseFornitore fornitore){

@@ -8,6 +8,7 @@ import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
+import it.calolenoci.mapper.GoOrdineFornitoreMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +27,8 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class OrdineFornitoreService {
 
+    @Inject
+    GoOrdineFornitoreMapper goOrdineFornitoreMapper;
     @Inject
     RegistroAzioniMapper registroAzioniMapper;
 
@@ -223,16 +226,14 @@ public class OrdineFornitoreService {
 
     public List<OrdineFornitoreDto> findAllByStatus(String status) throws ParseException {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
-                "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate";
+                "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate, go.note";
         if (StringUtils.isBlank(status)) {
-            query +=  " , go.flInviato, go.note, go.dataInvio ";
+            query +=  " , go.flInviato, go.dataInvio ";
         }
         query +=" FROM OrdineFornitore o " +
-                "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto ";
-        if (StringUtils.isBlank(status)) {
-            query += " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = go.progressivo ";
-        }
-        query += " WHERE o.dataOrdine >= :dataConfig ";
+                "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto "
+            + " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = go.progressivo "
+            + " WHERE o.dataOrdine >= :dataConfig ";
         Map<String, Object> params = new HashMap<>();
         params.put("dataConfig", sdf.parse(dataCongig));
         if (StringUtils.isNotBlank(status)) {
@@ -297,15 +298,21 @@ public class OrdineFornitoreService {
 
     @Transactional
     public void inviato(List<OrdineFornitoreDto> list) {
-        int update = 0;
-        for (OrdineFornitoreDto e : list) {
-            update += GoOrdineFornitore.update("flInviato =:flInv" +
-                            " WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo",
-                    Parameters.with("anno", e.getAnno()).and("serie", e.getSerie())
-                            .and("progressivo", e.getProgressivo())
-                            .and("flInv", e.getFlInviato()));
+        for (OrdineFornitoreDto dto : list) {
+            Optional<GoOrdineFornitore> opt = GoOrdineFornitore.findByIdOptional(new FornitoreId(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
+            GoOrdineFornitore ordineFornitore;
+            if(opt.isEmpty()) {
+                ordineFornitore = goOrdineFornitoreMapper.creaEntity(dto.getAnno(), dto.getSerie(), dto.getProgressivo());
+                ordineFornitore.setFlInviato(dto.getFlInviato());
+                ordineFornitore.persist();
+            } else {
+                GoOrdineFornitore.update("flInviato =:flInv" +
+                                " WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo",
+                        Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
+                                .and("progressivo", dto.getProgressivo())
+                                .and("flInv", dto.getFlInviato()));
+            }
         }
-        Log.info("FlInvio aggionati: " + update + " ordini");
     }
 
     public List<OrdineFornitoreDto> findForReport(Integer anno, String serie, Integer progressivo) {
@@ -348,4 +355,18 @@ public class OrdineFornitoreService {
         return valoreTotale;
     }
 
+    public void salvaNota(OrdineFornitoreDto dto) {
+        Optional<GoOrdineFornitore> opt = GoOrdineFornitore.findByIdOptional(new FornitoreId(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
+        GoOrdineFornitore ordineFornitore;
+        if(opt.isEmpty()) {
+            ordineFornitore = goOrdineFornitoreMapper.creaEntity(dto.getAnno(), dto.getSerie(), dto.getProgressivo());
+            ordineFornitore.setNote(dto.getNote());
+            ordineFornitore.persist();
+        } else {
+            GoOrdineFornitore.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
+                Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
+                        .and("serie", dto.getSerie())
+                        .and("progressivo", dto.getProgressivo()));
+        }
+    }
 }

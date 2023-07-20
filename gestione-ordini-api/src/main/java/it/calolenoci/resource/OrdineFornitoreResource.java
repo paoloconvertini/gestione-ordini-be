@@ -188,10 +188,7 @@ public class OrdineFornitoreResource {
     @Transactional
     @Consumes(APPLICATION_JSON)
     public Response addNotes(OrdineFornitoreDto dto) {
-        GoOrdineFornitore.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
-                Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
-                        .and("serie", dto.getSerie())
-                        .and("progressivo", dto.getProgressivo()));
+        this.service.salvaNota(dto);
         return Response.ok(new ResponseDto("Nota aggiunta", false)).build();
     }
 
