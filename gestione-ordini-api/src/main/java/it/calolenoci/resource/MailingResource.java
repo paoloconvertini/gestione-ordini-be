@@ -11,13 +11,11 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.File;
 
@@ -52,6 +50,15 @@ public class MailingResource {
     static class Templates {
         public static native MailTemplate.MailTemplateInstance ordine(String venditore, Integer anno, String serie, Integer progressivo);
     }
+
+//    @GET
+//    @Produces(APPLICATION_JSON)
+//    @PermitAll
+//    @Path("/test")
+//    public Response test() {
+//        service.invioMailOrdini();
+//        return null;
+//    }
 
     @POST
     @Produces(APPLICATION_JSON)

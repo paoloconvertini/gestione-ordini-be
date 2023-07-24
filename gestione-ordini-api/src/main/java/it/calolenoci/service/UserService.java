@@ -27,6 +27,6 @@ public interface UserService {
     @Operation(summary = "Returns all venditori")
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = UserResponseDTO.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Users")
-    @Timeout(1000)
+    @Timeout(5000)
     List<UserResponseDTO> getVenditori();
 }

@@ -108,17 +108,16 @@ public class MailService {
                         "          <th>Stato Ord.</th>" +
                         "         </tr>" +
                         "        </thead>" +
-                        "        <tbody>" +
-                        "           <tr>");
+                        "        <tbody>");
                 for (OrdineDTO dto : ordini) {
-                    body.append("<td>").append(dto.getAnno()).append("/").append(dto.getSerie()).append("/").append(dto.getProgressivo()).append("</td>");
+                    body.append("<tr>").append("<td>").append(dto.getAnno()).append("/").append(dto.getSerie()).append("/").append(dto.getProgressivo()).append("</td>");
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getIntestazione()) ? dto.getIntestazione() : "").append("</td>");
                     body.append("<td>").append(sdf.format(dto.getDataConferma())).append("</td>");
-                    body.append("<td>").append(StringUtils.isNotBlank(dto.getLocalita()) ? dto.getLocalita() : "").append(StringUtils.isNotBlank(dto.getProvincia()) ? "(" + dto.getProvincia() + ")" : "").append("</td>");
-                    body.append("<td>").append(dto.getStatus()).append("</td>");
+                    body.append("<td>").append(StringUtils.isNotBlank(dto.getLocalita()) ? dto.getLocalita() : "").append(StringUtils.isNotBlank(dto.getProvincia()) ? " (" + dto.getProvincia() + ")" : "").append("</td>");
+                    body.append("<td>").append(dto.getStatus()).append("</td>").append("</tr>");
                 }
 
-                body.append("</tr></tbody></table>");
+                body.append("</tbody></table>");
                 mailer.send(Mail.withHtml(v.getEmail(), "Lista Ordini completi!", body.toString()));
             }
 
