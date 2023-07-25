@@ -482,7 +482,7 @@ public class ArticoloService {
     public List<OrdineDettaglioDto> getArticoli(Integer anno, String serie, Integer progressivo) {
         String query = "SELECT o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  " +
-                "  o.fUnitaMisura,  " +
+                "  o.fUnitaMisura,  god.flagNonDisponibile, god.flagOrdinato, god.flagRiservato" +
                 "(CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, " +
                 "god.note " +
                 "FROM OrdineDettaglio o " +
