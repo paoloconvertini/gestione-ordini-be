@@ -88,10 +88,9 @@ public class GoOrdineDettaglio extends PanacheEntityBase {
     private Double qtaProntoConsegna;
 
 
-    public static Optional<GoOrdineDettaglio> getById(Integer anno, String serie, Integer progressivo, Integer rigo) {
-        return find("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo = :rigo",
-                Parameters.with("anno", anno).and("serie", serie)
-                        .and("progressivo", progressivo).and("rigo", rigo)).singleResultOptional();
+    public static Optional<GoOrdineDettaglio> getById(Integer progrGenerale) {
+        return find("progrGenerale = :progrGenerale",
+                Parameters.with("progrGenerale", progrGenerale)).singleResultOptional();
     }
 
     public static void updateStatus(Integer anno, String serie, Integer progressivo, String stato) {

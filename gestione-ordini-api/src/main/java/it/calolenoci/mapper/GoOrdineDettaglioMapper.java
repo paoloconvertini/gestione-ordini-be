@@ -26,6 +26,7 @@ public class GoOrdineDettaglioMapper {
         go.setFlProntoConsegna(Boolean.FALSE);
         go.setFlBolla(Boolean.FALSE);
         go.setQtaDaConsegnare(o.getQuantita());
+        go.setProgrGenerale(o.getProgrGenerale());
         return go;
     }
 }

@@ -33,7 +33,7 @@ public class FatturaService {
                         " join Ordine o ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
                         " INNER JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo" +
                         " where (go.status <> 'ARCHIVIATO' AND go.status <> null AND go.status <> '') " +
-                        " AND EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o.anno = god.anno AND o.serie = god.serie AND o.progressivo = god.progressivo AND o2.rigo = god.rigo)")
+                        " AND EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o2.progrGenerale = god.progrGenerale)")
                 .project(OrdineDettaglioDto.class).list();
         Map<Integer, Double> map = new HashMap<>();
         List<Integer> integers = list.stream().map(OrdineDettaglioDto::getProgrGenerale).toList();
@@ -50,7 +50,7 @@ public class FatturaService {
             }
         });
         long fine = System.currentTimeMillis();
-        Log.info("Query getBolle: " + (fine - inizio)/1000 + " sec");
+        Log.info("Query getBolle: " + (fine - inizio) + " msec");
         return list;
         //return fatturaDtos;
     }

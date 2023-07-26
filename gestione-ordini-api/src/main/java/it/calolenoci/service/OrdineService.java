@@ -124,7 +124,7 @@ public class OrdineService {
             }
         });
         long fine = System.currentTimeMillis();
-        Log.info("FindNoConsegnati: " + (fine - inizio) / 1000 + " sec");
+        Log.info("FindNoConsegnati: " + (fine - inizio) + " msec");
     }
 
     @Transactional
@@ -143,7 +143,7 @@ public class OrdineService {
             }
         });
         long fine = System.currentTimeMillis();
-        Log.info("Fine checkNoProntaConegna: " + (fine - inizio) / 1000 + " sec");
+        Log.info("Fine checkNoProntaConegna: " + (fine - inizio) + " msec");
     }
 
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {

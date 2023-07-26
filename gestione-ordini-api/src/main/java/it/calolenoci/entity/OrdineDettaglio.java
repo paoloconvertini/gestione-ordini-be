@@ -115,7 +115,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
                 "god.qtaConsegnatoSenzaBolla, (CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, god.flBolla, " +
                 "god.note, god.qtaRiservata, god.flProntoConsegna, god.qtaProntoConsegna, o.noteOrdCli  " +
                 "FROM OrdineDettaglio o " +
-                "LEFT JOIN GoOrdineDettaglio god ON o.anno = god.anno AND o.serie = god.serie AND o.progressivo = god.progressivo AND o.rigo = god.rigo " +
+                "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
                 "LEFT JOIN FornitoreArticolo a ON a.fornitoreArticoloId.articolo = o.fArticolo " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +

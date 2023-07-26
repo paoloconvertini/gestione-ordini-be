@@ -72,8 +72,7 @@ public class ArticoloService {
     public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
         return !OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o" +
                         " WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo and tipoRigo NOT IN ('C', 'AC')" +
-                        " AND NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE god.anno = o.anno" +
-                        " AND god.serie = o.serie AND god.progressivo = o.progressivo and god.rigo = o.rigo)",
+                        " AND NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o.progrGenerale = god.progrGenerale)",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
     }
 
@@ -82,7 +81,7 @@ public class ArticoloService {
         long inizio = System.currentTimeMillis();
         AtomicReference<Integer> aggiornati = new AtomicReference<>(0);
         list.forEach(e -> {
-            Optional<GoOrdineDettaglio> optional = GoOrdineDettaglio.getById(e.getAnno(), e.getSerie(), e.getProgressivo(), e.getRigo());
+            Optional<GoOrdineDettaglio> optional = GoOrdineDettaglio.getById(e.getProgrGenerale());
             if (optional.isPresent()) {
                 GoOrdineDettaglio goOrdineDettaglio = optional.get();
                 aggiornati.updateAndGet(v -> v + GoOrdineDettaglio.update(
@@ -93,10 +92,9 @@ public class ArticoloService {
                                 " qtaRiservata = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaRiservata END, " +
                                 " qtaDaConsegnare = (:quantita - :qta), " +
                                 " flBolla = 'T' " +
-                                " WHERE anno=:anno AND serie=:serie AND progressivo =:progressivo and rigo =:rigo" +
+                                " WHERE progrGenerale = :progrGenerale" +
                                 " AND (qtaDaConsegnare IS NULL OR qtaDaConsegnare <> (:quantita - :qta))",
-                        Parameters.with("qta", e.getQtaBolla()).and("anno", e.getAnno()).and("rigo", e.getRigo())
-                                .and("serie", e.getSerie()).and("progressivo", e.getProgressivo()).and("quantita", e.getQuantita())));
+                        Parameters.with("qta", e.getQtaBolla()).and("progrGenerale", e.getProgrGenerale()).and("quantita", e.getQuantita())));
 
                 if (goOrdineDettaglio.getQtaConsegnatoSenzaBolla() == null || goOrdineDettaglio.getQtaConsegnatoSenzaBolla() == 0) {
                     GoOrdine.update("warnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
@@ -113,36 +111,31 @@ public class ArticoloService {
 
     public boolean findNoProntaConsegna(Integer anno, String serie, Integer progressivo) {
         return GoOrdineDettaglio.count("anno = :anno AND serie = :serie AND progressivo = :progressivo " +
-                        " and flProntoConsegna = true",
+                        " and flProntoConsegna = true " +
+                        " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) == 0;
     }
 
     public boolean findNoConsegnati(Integer anno, String serie, Integer progressivo) {
         return GoOrdineDettaglio.find("SELECT god FROM GoOrdineDettaglio god " +
                         " WHERE god.anno = :anno AND god.serie = :serie AND god.progressivo = :progressivo " +
-                        " and (god.flagConsegnato = false OR god.flagConsegnato IS NULL) ",
+                        " and (god.flagConsegnato = false OR god.flagConsegnato IS NULL) " +
+                        " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
     }
 
     public void checkNoBolle() {
         long inizio = System.currentTimeMillis();
-        List<OrdineDettaglioDto> list = GoOrdineDettaglio.find("select god.anno, god.serie, god.progressivo, god.rigo  FROM GoOrdineDettaglio god " +
-                        "INNER JOIN OrdineDettaglio o ON o.anno = god.anno AND o.serie = god.serie AND " +
-                        "o.progressivo = god.progressivo AND o.rigo = god.rigo " +
-                        "WHERE NOT EXISTS (SELECT 1 FROM FattureDettaglio f2 WHERE f2.progrOrdCli = o.progrGenerale) " +
-                        "AND god.flBolla = 'T' ")
-                .project(OrdineDettaglioDto.class).list();
-        if (!list.isEmpty()) {
-            list.forEach(a -> GoOrdineDettaglio.update("flagConsegnato = 'F', qtaDaConsegnare = null," +
-                            " flBolla = 'F' WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo " +
-                            " and rigo =:rigo"
-                    , Parameters.with("anno", a.getAnno())
-                            .and("serie", a.getSerie())
-                            .and("progressivo", a.getProgressivo())
-                            .and("rigo", a.getRigo())));
-        }
+        GoOrdineDettaglio.update("flagConsegnato = 'F', qtaDaConsegnare = null," +
+                            " flBolla = 'F' WHERE progrGenerale IN (" +
+                            "select god.progrGenerale " +
+                            "FROM GoOrdineDettaglio god " +
+                            "WHERE NOT EXISTS (SELECT 1 FROM FattureDettaglio f2 WHERE f2.progrOrdCli = god.progrGenerale) " +
+                            "AND god.flBolla = 'T' " +
+                            "AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = god.progrGenerale))"
+            );
         long fine = System.currentTimeMillis();
-        Log.info("CheckNoBolle: " + (fine - inizio)/1000 + " sec");
+        Log.info("CheckNoBolle: " + (fine - inizio) + " msec");
     }
 
     @Transactional
@@ -164,7 +157,7 @@ public class ArticoloService {
                 }
                 GoOrdineDettaglio goOrdineDettaglio = new GoOrdineDettaglio();
                 OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
-                Optional<GoOrdineDettaglio> goOrdineDettaglioOptional = GoOrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
+                Optional<GoOrdineDettaglio> goOrdineDettaglioOptional = GoOrdineDettaglio.getById(dto.getProgrGenerale());
                 if (goOrdineDettaglioOptional.isPresent()) {
                     goOrdineDettaglio = goOrdineDettaglioOptional.get();
                 } else {
@@ -172,6 +165,7 @@ public class ArticoloService {
                     goOrdineDettaglio.setSerie(dto.getSerie());
                     goOrdineDettaglio.setProgressivo(dto.getProgressivo());
                     goOrdineDettaglio.setRigo(dto.getRigo());
+                    goOrdineDettaglio.setProgrGenerale(dto.getProgrGenerale());
                 }
                 if (!Objects.equals(ordineDettaglio.getFDescrArticolo(), dto.getFDescrArticolo())) {
                     ordineDettaglio.setFDescrArticolo(dto.getFDescrArticolo());
@@ -265,14 +259,16 @@ public class ArticoloService {
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
             if (GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
-                    " and flagNonDisponibile = 'T'", Parameters.with("anno", anno)
+                    " and flagNonDisponibile = 'T'" +
+                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)) > 0) {
                 sendMail(anno, serie, progressivo, email);
                 ordine.setStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             } else if(GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
-                    " and flagOrdinato = 'T'", Parameters.with("anno", anno)
+                    " and flagOrdinato = 'T' " +
+                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)) > 0) {
                 ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
@@ -284,7 +280,8 @@ public class ArticoloService {
         if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(result)) {
             if (GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
-                    " and flagNonDisponibile = 'T'", Parameters.with("anno", anno)
+                    " and flagNonDisponibile = 'T' " +
+                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)) == 0) {
                 ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
@@ -294,7 +291,8 @@ public class ArticoloService {
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
             if(GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
-                    " and (flagOrdinato = 'T' AND (flagRiservato = 'F' OR flagRiservato is null) )", Parameters.with("anno", anno)
+                    " and (flagOrdinato = 'T' AND (flagRiservato = 'F' OR flagRiservato is null) ) " +
+                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)) == 0) {
                 sendMail(anno, serie, progressivo, email);
@@ -486,7 +484,7 @@ public class ArticoloService {
                 "(CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, " +
                 "god.note " +
                 "FROM OrdineDettaglio o " +
-                "LEFT JOIN GoOrdineDettaglio god ON o.anno = god.anno AND o.serie = god.serie AND o.progressivo = god.progressivo AND o.rigo = god.rigo " +
+                "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
                 "AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
         return OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
