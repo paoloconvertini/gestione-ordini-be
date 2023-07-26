@@ -179,6 +179,13 @@ public class OrdineResource {
     @Path("/aggiornaListaOrdini")
     public Response aggiornaListaOrdini() throws ParseException {
         scheduler.findNuoviOrdini();
+        return Response.ok(ordineService.findAllByStatus(new FiltroOrdini())).build();
+    }
+
+    @GET
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @Path("/aggiornaBolle")
+    public Response aggiornaBolle() throws ParseException {
         scheduler.update();
         return Response.ok(ordineService.findAllByStatus(new FiltroOrdini())).build();
     }
