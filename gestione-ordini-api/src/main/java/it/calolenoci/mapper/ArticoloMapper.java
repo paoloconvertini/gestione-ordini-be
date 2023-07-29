@@ -12,12 +12,32 @@ import javax.enterprise.context.ApplicationScoped;
 public class ArticoloMapper {
 
     public void fromDtoToEntity (GoOrdineDettaglio o, OrdineDettaglioDto dto) {
-        o.setFlagNonDisponibile(dto.getFlagNonDisponibile());
-        o.setFlagOrdinato(dto.getFlagOrdinato());
-        o.setFlagRiservato(dto.getFlagRiservato());
-        o.setFlagConsegnato(dto.getFlagConsegnato());
+        if(dto.getFlagNonDisponibile() == null) {
+            dto.setFlagNonDisponibile(Boolean.FALSE);
+        } else {
+            o.setFlagNonDisponibile(dto.getFlagNonDisponibile());
+        }
+        if(dto.getFlagOrdinato() == null) {
+            dto.setFlagOrdinato(Boolean.FALSE);
+        } else {
+            o.setFlagOrdinato(dto.getFlagOrdinato());
+        }
+        if(dto.getFlagRiservato() == null) {
+            dto.setFlagRiservato(Boolean.FALSE);
+        } else {
+            o.setFlagRiservato(dto.getFlagRiservato());
+        }
+        if(dto.getFlagConsegnato() == null) {
+            dto.setFlagConsegnato(Boolean.FALSE);
+        } else {
+            o.setFlagConsegnato(dto.getFlagConsegnato());
+        }
+        if(dto.getFlProntoConsegna() == null) {
+            dto.setFlProntoConsegna(Boolean.FALSE);
+        } else {
+            o.setFlProntoConsegna(dto.getFlProntoConsegna());
+        }
         o.setQtaDaConsegnare(dto.getQtaDaConsegnare());
-        o.setFlProntoConsegna(dto.getFlProntoConsegna());
         if(dto.getQtaConsegnatoSenzaBolla() != null) {
             o.setQtaConsegnatoSenzaBolla(dto.getQtaConsegnatoSenzaBolla());
         }
