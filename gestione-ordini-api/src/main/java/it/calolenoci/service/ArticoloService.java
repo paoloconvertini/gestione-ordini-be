@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import com.microsoft.sqlserver.jdbc.SQLServerException;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
@@ -160,12 +161,14 @@ public class ArticoloService {
                 Optional<GoOrdineDettaglio> goOrdineDettaglioOptional = GoOrdineDettaglio.getById(dto.getProgrGenerale());
                 if (goOrdineDettaglioOptional.isPresent()) {
                     goOrdineDettaglio = goOrdineDettaglioOptional.get();
+                    Log.info("GO_ORDINE_DETTAGLIO trovato con progrGenerale: " + dto.getProgrGenerale());
                 } else {
                     goOrdineDettaglio.setAnno(dto.getAnno());
                     goOrdineDettaglio.setSerie(dto.getSerie());
                     goOrdineDettaglio.setProgressivo(dto.getProgressivo());
                     goOrdineDettaglio.setRigo(dto.getRigo());
                     goOrdineDettaglio.setProgrGenerale(dto.getProgrGenerale());
+                    Log.info("GO_ORDINE_DETTAGLIO non trovato con progrGenerale: " + dto.getProgrGenerale());
                 }
                 if (!Objects.equals(ordineDettaglio.getFDescrArticolo(), dto.getFDescrArticolo())) {
                     ordineDettaglio.setFDescrArticolo(dto.getFDescrArticolo());
@@ -238,7 +241,13 @@ public class ArticoloService {
         if (!ordineDettaglioList.isEmpty()) {
             OrdineDettaglio.persist(ordineDettaglioList);
         }
-        GoOrdineDettaglio.persist(goOrdineDettaglioList);
+        try {
+            GoOrdineDettaglio.persist(goOrdineDettaglioList);
+        } catch (Exception e) {
+            Log.error(e.getMessage());
+            return null;
+        }
+
         RegistroAzioni.persist(registroAzioniList);
         if (chiudi) {
             GoOrdine.update("locked = 'F', userLock = null where anno =:anno and serie =:serie and progressivo = :progressivo",
