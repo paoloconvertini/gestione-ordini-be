@@ -51,8 +51,14 @@ public class OAFArticoloService {
     public void approva(Integer anno, String serie, Integer progressivo) {
         OrdineFornitore.update("provvisorio = '' where anno = :anno AND serie = :serie AND progressivo = :progressivo",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
-        GoOrdineFornitore goOrdineFornitore = goOrdineFornitoreMapper.creaEntity(anno, serie, progressivo);
-        goOrdineFornitore.persist();
+        Optional<GoOrdineFornitore> opt = GoOrdineFornitore.findByIdOptional(new FornitoreId(anno, serie, progressivo));
+        if(opt.isPresent()){
+            opt.get().setFlInviato(Boolean.FALSE);
+        } else {
+            GoOrdineFornitore goOrdineFornitore = goOrdineFornitoreMapper.creaEntity(anno, serie, progressivo);
+            goOrdineFornitore.persist();
+        }
+
     }
 
     @Transactional
