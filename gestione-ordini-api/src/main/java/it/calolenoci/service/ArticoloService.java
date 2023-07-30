@@ -161,19 +161,15 @@ public class ArticoloService {
                 if (goOrdineDettaglioOptional.isPresent()) {
                     goOrdineDettaglio = goOrdineDettaglioOptional.get();
                     Log.info("GO_ORDINE_DETTAGLIO trovato con progrGenerale: " + dto.getProgrGenerale());
-                    if(StringUtils.isBlank(goOrdineDettaglio.getStatus())) {
-                        Log.info("Stato vuoto per : " + dto.getProgrGenerale() + ". Si tratta di un nuovo rigo. Elimino e salvo come nuovo");
-                        GoOrdineDettaglio.delete("anno =:anno AND serie =:serie AND " +
-                                "progressivo =:progressivo AND rigo=:rigo",
-                                Parameters.with("anno", dto.getAnno()).and( "serie", dto.getSerie())
-                                        .and("progressivo", dto.getProgressivo())
-                                        .and("rigo", dto.getRigo()));
-                        GoOrdineDettaglio.flush();
-                        goOrdineDettaglio = createGoOrdineDettaglio(dto);
-                    }
                 } else {
                     Log.info("GO_ORDINE_DETTAGLIO non trovato con progrGenerale: " + dto.getProgrGenerale());
-                    goOrdineDettaglio = createGoOrdineDettaglio(dto);
+                    goOrdineDettaglio = new GoOrdineDettaglio();
+                    goOrdineDettaglio.setAnno(dto.getAnno());
+                    goOrdineDettaglio.setSerie(dto.getSerie());
+                    goOrdineDettaglio.setProgressivo(dto.getProgressivo());
+                    goOrdineDettaglio.setRigo(dto.getRigo());
+                    goOrdineDettaglio.setProgrGenerale(dto.getProgrGenerale());
+                    goOrdineDettaglio.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
                 }
                 if (!Objects.equals(ordineDettaglio.getFDescrArticolo(), dto.getFDescrArticolo())) {
                     ordineDettaglio.setFDescrArticolo(dto.getFDescrArticolo());
@@ -263,18 +259,6 @@ public class ArticoloService {
             return stato;
         }
         return null;
-    }
-
-    private GoOrdineDettaglio createGoOrdineDettaglio(OrdineDettaglioDto dto) {
-        GoOrdineDettaglio goOrdineDettaglio;
-        goOrdineDettaglio = new GoOrdineDettaglio();
-        goOrdineDettaglio.setAnno(dto.getAnno());
-        goOrdineDettaglio.setSerie(dto.getSerie());
-        goOrdineDettaglio.setProgressivo(dto.getProgressivo());
-        goOrdineDettaglio.setRigo(dto.getRigo());
-        goOrdineDettaglio.setProgrGenerale(dto.getProgrGenerale());
-        goOrdineDettaglio.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-        return goOrdineDettaglio;
     }
 
     private String chiudi(Integer anno, String serie, Integer progressivo, String email) {
