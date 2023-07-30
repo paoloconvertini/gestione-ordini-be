@@ -166,6 +166,7 @@ public class ArticoloService {
                     goOrdineDettaglio = goOrdineDettaglioOptional.get();
                     Log.info("GO_ORDINE_DETTAGLIO trovato con progrGenerale: " + dto.getProgrGenerale());
                     if(StringUtils.isBlank(goOrdineDettaglio.getStatus())) {
+                        Log.info("Stato vuoto per : " + dto.getProgrGenerale() + ". Si tratta di un nuovo rigo. Elimino e salvo come nuovo");
                         GoOrdineDettaglio.deleteById(dto.getProgrGenerale());
                         goOrdineDettaglio = createGoOrdineDettaglio(dto);
                     }
