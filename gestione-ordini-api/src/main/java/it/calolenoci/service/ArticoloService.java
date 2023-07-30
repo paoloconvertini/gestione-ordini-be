@@ -12,6 +12,7 @@ import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jetbrains.annotations.NotNull;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -149,8 +150,10 @@ public class ArticoloService {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
         List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();
+        List<GoOrdineDettaglio> goOrdineDettaglioListToPersist = new ArrayList<>();
         AtomicBoolean warnNoBolla = new AtomicBoolean(false);
         AtomicBoolean hasProntoConsegna = new AtomicBoolean(false);
+        AtomicBoolean isToPersist = new AtomicBoolean(false);
         list.forEach(dto -> {
             if (!"C".equals(dto.getTipoRigo()) && !"AC".equals(dto.getTipoRigo())) {
                 if (!hasProntoConsegna.get() && dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna()) {
@@ -161,19 +164,15 @@ public class ArticoloService {
                 Optional<GoOrdineDettaglio> goOrdineDettaglioOptional = GoOrdineDettaglio.getById(dto.getProgrGenerale());
                 if (goOrdineDettaglioOptional.isPresent()) {
                     goOrdineDettaglio = goOrdineDettaglioOptional.get();
-                    if(StringUtils.isBlank(goOrdineDettaglio.getStatus())) {
-                        goOrdineDettaglio.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-                    }
                     Log.info("GO_ORDINE_DETTAGLIO trovato con progrGenerale: " + dto.getProgrGenerale());
+                    if(StringUtils.isBlank(goOrdineDettaglio.getStatus())) {
+                        GoOrdineDettaglio.deleteById(dto.getProgrGenerale());
+                        goOrdineDettaglio = createGoOrdineDettaglio(dto);
+                    }
                 } else {
-                    goOrdineDettaglio = new GoOrdineDettaglio();
-                    goOrdineDettaglio.setAnno(dto.getAnno());
-                    goOrdineDettaglio.setSerie(dto.getSerie());
-                    goOrdineDettaglio.setProgressivo(dto.getProgressivo());
-                    goOrdineDettaglio.setRigo(dto.getRigo());
-                    goOrdineDettaglio.setProgrGenerale(dto.getProgrGenerale());
-                    goOrdineDettaglio.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
                     Log.info("GO_ORDINE_DETTAGLIO non trovato con progrGenerale: " + dto.getProgrGenerale());
+                    goOrdineDettaglio = createGoOrdineDettaglio(dto);
+                    isToPersist.getAndSet(Boolean.TRUE);
                 }
                 if (!Objects.equals(ordineDettaglio.getFDescrArticolo(), dto.getFDescrArticolo())) {
                     ordineDettaglio.setFDescrArticolo(dto.getFDescrArticolo());
@@ -233,7 +232,13 @@ public class ArticoloService {
                 }
 
                 mapper.fromDtoToEntity(goOrdineDettaglio, dto);
-                goOrdineDettaglioList.add(goOrdineDettaglio);
+
+                if(isToPersist.get()){
+                   goOrdineDettaglioListToPersist.add(goOrdineDettaglio);
+                } else {
+                    goOrdineDettaglioList.add(goOrdineDettaglio);
+                }
+
             }
         });
         OrdineDettaglioDto dto = list.get(0);
@@ -247,11 +252,12 @@ public class ArticoloService {
             OrdineDettaglio.persist(ordineDettaglioList);
         }
         try {
-            GoOrdineDettaglio.persist(goOrdineDettaglioList);
+            GoOrdineDettaglio.persist(goOrdineDettaglioListToPersist);
         } catch (Exception e) {
             Log.error(e.getMessage());
             return null;
         }
+
 
         RegistroAzioni.persist(registroAzioniList);
         if (chiudi) {
@@ -264,6 +270,19 @@ public class ArticoloService {
             return stato;
         }
         return null;
+    }
+
+    @NotNull
+    private GoOrdineDettaglio createGoOrdineDettaglio(OrdineDettaglioDto dto) {
+        GoOrdineDettaglio goOrdineDettaglio;
+        goOrdineDettaglio = new GoOrdineDettaglio();
+        goOrdineDettaglio.setAnno(dto.getAnno());
+        goOrdineDettaglio.setSerie(dto.getSerie());
+        goOrdineDettaglio.setProgressivo(dto.getProgressivo());
+        goOrdineDettaglio.setRigo(dto.getRigo());
+        goOrdineDettaglio.setProgrGenerale(dto.getProgrGenerale());
+        goOrdineDettaglio.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+        return goOrdineDettaglio;
     }
 
     private String chiudi(Integer anno, String serie, Integer progressivo, String email) {
