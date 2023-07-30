@@ -150,10 +150,8 @@ public class ArticoloService {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
         List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();
-        List<GoOrdineDettaglio> goOrdineDettaglioListToPersist = new ArrayList<>();
         AtomicBoolean warnNoBolla = new AtomicBoolean(false);
         AtomicBoolean hasProntoConsegna = new AtomicBoolean(false);
-        AtomicBoolean isToPersist = new AtomicBoolean(false);
         list.forEach(dto -> {
             if (!"C".equals(dto.getTipoRigo()) && !"AC".equals(dto.getTipoRigo())) {
                 if (!hasProntoConsegna.get() && dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna()) {
@@ -173,15 +171,12 @@ public class ArticoloService {
                 } else {
                     Log.info("GO_ORDINE_DETTAGLIO non trovato con progrGenerale: " + dto.getProgrGenerale());
                     goOrdineDettaglio = createGoOrdineDettaglio(dto);
-                    isToPersist.getAndSet(Boolean.TRUE);
                 }
                 if (!Objects.equals(ordineDettaglio.getFDescrArticolo(), dto.getFDescrArticolo())) {
                     ordineDettaglio.setFDescrArticolo(dto.getFDescrArticolo());
-                    ordineDettaglioList.add(ordineDettaglio);
                 }
                 if (!Objects.equals(ordineDettaglio.getCodArtFornitore(), dto.getCodArtFornitore())) {
                     ordineDettaglio.setCodArtFornitore(dto.getCodArtFornitore());
-                    ordineDettaglioList.add(ordineDettaglio);
                 }
                 if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
@@ -189,14 +184,12 @@ public class ArticoloService {
                             dto.getRigo(), null, dto.getQuantita(), null, null));
                     ordineDettaglio.setQuantita(dto.getQuantita());
                     ordineDettaglio.setQuantitaV(dto.getQuantita());
-                    ordineDettaglioList.add(ordineDettaglio);
                 }
                 if (!Objects.equals(ordineDettaglio.getTono(), dto.getTono())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                             dto.getProgressivo(), user, AzioneEnum.TONO.getDesczrizione(),
                             dto.getRigo(), dto.getTono(), null, null, null));
                     ordineDettaglio.setTono(dto.getTono());
-                    ordineDettaglioList.add(ordineDettaglio);
                 }
                 if (!Objects.equals(dto.getFlagRiservato(), goOrdineDettaglio.getFlagRiservato())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
@@ -233,12 +226,8 @@ public class ArticoloService {
                 }
 
                 mapper.fromDtoToEntity(goOrdineDettaglio, dto);
-
-                if(isToPersist.get()){
-                   goOrdineDettaglioListToPersist.add(goOrdineDettaglio);
-                } else {
-                    goOrdineDettaglioList.add(goOrdineDettaglio);
-                }
+                goOrdineDettaglioList.add(goOrdineDettaglio);
+                ordineDettaglioList.add(ordineDettaglio);
 
             }
         });
@@ -253,7 +242,7 @@ public class ArticoloService {
             OrdineDettaglio.persist(ordineDettaglioList);
         }
         try {
-            GoOrdineDettaglio.persist(goOrdineDettaglioListToPersist);
+            GoOrdineDettaglio.persist(goOrdineDettaglioList);
         } catch (Exception e) {
             Log.error(e.getMessage());
             return null;
