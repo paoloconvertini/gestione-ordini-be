@@ -1,6 +1,5 @@
 package it.calolenoci.service;
 
-import com.microsoft.sqlserver.jdbc.SQLServerException;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
@@ -12,7 +11,6 @@ import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jetbrains.annotations.NotNull;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -165,7 +163,11 @@ public class ArticoloService {
                     Log.info("GO_ORDINE_DETTAGLIO trovato con progrGenerale: " + dto.getProgrGenerale());
                     if(StringUtils.isBlank(goOrdineDettaglio.getStatus())) {
                         Log.info("Stato vuoto per : " + dto.getProgrGenerale() + ". Si tratta di un nuovo rigo. Elimino e salvo come nuovo");
-                        GoOrdineDettaglio.deleteById(dto.getProgrGenerale());
+                        GoOrdineDettaglio.delete("anno =:anno AND serie =:serie AND " +
+                                "progressivo =:progressivo AND rigo=:rigo",
+                                Parameters.with("anno", dto.getAnno()).and( "serie", dto.getSerie())
+                                        .and("progressivo", dto.getProgressivo())
+                                        .and("rigo", dto.getRigo()));
                         goOrdineDettaglio = createGoOrdineDettaglio(dto);
                     }
                 } else {
@@ -262,7 +264,6 @@ public class ArticoloService {
         return null;
     }
 
-    @NotNull
     private GoOrdineDettaglio createGoOrdineDettaglio(OrdineDettaglioDto dto) {
         GoOrdineDettaglio goOrdineDettaglio;
         goOrdineDettaglio = new GoOrdineDettaglio();

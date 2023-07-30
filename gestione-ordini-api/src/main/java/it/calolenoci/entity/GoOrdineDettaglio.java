@@ -20,26 +20,22 @@ import java.util.Optional;
 @Table(name = "GO_ORDINE_DETTAGLIO")
 @Getter
 @Setter
-@IdClass(OrdineDettaglioId.class)
 public class GoOrdineDettaglio extends PanacheEntityBase {
 
     @Column(length = 4)
-    @Id
     private Integer anno;
 
     @Column(length = 3)
-    @Id
     private String serie;
 
     @Column
-    @Id
     private Integer progressivo;
 
+    @Id
     @Column(name="PROGRGENERALE")
     private Integer progrGenerale;
 
     @Column
-    @Id
     private Integer rigo;
 
     @Column(name = "QUANTITA_DA_CONSEGNARE")
