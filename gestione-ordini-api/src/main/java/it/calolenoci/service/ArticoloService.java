@@ -168,6 +168,7 @@ public class ArticoloService {
                                 Parameters.with("anno", dto.getAnno()).and( "serie", dto.getSerie())
                                         .and("progressivo", dto.getProgressivo())
                                         .and("rigo", dto.getRigo()));
+                        GoOrdineDettaglio.flush();
                         goOrdineDettaglio = createGoOrdineDettaglio(dto);
                     }
                 } else {
