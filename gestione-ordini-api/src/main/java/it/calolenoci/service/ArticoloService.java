@@ -156,18 +156,23 @@ public class ArticoloService {
                 if (!hasProntoConsegna.get() && dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna()) {
                     hasProntoConsegna.getAndSet(Boolean.TRUE);
                 }
-                GoOrdineDettaglio goOrdineDettaglio = new GoOrdineDettaglio();
+                GoOrdineDettaglio goOrdineDettaglio;
                 OrdineDettaglio ordineDettaglio = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
                 Optional<GoOrdineDettaglio> goOrdineDettaglioOptional = GoOrdineDettaglio.getById(dto.getProgrGenerale());
                 if (goOrdineDettaglioOptional.isPresent()) {
                     goOrdineDettaglio = goOrdineDettaglioOptional.get();
+                    if(StringUtils.isBlank(goOrdineDettaglio.getStatus())) {
+                        goOrdineDettaglio.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+                    }
                     Log.info("GO_ORDINE_DETTAGLIO trovato con progrGenerale: " + dto.getProgrGenerale());
                 } else {
+                    goOrdineDettaglio = new GoOrdineDettaglio();
                     goOrdineDettaglio.setAnno(dto.getAnno());
                     goOrdineDettaglio.setSerie(dto.getSerie());
                     goOrdineDettaglio.setProgressivo(dto.getProgressivo());
                     goOrdineDettaglio.setRigo(dto.getRigo());
                     goOrdineDettaglio.setProgrGenerale(dto.getProgrGenerale());
+                    goOrdineDettaglio.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
                     Log.info("GO_ORDINE_DETTAGLIO non trovato con progrGenerale: " + dto.getProgrGenerale());
                 }
                 if (!Objects.equals(ordineDettaglio.getFDescrArticolo(), dto.getFDescrArticolo())) {
