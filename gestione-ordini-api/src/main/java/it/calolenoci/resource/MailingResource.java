@@ -5,6 +5,7 @@ import io.quarkus.qute.CheckedTemplate;
 import it.calolenoci.dto.EmailDto;
 import it.calolenoci.dto.InlineAttachment;
 import it.calolenoci.dto.MailAttachment;
+import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.MailService;
 import it.calolenoci.service.PianoContiService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -18,6 +19,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
 
 import static it.calolenoci.enums.Ruolo.ADMIN;
 import static it.calolenoci.enums.Ruolo.VENDITORE;
@@ -44,6 +47,9 @@ public class MailingResource {
     @Inject
     PianoContiService pianoContiService;
 
+    @Inject
+    FetchScheduler scheduler;
+
 
 
     @CheckedTemplate
@@ -51,19 +57,19 @@ public class MailingResource {
         public static native MailTemplate.MailTemplateInstance ordine(String venditore, Integer anno, String serie, Integer progressivo);
     }
 
-//    @GET
-//    @Produces(APPLICATION_JSON)
-//    @PermitAll
-//    @Path("/test")
-//    public Response test() {
-//        service.invioMailOrdini();
-//        return null;
-//    }
+    @GET
+    @Produces(APPLICATION_JSON)
+    @PermitAll
+    @Path("/test")
+    public Response test() throws IOException, ParseException, InterruptedException, org.jose4j.json.internal.json_simple.parser.ParseException {
+        scheduler.geoLocation();
+        return null;
+    }
 
     @POST
     @Produces(APPLICATION_JSON)
     @RolesAllowed({ADMIN, VENDITORE})
-    @Path("/confermato")
+    @Path("/confermatox")
     public Response send(EmailDto dto) {
         File f = new File(pathReport + "/" + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getSottoConto() + "_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
         MailAttachment attachment = new MailAttachment(f.getName(), f, "application/pdf");

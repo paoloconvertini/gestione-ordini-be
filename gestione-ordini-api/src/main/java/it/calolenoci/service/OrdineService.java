@@ -91,6 +91,21 @@ public class OrdineService {
         return list;
     }
 
+    public List<PianoContiDto> findClienti() throws ParseException {
+        String query = " SELECT p.gruppoConto, p.sottoConto, p.intestazione, p.indirizzo, p.localita, p.cap, " +
+                "p.provincia, p.latitudine, p.longitudine " +
+                "FROM Ordine o " +
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
+                "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' " +
+                "AND p.latitudine = 0 AND p.provincia <> 'EE'";
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("dataConfig", sdf.parse(dataCongig));
+
+        return Ordine.find(query, map).project(PianoContiDto.class).list();
+    }
+
+
     @Transactional
     public void checkStatusDettaglio() {
         List<String> list = new ArrayList<>();
@@ -237,7 +252,7 @@ public class OrdineService {
         checkNoProntaConegna();
 
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
-                "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
+                "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine, " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
                 "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note " +
                 "FROM Ordine o " +
