@@ -272,7 +272,7 @@ public class ArticoloService {
                     " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)) > 0) {
-                sendMail(anno, serie, progressivo, email);
+                //sendMail(anno, serie, progressivo, email);
                 ordine.setStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             } else if(GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
@@ -304,7 +304,7 @@ public class ArticoloService {
                     " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)) == 0) {
-                sendMail(anno, serie, progressivo, email);
+               // sendMail(anno, serie, progressivo, email);
                 ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
             }
 
