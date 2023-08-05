@@ -65,7 +65,7 @@ public class OrdineService {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
-                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' ";
@@ -254,13 +254,20 @@ public class OrdineService {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine, " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
-                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'" +
                 " AND go.status IN ('INCOMPLETO', 'COMPLETO') ";
 
         Map<String, Object> map = new HashMap<>();
+        if (StringUtils.isNotBlank(filtro.getStatus())) {
+            query += " AND go.status = :status ";
+            map.put("status", filtro.getStatus());
+        } else {
+            query += " AND go.status IN ('INCOMPLETO', 'COMPLETO')";
+        }
+
         map.put("dataConfig", sdf.parse(dataCongig));
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";

@@ -491,9 +491,12 @@ public class ArticoloService {
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  " +
                 "  o.fUnitaMisura,  god.flagNonDisponibile, god.flagOrdinato, god.flagRiservato, " +
                 "(CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, " +
-                "god.note " +
+                "god.note, " +
+                "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF " +
                 "FROM OrdineDettaglio o " +
                 "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
+                "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
+                "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
                 "AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
         return OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)

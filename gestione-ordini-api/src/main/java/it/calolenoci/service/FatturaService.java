@@ -7,13 +7,12 @@ import it.calolenoci.dto.FatturaDto;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.entity.FattureDettaglio;
 import it.calolenoci.entity.OrdineDettaglio;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -24,7 +23,7 @@ public class FatturaService {
     @Inject
     EntityManager em;
 
-    public List<OrdineDettaglioDto> getBolle()  {
+    public List<OrdineDettaglioDto> getBolle() {
         long inizio = System.currentTimeMillis();
         List<OrdineDettaglioDto> list = OrdineDettaglio.find("select o2.anno,o2.serie,o2.progressivo," +
                         " o2.progrGenerale, o2.rigo, " +
@@ -43,9 +42,9 @@ public class FatturaService {
                                 "WHERE f.progrOrdCli in (:list) GROUP BY f.progrOrdCli",
                         Parameters.with("list", integers))
                 .project(FatturaDto.class).list();
-               fatturaDtos.forEach(fatturaDto -> map.put(fatturaDto.getProgrOrdCli(), fatturaDto.getQta()));
-                  list.forEach(o -> {
-            if(map.containsKey(o.getProgrGenerale())){
+        fatturaDtos.forEach(fatturaDto -> map.put(fatturaDto.getProgrOrdCli(), fatturaDto.getQta()));
+        list.forEach(o -> {
+            if (map.containsKey(o.getProgrGenerale())) {
                 o.setQtaBolla(map.get(o.getProgrGenerale()));
             }
         });
@@ -55,7 +54,7 @@ public class FatturaService {
         //return fatturaDtos;
     }
 
-    public List<FatturaDto> getBolle(Integer progrCliente){
+    public List<FatturaDto> getBolle(Integer progrCliente) {
         return FattureDettaglio
                 .find("Select f.numeroBolla, f.dataBolla, f2.quantita as qta FROM FattureDettaglio f2 " +
                         "INNER JOIN Fatture f ON f.anno = f2.anno and f.serie = f2.serie and f.progressivo = f2.progressivo " +
@@ -65,6 +64,94 @@ public class FatturaService {
     }
 
     public List<AccontoDto> getAcconti(String sottoConto) {
-        return em.createNamedQuery("AccontoDto").setParameter("sottoConto", sottoConto).getResultList();
+        List<AccontoDto> resultList = new ArrayList<>();
+        List<AccontoDto> listaAcconto = em.createNamedQuery("AccontoDto").setParameter("sottoConto", sottoConto).getResultList();
+        List<AccontoDto> listaStorno = em.createNamedQuery("StornoDto").setParameter("sottoConto", sottoConto).getResultList();
+
+        if (listaAcconto.isEmpty() && listaStorno.isEmpty()) {
+            Log.info("Entrambe le liste sono vuote");
+            return resultList;
+        }
+        if (listaAcconto.isEmpty()) {
+            Log.info("La lista acconti è vuota");
+            return listaStorno;
+        } else {
+            Map<String, List<AccontoDto>> mapByNumFatt = listaAcconto.stream().collect(Collectors.groupingBy(AccontoDto::getNumeroFattura));
+            Log.info("Lista acconti size: " + mapByNumFatt.size());
+            for (String numFatt : mapByNumFatt.keySet()) {
+                int rowACC = 0;
+                //ciclo sulle righe della singola fattura
+                List<AccontoDto> righeFattura = mapByNumFatt.get(numFatt);
+                if (righeFattura.isEmpty()) {
+                    continue;
+                }
+                long acc = righeFattura.stream().filter(a -> StringUtils.equals("*ACC", a.getFArticolo())).count();
+                long ord = righeFattura.stream().filter(a -> StringUtils.containsIgnoreCase(a.getOperazione(), "ord")).count();
+                // situazione con acconti e ordine cliente uguale
+                if ((acc == ord)) {
+                    Log.info("situazione con acconti e ordine cliente uguale per fattura " + numFatt);
+                    for (int i = 0; i < righeFattura.size(); i++) {
+                        AccontoDto rigaFattura = righeFattura.get(i);
+                        if (StringUtils.equals("*ACC", rigaFattura.getFArticolo())) {
+                            rowACC = i;
+                            continue;
+                        }
+                        if (i == rowACC + 2) {
+                            List<String> rifCliList = new ArrayList<>();
+                            rifCliList.add(rigaFattura.getOperazione());
+                            righeFattura.get(rowACC).setRifOrdClienteList(rifCliList);
+                        }
+                    }
+                    // situazione con 2 acconti e unico ordine cliente
+                } else if (acc > 1 && ord == 1) {
+                    List<Integer> rowACCs = new ArrayList<>();
+                    List<String> rifCliList = new ArrayList<>();
+                    Log.info("situazione con 2 acconti e unico ordine cliente per fattura " + numFatt);
+                    for (int i = 0; i < righeFattura.size(); i++) {
+                        AccontoDto rigaFattura = righeFattura.get(i);
+                        if (StringUtils.equals("*ACC", rigaFattura.getFArticolo())) {
+                            rowACCs.add(i);
+                            continue;
+                        }
+                        if (StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), "ord")) {
+                            rifCliList.add(rigaFattura.getOperazione());
+                        }
+                    }
+                    rowACCs.forEach(r -> righeFattura.get(r).setRifOrdClienteList(rifCliList));
+                } else if (acc == 1 && ord > 1) {
+                    List<String> rifCliList = new ArrayList<>();
+                    Log.info("situazione con unico acconto e più ordini clienti per fattura " + numFatt);
+                    for (int i = 0; i < righeFattura.size(); i++) {
+                        AccontoDto rigaFattura = righeFattura.get(i);
+                        if (StringUtils.equals("*ACC", rigaFattura.getFArticolo())) {
+                            rowACC = i;
+                            continue;
+                        }
+                        if (StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), "ord")) {
+                            rifCliList.add(rigaFattura.getOperazione());
+                        }
+                    }
+                    righeFattura.get(rowACC).setRifOrdClienteList(rifCliList);
+                }
+            }
+
+            final List<AccontoDto> listaAcconti = new ArrayList<>();
+            mapByNumFatt.values().forEach(list -> listaAcconti.addAll(list.stream().filter(a -> a.getRifOrdClienteList() !=null && !a.getRifOrdClienteList().isEmpty()).toList()));
+
+            listaAcconti.sort(Comparator.comparing(AccontoDto::getDataFattura));
+            Log.info("Acconti post elaborazione: " +listaAcconti.size());
+            Log.info("Lista storni: " + listaStorno.size());
+            for (AccontoDto a : listaAcconti) {
+                resultList.add(a);
+                for (AccontoDto s : listaStorno) {
+                    if (StringUtils.contains(s.getOperazione(), a.getNumeroFattura())
+                            && StringUtils.contains(a.getRifOrdCliente(), s.getOrdineCliente())) {
+                        resultList.add(s);
+                    }
+                }
+            }
+        }
+
+        return resultList;
     }
 }

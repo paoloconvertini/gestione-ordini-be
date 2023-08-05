@@ -147,6 +147,9 @@ public class OrdineResource {
     @Consumes(APPLICATION_JSON)
     @Path("/consegne")
     public Response getAllOrdiniByStati(FiltroOrdini filtro) throws ParseException {
+        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
+            filtro.setStatus(null);
+        }
         return Response.ok(ordineService.findAllByStati(filtro)).build();
     }
 
@@ -179,7 +182,7 @@ public class OrdineResource {
     @Path("/aggiornaListaOrdini")
     public Response aggiornaListaOrdini() throws ParseException {
         scheduler.findNuoviOrdini();
-        return Response.ok(ordineService.findAllByStatus(new FiltroOrdini())).build();
+        return Response.ok().build();
     }
 
     @GET
@@ -199,13 +202,20 @@ public class OrdineResource {
     }
 
     @POST
-    @Path("/addNotes")
+    @Path("/addNotes/{from}")
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @Transactional
     @Consumes(APPLICATION_JSON)
-    public Response addNotes(OrdineDTO dto) {
-        GoOrdine.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
-                Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
+    public Response addNotes(OrdineDTO dto, Integer from) {
+        String query;
+        if(from == 0) {
+          query = "note ";
+        } else {
+            query = "noteLogistica ";
+        }
+        query += "= :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo";
+        GoOrdine.update(query, Parameters.with("note", dto.getNote())
+                .and("anno", dto.getAnno())
                         .and("serie", dto.getSerie())
                         .and("progressivo", dto.getProgressivo()));
         return Response.ok(new ResponseDto("Nota aggiunta", false)).build();

@@ -56,6 +56,9 @@ public class GoOrdine extends PanacheEntityBase {
     @Column(length = 2000, name = "NOTE")
     private String note;
 
+    @Column(length = 2000, name = "NOTELOGISTICA")
+    private String noteLogistica;
+
     public static List<GoOrdine> findOrdiniByStatus(List<String> param) {
         return list("status in (:param)", Parameters.with("param", param));
     }
