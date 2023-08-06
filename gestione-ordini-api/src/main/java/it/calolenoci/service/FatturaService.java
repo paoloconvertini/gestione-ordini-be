@@ -49,7 +49,7 @@ public class FatturaService {
             }
         });
         long fine = System.currentTimeMillis();
-        Log.info("Query getBolle: " + (fine - inizio) + " msec");
+        Log.debug("Query getBolle: " + (fine - inizio) + " msec");
         return list;
         //return fatturaDtos;
     }
@@ -69,15 +69,15 @@ public class FatturaService {
         List<AccontoDto> listaStorno = em.createNamedQuery("StornoDto").setParameter("sottoConto", sottoConto).getResultList();
 
         if (listaAcconto.isEmpty() && listaStorno.isEmpty()) {
-            Log.info("Entrambe le liste sono vuote");
+            Log.debug("Entrambe le liste sono vuote");
             return resultList;
         }
         if (listaAcconto.isEmpty()) {
-            Log.info("La lista acconti è vuota");
+            Log.debug("La lista acconti è vuota");
             return listaStorno;
         } else {
             Map<String, List<AccontoDto>> mapByNumFatt = listaAcconto.stream().collect(Collectors.groupingBy(AccontoDto::getNumeroFattura));
-            Log.info("Lista acconti size: " + mapByNumFatt.size());
+            Log.debug("Lista acconti size: " + mapByNumFatt.size());
             for (String numFatt : mapByNumFatt.keySet()) {
                 int rowACC = 0;
                 //ciclo sulle righe della singola fattura
@@ -89,7 +89,7 @@ public class FatturaService {
                 long ord = righeFattura.stream().filter(a -> StringUtils.containsIgnoreCase(a.getOperazione(), "ord")).count();
                 // situazione con acconti e ordine cliente uguale
                 if ((acc == ord)) {
-                    Log.info("situazione con acconti e ordine cliente uguale per fattura " + numFatt);
+                    Log.debug("situazione con acconti e ordine cliente uguale per fattura " + numFatt);
                     for (int i = 0; i < righeFattura.size(); i++) {
                         AccontoDto rigaFattura = righeFattura.get(i);
                         if (StringUtils.equals("*ACC", rigaFattura.getFArticolo())) {
@@ -106,7 +106,7 @@ public class FatturaService {
                 } else if (acc > 1 && ord == 1) {
                     List<Integer> rowACCs = new ArrayList<>();
                     List<String> rifCliList = new ArrayList<>();
-                    Log.info("situazione con 2 acconti e unico ordine cliente per fattura " + numFatt);
+                    Log.debug("situazione con 2 acconti e unico ordine cliente per fattura " + numFatt);
                     for (int i = 0; i < righeFattura.size(); i++) {
                         AccontoDto rigaFattura = righeFattura.get(i);
                         if (StringUtils.equals("*ACC", rigaFattura.getFArticolo())) {
@@ -120,7 +120,7 @@ public class FatturaService {
                     rowACCs.forEach(r -> righeFattura.get(r).setRifOrdClienteList(rifCliList));
                 } else if (acc == 1 && ord > 1) {
                     List<String> rifCliList = new ArrayList<>();
-                    Log.info("situazione con unico acconto e più ordini clienti per fattura " + numFatt);
+                    Log.debug("situazione con unico acconto e più ordini clienti per fattura " + numFatt);
                     for (int i = 0; i < righeFattura.size(); i++) {
                         AccontoDto rigaFattura = righeFattura.get(i);
                         if (StringUtils.equals("*ACC", rigaFattura.getFArticolo())) {
@@ -139,14 +139,18 @@ public class FatturaService {
             mapByNumFatt.values().forEach(list -> listaAcconti.addAll(list.stream().filter(a -> a.getRifOrdClienteList() !=null && !a.getRifOrdClienteList().isEmpty()).toList()));
 
             listaAcconti.sort(Comparator.comparing(AccontoDto::getDataFattura));
-            Log.info("Acconti post elaborazione: " +listaAcconti.size());
-            Log.info("Lista storni: " + listaStorno.size());
+            Log.debug("Acconti post elaborazione: " +listaAcconti.size());
+            Log.debug("Lista storni: " + listaStorno.size());
             for (AccontoDto a : listaAcconti) {
                 resultList.add(a);
                 for (AccontoDto s : listaStorno) {
+                    Log.debug("Contiene num fatt: " + StringUtils.contains(s.getOperazione(), a.getNumeroFattura()));
                     if (StringUtils.contains(s.getOperazione(), a.getNumeroFattura())
                             && StringUtils.contains(a.getRifOrdCliente(), s.getOrdineCliente())) {
-                        resultList.add(s);
+                        a.getRifOrdClienteList().forEach(r -> {
+                            if(StringUtils.contains(r, s.getOrdineCliente())) {
+                                resultList.add(s);
+                            }});
                     }
                 }
             }
