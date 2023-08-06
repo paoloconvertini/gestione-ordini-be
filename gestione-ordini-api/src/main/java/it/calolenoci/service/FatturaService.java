@@ -144,11 +144,15 @@ public class FatturaService {
             for (AccontoDto a : listaAcconti) {
                 resultList.add(a);
                 for (AccontoDto s : listaStorno) {
-                    Log.debug("Contiene num fatt: " + StringUtils.contains(s.getOperazione(), a.getNumeroFattura()));
-                    if (StringUtils.contains(s.getOperazione(), a.getNumeroFattura())
-                            && StringUtils.contains(a.getRifOrdCliente(), s.getOrdineCliente())) {
+                    Log.debug("Acconto n." + a.getNumeroFattura() + " contiene storno operazione " + s.getOperazione() + "? " + StringUtils.contains(s.getOperazione(), a.getNumeroFattura()));
+                    if (StringUtils.contains(s.getOperazione(), a.getNumeroFattura())) {
                         a.getRifOrdClienteList().forEach(r -> {
-                            if(StringUtils.contains(r, s.getOrdineCliente())) {
+                            String ordCli2 = StringUtils.replace(s.getOrdineCliente(), "/", ".");
+                            if(StringUtils.contains(r, s.getOrdineCliente()) ||
+                                    StringUtils.contains(r, ordCli2)) {
+                                List<String> rifList = new ArrayList<>();
+                                rifList.add(s.getRifOrdCliente());
+                                s.setRifOrdClienteList(rifList);
                                 resultList.add(s);
                             }});
                     }
