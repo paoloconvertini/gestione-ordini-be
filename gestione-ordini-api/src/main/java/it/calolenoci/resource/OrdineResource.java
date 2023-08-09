@@ -257,4 +257,15 @@ public class OrdineResource {
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("Lista salvata", false)).build();
     }
 
+    @Operation(summary = "Returns all the ordini from the database")
+    @GET
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
+    @Consumes(APPLICATION_JSON)
+    @Path("/cercaAltriOrdiniCliente/{anno}/{serie}/{progressivo}/{sottoConto}")
+    public Response findAltriOrdiniCliente(Integer anno, String serie, Integer progressivo, String sottoConto) throws ParseException {
+        return Response.ok(ordineService.findAltriOrdiniCliente(anno, serie, progressivo, sottoConto)).build();
+    }
+
 }

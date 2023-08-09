@@ -24,9 +24,9 @@ public class OrdineDettaglioDto implements Serializable {
     private  String codArtFornitore;
     private  String fDescrArticolo;
     private  Double quantita;
-    private  Float prezzo;
+    private  Double prezzo;
 
-    private  Float prezzoScontato;
+    private  Double prezzoScontato;
     private  String fUnitaMisura;
 
     private Float scontoArticolo;
@@ -80,8 +80,13 @@ public class OrdineDettaglioDto implements Serializable {
 
     private String noteOrdCli;
 
+
+    private Date dataFattura;
+
+    private String numeroFattura;
+
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo,
-                              String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, String fUnitaMisura,
+                              String codArtFornitore, String fDescrArticolo, Double quantita, Double prezzo, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
                               Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla) {
@@ -113,7 +118,7 @@ public class OrdineDettaglioDto implements Serializable {
     }
 
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo,
-                              String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, String fUnitaMisura,
+                              String codArtFornitore, String fDescrArticolo, Double quantita, Double prezzo, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
                               Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla, String intestazione) {
@@ -146,7 +151,7 @@ public class OrdineDettaglioDto implements Serializable {
     }
 
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo,
-                              String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, String fUnitaMisura,
+                              String codArtFornitore, String fDescrArticolo, Double quantita, Double prezzo, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
                               Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla, String intestazione,
@@ -183,8 +188,9 @@ public class OrdineDettaglioDto implements Serializable {
         this.qtaProntoConsegna = qtaProntoConsegna;
     }
 
-    public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo,
-                              String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, Float prezzoScontato, String fUnitaMisura,
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
+                              String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
+                              Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
                               Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
@@ -239,7 +245,9 @@ public class OrdineDettaglioDto implements Serializable {
         this.quantita = quantita;
     }
 
-    public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo, String codArtFornitore, String fDescrArticolo, Double quantita, Float prezzo, String fUnitaMisura,
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
+                              String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
+                              Double quantita, Double prezzo, String fUnitaMisura,
                               Integer fColli, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva) {
         this.anno = anno;
         this.progressivo = progressivo;

@@ -1,7 +1,9 @@
 package it.calolenoci.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import it.calolenoci.entity.OrdineId;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -40,6 +42,8 @@ public class AccontoDto {
 
     private List<String> rifOrdClienteList;
 
+    private String uuidAS;
+
     public AccontoDto(String contoCliente, Integer anno,String serie, Integer progressivo,
                       Date dataFattura, String numeroFattura, String rifOrdCliente,
                       String operazione, Double prezzo, String iva, String ordineCliente) {
@@ -69,5 +73,14 @@ public class AccontoDto {
         this.prezzo = prezzo;
         this.iva = iva;
         this.fArticolo = fArticolo;
+    }
+
+    public static boolean checkOrdineEsiste(AccontoDto a, OrdineId id){
+        for (String r : a.getRifOrdClienteList()) {
+            if(StringUtils.contains(r, StringUtils.join(id.getAnno(), "/", id.getSerie(), "/", id.getProgressivo()))) {
+               return true;
+            }
+        }
+        return false;
     }
 }

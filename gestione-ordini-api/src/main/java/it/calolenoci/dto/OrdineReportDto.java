@@ -24,7 +24,7 @@ public class OrdineReportDto implements Serializable {
 	private String CODARTFORNITORE;
 	private String FDESCRARTICOLO;
 	private Double QUANTITA;
-	private Float PREZZO;
+	private Double PREZZO;
 	private String FUNITAMISURA;
 	private Float SCONTOARTICOLO;
 	private Float SCONTOC1;

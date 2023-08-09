@@ -137,7 +137,7 @@ AND c.contocliente = pc.sottoconto]]>
 		<property name="com.jaspersoft.studio.field.label" value="QUANTITA"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
 	</field>
-	<field name="PREZZO" class="java.lang.Float">
+	<field name="PREZZO" class="java.lang.Double">
 		<property name="com.jaspersoft.studio.field.name" value="PREZZO"/>
 		<property name="com.jaspersoft.studio.field.label" value="PREZZO"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>

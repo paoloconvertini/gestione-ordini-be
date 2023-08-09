@@ -91,6 +91,24 @@ public class OrdineService {
         return list;
     }
 
+    public List<OrdineDTO> findAltriOrdiniCliente(Integer anno, String serie, Integer progressivo, String sottoConto) throws ParseException {
+        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
+                " go.status, go.hasProntoConsegna, go.note, go.noteLogistica " +
+                "FROM Ordine o " +
+                "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
+                "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' " +
+                "AND go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '' AND go.hasProntoConsegna = true " +
+                "AND o.contoCliente = :sottoConto";
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("dataConfig", sdf.parse(dataCongig));
+        map.put("sottoConto", sottoConto);
+
+        List<OrdineDTO> list = Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
+        list.removeIf(o -> Objects.equals(o.getAnno(), anno) && StringUtils.equals(o.getSerie(), serie) && Objects.equals(o.getProgressivo(), progressivo));
+        return list;
+    }
+
     public List<PianoContiDto> findClienti() throws ParseException {
         String query = " SELECT p.gruppoConto, p.sottoConto, p.intestazione, p.indirizzo, p.localita, p.cap, " +
                 "p.provincia, p.latitudine, p.longitudine " +

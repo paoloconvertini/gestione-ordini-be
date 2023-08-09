@@ -48,6 +48,37 @@ public class Ordine extends PanacheEntityBase {
     @Column(length = 1)
     private String provvisorio;
 
+    @Column(name= "BANCAAPPOGGIO")
+    private Double bancaAppoggio;
+
+    @Column(name= "NSBANCAINCASSO", length = 3)
+    private String nsBancaIncasso;
+
+
+    @Column(name = "NUMEROCOLLI")
+    private Integer numerocolli;
+
+    @Column(name = "FCODDIFFPAG")
+    private String fcoddiffpag;
+
+    @Column(name = "FOGGETTO")
+    private String oggetto;
+
+    @Column(name = "SPESEBOLLO")
+    private String spesebollo;
+
+    @Column(name = "IVAPRIMASCAD")
+    private String ivaprimascad;
+
+    @Column(name = "AGENTE")
+    private String agente;
+
+    @Column(name = "LISTINO")
+    private String listino;
+
+    @Column(name = "MODOCONSEGNA")
+    private String modoconsegna;
+
     @Column
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataOrdine;

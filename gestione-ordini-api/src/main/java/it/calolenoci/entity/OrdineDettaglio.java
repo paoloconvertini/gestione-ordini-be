@@ -1,14 +1,13 @@
 package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.FiltroArticoli;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
-import org.jfree.util.Log;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -68,12 +67,12 @@ public class OrdineDettaglio extends PanacheEntityBase {
     private Double quantitaV;
 
     @Column
-    private Float quantita2;
+    private Double quantita2;
 
     @Column
-    private Float prezzo;
+    private Double prezzo;
 
-    @Column
+    @Column(name = "FCOLLI")
     private Integer fColli;
 
     @Column(name = "LOTTOMAGF", length = 10)
@@ -82,23 +81,183 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 2)
     private String fUnitaMisura;
 
-    @Column
-    private Float scontoArticolo;
+    @Column(name = "SCONTOARTICOLO")
+    private Double scontoArticolo;
 
     @Column
-    private Float scontoC1;
+    private Double scontoC1;
 
     @Column
-    private Float scontoC2;
+    private Double scontoC2;
 
     @Column
-    private Float scontoP;
+    private Double scontoP;
 
     @Column(length = 3)
     private String fCodiceIva;
 
     @Column(length = 5000, name = "NOTEORDCLI2", columnDefinition = "text")
     private String noteOrdCli;
+
+    @Column(name = "VARIANTE1")
+    private String variante1;
+
+    @Column(name = "VARIANTE2")
+    private String variante2;
+
+    @Column(name = "VARIANTE3")
+    private String variante3;
+
+    @Column(name = "VARIANTE4")
+    private String variante4;
+
+    @Column(name = "VARIANTE5")
+    private String variante5;
+
+    @Column(name = "CODICEEAN")
+    private String codiceean;
+
+    @Column(name = "QTAOMAGGIO")
+    private Double qtaomaggio;
+
+    @Column(name = "FUNITAMISURA")
+    private String funitamisura;
+
+    @Column(name = "FCOEFFICIENTE")
+    private Double fcoefficiente;
+
+    @Column(name = "PREZZOEXTRA")
+    private Double prezzoextra;
+
+    @Column(name = "MAGAZZ")
+    private String magazz;
+
+    @Column(name = "IMPPROVVFISSO")
+    private Double impprovvfisso;
+
+    @Column(name = "FPROVVARTICOLO")
+    private Double fprovvarticolo;
+
+    @Column(name = "FPROVVCLIENTE")
+    private Double fprovvcliente;
+
+    @Column(name = "FPALLET")
+    private Double fpallet;
+
+    @Column(name = "COEFPREZZO")
+    private Double coefprezzo;
+
+    @Column(name = "FCENTROCOSTOR")
+    private String fcentrocostor;
+
+    @Column(name = "FCOMMESSA")
+    private String fcommessa;
+
+    @Column(name = "FGRUPPORICAVO")
+    private Integer fgrupporicavo;
+
+    @Column(name = "FCONTORICAVO")
+    private String fcontoricavo;
+
+    @Column(name = "FPROVENIENZA")
+    private String fprovenienza;
+
+    @Column(name = "FPID")
+    private Integer fpid;
+
+    @Column(name = "QTYUSER1")
+    private Double qtyuser1;
+
+    @Column(name = "QTYUSER2")
+    private Double qtyuser2;
+
+    @Column(name = "QTYUSER3")
+    private Double qtyuser3;
+
+    @Column(name = "QTYUSER4")
+    private Double qtyuser4;
+
+    @Column(name = "QTYUSER5")
+    private Double qtyuser5;
+
+    @Column(name = "QTYUSER6")
+    private Double qtyuser6;
+
+    @Column(name = "QTYUSER7")
+    private Double qtyuser7;
+
+    @Column(name = "DESCRUSER1")
+    private String descruser1;
+
+    @Column(name = "DESCRUSER2")
+    private String descruser2;
+
+    @Column(name = "DESCRUSER3")
+    private String descruser3;
+
+    @Column(name = "DESCRUSER4")
+    private String descruser4;
+
+    @Column(name = "DESCRUSER5")
+    private String descruser5;
+
+    @Column(name = "DESCRUSER6")
+    private String descruser6;
+
+    @Column(name = "DESCRUSER7")
+    private String descruser7;
+
+    @Column(name = "DATAUSER1")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date datauser1;
+
+    @Column(name = "DATAUSER2")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date datauser2;
+
+    @Column(name = "DATAUSER3")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date datauser3;
+
+    @Column(name = "DATAUSER4")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date datauser4;
+
+    @Column(name = "DATAUSER5")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date datauser5;
+
+    @Column(name = "DATAUSER6")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date datauser6;
+
+    @Column(name = "DATAUSER7")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date datauser7;
+
+    @Column(name = "CONTROMARCA")
+    private String contromarca;
+
+    @Column(name = "USERNAME")
+    private String username;
+
+    @Column(name = "DATAMODIFICA")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date datamodifica;
+
+    @Column(name = "SYS_CREATEDATE")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date sysCreatedate;
+
+    @Column(name = "SYS_CREATEUSER")
+    private String sysCreateuser;
+
+    @Column(name = "SYS_UPDATEDATE")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date sysUpdatedate;
+
+    @Column(name = "SYS_UPDATEUSER")
+    private String sysUpdateuser;
 
     public static OrdineDettaglio getById(Integer anno, String serie, Integer progressivo, Integer rigo) {
         return find("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo = :rigo",

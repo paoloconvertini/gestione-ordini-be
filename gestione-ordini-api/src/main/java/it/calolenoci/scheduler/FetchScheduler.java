@@ -60,6 +60,7 @@ public class FetchScheduler {
         Integer update;
         List<OrdineDettaglioDto> list = fatturaService.getBolle();
         if (list != null && !list.isEmpty()) {
+            Log.debug("Trovate " + list.size() + " bolle");
             update = articoloService.updateArticoliBolle(list);
             Log.info("Aggiornati " + update + " articoli");
             if (update != null && update != 0) {

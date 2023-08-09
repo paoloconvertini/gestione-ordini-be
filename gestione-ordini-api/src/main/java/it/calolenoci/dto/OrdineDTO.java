@@ -43,6 +43,8 @@ public class OrdineDTO implements Serializable {
 
     private String sottoConto;
 
+    private String contoFattura;
+
     private Boolean warnNoBolla = Boolean.FALSE;
 
     private Boolean locked= Boolean.FALSE;
@@ -222,5 +224,18 @@ public class OrdineDTO implements Serializable {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
+    }
+
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+                      String status, Boolean hasProntoConsegna, String note, String noteLogistica) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.status = status;
+        this.hasProntoConsegna = hasProntoConsegna;
+        this.note = note;
+        this.noteLogistica = noteLogistica;
     }
 }

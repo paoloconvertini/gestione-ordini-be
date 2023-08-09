@@ -4,10 +4,11 @@ import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.GoOrdineDettaglio;
-import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
 import it.calolenoci.service.FatturaService;
+import it.calolenoci.service.OrdineService;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -16,7 +17,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
-import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -25,8 +25,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static it.calolenoci.enums.Ruolo.*;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path("api/articoli")
 @Produces(APPLICATION_JSON)
@@ -39,6 +39,9 @@ public class ArticoloResource {
 
     @Inject
     FatturaService fatturaService;
+
+    @Inject
+    OrdineService ordineService;
 
     @Inject
     @Claim(standard = Claims.upn)
@@ -105,6 +108,25 @@ public class ArticoloResource {
     @Path("/getBolle/{progrCliente}")
     public Response getBolle(Integer progrCliente) {
         return Response.ok(fatturaService.getBolle(progrCliente)).build();
+    }
+
+    @Operation(summary = "Creazione bolle a partire da articoli in pronta consegna")
+    @POST
+    @RolesAllowed({ADMIN, LOGISTICA})
+    @Path("/creaBolla")
+    public Response creaBolla(Body body) {
+        String result = fatturaService.creaBolla(body.getList(), body.getAccontoDtos());
+        return Response.ok(new ResponseDto(result, StringUtils.isBlank(result))).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @POST
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Path("/cercaAcconti/{sottoConto}")
+    public Response cercaAcconti(String sottoConto, List<OrdineDettaglioDto> list) {
+        return Response.ok(fatturaService.getAcconti(sottoConto, list)).build();
     }
 
     @Operation(summary = "Returns all the articoli from the database")
