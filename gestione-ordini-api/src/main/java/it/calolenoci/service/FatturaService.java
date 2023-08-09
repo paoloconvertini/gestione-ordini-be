@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.transaction.Transactional;
+import java.time.Year;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -139,7 +140,7 @@ public class FatturaService {
     public String creaBolla(List<OrdineDettaglioDto> list, List<AccontoDto> accontoDtos) {
         String result = null;
         try {
-            Integer progressivoFatt = OrdineFornitore.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM Fatture o").project(Integer.class).firstResult();
+            Integer progressivoFatt = OrdineFornitore.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM Fatture o WHERE anno = :anno and serie = 'B'", Parameters.with("anno", Year.now())).project(Integer.class).firstResult();
             Integer progressivoFattDettaglio = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM FattureDettaglio o").project(Integer.class).firstResult();
             Ordine ordine = Ordine.findByOrdineId(list.get(0).getAnno(), list.get(0).getSerie(), list.get(0).getProgressivo());
             Fatture f = fattureMapper.buildFatture(progressivoFatt, ordine);
