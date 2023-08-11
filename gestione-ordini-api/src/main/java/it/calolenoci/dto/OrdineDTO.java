@@ -227,7 +227,10 @@ public class OrdineDTO implements Serializable {
     }
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
-                      String status, Boolean hasProntoConsegna, String note, String noteLogistica) {
+                      String status, Boolean hasProntoConsegna, String note, String noteLogistica,
+                     String intestazione, String riferimento,
+                     String localita, String provincia
+                     ) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
@@ -237,5 +240,9 @@ public class OrdineDTO implements Serializable {
         this.hasProntoConsegna = hasProntoConsegna;
         this.note = note;
         this.noteLogistica = noteLogistica;
+        this.intestazione = intestazione;
+        this.riferimento = riferimento;
+        this.localita = localita;
+        this.provincia = provincia;
     }
 }

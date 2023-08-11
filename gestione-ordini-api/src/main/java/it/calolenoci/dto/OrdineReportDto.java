@@ -26,10 +26,10 @@ public class OrdineReportDto implements Serializable {
 	private Double QUANTITA;
 	private Double PREZZO;
 	private String FUNITAMISURA;
-	private Float SCONTOARTICOLO;
-	private Float SCONTOC1;
-	private Float SCONTOC2;
-	private Float SCONTOP;
+	private Double SCONTOARTICOLO;
+	private Double SCONTOC1;
+	private Double SCONTOC2;
+	private Double SCONTOP;
 	private String FCODICEIVA;
 	private String INTESTAZIONE;
 	private String INDIRIZZO;

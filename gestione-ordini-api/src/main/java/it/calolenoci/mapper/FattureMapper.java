@@ -215,10 +215,10 @@ public class FattureMapper {
         fd.setQuantita(0D);
         fd.setPrezzo(-dto.getPrezzo());
         fd.setFUnitaMisura(".");
-        fd.setScontoArticolo(0f);
-        fd.setScontoC1(0f);
-        fd.setScontoC2(0f);
-        fd.setScontoP(0f);
+        fd.setScontoArticolo(0D);
+        fd.setScontoC1(0D);
+        fd.setScontoC2(0D);
+        fd.setScontoP(0D);
         fd.setFCodiceIva("");
         fd.setFColli(0);
         fd.setDataFattura(dto.getDataFattura());

@@ -93,9 +93,10 @@ public class OrdineService {
 
     public List<OrdineDTO> findAltriOrdiniCliente(Integer anno, String serie, Integer progressivo, String sottoConto) throws ParseException {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
-                " go.status, go.hasProntoConsegna, go.note, go.noteLogistica " +
+                " go.status, go.hasProntoConsegna, go.note, go.noteLogistica, p.intestazione, p.localita, p.provincia " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                 "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' " +
                 "AND go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '' AND go.hasProntoConsegna = true " +
                 "AND o.contoCliente = :sottoConto";

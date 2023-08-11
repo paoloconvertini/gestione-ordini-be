@@ -29,13 +29,13 @@ public class OrdineDettaglioDto implements Serializable {
     private  Double prezzoScontato;
     private  String fUnitaMisura;
 
-    private Float scontoArticolo;
+    private Double scontoArticolo;
 
-    private Float scontoC1;
+    private Double scontoC1;
 
-    private Float scontoC2;
+    private Double scontoC2;
 
-    private Float scontoP;
+    private Double scontoP;
 
     private String fCodiceIva;
 
@@ -248,7 +248,7 @@ public class OrdineDettaglioDto implements Serializable {
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
                               String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
                               Double quantita, Double prezzo, String fUnitaMisura,
-                              Integer fColli, Float scontoArticolo, Float scontoC1, Float scontoC2, Float scontoP, String fCodiceIva) {
+                              Integer fColli, Double scontoArticolo, Double scontoC1, Double scontoC2, Double scontoP, String fCodiceIva) {
         this.anno = anno;
         this.progressivo = progressivo;
         this.progrGenerale = progrGenerale;

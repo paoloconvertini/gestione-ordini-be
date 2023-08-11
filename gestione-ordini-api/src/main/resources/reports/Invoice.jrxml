@@ -147,22 +147,22 @@ AND c.contocliente = pc.sottoconto]]>
 		<property name="com.jaspersoft.studio.field.label" value="FUNITAMISURA"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
 	</field>
-	<field name="SCONTOARTICOLO" class="java.lang.Float">
+	<field name="SCONTOARTICOLO" class="java.lang.Double">
 		<property name="com.jaspersoft.studio.field.name" value="SCONTOARTICOLO"/>
 		<property name="com.jaspersoft.studio.field.label" value="SCONTOARTICOLO"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
 	</field>
-	<field name="SCONTOC1" class="java.lang.Float">
+	<field name="SCONTOC1" class="java.lang.Double">
 		<property name="com.jaspersoft.studio.field.name" value="SCONTOC1"/>
 		<property name="com.jaspersoft.studio.field.label" value="SCONTOC1"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
 	</field>
-	<field name="SCONTOC2" class="java.lang.Float">
+	<field name="SCONTOC2" class="java.lang.Double">
 		<property name="com.jaspersoft.studio.field.name" value="SCONTOC2"/>
 		<property name="com.jaspersoft.studio.field.label" value="SCONTOC2"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>
 	</field>
-	<field name="SCONTOP" class="java.lang.Float">
+	<field name="SCONTOP" class="java.lang.Double">
 		<property name="com.jaspersoft.studio.field.name" value="SCONTOP"/>
 		<property name="com.jaspersoft.studio.field.label" value="SCONTOP"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI2"/>

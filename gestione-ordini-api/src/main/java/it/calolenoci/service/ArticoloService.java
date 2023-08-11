@@ -486,7 +486,7 @@ public class ArticoloService {
         return result;
     }
 
-    public List<OrdineDettaglioDto> getArticoli(Integer anno, String serie, Integer progressivo) {
+    public List<OrdineDettaglioDto> getArticoli(boolean bolla, Integer anno, String serie, Integer progressivo) {
         String query = "SELECT o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  " +
                 "  o.fUnitaMisura,  god.flagNonDisponibile, god.flagOrdinato, god.flagRiservato, " +
@@ -497,8 +497,12 @@ public class ArticoloService {
                 "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
-                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
-                "AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
+                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ";
+        if(bolla){
+            query += " AND god.flProntoConsegna";
+        } else {
+            query += " AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
+        }
         return OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
                 .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
     }
