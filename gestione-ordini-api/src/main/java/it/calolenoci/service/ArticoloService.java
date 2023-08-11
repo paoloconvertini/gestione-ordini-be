@@ -499,7 +499,7 @@ public class ArticoloService {
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ";
         if(bolla){
-            query += " AND god.flProntoConsegna";
+            query += " AND god.flProntoConsegna = 'T'";
         } else {
             query += " AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
         }
