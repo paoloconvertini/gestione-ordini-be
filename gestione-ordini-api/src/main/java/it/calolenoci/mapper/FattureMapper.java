@@ -219,7 +219,7 @@ public class FattureMapper {
         fd.setScontoC1(0D);
         fd.setScontoC2(0D);
         fd.setScontoP(0D);
-        fd.setFCodiceIva("");
+        fd.setFCodiceIva(dto.getIva());
         fd.setFColli(0);
         fd.setDataFattura(dto.getDataFattura());
         fd.setNumeroFattura(dto.getNumeroFattura());
@@ -257,7 +257,7 @@ public class FattureMapper {
         fd.setPrezzoextra(0D);
         fd.setMagazz("B");
         fd.setLottomagf("");
-        fd.setIva("");
+        fd.setIva(dto.getFCodiceIva());
         fd.setImpprovvfisso(0D);
         fd.setFprovvarticolo(0D);
         fd.setFprovvcliente(0D);
