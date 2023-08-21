@@ -139,12 +139,12 @@ public class ArticoloService {
     }
 
     @Transactional
-    public void save(List<OrdineDettaglioDto> list, String user, String email) {
-        save(list, user, false, email);
+    public void save(List<OrdineDettaglioDto> list, String user) {
+        save(list, user, false);
     }
 
     @Transactional
-    public String save(List<OrdineDettaglioDto> list, String user, Boolean chiudi, String email) {
+    public String save(List<OrdineDettaglioDto> list, String user, Boolean chiudi) {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
         List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();
@@ -254,32 +254,31 @@ public class ArticoloService {
                     Parameters.with("anno", dto.getAnno())
                             .and("serie", dto.getSerie())
                             .and("progressivo", dto.getProgressivo()));
-            String stato = chiudi(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), email);
+            String stato = chiudi(dto.getAnno(), dto.getSerie(), dto.getProgressivo());
             GoOrdineDettaglio.updateStatus(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), stato);
             return stato;
         }
         return null;
     }
 
-    private String chiudi(Integer anno, String serie, Integer progressivo, String email) {
+    private String chiudi(Integer anno, String serie, Integer progressivo) {
         GoOrdine ordine = GoOrdine.findByOrdineId(anno, serie, progressivo);
 
         final String result = ordine.getStatus();
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
-            if (GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
+            if (!GoOrdineDettaglio.find(" SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
                     " and flagNonDisponibile = 'T'" +
-                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
+                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
-                    .and("progressivo", progressivo)) > 0) {
-                //sendMail(anno, serie, progressivo, email);
+                    .and("progressivo", progressivo)).list().isEmpty()) {
                 ordine.setStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
-            } else if(GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
+            } else if(!GoOrdineDettaglio.find(" SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
                     " and flagOrdinato = 'T' " +
-                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
+                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
-                    .and("progressivo", progressivo)) > 0) {
+                    .and("progressivo", progressivo)).list().isEmpty()) {
                 ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             } else {
                 ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
@@ -287,44 +286,29 @@ public class ArticoloService {
         }
 
         if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(result)) {
-            if (GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
+            if (GoOrdineDettaglio.find("SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
                     " and flagNonDisponibile = 'T' " +
-                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
+                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
-                    .and("progressivo", progressivo)) == 0) {
+                    .and("progressivo", progressivo)).list().isEmpty()) {
                 ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             }
         }
 
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
-            if(GoOrdineDettaglio.count("anno = :anno and serie =:serie" +
+            if(GoOrdineDettaglio.find("SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
                     " and (flagOrdinato = 'T' AND (flagRiservato = 'F' OR flagRiservato is null) ) " +
-                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)", Parameters.with("anno", anno)
+                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
-                    .and("progressivo", progressivo)) == 0) {
-               // sendMail(anno, serie, progressivo, email);
+                    .and("progressivo", progressivo)).list().isEmpty()) {
                 ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
             }
 
         }
         ordine.persist();
         return ordine.getStatus();
-    }
-
-    private void sendMail(Integer anno, String serie, Integer progressivo, String email) {
-        OrdineDTO dto = Ordine.find("SELECT p.intestazione, p.localita, p.provincia, p.telefono, p.email, p.sottoConto " +
-                                " FROM Ordine o " +
-                                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
-                                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo",
-                        Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo))
-                .project(OrdineDTO.class).firstResult();
-        File f = new File(pathReport + "/" + anno + "/" + serie + "/" + dto.getSottoConto() + "_" + anno + "_" + serie + "_" + progressivo + ".pdf");
-        dto.setAnno(anno);
-        dto.setSerie(serie);
-        dto.setProgressivo(progressivo);
-        mailService.sendMailOrdineCompleto(f, dto, email);
     }
 
     @Transactional
