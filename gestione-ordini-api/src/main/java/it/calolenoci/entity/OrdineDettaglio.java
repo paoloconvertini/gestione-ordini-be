@@ -78,7 +78,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(name = "LOTTOMAGF", length = 10)
     private String tono;
 
-    @Column(length = 2)
+    @Column(length = 2, name = "FUNITAMISURA")
     private String fUnitaMisura;
 
     @Column(name = "SCONTOARTICOLO")
@@ -119,9 +119,6 @@ public class OrdineDettaglio extends PanacheEntityBase {
 
     @Column(name = "QTAOMAGGIO")
     private Double qtaomaggio;
-
-    @Column(name = "FUNITAMISURA")
-    private String funitamisura;
 
     @Column(name = "FCOEFFICIENTE")
     private Double fcoefficiente;

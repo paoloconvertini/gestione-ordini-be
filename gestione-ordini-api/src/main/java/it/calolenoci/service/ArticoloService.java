@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ArticoloService {
@@ -79,34 +81,66 @@ public class ArticoloService {
     @Transactional
     public Integer updateArticoliBolle(List<OrdineDettaglioDto> list) {
         long inizio = System.currentTimeMillis();
-        AtomicReference<Integer> aggiornati = new AtomicReference<>(0);
-        list.forEach(e -> {
+        List<GoOrdineDettaglio> listToSave = new ArrayList<>();
+        List<OrdineId> ids = new ArrayList<>();
+        for (OrdineDettaglioDto e : list) {
+            if(e.getQuantita() == null || e.getQtaBolla() == null) {
+                continue;
+            }
             Optional<GoOrdineDettaglio> optional = GoOrdineDettaglio.getById(e.getProgrGenerale());
             if (optional.isPresent()) {
                 GoOrdineDettaglio goOrdineDettaglio = optional.get();
-                aggiornati.updateAndGet(v -> v + GoOrdineDettaglio.update(
-                          " qtaConsegnatoSenzaBolla = CASE WHEN (:quantita - :qta) = 0 THEN NULL ELSE qtaConsegnatoSenzaBolla END, " +
-                                " flagConsegnato = CASE WHEN (:quantita - :qta) = 0 THEN 'T' ELSE 'F' END, " +
-                                " qtaProntoConsegna = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaProntoConsegna END, " +
-                                " flProntoConsegna = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN 'F' ELSE 'T' END, " +
-                                " qtaRiservata = CASE WHEN (:quantita - qtaDaConsegnare) <> :qta THEN NULL ELSE qtaRiservata END, " +
-                                " qtaDaConsegnare = (:quantita - :qta), " +
-                                " flBolla = 'T' " +
-                                " WHERE progrGenerale = :progrGenerale" +
-                                " AND (qtaDaConsegnare IS NULL OR qtaDaConsegnare <> (:quantita - :qta))",
-                        Parameters.with("qta", e.getQtaBolla()).and("progrGenerale", e.getProgrGenerale()).and("quantita", e.getQuantita())));
-
-                if (goOrdineDettaglio.getQtaConsegnatoSenzaBolla() == null || goOrdineDettaglio.getQtaConsegnatoSenzaBolla() == 0) {
-                    GoOrdine.update("warnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
-                            Parameters.with("anno", e.getAnno())
-                                    .and("serie", e.getSerie())
-                                    .and("progressivo", e.getProgressivo()));
+                if(goOrdineDettaglio.getQtaDaConsegnare() != null && goOrdineDettaglio.getQtaDaConsegnare() == 0) {
+                    continue;
+                }
+                Double qtaDaConsegnare = (e.getQuantita() - e.getQtaBolla());
+                if(goOrdineDettaglio.getQtaDaConsegnare() == null || !Objects.equals(goOrdineDettaglio.getQtaDaConsegnare(), qtaDaConsegnare)){
+                    Double diffQtaCons = (e.getQuantita() - goOrdineDettaglio.getQtaDaConsegnare());
+                    if(qtaDaConsegnare == 0 ){
+                        goOrdineDettaglio.setQtaConsegnatoSenzaBolla(null);
+                    }
+                    goOrdineDettaglio.setFlagConsegnato((qtaDaConsegnare == 0 ));
+                    if(!diffQtaCons.equals(e.getQtaBolla())) {
+                        goOrdineDettaglio.setQtaProntoConsegna(null);
+                        goOrdineDettaglio.setQtaRiservata(null);
+                    }
+                    goOrdineDettaglio.setFlProntoConsegna(diffQtaCons.equals(e.getQtaBolla()));
+                    goOrdineDettaglio.setQtaDaConsegnare(qtaDaConsegnare);
+                    goOrdineDettaglio.setFlBolla(Boolean.TRUE);
+                    listToSave.add(goOrdineDettaglio);
+                    OrdineId ordineId = new OrdineId(e.getAnno(), e.getSerie(), e.getProgressivo());
+                    if(!ids.contains(ordineId)){
+                        ids.add(ordineId);
+                    }
                 }
             }
-        });
+        }
+
+        if(!listToSave.isEmpty()) {
+            GoOrdineDettaglio.persist(listToSave);
+            Map<OrdineId, List<GoOrdineDettaglio>> goMap = new HashMap<>();
+            for (OrdineId e : ids) {
+                List<GoOrdineDettaglio> ordineDettaglioList = GoOrdineDettaglio
+                            .find("anno =:anno AND serie =:serie AND progressivo =:progressivo",
+                                    Parameters.with("anno", e.getAnno()).and( "serie", e.getSerie())
+                                            .and("progressivo", e.getProgressivo())).list();
+                goMap.put(e, ordineDettaglioList);
+            }
+
+            for (OrdineId id : goMap.keySet()) {
+                if(goMap.get(id).stream()
+                        .allMatch(b-> b.getQtaConsegnatoSenzaBolla() == null || b.getQtaConsegnatoSenzaBolla() == 0)) {
+                    GoOrdine.update("warnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
+                            Parameters.with("anno", id.getAnno())
+                                    .and("serie", id.getSerie())
+                                    .and("progressivo", id.getProgressivo()));
+                }
+            }
+        }
+
         long fine = System.currentTimeMillis();
         Log.info("UpdateArticoliBolle: " + (fine - inizio)/1000 + " sec");
-        return aggiornati.get();
+        return listToSave.size();
     }
 
     public boolean findNoProntaConsegna(Integer anno, String serie, Integer progressivo) {

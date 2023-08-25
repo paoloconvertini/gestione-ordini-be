@@ -94,4 +94,6 @@ public class GoOrdineDettaglio extends PanacheEntityBase {
                 Parameters.with("stato", stato).and("anno", anno).and("serie", serie)
                         .and("progressivo", progressivo));
     }
+
+
 }
