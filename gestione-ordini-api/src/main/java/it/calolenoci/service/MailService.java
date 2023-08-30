@@ -94,6 +94,9 @@ public class MailService {
                 StringBuilder body;
                 FiltroOrdini filtro = new FiltroOrdini();
                 filtro.setCodVenditore(v.getCodVenditore());
+                List<String> stati = new ArrayList<>();
+                stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+                filtro.setStati(stati);
                 List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
                 if (ordini.isEmpty()) {
                     continue;

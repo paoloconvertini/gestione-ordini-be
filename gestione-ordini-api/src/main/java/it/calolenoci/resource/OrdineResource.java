@@ -148,7 +148,10 @@ public class OrdineResource {
     @Path("/consegne")
     public Response getAllOrdiniByStati(FiltroOrdini filtro) throws ParseException {
         if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
-            filtro.setStatus(null);
+            List<String> stati = new ArrayList<>();
+            stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+            stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+            filtro.setStati(stati);
         }
         return Response.ok(ordineService.findAllByStati(filtro)).build();
     }

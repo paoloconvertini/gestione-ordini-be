@@ -69,7 +69,7 @@ public class MailingResource {
     @POST
     @Produces(APPLICATION_JSON)
     @RolesAllowed({ADMIN, VENDITORE})
-    @Path("/confermatox")
+    @Path("/confermato")
     public Response send(EmailDto dto) {
         File f = new File(pathReport + "/" + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getSottoConto() + "_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");
         MailAttachment attachment = new MailAttachment(f.getName(), f, "application/pdf");
