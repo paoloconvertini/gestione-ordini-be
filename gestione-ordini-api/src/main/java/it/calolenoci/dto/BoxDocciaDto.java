@@ -27,10 +27,14 @@ public class BoxDocciaDto implements Serializable {
     private String foto;
     private String posa;
 
-    public BoxDocciaDto(String id, String codice, String descrizione) {
+    public BoxDocciaDto(String id, String codice, String descrizione,
+                        String profilo, String estensibilita, String versione) {
         this.id = id;
         this.codice = codice;
         this.descrizione = descrizione;
+        this.profilo = profilo;
+        this.estensibilita = estensibilita;
+        this.versione = versione;
     }
 
     public BoxDocciaDto(String profilo, String estensibilita, String versione, Integer qta, Double prezzo, String extra, String foto, String posa) {

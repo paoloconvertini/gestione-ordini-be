@@ -38,7 +38,7 @@ public class BoxDocciaResource {
     @Consumes(APPLICATION_JSON)
     public Response getAll() {
         return Response.ok(
-                BoxDoccia.find("SELECT id,codice,descrizione FROM BoxDoccia WHERE venduto = 0")
+                BoxDoccia.find("SELECT id,codice,descrizione, profilo, estensibilita, versione FROM BoxDoccia WHERE venduto = 0")
                         .project(BoxDocciaDto.class).list()).build();
     }
 

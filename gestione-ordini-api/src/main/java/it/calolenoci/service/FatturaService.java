@@ -161,6 +161,7 @@ public class FatturaService {
             map.values().forEach(listaDaTrasformare::addAll);
 
             List<FattureDettaglio> fattureDaSalvare = new ArrayList<>();
+            List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
             FattureDettaglio fd;
             for (int i = 0; i < listaDaTrasformare.size(); i++) {
                 OrdineDettaglioDto dto = listaDaTrasformare.get(i);
@@ -169,10 +170,13 @@ public class FatturaService {
                 } else {
                     OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
                     fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i);
+                    o.setSaldoAcconto("S");
+                    ordineDettaglioList.add(o);
                 }
                 fattureDaSalvare.add(fd);
             }
             FattureDettaglio.persist(fattureDaSalvare);
+            OrdineDettaglio.persist(ordineDettaglioList);
             result = StringUtils.join("Creata bolla n. ", f.getAnno(), "/", f.getSerie(), "/", f.getProgressivo());
         } catch (Exception e) {
             Log.error("Errore nella creazione della bolla: " + e.getMessage(), e);

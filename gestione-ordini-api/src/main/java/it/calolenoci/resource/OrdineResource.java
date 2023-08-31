@@ -1,5 +1,6 @@
 package it.calolenoci.resource;
 
+import com.dropbox.core.DbxException;
 import io.quarkus.panache.common.Parameters;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.file.OpenOptions;
@@ -78,6 +79,9 @@ public class OrdineResource {
 
     @ConfigProperty(name = "ordini.path")
     String pathReport;
+
+    @Inject
+    DropBoxService dropBoxService;
 
     @Operation(summary = "Returns all the roles from the database")
     @POST
@@ -242,6 +246,15 @@ public class OrdineResource {
                 .transform(asyncFile -> Response.ok(asyncFile)
                         .header("Content-Disposition", "attachment;filename=" + ordineId)
                         .build());
+    }
+
+    @GET
+    @Path("/downloadSchedeTecniche")
+    @Produces(MediaType.TEXT_PLAIN)
+    @PermitAll
+    public Response dpx() throws DbxException {
+        dropBoxService.list();
+        return Response.noContent().build();
     }
 
     @Transactional

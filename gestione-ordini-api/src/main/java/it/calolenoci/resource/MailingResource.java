@@ -11,6 +11,7 @@ import it.calolenoci.service.PianoContiService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
+import org.jfree.util.Log;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -20,7 +21,15 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import static it.calolenoci.enums.Ruolo.ADMIN;
 import static it.calolenoci.enums.Ruolo.VENDITORE;
@@ -62,8 +71,14 @@ public class MailingResource {
     @PermitAll
     @Path("/test")
     public Response test() throws IOException, ParseException, InterruptedException, org.jose4j.json.internal.json_simple.parser.ParseException {
-        scheduler.geoLocation();
-        return null;
+        //scheduler.geoLocation();
+        ZoneId zone = ZoneId.of("Europe/Paris");
+        ZonedDateTime zonedDateTime = ZonedDateTime.now(zone);
+        //ZonedDateTime t = zonedDateTime.withYear(1899).withMonth(12).withDayOfMonth(30);
+        //Date d = java.sql.Date.valueOf(String.valueOf(zonedDateTime.toLocalDateTime()));
+
+        Date entity = Timestamp.valueOf(zonedDateTime.toLocalDateTime());
+        return Response.ok(entity).build();
     }
 
     @POST
