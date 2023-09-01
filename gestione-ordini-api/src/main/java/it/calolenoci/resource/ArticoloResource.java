@@ -1,11 +1,13 @@
 package it.calolenoci.resource;
 
+import com.dropbox.core.DbxException;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.GoOrdineDettaglio;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.service.ArticoloService;
+import it.calolenoci.service.DropBoxService;
 import it.calolenoci.service.FatturaService;
 import it.calolenoci.service.OrdineService;
 import org.apache.commons.lang3.StringUtils;
@@ -17,12 +19,15 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.util.List;
 
 import static it.calolenoci.enums.Ruolo.*;
@@ -50,6 +55,9 @@ public class ArticoloResource {
     @Inject
     @Claim(standard = Claims.email)
     String email;
+
+    @Inject
+    DropBoxService dropBoxService;
 
     @Operation(summary = "Crea ordine a fornitore")
     @POST
@@ -185,6 +193,19 @@ public class ArticoloResource {
                         .and("progressivo", dto.getProgressivo())
                         .and("rigo", dto.getRigo()));
         return Response.ok(new ResponseDto("Nota aggiunta", false)).build();
+    }
+
+    @POST
+    @Path("/scaricaSchedeTecniche")
+    @Produces(MediaType.TEXT_PLAIN)
+    @PermitAll
+    public Response dpx(List<OrdineDettaglioDto> list) throws DbxException {
+        File zip = dropBoxService.list(list);
+        if(zip != null){
+            return Response.ok().header("Content-Disposition", "attachment;filename=" + zip.getName()).build();
+        } else {
+            return Response.noContent().build();
+        }
     }
 
 }

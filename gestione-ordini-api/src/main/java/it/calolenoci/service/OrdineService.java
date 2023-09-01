@@ -276,11 +276,21 @@ public class OrdineService {
                 "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'" +
-                " AND go.status IN (:list) ";
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'" ;
 
         Map<String, Object> map = new HashMap<>();
-        map.put("list", filtro.getStati());
+
+        if(filtro.getStati() != null && !filtro.getStati().isEmpty()){
+            query += "AND go.status IN (:list)";
+            map.put("list", filtro.getStati());
+        }
+        if(StringUtils.isNotBlank(filtro.getStatus())) {
+            query += " AND go.status = :status";
+            map.put("status", filtro.getStatus());
+        }
+
+
+
 
         map.put("dataConfig", sdf.parse(dataCongig));
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {

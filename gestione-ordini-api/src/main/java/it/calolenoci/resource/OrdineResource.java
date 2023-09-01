@@ -80,9 +80,6 @@ public class OrdineResource {
     @ConfigProperty(name = "ordini.path")
     String pathReport;
 
-    @Inject
-    DropBoxService dropBoxService;
-
     @Operation(summary = "Returns all the roles from the database")
     @POST
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
@@ -156,6 +153,7 @@ public class OrdineResource {
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             filtro.setStati(stati);
+            filtro.setStatus(null);
         }
         return Response.ok(ordineService.findAllByStati(filtro)).build();
     }
@@ -246,15 +244,6 @@ public class OrdineResource {
                 .transform(asyncFile -> Response.ok(asyncFile)
                         .header("Content-Disposition", "attachment;filename=" + ordineId)
                         .build());
-    }
-
-    @GET
-    @Path("/downloadSchedeTecniche")
-    @Produces(MediaType.TEXT_PLAIN)
-    @PermitAll
-    public Response dpx() throws DbxException {
-        dropBoxService.list();
-        return Response.noContent().build();
     }
 
     @Transactional
