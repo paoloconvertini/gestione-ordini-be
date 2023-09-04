@@ -1,6 +1,7 @@
 package it.calolenoci.resource;
 
 import com.dropbox.core.DbxException;
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.GoOrdine;
@@ -10,6 +11,7 @@ import it.calolenoci.service.ArticoloService;
 import it.calolenoci.service.DropBoxService;
 import it.calolenoci.service.FatturaService;
 import it.calolenoci.service.OrdineService;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
@@ -199,13 +201,19 @@ public class ArticoloResource {
     @Path("/scaricaSchedeTecniche")
     @Produces(MediaType.TEXT_PLAIN)
     @PermitAll
-    public Response dpx(List<OrdineDettaglioDto> list) throws DbxException {
-        File zip = dropBoxService.list(list);
-        if(zip != null){
-            return Response.ok().header("Content-Disposition", "attachment;filename=" + zip.getName()).build();
-        } else {
-            return Response.noContent().build();
+    public Response dpx(List<OrdineDettaglioDto> list) {
+        File zip;
+        try {
+            zip = dropBoxService.list(list);
+            if(zip != null){
+                return Response.ok(zip).header("Content-Disposition", "attachment;filename=" + zip.getName()).build();
+            } else {
+                return Response.noContent().build();
+            }
+        } catch (Exception e) {
+            Log.error("Errore scarica dropbox file", e);
         }
+        return null;
     }
 
 }

@@ -9,8 +9,11 @@ import com.dropbox.core.v2.users.FullAccount;
 import io.quarkus.logging.Log;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.entity.GoOrdine;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jose4j.json.internal.json_simple.JSONObject;
+import org.jose4j.json.internal.json_simple.parser.JSONParser;
 
 import javax.inject.Singleton;
 import java.io.*;
@@ -38,44 +41,51 @@ public class DropBoxService {
     @ConfigProperty(name = "dropbox.secret")
     String secret;
 
+    @ConfigProperty(name = "dropbox.refresh.token")
+    String refreshToken;
+
     public File list(List<OrdineDettaglioDto> list) throws DbxException {
         try {
             List<File> fileList = new ArrayList<>();
             // Create Dropbox client
-            String appKey = key;
-            String appSecret = secret;
-            DbxRequestConfig config = DbxRequestConfig.newBuilder(appKey).build();
-
-            DbxWebAuth webAuth = new DbxWebAuth(config, new DbxAppInfo(appKey, appSecret));
-            HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(url+key)).build();
+            DbxRequestConfig config = DbxRequestConfig.newBuilder(key).build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .POST(HttpRequest.BodyPublishers.ofString("grant_type=refresh_token&refresh_token=" + refreshToken + "&client_id=" + key + "&client_secret=" + secret))
+                    .uri(URI.create(url)).build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (StringUtils.isNotBlank(response.body())) {
                 Log.info(response.body());
-            }
-            DbxAuthFinish dbxAuthFinish = webAuth.finishFromCode(response.body());
-            DbxCredential credential = new DbxCredential(dbxAuthFinish.getAccessToken(), 1L, dbxAuthFinish.getRefreshToken(), appKey);
-            DbxClientV2 client = new DbxClientV2(config, credential);
-            for (OrdineDettaglioDto dto : list) {
-                SearchV2Builder searchBuilder = client.files().searchV2Builder(dto.getCodArtFornitore());
-                SearchOptions searchOptions = SearchOptions.newBuilder()
-                        .withPath("/Applicazioni/GO_doc_ordini_cliente/schede tecniche/")
-                        .build();
-                SearchV2Result searchResult = searchBuilder.withOptions(searchOptions).start();
-                List<SearchMatchV2> matches = searchResult.getMatches();
-                if(!matches.isEmpty()) {
-                    for (SearchMatchV2 match : matches) {
-                        String path = match.getMetadata().getMetadataValue().getPathDisplay();
-                        String fileName = match.getMetadata().getMetadataValue().getName();
-                        fileList.add(downloadFromDropbox(fileName, path, client));
+                JSONParser parser = new JSONParser();
+                JSONObject jobj = (JSONObject) parser.parse(response.body());
+                String accessToken = (String)jobj.get("access_token");
+                DbxCredential credential = new DbxCredential(accessToken);
+                DbxClientV2 client = new DbxClientV2(config, credential);
+                for (OrdineDettaglioDto dto : list) {
+                    SearchV2Builder searchBuilder = client.files().searchV2Builder(dto.getCodArtFornitore());
+                    SearchOptions searchOptions = SearchOptions.newBuilder()
+                            .withPath("/schede tecniche")
+                            .withFilenameOnly(Boolean.TRUE)
+                            .build();
+                    SearchV2Result searchResult = searchBuilder.withOptions(searchOptions).start();
+                    List<SearchMatchV2> matches = searchResult.getMatches();
+                    if(!matches.isEmpty()) {
+                        for (SearchMatchV2 match : matches) {
+                            String path = match.getMetadata().getMetadataValue().getPathDisplay();
+                            String fileName = match.getMetadata().getMetadataValue().getName();
+                            fileList.add(downloadFromDropbox(fileName, path, client));
+                        }
                     }
                 }
             }
 
+
             if(!fileList.isEmpty()) {
-                return zipFile(fileList);
+                File file = zipFile(fileList);
+                fileList.forEach(FileUtils::deleteQuietly);
+                return file;
             }
         } catch (Exception e ) {
-            Log.error("errore search documenti");
+            Log.error("errore search documenti", e);
         }
         return null;
     }
