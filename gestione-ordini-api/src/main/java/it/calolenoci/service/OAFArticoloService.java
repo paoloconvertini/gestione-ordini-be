@@ -1,13 +1,12 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.mapper.GoOrdineFornitoreMapper;
 import it.calolenoci.mapper.OafArticoloMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.jfree.util.Log;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -77,13 +76,13 @@ public class OAFArticoloService {
     }
 
     @Transactional
-    public boolean save(ArticoloDto dto) {
+    public boolean save(ArticoloDto dto, String user) {
         try {
             OrdineFornitoreDettaglio.update("rigo = (rigo+1) WHERE anno = :anno AND serie = :serie" +
                             " AND progressivo = :progressivo and rigo >=:rigo",
                     Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
                             .and("progressivo", dto.getProgressivo()).and("rigo", dto.getRigo()));
-            mapper.fromDtoToEntity(dto).persist();
+            mapper.fromDtoToEntity(dto, user).persist();
             return true;
         } catch (Exception e) {
             Log.error("Errore nella creazione del rigo, " + e.getMessage());

@@ -1,28 +1,23 @@
 package it.calolenoci.service;
 
-import com.dropbox.core.*;
-import com.dropbox.core.oauth.DbxCredential;
-import com.dropbox.core.v1.DbxEntry;
+import com.dropbox.core.DbxDownloader;
+import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.*;
-import com.dropbox.core.v2.users.FullAccount;
 import io.quarkus.logging.Log;
+import it.calolenoci.dto.DbxDto;
+import it.calolenoci.dto.DbxMultipartBody;
+import it.calolenoci.dto.DbxSearchDTO;
 import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.entity.GoOrdine;
+import it.calolenoci.handler.DBXHandler;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jose4j.json.internal.json_simple.JSONObject;
-import org.jose4j.json.internal.json_simple.parser.JSONParser;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.*;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -30,61 +25,92 @@ import java.util.zip.ZipOutputStream;
 @Singleton
 public class DropBoxService {
 
-    private final HttpClient httpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_2).build();
+    @Inject
+    DBXHandler dbxHandler;
 
-    @ConfigProperty(name = "dropbox.auth.url")
-    String url;
+    private static final String URL = "/Applicazioni/GO_doc_ordini_cliente/schede tecniche";
 
-    @ConfigProperty(name = "dropbox.key")
-    String key;
-
-    @ConfigProperty(name = "dropbox.secret")
-    String secret;
-
-    @ConfigProperty(name = "dropbox.refresh.token")
-    String refreshToken;
-
-    public File list(List<OrdineDettaglioDto> list) throws DbxException {
+    public DbxDto cercaSchedeTecniche(List<OrdineDettaglioDto> list) {
         try {
-            List<File> fileList = new ArrayList<>();
-            // Create Dropbox client
-            DbxRequestConfig config = DbxRequestConfig.newBuilder(key).build();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .POST(HttpRequest.BodyPublishers.ofString("grant_type=refresh_token&refresh_token=" + refreshToken + "&client_id=" + key + "&client_secret=" + secret))
-                    .uri(URI.create(url)).build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (StringUtils.isNotBlank(response.body())) {
-                Log.info(response.body());
-                JSONParser parser = new JSONParser();
-                JSONObject jobj = (JSONObject) parser.parse(response.body());
-                String accessToken = (String)jobj.get("access_token");
-                DbxCredential credential = new DbxCredential(accessToken);
-                DbxClientV2 client = new DbxClientV2(config, credential);
-                for (OrdineDettaglioDto dto : list) {
-                    SearchV2Builder searchBuilder = client.files().searchV2Builder(dto.getCodArtFornitore());
-                    SearchOptions searchOptions = SearchOptions.newBuilder()
-                            .withPath("/schede tecniche")
-                            .withFilenameOnly(Boolean.TRUE)
-                            .build();
+            DbxDto dbxDto = new DbxDto();
+            DbxClientV2 client = dbxHandler.getClient();
+            if (client == null) {
+                throw new DbxException("Errore creazione dbx client");
+            }
+            for (OrdineDettaglioDto dto : list) {
+                if (StringUtils.isBlank(dto.getCodArtFornitore())) {
+                    continue;
+                }
+                SearchV2Builder searchBuilder = client.files().searchV2Builder(dto.getCodArtFornitore());
+                SearchOptions searchOptions = SearchOptions.newBuilder()
+                        .withPath("/schede tecniche")
+                        .withFilenameOnly(Boolean.TRUE)
+                        .build();
+                try {
                     SearchV2Result searchResult = searchBuilder.withOptions(searchOptions).start();
                     List<SearchMatchV2> matches = searchResult.getMatches();
-                    if(!matches.isEmpty()) {
+                    if (!matches.isEmpty()) {
                         for (SearchMatchV2 match : matches) {
                             String path = match.getMetadata().getMetadataValue().getPathDisplay();
                             String fileName = match.getMetadata().getMetadataValue().getName();
-                            fileList.add(downloadFromDropbox(fileName, path, client));
+                            dbxDto.getSearchDTOS().add(new DbxSearchDTO(fileName, path));
                         }
+                    } else {
+                        dbxDto.getCodArtFornList().add(dto.getCodArtFornitore());
                     }
+                } catch (DbxException e) {
+                    Log.error("Errore dbx per la query: " + dto.getCodArtFornitore(), e);
                 }
             }
+            return dbxDto;
+        } catch (Exception e) {
+            Log.error("errore search documenti", e);
+        }
+        return null;
+    }
 
+    public List<String> cercaCartelleSchedeTecniche() {
+        try {
+            List<String> returnList = new ArrayList<>();
+            DbxClientV2 client = dbxHandler.getClient();
+            if (client == null) {
+                throw new DbxException("Errore creazione dbx client");
+            }
+            try {
+                ListFolderResult listFolderResult = client.files().listFolder("/schede tecniche");
+                if (listFolderResult != null && !listFolderResult.getEntries().isEmpty()) {
+                    for (Metadata match : listFolderResult.getEntries()) {
+                        returnList.add(match.getName());
+                    }
+                }
+            } catch (DbxException e) {
+                Log.error("Errore dbx get cartella: ", e);
+            }
+            return returnList;
+        } catch (Exception e) {
+            Log.error("errore search folders", e);
+        }
+        return null;
+    }
 
-            if(!fileList.isEmpty()) {
+    public File scaricaSchedeTecniche(List<DbxSearchDTO> list) {
+        try {
+            List<File> fileList = new ArrayList<>();
+            // Create Dropbox client
+            DbxClientV2 client = dbxHandler.getClient();
+            if (client == null) {
+                throw new DbxException("Errore creazione dbx client");
+            }
+            for (DbxSearchDTO dto : list) {
+                fileList.add(downloadFromDropbox(dto.getFileName(), dto.getPath(), client));
+            }
+
+            if (!fileList.isEmpty()) {
                 File file = zipFile(fileList);
                 fileList.forEach(FileUtils::deleteQuietly);
                 return file;
             }
-        } catch (Exception e ) {
+        } catch (Exception e) {
             Log.error("errore search documenti", e);
         }
         return null;
@@ -125,5 +151,25 @@ public class DropBoxService {
             Log.error("Error zipping file", e);
         }
         return null;
+    }
+
+    public void uploadSchedaTecnica(List<DbxMultipartBody> list) {
+        try {
+            // Create Dropbox client
+            DbxClientV2 client = dbxHandler.getClient();
+            if (client == null) {
+                throw new DbxException("Errore creazione dbx client");
+            }
+            for (DbxMultipartBody dbx : list) {
+                String stringFile = dbx.file.split(",")[1];
+                byte[] decodedFile = Base64.getDecoder().decode(stringFile);
+                try (InputStream in = new ByteArrayInputStream(decodedFile)) {
+                    String path = URL + "/" + dbx.folder + "/" +  dbx.filename;
+                    client.files().uploadBuilder(path).uploadAndFinish(in);
+                }
+            }
+        } catch (Exception e) {
+            Log.error("errore search documenti", e);
+        }
     }
 }

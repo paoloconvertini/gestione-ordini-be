@@ -82,6 +82,22 @@ public class ArticoloResource {
         }
     }
 
+    @Operation(summary = "Crea ordine a fornitore")
+    @POST
+    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @Path("/uploadSchedaTecnica")
+    public Response uploadSchedaTecnica(List<DbxMultipartBody> list) {
+        try {
+            if(list.isEmpty()) {
+                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun elemento caricato!", false)).build();
+            }
+            dropBoxService.uploadSchedaTecnica(list);
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
+        }
+        return Response.noContent().build();
+    }
+
     @Operation(summary = "Returns all the articoli from the database")
     @POST
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
@@ -198,13 +214,44 @@ public class ArticoloResource {
     }
 
     @POST
+    @Path("/cercaSchedeTecniche")
+    @Produces(APPLICATION_JSON)
+    @PermitAll
+    public Response cercaSchedeTecniche(List<OrdineDettaglioDto> list) {
+        try {
+            DbxDto dto = dropBoxService.cercaSchedeTecniche(list);
+            return Response.ok(dto).build();
+        } catch (Exception e) {
+            Log.error("Errore cerca dropbox file", e);
+        }
+        return null;
+    }
+
+    @GET
+    @Path("/cercaCartelleSchedeTecniche")
+    @Produces(APPLICATION_JSON)
+    @PermitAll
+    public Response cercaCartelleSchedeTecniche() {
+        try {
+            List<String> list = dropBoxService.cercaCartelleSchedeTecniche();
+            if(list == null) {
+                return Response.noContent().build();
+            }
+            return Response.ok(list).build();
+        } catch (Exception e) {
+            Log.error("Errore cerca dropbox cartelle", e);
+        }
+        return null;
+    }
+
+    @POST
     @Path("/scaricaSchedeTecniche")
     @Produces(MediaType.TEXT_PLAIN)
     @PermitAll
-    public Response dpx(List<OrdineDettaglioDto> list) {
+    public Response scaricaSchedeTecniche(List<DbxSearchDTO> list) {
         File zip;
         try {
-            zip = dropBoxService.list(list);
+            zip = dropBoxService.scaricaSchedeTecniche(list);
             if(zip != null){
                 return Response.ok(zip).header("Content-Disposition", "attachment;filename=" + zip.getName()).build();
             } else {

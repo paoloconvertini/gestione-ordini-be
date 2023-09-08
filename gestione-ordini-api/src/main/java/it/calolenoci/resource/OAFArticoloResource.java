@@ -83,7 +83,7 @@ public class OAFArticoloResource {
     @RolesAllowed({AMMINISTRATIVO, ADMIN})
     @Path("/salvaRigo")
     public Response salvaRigo(ArticoloDto dto) {
-        boolean save = articoloService.save(dto);
+        boolean save = articoloService.save(dto, user);
         if(!save){
             return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Errore Salvataggio !", true)).build();
         }

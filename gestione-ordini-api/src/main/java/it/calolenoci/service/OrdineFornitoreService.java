@@ -1,7 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
@@ -105,11 +103,8 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setProgrGenerale(++progressivoFornDettaglio);
                         fornitoreDettaglio.setAnno(Year.now().getValue());
                         fornitoreDettaglio.setSerie(serieOAF);
-                        //Integer rigo = articoloDtoList.indexOf(a);
-                      /*  if(optOrdine.isPresent()) {
-                             rigo = findRigo(serieOAF, prog);
-                        }*/
                         fornitoreDettaglio.setRigo(articoloDtoList.indexOf(a) + 1);
+                        fornitoreDettaglio.setTipoRigo(" ");
                         fornitoreDettaglio.setPid(a.getProgrGenerale());
                         fornitoreDettaglio.setOArticolo(a.getArticolo());
                         fornitoreDettaglio.setODescrArticolo(a.getDescrArticolo());
@@ -121,13 +116,13 @@ public class OrdineFornitoreService {
                                 .ifPresent(fornitoreDettaglio::setOPrezzo);
                         fornitoreDettaglio.setOQuantita(a.getQuantita());
                         fornitoreDettaglio.setOQuantitaV(a.getQuantitaV());
+                        fornitoreDettaglio.setOquantita2(0D);
                         fornitoreDettaglio.setOUnitaMisura(a.getUnitaMisura());
                         fornitoreDettaglio.setOColli(a.getColli());
                         fornitoreDettaglio.setOCodiceIva("22");
                         fornitoreDettaglio.setProvenienza("C");
                         fornitoreDettaglio.setMagazzino("B");
-                        fornitoreDettaglio.setSaldo("");
-                        fornitoreDettaglio.setTipoRigo("");
+                        settaCampi(user, fornitoreDettaglio);
                         if(fornitoreDettaglio.getOQuantita() != null && fornitoreDettaglio.getOPrezzo() != null){
                             fornitoreDettaglio.setValoreTotale(fornitoreDettaglio.getOQuantita()*fornitoreDettaglio.getOPrezzo());
                         }
@@ -147,7 +142,7 @@ public class OrdineFornitoreService {
                                 , a.getRigo(), null, null, null, null));
                     }
                     OrdineFornitoreDettaglio rigoRiferimento = createRigoRiferimento(serieOAF, prog, articoloDto.getIntestazioneCliente(),
-                            ordineFornitoreDettaglios.get(ordineFornitoreDettaglios.size() - 1).getRigo(), progressivoFornDettaglio);
+                            ordineFornitoreDettaglios.get(ordineFornitoreDettaglios.size() - 1).getRigo(), progressivoFornDettaglio, user);
                     ordineFornitoreDettaglios.add(rigoRiferimento);
                     progressivoFornDettaglio = rigoRiferimento.getProgrGenerale();
                 }
@@ -212,7 +207,7 @@ public class OrdineFornitoreService {
                 .project(Integer.class).singleResult();
     }
 
-    private OrdineFornitoreDettaglio createRigoRiferimento(String serie, Integer progressivo, String intestazione, Integer rigo, Integer progrGenerale) {
+    private OrdineFornitoreDettaglio createRigoRiferimento(String serie, Integer progressivo, String intestazione, Integer rigo, Integer progrGenerale, String user) {
         OrdineFornitoreDettaglio ordineFornitoreDettaglio = new OrdineFornitoreDettaglio();
         ordineFornitoreDettaglio.setTipoRigo("C");
         ordineFornitoreDettaglio.setRigo(rigo + 1);
@@ -221,7 +216,65 @@ public class OrdineFornitoreService {
         ordineFornitoreDettaglio.setProgressivo(progressivo);
         ordineFornitoreDettaglio.setODescrArticolo("Rif. " + intestazione);
         ordineFornitoreDettaglio.setProgrGenerale(progrGenerale + 1);
+        ordineFornitoreDettaglio.setNota(" ");
+        ordineFornitoreDettaglio.setOQuantita(0D);
+        ordineFornitoreDettaglio.setOQuantitaV(0D);
+        ordineFornitoreDettaglio.setOquantita2(0D);
+        ordineFornitoreDettaglio.setOUnitaMisura(" ");
+        ordineFornitoreDettaglio.setOColli(0);
+        ordineFornitoreDettaglio.setOCodiceIva(" ");
+        ordineFornitoreDettaglio.setProvenienza(" ");
+        ordineFornitoreDettaglio.setMagazzino(" ");
+        ordineFornitoreDettaglio.setPid(0);
+        ordineFornitoreDettaglio.setOArticolo(" ");
+        ordineFornitoreDettaglio.setCampoUser5(" ");
+        settaCampi(user, ordineFornitoreDettaglio);
+
         return ordineFornitoreDettaglio;
+    }
+
+    private void settaCampi(String user, OrdineFornitoreDettaglio ordineFornitoreDettaglio) {
+        ordineFornitoreDettaglio.setSaldo(" ");
+        ordineFornitoreDettaglio.setSinonimo1(0);
+        ordineFornitoreDettaglio.setVariante1(" ");
+        ordineFornitoreDettaglio.setVariante2(" ");
+        ordineFornitoreDettaglio.setVariante3(" ");
+        ordineFornitoreDettaglio.setVariante4(" ");
+        ordineFornitoreDettaglio.setVariante5(" ");
+        ordineFornitoreDettaglio.setCodiceean(" ");
+        ordineFornitoreDettaglio.setOcoefficiente(0D);
+        ordineFornitoreDettaglio.setPrezzoextra(0D);
+        ordineFornitoreDettaglio.setDataconfconseg(new Date());
+        ordineFornitoreDettaglio.setDatarichconseg(new Date());
+        ordineFornitoreDettaglio.setOlottomagf(" ");
+        ordineFornitoreDettaglio.setOpallet(0D);
+        ordineFornitoreDettaglio.setOcommessa(" ");
+        ordineFornitoreDettaglio.setOcentrocostor(" ");
+        ordineFornitoreDettaglio.setImpprovvfisso(0D);
+        ordineFornitoreDettaglio.setOprovvarticolo(0D);
+        ordineFornitoreDettaglio.setOprovvfornitore(0D);
+        ordineFornitoreDettaglio.setQtyuser1(0D);
+        ordineFornitoreDettaglio.setQtyuser2(0D);
+        ordineFornitoreDettaglio.setQtyuser3(0D);
+        ordineFornitoreDettaglio.setQtyuser4(0D);
+        ordineFornitoreDettaglio.setQtyuser5(0D);
+        ordineFornitoreDettaglio.setCampouser1(" ");
+        ordineFornitoreDettaglio.setCampouser2(" ");
+        ordineFornitoreDettaglio.setCampouser3(" ");
+        ordineFornitoreDettaglio.setCampouser4(" ");
+        ordineFornitoreDettaglio.setPidPrimanota(0);
+        ordineFornitoreDettaglio.setUsername(user);
+        ordineFornitoreDettaglio.setSysCreatedate(new Date());
+        ordineFornitoreDettaglio.setSysUpdatedate(new Date());
+        ordineFornitoreDettaglio.setSysCreateuser(user);
+        ordineFornitoreDettaglio.setSysUpdateuser(user);
+        ordineFornitoreDettaglio.setOvocespesa(" ");
+        ordineFornitoreDettaglio.setOPrezzo(0D);
+        ordineFornitoreDettaglio.setValoreTotale(0D);
+        ordineFornitoreDettaglio.setFScontoArticolo(0D);
+        ordineFornitoreDettaglio.setScontoF1(0D);
+        ordineFornitoreDettaglio.setScontoF2(0D);
+        ordineFornitoreDettaglio.setFScontoP(0D);
     }
 
     public List<OrdineFornitoreDto> findAllByStatus(String status) throws ParseException {

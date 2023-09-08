@@ -85,9 +85,12 @@ public class OrdineService {
             query += " and o.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());
         }
+        long inizioQuery = System.currentTimeMillis();
         List<OrdineDTO> list = Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
+        long fineQuery = System.currentTimeMillis();
+        Log.info("Query all ordini: " + (fineQuery - inizioQuery)/1000 + " sec");
         long fine = System.currentTimeMillis();
-        Log.info("Find all ordini: " + (fine - inizio)/1000 + " sec");
+        Log.info("Metodo all ordini: " + (fine - inizio)/1000 + " sec");
         return list;
     }
 

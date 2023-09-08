@@ -151,10 +151,9 @@ public class ArticoloService {
     }
 
     public boolean findNoConsegnati(Integer anno, String serie, Integer progressivo) {
-        return GoOrdineDettaglio.find("SELECT god FROM GoOrdineDettaglio god " +
-                        " WHERE god.anno = :anno AND god.serie = :serie AND god.progressivo = :progressivo " +
-                        " and (god.flagConsegnato = false OR god.flagConsegnato IS NULL) " +
-                        " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)",
+        return OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o " +
+                        " WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
+                        " and saldoAcconto <> 'S' and tipoRigo = ' '",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
     }
 

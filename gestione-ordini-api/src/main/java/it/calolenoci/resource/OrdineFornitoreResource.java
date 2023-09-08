@@ -85,13 +85,13 @@ public class OrdineFornitoreResource {
     public Response createOAF(List<OrdineDettaglio> articoli) {
         try {
             if (articoli.isEmpty()) {
-                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun articolo da ordinare!", false)).build();
+                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun articolo da ordinare!", true)).build();
             }
             List<String> list = service.save(articoli, user);
             if (!list.isEmpty()) {
                 return Response.status(Response.Status.CREATED).entity(list).build();
             } else {
-                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun elemento salvato!", false)).build();
+                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun elemento salvato!", true)).build();
             }
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
