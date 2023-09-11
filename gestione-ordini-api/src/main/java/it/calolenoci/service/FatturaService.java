@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
@@ -172,6 +173,17 @@ public class FatturaService {
                     fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i);
                     o.setSaldoAcconto("S");
                     ordineDettaglioList.add(o);
+                    Optional<SaldiMagazzino> optional = SaldiMagazzino.find("marticolo =:art and  mmagazzino = :mag",
+                    Parameters.with("art", o.getFArticolo()).and("mag", o.getMagazz())).firstResultOptional();
+                    if(optional.isPresent()){
+                        SaldiMagazzino saldiMagazzino = optional.get();
+                        Double qtaScarico = saldiMagazzino.getQscarichi() + o.getQuantita();
+                        Double qtaGiacenza = saldiMagazzino.getQcarichi() - qtaScarico;
+                        saldiMagazzino.setQscarichi(qtaScarico);
+                        saldiMagazzino.setQgiacenza(qtaGiacenza);
+                        SaldiMagazzino.persist(saldiMagazzino);
+                    }
+
                 }
                 fattureDaSalvare.add(fd);
             }
