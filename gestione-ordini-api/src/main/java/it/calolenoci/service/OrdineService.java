@@ -203,7 +203,7 @@ public class OrdineService {
             List<GoOrdineDto> ordines = map.get(s);
             GoOrdineDto o = ordines.get(0);
             GoOrdine ordine = o.getGo();
-            boolean noneMatch = ordines.stream().noneMatch(GoOrdineDto::getFlProntoConsegna);
+            boolean noneMatch = ordines.stream().noneMatch(dto->dto.getFlProntoConsegna()!=null && dto.getFlProntoConsegna());
             if (noneMatch) {
                 ordine.setHasProntoConsegna(Boolean.FALSE);
                 GoOrdine.persist(ordine);
