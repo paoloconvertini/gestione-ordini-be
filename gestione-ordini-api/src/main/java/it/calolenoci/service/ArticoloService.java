@@ -71,13 +71,6 @@ public class ArticoloService {
         return OrdineDettaglio.findArticoliForReport(anno, serie, progressivo);
     }
 
-    public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
-        return !OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o" +
-                        " WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo and tipoRigo NOT IN ('C', 'AC')" +
-                        " AND NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o.progrGenerale = god.progrGenerale)",
-                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
-    }
-
     @Transactional
     public Integer updateArticoliBolle(List<OrdineDettaglioDto> list) {
         long inizio = System.currentTimeMillis();
@@ -95,7 +88,7 @@ public class ArticoloService {
                 }
                 Double qtaDaConsegnare = (e.getQuantita() - e.getQtaBolla());
                 if(goOrdineDettaglio.getQtaDaConsegnare() == null || !Objects.equals(goOrdineDettaglio.getQtaDaConsegnare(), qtaDaConsegnare)){
-                    Double diffQtaCons = (e.getQuantita() - goOrdineDettaglio.getQtaDaConsegnare());
+                    Double diffQtaCons = (e.getQuantita() - (goOrdineDettaglio.getQtaDaConsegnare()==null?0: goOrdineDettaglio.getQtaDaConsegnare()));
                     if(qtaDaConsegnare == 0 ){
                         goOrdineDettaglio.setQtaConsegnatoSenzaBolla(null);
                     }
@@ -148,13 +141,6 @@ public class ArticoloService {
                         " and flProntoConsegna = true " +
                         " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale)",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) == 0;
-    }
-
-    public boolean findNoConsegnati(Integer anno, String serie, Integer progressivo) {
-        return OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o " +
-                        " WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
-                        " and saldoAcconto <> 'S' and tipoRigo = ' '",
-                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
     }
 
     public void checkNoBolle() {

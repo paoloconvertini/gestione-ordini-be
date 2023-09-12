@@ -64,11 +64,11 @@ public class FetchScheduler {
             update = articoloService.updateArticoliBolle(list);
             Log.info("Aggiornati " + update + " articoli");
             if (update != null && update != 0) {
-                ordineService.checkConsegnati();
+                ordineService.checkConsegnati(null);
             }
         }
         articoloService.checkNoBolle();
-        ordineService.checkNoProntaConegna();
+        ordineService.checkNoProntaConegna(null);
         long fine = System.currentTimeMillis();
         Log.info("FINE UPDATE CHECK BOLLE: " + (fine - inizio) / 1000 + " sec");
     }

@@ -1,18 +1,19 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
-import it.calolenoci.dto.*;
+import it.calolenoci.dto.AccontoDto;
+import it.calolenoci.dto.FatturaDto;
+import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.entity.*;
 import it.calolenoci.mapper.FattureMapper;
+import it.calolenoci.mapper.MagazzinoMapper;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
 import javax.transaction.Transactional;
 import java.time.Year;
 import java.util.*;
@@ -26,6 +27,9 @@ public class FatturaService {
 
     @Inject
     FattureMapper fattureMapper;
+
+    @Inject
+    MagazzinoMapper magazzinoMapper;
 
     public List<OrdineDettaglioDto> getBolle() {
         long inizio = System.currentTimeMillis();
@@ -183,6 +187,8 @@ public class FatturaService {
                         saldiMagazzino.setQgiacenza(qtaGiacenza);
                         SaldiMagazzino.persist(saldiMagazzino);
                     }
+                    //Magazzino.find("anno=:anno and serie = 'B' a")
+                    //Magazzino.persist(magazzinoMapper.buildMagazzino());
 
                 }
                 fattureDaSalvare.add(fd);

@@ -56,11 +56,11 @@ public class OrdineService {
         if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
                 !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus()) &&
         !StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
-            checkStatusDettaglio();
+            checkStatusDettaglio(filtro.getStatus());
         }
         if (!StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
-            checkConsegnati();
-            checkNoProntaConegna();
+            checkConsegnati(filtro.getStatus());
+            checkNoProntaConegna(filtro.getStatus());
         }
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
@@ -129,56 +129,87 @@ public class OrdineService {
 
 
     @Transactional
-    public void checkStatusDettaglio() {
+    public void checkStatusDettaglio(String status) {
         List<String> list = new ArrayList<>();
-        list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
-        list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
-        List<GoOrdine> ordineList = GoOrdine.findOrdiniByStatus(list);
+        if(StringUtils.isBlank(status)) {
+            list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+            list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+        } else {
+            list.add(status);
+        }
+        long inizio = System.currentTimeMillis();
+        List<GoOrdine> ordineList = GoOrdine.findOrdiniWithNewItems(list);
         ordineList.forEach(o -> {
-            if (articoloService.findAnyNoStatus(o.getAnno(), o.getSerie(), o.getProgressivo())) {
-                o.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-                o.persist();
-            }
-
+            o.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+            o.persist();
         });
+        long fine = System.currentTimeMillis();
+        Log.info("check nuovi articoli: " + (fine - inizio) + " msec");
     }
 
     @Transactional
-    public void checkConsegnati() {
-        long inizio = System.currentTimeMillis();
+    public void checkConsegnati(String status) {
         List<String> list = new ArrayList<>();
-        list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
-        list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
-        list.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-        List<GoOrdine> ordineList = GoOrdine.findOrdiniByStatus(list);
-        ordineList.forEach(o -> {
-            if (articoloService.findNoConsegnati(o.getAnno(), o.getSerie(), o.getProgressivo()) && !o.getWarnNoBolla()) {
-                o.setStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
-                if (o.getHasProntoConsegna() != null && o.getHasProntoConsegna()) {
-                    o.setHasProntoConsegna(Boolean.FALSE);
+        if(StringUtils.isBlank(status)) {
+            list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+            list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+            list.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+        } else {
+            list.add(status);
+        }
+
+        long i = System.currentTimeMillis();
+        List<GoOrdineDto> ordineList = GoOrdine.findOrdiniConsegnatiByStatus(list);
+        long f = System.currentTimeMillis();
+        Log.info("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
+        long inizio = System.currentTimeMillis();
+        Map<String, List<GoOrdineDto>> map = ordineList.stream().collect(Collectors.groupingBy(GoOrdineDto::creaId));
+        for (String s : map.keySet()) {
+            List<GoOrdineDto> ordines = map.get(s);
+            GoOrdineDto o = ordines.get(0);
+            GoOrdine ordine = o.getGo();
+            boolean anyMatch = ordines.stream().allMatch(or -> StringUtils.equals("S", or.getSaldoAcconto()));
+                if (anyMatch && !ordine.getWarnNoBolla()) {
+                    ordine.setStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
+                    if (ordine.getHasProntoConsegna() != null && ordine.getHasProntoConsegna()) {
+                        ordine.setHasProntoConsegna(Boolean.FALSE);
+                    }
+                    ordine.persist();
                 }
-                o.persist();
-            }
-        });
+        }
         long fine = System.currentTimeMillis();
         Log.info("FindNoConsegnati: " + (fine - inizio) + " msec");
     }
 
     @Transactional
-    public void checkNoProntaConegna() {
-        long inizio = System.currentTimeMillis();
+    public void checkNoProntaConegna(String status) {
         List<String> list = new ArrayList<>();
-        list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
-        list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
-        list.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
-        list.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-        List<GoOrdine> ordineList = GoOrdine.findOrdiniByStatus(list);
-        ordineList.forEach(o -> {
-            if (articoloService.findNoProntaConsegna(o.getAnno(), o.getSerie(), o.getProgressivo())) {
-                o.setHasProntoConsegna(Boolean.FALSE);
-                o.persist();
+        if(StringUtils.isBlank(status)){
+            list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+            list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+            list.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
+            list.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+        } else {
+            list.add(status);
+        }
+
+        long i = System.currentTimeMillis();
+        List<GoOrdineDto> ordineList = GoOrdine.findOrdiniNoProntaConsegnaByStatus(list);
+        long f = System.currentTimeMillis();
+        Log.info("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
+        long inizio = System.currentTimeMillis();
+        Map<String, List<GoOrdineDto>> map = ordineList.stream().collect(Collectors.groupingBy(GoOrdineDto::creaId));
+        for (String s : map.keySet()) {
+            List<GoOrdineDto> ordines = map.get(s);
+            GoOrdineDto o = ordines.get(0);
+            GoOrdine ordine = o.getGo();
+            boolean noneMatch = ordines.stream().noneMatch(GoOrdineDto::getFlProntoConsegna);
+            if (noneMatch) {
+                ordine.setHasProntoConsegna(Boolean.FALSE);
+                GoOrdine.persist(ordine);
             }
-        });
+        }
+
         long fine = System.currentTimeMillis();
         Log.info("Fine checkNoProntaConegna: " + (fine - inizio) + " msec");
     }
@@ -269,9 +300,9 @@ public class OrdineService {
     }
 
     public List<OrdineDTO> findAllByStati(FiltroOrdini filtro) throws ParseException {
-        checkStatusDettaglio();
-        checkConsegnati();
-        checkNoProntaConegna();
+        checkStatusDettaglio(filtro.getStatus());
+        checkConsegnati(filtro.getStatus());
+        checkNoProntaConegna(filtro.getStatus());
 
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine, " +
