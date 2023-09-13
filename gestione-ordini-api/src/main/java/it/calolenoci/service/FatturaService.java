@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.AccontoDto;
@@ -142,7 +143,7 @@ public class FatturaService {
     }
 
     @Transactional
-    public String creaBolla(List<OrdineDettaglioDto> list, List<AccontoDto> accontoDtos) {
+    public String creaBolla(List<OrdineDettaglioDto> list, List<AccontoDto> accontoDtos, String user) {
         String result = null;
         try {
             Integer progressivoFatt = OrdineFornitore.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM Fatture o WHERE anno = :anno and serie = 'B'", Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
@@ -171,10 +172,10 @@ public class FatturaService {
             for (int i = 0; i < listaDaTrasformare.size(); i++) {
                 OrdineDettaglioDto dto = listaDaTrasformare.get(i);
                 if(StringUtils.containsIgnoreCase(dto.getFDescrArticolo(), "Storno")) {
-                    fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i);
+                    fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i, user);
                 } else {
                     OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
-                    fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i);
+                    fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
                     o.setSaldoAcconto("S");
                     ordineDettaglioList.add(o);
                     Optional<SaldiMagazzino> optional = SaldiMagazzino.find("marticolo =:art and  mmagazzino = :mag",
@@ -187,9 +188,12 @@ public class FatturaService {
                         saldiMagazzino.setQgiacenza(qtaGiacenza);
                         SaldiMagazzino.persist(saldiMagazzino);
                     }
-                    //Magazzino.find("anno=:anno and serie = 'B' a")
-                    //Magazzino.persist(magazzinoMapper.buildMagazzino());
-
+                    Integer progressivo = Magazzino.find("select MAX(m.magazzinoId.progressivo)+1 from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
+                            Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
+                    Integer progressivoGen = Magazzino.find("select MAX(m.progrgenerale)+1 from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
+                            Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
+                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i);
+                    Magazzino.persist(magazzinoMapper.buildMagazzino(id, progressivoGen, o, fd, f, ordine));
                 }
                 fattureDaSalvare.add(fd);
             }

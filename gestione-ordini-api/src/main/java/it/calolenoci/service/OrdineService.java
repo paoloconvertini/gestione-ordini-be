@@ -52,7 +52,6 @@ public class OrdineService {
 
 
     public List<OrdineDTO> findAllByStatus(FiltroOrdini filtro) throws ParseException {
-        long inizio = System.currentTimeMillis();
         if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
                 !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus()) &&
         !StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
@@ -62,6 +61,7 @@ public class OrdineService {
             checkConsegnati(filtro.getStatus());
             checkNoProntaConegna(filtro.getStatus());
         }
+        long inizio = System.currentTimeMillis();
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
@@ -203,7 +203,7 @@ public class OrdineService {
             List<GoOrdineDto> ordines = map.get(s);
             GoOrdineDto o = ordines.get(0);
             GoOrdine ordine = o.getGo();
-            boolean noneMatch = ordines.stream().noneMatch(dto->dto.getFlProntoConsegna()!=null && dto.getFlProntoConsegna());
+            boolean noneMatch = ordines.stream().noneMatch(dto-> dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna());
             if (noneMatch) {
                 ordine.setHasProntoConsegna(Boolean.FALSE);
                 GoOrdine.persist(ordine);

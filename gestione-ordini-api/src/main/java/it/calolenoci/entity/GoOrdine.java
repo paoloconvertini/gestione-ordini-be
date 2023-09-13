@@ -77,7 +77,7 @@ public class GoOrdine extends PanacheEntityBase {
                 "from GoOrdine go " +
                 "join GoOrdineDettaglio god on go.anno = god.anno AND  go.progressivo = god.progressivo AND go.serie = god.serie " +
                 "where exists (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = god.progrGenerale and o.tipoRigo = ' ') AND go.status IN (:param) " +
-                "and go.hasProntoConsegna = 'T'", Parameters.with("param", param)).project(GoOrdineDto.class).list();
+                "and go.hasProntoConsegna = true", Parameters.with("param", param)).project(GoOrdineDto.class).list();
     }
 
     public static List<GoOrdineDto> findOrdiniConsegnatiByStatus(List<String> param) {

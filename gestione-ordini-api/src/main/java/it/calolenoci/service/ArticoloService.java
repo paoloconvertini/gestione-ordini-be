@@ -294,7 +294,7 @@ public class ArticoloService {
                 ordine.setStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             } else if(!GoOrdineDettaglio.find(" SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
-                    " and flagOrdinato = 'T' " +
+                    " and flagOrdinato = 'T' and flagRiservato IN (null, 'F')" +
                     " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
                     .and("serie", serie)
                     .and("progressivo", progressivo)).list().isEmpty()) {

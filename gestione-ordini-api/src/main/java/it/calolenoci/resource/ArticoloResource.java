@@ -141,7 +141,7 @@ public class ArticoloResource {
     @RolesAllowed({ADMIN, LOGISTICA})
     @Path("/creaBolla")
     public Response creaBolla(Body body) {
-        String result = fatturaService.creaBolla(body.getList(), body.getAccontoDtos());
+        String result = fatturaService.creaBolla(body.getList(), body.getAccontoDtos(), user);
         return Response.ok(new ResponseDto(result, StringUtils.isBlank(result))).build();
     }
 

@@ -134,10 +134,14 @@ public class OrdineResource {
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
     public Response getAllOrdini(FiltroOrdini filtro) throws ParseException {
+        long i =  System.currentTimeMillis();
         if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
             filtro.setStatus(null);
         }
-        return Response.ok(ordineService.findAllByStatus(filtro)).build();
+        List<OrdineDTO> allByStatus = ordineService.findAllByStatus(filtro);
+        long fine = System.currentTimeMillis();
+        io.quarkus.logging.Log.info("get all ordini: " + (fine - i) + " msec");
+        return Response.ok(allByStatus).build();
     }
 
     @Operation(summary = "Returns all the ordini from the database")

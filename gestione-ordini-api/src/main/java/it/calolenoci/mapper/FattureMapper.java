@@ -44,14 +44,14 @@ public class FattureMapper {
         f.setIvaprimascad(ordine.getIvaprimascad());
         f.setAgente(ordine.getAgente());
         f.setListino(ordine.getListino());
-        f.setModoconsegna("");
-        f.setVettore("");
-        f.setTarga("");
-        f.setTargarimorchio("");
-        f.setVettore2("");
+        f.setModoconsegna(" ");
+        f.setVettore(" ");
+        f.setTarga(" ");
+        f.setTargarimorchio(" ");
+        f.setVettore2(" ");
         f.setCausaletrasp("V");
         f.setAspettobene("A vista");
-        f.setCodicecolli("");
+        f.setCodicecolli(" ");
         f.setNumerocolli(ordine.getNumerocolli());
         ZoneId zone = ZoneId.of("Europe/Paris");
         ZonedDateTime zonedDateTime = ZonedDateTime.now(zone);
@@ -122,7 +122,7 @@ public class FattureMapper {
         return f;
     }
 
-    public FattureDettaglio buildFattureDettaglio(OrdineDettaglioDto dto, Fatture f, OrdineDettaglio o, Integer progressivoFattDettaglio, Integer i){
+    public FattureDettaglio buildFattureDettaglio(OrdineDettaglioDto dto, Fatture f, OrdineDettaglio o, Integer progressivoFattDettaglio, Integer i, String user){
         FattureDettaglio fd = new FattureDettaglio();
         fd.setAnno(f.getAnno());
         fd.setSerie(f.getSerie());
@@ -143,7 +143,7 @@ public class FattureMapper {
         fd.setQuantita2(0D);
         fd.setQtaomaggio(o.getQtaomaggio());
         fd.setQtainevasa(0D);
-        fd.setCausaleinevaso("");
+        fd.setCausaleinevaso(" ");
         fd.setPrezzo(o.getPrezzo());
         fd.setFunitamisura(o.getFUnitaMisura());
         fd.setFcoefficiente(o.getFcoefficiente());
@@ -161,8 +161,8 @@ public class FattureMapper {
         fd.setFcolli(o.getFColli());
         fd.setFpallet(o.getFpallet());
         fd.setCoefprezzo(o.getCoefprezzo());
-        fd.setFcentrocostor("");
-        fd.setFvocespesa("");
+        fd.setFcentrocostor(" ");
+        fd.setFvocespesa(" ");
         fd.setFcommessa(o.getFcommessa());
         fd.setFcompetenza(0);
         fd.setFgrupporicavo(o.getFgrupporicavo());
@@ -183,24 +183,24 @@ public class FattureMapper {
         fd.setDescruser5(o.getDescruser5());
         fd.setDescruser6(o.getDescruser6());
         fd.setDescruser7(o.getDescruser7());
-        fd.setDescruser1E("");
-        fd.setDescruser2E("");
-        fd.setDescruser3E("");
-        fd.setDescruser4E("");
-        fd.setDescruser5E("");
-        fd.setNoterigo("");
+        fd.setDescruser1E(" ");
+        fd.setDescruser2E(" ");
+        fd.setDescruser3E(" ");
+        fd.setDescruser4E(" ");
+        fd.setDescruser5E(" ");
+        fd.setNoterigo(" ");
         fd.setContromarca(o.getContromarca());
-        fd.setFeordid("");
-        fd.setFeorditem("");
+        fd.setFeordid(" ");
+        fd.setFeorditem(" ");
         fd.setFeintento(0);
         fd.setProgrdeposito(0);
         fd.setProgrprev(0);
-        fd.setUsername("daniele");
+        fd.setUsername(user);
         fd.setDatamodifica(new Date());
         fd.setSysCreatedate(new Date());
         fd.setSysUpdatedate(new Date());
-        fd.setSysCreateuser("daniele");
-        fd.setSysUpdateuser("daniele");
+        fd.setSysCreateuser(user);
+        fd.setSysUpdateuser(user);
         return fd;
     }
 
@@ -226,7 +226,7 @@ public class FattureMapper {
         fd.setNumeroFattura(dto.getNumeroFattura());
         return fd;
     }
-    public FattureDettaglio buildStorno(OrdineDettaglioDto dto, Fatture f, Integer progressivoFattDettaglio, Integer i){
+    public FattureDettaglio buildStorno(OrdineDettaglioDto dto, Fatture f, Integer progressivoFattDettaglio, Integer i, String user){
         FattureDettaglio fd = new FattureDettaglio();
         fd.setAnno(f.getAnno());
         fd.setSerie(f.getSerie());
@@ -236,18 +236,18 @@ public class FattureMapper {
         fd.setProgrOrdCli(0);
         fd.setTipoRigo("V");
         fd.setFArticolo("*ACC");
-        fd.setVariante1("");
-        fd.setVariante2("");
-        fd.setVariante3("");
-        fd.setVariante4("");
-        fd.setVariante5("");
+        fd.setVariante1(" ");
+        fd.setVariante2(" ");
+        fd.setVariante3(" ");
+        fd.setVariante4(" ");
+        fd.setVariante5(" ");
         fd.setFDescrArticolo(dto.getFDescrArticolo());
         fd.setCodiceean("");
         fd.setQuantita(0D);
         fd.setQuantita2(0D);
         fd.setQtaomaggio(0D);
         fd.setQtainevasa(0D);
-        fd.setCausaleinevaso("");
+        fd.setCausaleinevaso(" ");
         fd.setPrezzo(dto.getPrezzo());
         fd.setFunitamisura(".");
         fd.setFcoefficiente(0D);
@@ -257,7 +257,7 @@ public class FattureMapper {
         fd.setScontop(0D);
         fd.setPrezzoextra(0D);
         fd.setMagazz("B");
-        fd.setLottomagf("");
+        fd.setLottomagf(" ");
         fd.setIva(dto.getFCodiceIva());
         fd.setImpprovvfisso(0D);
         fd.setFprovvarticolo(0D);
@@ -265,9 +265,9 @@ public class FattureMapper {
         fd.setFcolli(0);
         fd.setFpallet(0D);
         fd.setCoefprezzo(0D);
-        fd.setFcentrocostor("");
-        fd.setFvocespesa("");
-        fd.setFcommessa("");
+        fd.setFcentrocostor(" ");
+        fd.setFvocespesa(" ");
+        fd.setFcommessa(" ");
         fd.setFcompetenza(0);
         fd.setFgrupporicavo(0);
         fd.setFcontoricavo("");
@@ -280,31 +280,31 @@ public class FattureMapper {
         fd.setQtyuser5(0D);
         fd.setQtyuser6(0D);
         fd.setQtyuser7(0D);
-        fd.setDescruser1("");
-        fd.setDescruser2("");
-        fd.setDescruser3("");
-        fd.setDescruser4("");
-        fd.setDescruser5("");
-        fd.setDescruser6("");
-        fd.setDescruser7("");
-        fd.setDescruser1E("");
-        fd.setDescruser2E("");
-        fd.setDescruser3E("");
-        fd.setDescruser4E("");
-        fd.setDescruser5E("");
-        fd.setNoterigo("");
-        fd.setContromarca("");
-        fd.setFeordid("");
-        fd.setFeorditem("");
+        fd.setDescruser1(" ");
+        fd.setDescruser2(" ");
+        fd.setDescruser3(" ");
+        fd.setDescruser4(" ");
+        fd.setDescruser5(" ");
+        fd.setDescruser6(" ");
+        fd.setDescruser7(" ");
+        fd.setDescruser1E(" ");
+        fd.setDescruser2E(" ");
+        fd.setDescruser3E(" ");
+        fd.setDescruser4E(" ");
+        fd.setDescruser5E(" ");
+        fd.setNoterigo(" ");
+        fd.setContromarca(" ");
+        fd.setFeordid(" ");
+        fd.setFeorditem(" ");
         fd.setFeintento(0);
         fd.setProgrdeposito(0);
         fd.setProgrprev(0);
-        fd.setUsername("daniele");
+        fd.setUsername(user);
         fd.setDatamodifica(new Date());
         fd.setSysCreatedate(new Date());
         fd.setSysUpdatedate(new Date());
-        fd.setSysCreateuser("daniele");
-        fd.setSysUpdateuser("daniele");
+        fd.setSysCreateuser(user);
+        fd.setSysUpdateuser(user);
         return fd;
     }
 }

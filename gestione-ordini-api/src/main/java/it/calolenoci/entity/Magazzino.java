@@ -32,13 +32,13 @@ public class Magazzino extends PanacheEntityBase {
     private String numdocmagazzino;
 
     @Column(name = "DATADOCMAG", nullable = true)
-    private java.sql.Date datadocmag;
+    private Date datadocmag;
 
     @Column(name = "NUMFATTURAMAG", nullable = true, length = 15)
     private String numfatturamag;
 
     @Column(name = "DATAFATTURAMAG", nullable = true)
-    private java.sql.Date datafatturamag;
+    private Date datafatturamag;
 
     @Column(name = "MCAUSALE", nullable = true, length = 3)
     private String mcausale;
@@ -152,7 +152,7 @@ public class Magazzino extends PanacheEntityBase {
     private String magente;
 
     @Column(name = "DATAPRIMAMAG", nullable = true)
-    private java.sql.Date dataprimamag;
+    private Date dataprimamag;
 
     @Column(name = "MCENTROCOSTO", nullable = true, length = 10)
     private String mcentrocosto;
@@ -215,19 +215,19 @@ public class Magazzino extends PanacheEntityBase {
     private Double quantitauser05;
 
     @Column(name = "DATAUSER1", nullable = true)
-    private java.sql.Date datauser1;
+    private Date datauser1;
 
     @Column(name = "DATAUSER2", nullable = true)
-    private java.sql.Date datauser2;
+    private Date datauser2;
 
     @Column(name = "DATAUSER3", nullable = true)
-    private java.sql.Date datauser3;
+    private Date datauser3;
 
     @Column(name = "DATAUSER4", nullable = true)
-    private java.sql.Date datauser4;
+    private Date datauser4;
 
     @Column(name = "DATAUSER5", nullable = true)
-    private java.sql.Date datauser5;
+    private Date datauser5;
 
     @Column(name = "FLAGTRASFERITO", nullable = true, length = 1)
     private String flagtrasferito;
@@ -266,31 +266,31 @@ public class Magazzino extends PanacheEntityBase {
     private Integer rigogiornale;
 
     @Column(name = "DATAINSERIMENTO", nullable = true)
-    private java.sql.Date datainserimento;
+    private Date datainserimento;
 
     @Column(name = "USERNAME", nullable = true, length = 20)
     private String username;
 
     @Column(name = "DATAMODIFICA", nullable = true)
-    private java.sql.Date datamodifica;
+    private Date datamodifica;
 
     @Column(name = "COSTOMEDIO", nullable = true, precision = 0)
     private Double costomedio;
 
     @Column(name = "SYS_CREATEDATE", nullable = true)
-    private java.sql.Date sysCreatedate;
+    private Date sysCreatedate;
 
     @Column(name = "SYS_CREATEUSER", nullable = true, length = 20)
     private String sysCreateuser;
 
     @Column(name = "SYS_UPDATEDATE", nullable = true)
-    private java.sql.Date sysUpdatedate;
+    private Date sysUpdatedate;
 
     @Column(name = "SYS_UPDATEUSER", nullable = true, length = 20)
     private String sysUpdateuser;
 
     @Column(name = "DATASCONTRINO", nullable = true)
-    private java.sql.Date datascontrino;
+    private Date datascontrino;
 
     @Column(name = "PID_PRIMANOTA", nullable = true)
     private Integer pidPrimanota;
