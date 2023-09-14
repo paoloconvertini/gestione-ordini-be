@@ -19,6 +19,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -69,7 +70,7 @@ public class DropBoxService {
         return null;
     }
 
-    public List<String> cercaCartelleSchedeTecniche() {
+    public List<String> cercaCartelleSchedeTecniche(String folder) {
         try {
             List<String> returnList = new ArrayList<>();
             DbxClientV2 client = dbxHandler.getClient();
@@ -77,14 +78,19 @@ public class DropBoxService {
                 throw new DbxException("Errore creazione dbx client");
             }
             try {
-                ListFolderResult listFolderResult = client.files().listFolder("/schede tecniche");
+                String path = "/schede tecniche";
+                ListFolderResult listFolderResult = client.files().listFolder(path);
                 if (listFolderResult != null && !listFolderResult.getEntries().isEmpty()) {
+                    if (StringUtils.isNotBlank(folder)) {
+                       return listFolderResult.getEntries().stream().map(Metadata::getName).filter(name ->StringUtils.equals(folder, name)).collect(Collectors.toList());
+                    }
                     for (Metadata match : listFolderResult.getEntries()) {
                         returnList.add(match.getName());
                     }
                 }
             } catch (DbxException e) {
                 Log.error("Errore dbx get cartella: ", e);
+                return null;
             }
             return returnList;
         } catch (Exception e) {
@@ -153,23 +159,27 @@ public class DropBoxService {
         return null;
     }
 
-    public void uploadSchedaTecnica(List<DbxMultipartBody> list) {
+    public boolean uploadSchedaTecnica(DbxMultipartBody dbx) {
         try {
             // Create Dropbox client
             DbxClientV2 client = dbxHandler.getClient();
             if (client == null) {
-                throw new DbxException("Errore creazione dbx client");
+                Log.error("Errore creazione dbx client");
+                return false;
             }
-            for (DbxMultipartBody dbx : list) {
-                String stringFile = dbx.file.split(",")[1];
-                byte[] decodedFile = Base64.getDecoder().decode(stringFile);
-                try (InputStream in = new ByteArrayInputStream(decodedFile)) {
-                    String path = URL + "/" + dbx.folder + "/" +  dbx.filename;
-                    client.files().uploadBuilder(path).uploadAndFinish(in);
-                }
+            List<String> folderList = this.cercaCartelleSchedeTecniche(dbx.folder);
+            if(folderList == null){
+                return false;
             }
+            if (folderList.isEmpty()) {
+                client.files().createFolderV2("/schede tecniche/" + dbx.folder);
+            }
+            String path = "/schede tecniche/" + dbx.folder + "/" + dbx.filename;
+            client.files().uploadBuilder(path).uploadAndFinish(dbx.file);
         } catch (Exception e) {
-            Log.error("errore search documenti", e);
+            Log.error("errore upload scheda tecnica", e);
+            return false;
         }
+        return true;
     }
 }

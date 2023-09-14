@@ -5,18 +5,19 @@ import org.jboss.resteasy.reactive.PartType;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.core.MediaType;
+import java.io.InputStream;
 
 public class DbxMultipartBody {
 
     @FormParam("file")
-    @PartType(MediaType.TEXT_PLAIN)
-    public String file;
+    @PartType(MediaType.APPLICATION_OCTET_STREAM)
+    public InputStream file;
 
     @FormParam("folder")
     @PartType(MediaType.TEXT_PLAIN)
     public String folder;
 
-    @FormParam("folder")
+    @FormParam("filename")
     @PartType(MediaType.TEXT_PLAIN)
     public String filename;
 

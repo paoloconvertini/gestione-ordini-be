@@ -34,6 +34,7 @@ import java.util.List;
 
 import static it.calolenoci.enums.Ruolo.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 @Path("api/articoli")
 @Produces(APPLICATION_JSON)
@@ -85,17 +86,21 @@ public class ArticoloResource {
     @Operation(summary = "Crea ordine a fornitore")
     @POST
     @RolesAllowed({ADMIN, AMMINISTRATIVO})
-    @Path("/uploadSchedaTecnica")
-    public Response uploadSchedaTecnica(List<DbxMultipartBody> list) {
+    @Path("/uploadSchedeTecniche")
+    @Consumes(MULTIPART_FORM_DATA)
+    public Response uploadSchedaTecnica(DbxMultipartBody body) {
         try {
-            if(list.isEmpty()) {
-                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun elemento caricato!", false)).build();
+            if(body == null) {
+                return Response.noContent().build();
             }
-            dropBoxService.uploadSchedaTecnica(list);
+            if(dropBoxService.uploadSchedaTecnica(body)){
+                return Response.status(Response.Status.OK).entity(new ResponseDto("Scheda caricata con successo", false)).build();
+            } else {
+                return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Errore upload", true)).build();
+            }
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
         }
-        return Response.noContent().build();
     }
 
     @Operation(summary = "Returns all the articoli from the database")
@@ -233,7 +238,7 @@ public class ArticoloResource {
     @PermitAll
     public Response cercaCartelleSchedeTecniche() {
         try {
-            List<String> list = dropBoxService.cercaCartelleSchedeTecniche();
+            List<String> list = dropBoxService.cercaCartelleSchedeTecniche(null);
             if(list == null) {
                 return Response.noContent().build();
             }
