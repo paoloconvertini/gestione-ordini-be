@@ -118,7 +118,7 @@ public class JasperService {
             jasperReport = JasperCompileManager.compileReport(reportStream);
             JRSaver.saveObject(jasperReport, reportName.replace(".jrxml", ".jasper"));
         } catch (JRException ex) {
-            Log.error("Error compliling report");
+            Log.error("Error compliling report", ex);
         }
         return jasperReport;
     }

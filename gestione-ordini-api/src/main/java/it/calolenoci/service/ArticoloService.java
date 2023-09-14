@@ -71,6 +71,13 @@ public class ArticoloService {
         return OrdineDettaglio.findArticoliForReport(anno, serie, progressivo);
     }
 
+    public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
+        return !OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o" +
+                        " WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo and tipoRigo NOT IN ('C', 'AC')" +
+                        " AND NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o.progrGenerale = god.progrGenerale)",
+                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
+    }
+
     @Transactional
     public Integer updateArticoliBolle(List<OrdineDettaglioDto> list) {
         long inizio = System.currentTimeMillis();

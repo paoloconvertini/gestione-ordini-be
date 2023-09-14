@@ -239,6 +239,7 @@ AND c.contocliente = pc.sottoconto]]>
 	</field>
 	<field name="valoreTotale" class="java.lang.Double"/>
 	<field name="firmaVenditore" class="java.lang.String"/>
+	<field name="codiceCliente" class="java.lang.String"/>
 	<title>
 		<band height="201" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -273,6 +274,13 @@ AND c.contocliente = pc.sottoconto]]>
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{NUMEROCONFERMA}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="430" y="181" width="68" height="20" uuid="2f5730ea-6394-4d04-8fc2-c5e59798d496"/>
+				<textElement>
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{DATACONFERMA}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="289" y="181" width="53" height="20" uuid="0b3f9342-da78-4cfa-9fc5-2301c4749678"/>
@@ -327,7 +335,7 @@ Tel 0831-377180   Fax 0831-383047
 				<textElement>
 					<font fontName="SansSerif" size="8" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{INTESTAZIONE}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{INTESTAZIONE} + " - " + $F{codiceCliente}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement style="Detail" positionType="Float" x="361" y="40" width="190" height="10" uuid="acd4f1c4-e0ca-44ff-a4f0-6a0c8777ad55">
@@ -445,13 +453,6 @@ Tel 0831-377180   Fax 0831-383047
 				</textElement>
 				<text><![CDATA[del:]]></text>
 			</staticText>
-			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
-				<reportElement style="Detail" x="430" y="181" width="68" height="20" uuid="2f5730ea-6394-4d04-8fc2-c5e59798d496"/>
-				<textElement markup="rtf">
-					<font fontName="SansSerif" size="8"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{DATACONFERMA}]]></textFieldExpression>
-			</textField>
 			<staticText>
 				<reportElement x="498" y="181" width="22" height="20" uuid="9277b898-b60c-4357-9118-e7c77a69f17e"/>
 				<textElement>

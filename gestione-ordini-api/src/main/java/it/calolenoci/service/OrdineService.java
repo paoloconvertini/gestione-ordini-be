@@ -139,7 +139,9 @@ public class OrdineService {
         }
         long inizio = System.currentTimeMillis();
         List<GoOrdine> ordineList = GoOrdine.findOrdiniWithNewItems(list);
+        Log.info("Ordini con modifica articoli:" + ordineList.size());
         ordineList.forEach(o -> {
+            Log.debug("Ordine n." + o.getAnno() + " " + o.getSerie() + " " + o.getProgressivo() +", status: " + o.getStatus());
             o.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             o.persist();
         });
@@ -157,7 +159,6 @@ public class OrdineService {
         } else {
             list.add(status);
         }
-
         long i = System.currentTimeMillis();
         List<GoOrdineDto> ordineList = GoOrdine.findOrdiniConsegnatiByStatus(list);
         long f = System.currentTimeMillis();
@@ -170,6 +171,7 @@ public class OrdineService {
             GoOrdine ordine = o.getGo();
             boolean anyMatch = ordines.stream().allMatch(or -> StringUtils.equals("S", or.getSaldoAcconto()));
                 if (anyMatch && !ordine.getWarnNoBolla()) {
+                    Log.debug("Ordine n." + ordine.getAnno() + " " + ordine.getSerie() + " " + ordine.getProgressivo() +", status: " + ordine.getStatus());
                     ordine.setStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
                     if (ordine.getHasProntoConsegna() != null && ordine.getHasProntoConsegna()) {
                         ordine.setHasProntoConsegna(Boolean.FALSE);
@@ -192,7 +194,6 @@ public class OrdineService {
         } else {
             list.add(status);
         }
-
         long i = System.currentTimeMillis();
         List<GoOrdineDto> ordineList = GoOrdine.findOrdiniNoProntaConsegnaByStatus(list);
         long f = System.currentTimeMillis();
@@ -205,11 +206,11 @@ public class OrdineService {
             GoOrdine ordine = o.getGo();
             boolean noneMatch = ordines.stream().noneMatch(dto-> dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna());
             if (noneMatch) {
+                Log.debug("Ordine n." + ordine.getAnno() + " " + ordine.getSerie() + " " + ordine.getProgressivo() +", status: " + ordine.getStatus());
                 ordine.setHasProntoConsegna(Boolean.FALSE);
                 GoOrdine.persist(ordine);
             }
         }
-
         long fine = System.currentTimeMillis();
         Log.info("Fine checkNoProntaConegna: " + (fine - inizio) + " msec");
     }

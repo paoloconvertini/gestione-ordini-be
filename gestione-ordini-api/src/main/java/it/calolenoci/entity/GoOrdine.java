@@ -69,7 +69,7 @@ public class GoOrdine extends PanacheEntityBase {
                 "JOIN OrdineDettaglio o2 ON o2.anno = o.anno " +
                 "and o2.serie = o.serie AND o2.progressivo = o.progressivo " +
                 "WHERE NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o2.progrGenerale = god.progrGenerale) " +
-                "and o.status in (:param)", Parameters.with("param", param));
+                "and o.status in (:param) and o2.tipoRigo = ' '", Parameters.with("param", param));
     }
 
     public static List<GoOrdineDto> findOrdiniNoProntaConsegnaByStatus(List<String> param) {

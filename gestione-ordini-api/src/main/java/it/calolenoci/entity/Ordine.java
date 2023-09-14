@@ -90,7 +90,7 @@ public class Ordine extends PanacheEntityBase {
     @Column(length = 15)
     private String numeroConferma;
 
-    @Column(name = "DATACONFERMA")
+    @Column
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataConferma;
 

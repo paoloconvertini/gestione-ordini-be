@@ -6,6 +6,7 @@ import it.calolenoci.dto.OrdineReportDto;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.text.SimpleDateFormat;
 
 @ApplicationScoped
 public class OrdineClienteReportMapper {
@@ -46,6 +47,7 @@ public class OrdineClienteReportMapper {
         dto.setCODARTFORNITORE(a.getCodArtFornitore());
         dto.setFDESCRARTICOLO(a.getFDescrArticolo());
         dto.setINTESTAZIONE(ordineDTO.getIntestazione());
+        dto.setCodiceCliente(ordineDTO.getSottoConto());
         dto.setINDIRIZZO(ordineDTO.getIndirizzo());
         dto.setLOCALITA(ordineDTO.getLocalita());
         dto.setCAP(ordineDTO.getCap());
