@@ -178,8 +178,15 @@ public class FatturaService {
             Log.debug("Magazzino progressivo generale: " + progressivoGen);
             for (int i = 0; i < listaDaTrasformare.size(); i++) {
                 OrdineDettaglioDto dto = listaDaTrasformare.get(i);
+                Magazzino m;
                 if (StringUtils.containsIgnoreCase(dto.getFDescrArticolo(), "Storno")) {
                     fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i, user);
+                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", ++progressivo, " ", i+1);
+                    m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, fd, f, ordine);
+                    Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
+                    if (opt.isPresent()) {
+                        Log.error("Errore trovato record con progrGen: " + progressivoGen);
+                    }
                 } else {
                     OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
                     fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
@@ -189,21 +196,22 @@ public class FatturaService {
                             Parameters.with("art", o.getFArticolo()).and("mag", o.getMagazz())).firstResultOptional();
                     if (optional.isPresent()) {
                         SaldiMagazzino saldiMagazzino = optional.get();
-                        Double qtaScarico = saldiMagazzino.getQscarichi() + o.getQuantita();
-                        Double qtaGiacenza = saldiMagazzino.getQcarichi() - qtaScarico;
+                        Double qtaScarico = (saldiMagazzino.getQscarichi()==null?0: saldiMagazzino.getQscarichi()) + (o.getQuantita()==null?0:o.getQuantita());
+                        Double qtaGiacenza = (saldiMagazzino.getQcarichi()==null?0: saldiMagazzino.getQcarichi()) - qtaScarico;
                         saldiMagazzino.setQscarichi(qtaScarico);
                         saldiMagazzino.setQgiacenza(qtaGiacenza);
                         saldiMagazzinoList.add(saldiMagazzino);
                     }
 
                     MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", ++progressivo, " ", i+1);
-                    Magazzino m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, o, fd, f, ordine);
+                    m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, o, fd, f, ordine);
                     Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
                     if (opt.isPresent()) {
                         Log.error("Errore trovato record con progrGen: " + progressivoGen);
                     }
-                    magazzinoList.add(m);
+
                 }
+                magazzinoList.add(m);
                 fattureDaSalvare.add(fd);
             }
             FattureDettaglio.persist(fattureDaSalvare);
