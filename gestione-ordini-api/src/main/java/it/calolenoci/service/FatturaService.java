@@ -10,6 +10,8 @@ import it.calolenoci.entity.*;
 import it.calolenoci.mapper.FattureMapper;
 import it.calolenoci.mapper.MagazzinoMapper;
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.CharSet;
+import org.apache.commons.lang3.CharSetUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -111,8 +113,10 @@ public class FatturaService {
                     if (StringUtils.contains(s.getOperazione(), StringUtils.trim(a.getNumeroFattura()))) {
                         a.getRifOrdClienteList().forEach(r -> {
                             String ordCli2 = StringUtils.replace(s.getOrdineCliente(), "/", ".");
+                            String ordCli3 = StringUtils.replace(s.getOrdineCliente(), "/", "-");
                             if (StringUtils.contains(r, s.getOrdineCliente()) ||
-                                    StringUtils.contains(r, ordCli2)) {
+                                    StringUtils.contains(r, ordCli2)
+                            || StringUtils.contains(r, ordCli3)) {
                                 List<String> rifList = new ArrayList<>();
                                 rifList.add(s.getRifOrdCliente());
                                 s.setRifOrdClienteList(rifList);
@@ -171,7 +175,7 @@ public class FatturaService {
             List<Magazzino> magazzinoList = new ArrayList<>();
             List<SaldiMagazzino> saldiMagazzinoList = new ArrayList<>();
             FattureDettaglio fd;
-            Integer progressivo = Magazzino.find("select MAX(m.magazzinoId.progressivo) from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
+            Integer progressivo = Magazzino.find("select MAX(m.magazzinoId.progressivo)+1 from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
                     Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
             Log.debug("Magazzino progressivo: " + progressivo);
             Integer progressivoGen = Magazzino.find("select MAX(m.progrgenerale) from Magazzino m").project(Integer.class).firstResult();
@@ -181,7 +185,7 @@ public class FatturaService {
                 Magazzino m;
                 if (StringUtils.containsIgnoreCase(dto.getFDescrArticolo(), "Storno")) {
                     fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i, user);
-                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", ++progressivo, " ", i+1);
+                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i+1);
                     m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, fd, f, ordine);
                     Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
                     if (opt.isPresent()) {
@@ -203,7 +207,7 @@ public class FatturaService {
                         saldiMagazzinoList.add(saldiMagazzino);
                     }
 
-                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", ++progressivo, " ", i+1);
+                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i+1);
                     m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, o, fd, f, ordine);
                     Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
                     if (opt.isPresent()) {
@@ -301,7 +305,8 @@ public class FatturaService {
     private void checkOrdCli(List<OrdineDettaglioDto> list, boolean check, List<String> rifCliList, AccontoDto rigaFattura) {
         if (check) {
             for (OrdineDettaglioDto l : list) {
-                if (StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), StringUtils.join(l.getAnno(), "/", l.getSerie(), "/", l.getProgressivo()))) {
+                if (StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), StringUtils.join(l.getAnno(), "/", l.getSerie(), "/", l.getProgressivo()))
+                || StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), StringUtils.join(l.getAnno(), "-", l.getSerie(), "-", l.getProgressivo()))) {
                     rifCliList.add(rigaFattura.getOperazione());
                     break;
                 }
