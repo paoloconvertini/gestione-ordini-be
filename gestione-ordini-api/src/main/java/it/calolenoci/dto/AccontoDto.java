@@ -14,6 +14,7 @@ import java.util.List;
 @RegisterForReflection
 @Getter
 @Setter
+@ToString
 public class AccontoDto {
     
     private Integer anno;

@@ -121,6 +121,7 @@ public class FatturaService {
                                 rifList.add(s.getRifOrdCliente());
                                 s.setRifOrdClienteList(rifList);
                                 s.setUuidAS("" + a.getUuidAS());
+                                Log.debug("AccontoDto :" + s);
                                 resultList.add(s);
                             }
                         });
@@ -132,8 +133,10 @@ public class FatturaService {
         if (lista != null && !lista.isEmpty()) {
             List<AccontoDto> accontoDtoList = new ArrayList<>();
             Map<String, List<AccontoDto>> mapAccontoStorno = resultList.stream().collect(Collectors.groupingBy(AccontoDto::getUuidAS));
+            Log.debug("Mappa acconti storno size: " + mapAccontoStorno.size());
             for (String uuid : mapAccontoStorno.keySet()) {
                 double sum = mapAccontoStorno.get(uuid).stream().mapToDouble(AccontoDto::getPrezzo).sum();
+                Log.debug("Somma saldo " + uuid + ":" + sum);
                 if (sum > 0) {
                     AccontoDto dto = mapAccontoStorno.get(uuid).stream().filter(a -> a.getPrezzo() > 0).findFirst().get();
                     dto.setPrezzo(sum);
