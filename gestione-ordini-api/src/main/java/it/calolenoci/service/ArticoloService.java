@@ -174,6 +174,7 @@ public class ArticoloService {
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
         List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();
+        List<OrdineDettaglio> listToCheck = new ArrayList<>();
         AtomicBoolean warnNoBolla = new AtomicBoolean(false);
         AtomicBoolean hasProntoConsegna = new AtomicBoolean(false);
         list.forEach(dto -> {
@@ -202,6 +203,7 @@ public class ArticoloService {
                 }
                 if (!Objects.equals(ordineDettaglio.getCodArtFornitore(), dto.getCodArtFornitore())) {
                     ordineDettaglio.setCodArtFornitore(dto.getCodArtFornitore());
+                    listToCheck.add(ordineDettaglio);
                 }
                 if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
@@ -214,7 +216,7 @@ public class ArticoloService {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                             dto.getProgressivo(), user, AzioneEnum.TONO.getDesczrizione(),
                             dto.getRigo(), dto.getTono(), null, null, null));
-                    ordineDettaglio.setTono(dto.getTono());
+                    ordineDettaglio.setTono(StringUtils.trim(dto.getTono()));
                 }
                 if (!Objects.equals(dto.getFlagRiservato(), goOrdineDettaglio.getFlagRiservato())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
@@ -265,6 +267,9 @@ public class ArticoloService {
                         .and("pc", hasProntoConsegna.get()));
         if (!ordineDettaglioList.isEmpty()) {
             OrdineDettaglio.persist(ordineDettaglioList);
+        }
+        if(!listToCheck.isEmpty()){
+            checkCodArtFornitore(listToCheck);
         }
         try {
             GoOrdineDettaglio.persist(goOrdineDettaglioList);
@@ -515,5 +520,11 @@ public class ArticoloService {
         }
         return OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
                 .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
+    }
+
+    @Transactional
+    private void checkCodArtFornitore(List<OrdineDettaglio> ordineDettaglioDtos) {
+        ordineDettaglioDtos.forEach(o -> Articolo.update("descrArtSuppl =:cod WHERE articolo = :desc"
+                , Parameters.with("cod", o.getCodArtFornitore()).and("desc", o.getFArticolo())));
     }
 }
