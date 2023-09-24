@@ -63,7 +63,7 @@ public class ArticoloService {
         response.setModalitaPagamento(ordineDTO.getModalitaPagamento());
         response.setArticoli(list);
         long fine = System.currentTimeMillis();
-        Log.info("Get articoli ordine cliente: " + (fine - inizio)/1000 + " sec");
+        Log.info("Get articoli ordine cliente: " + (fine - inizio) / 1000 + " sec");
         return response;
     }
 
@@ -84,23 +84,23 @@ public class ArticoloService {
         List<GoOrdineDettaglio> listToSave = new ArrayList<>();
         List<OrdineId> ids = new ArrayList<>();
         for (OrdineDettaglioDto e : list) {
-            if(e.getQuantita() == null || e.getQtaBolla() == null) {
+            if (e.getQuantita() == null || e.getQtaBolla() == null) {
                 continue;
             }
             Optional<GoOrdineDettaglio> optional = GoOrdineDettaglio.getById(e.getProgrGenerale());
             if (optional.isPresent()) {
                 GoOrdineDettaglio goOrdineDettaglio = optional.get();
-                if(goOrdineDettaglio.getQtaDaConsegnare() != null && goOrdineDettaglio.getQtaDaConsegnare() == 0) {
+                if (goOrdineDettaglio.getQtaDaConsegnare() != null && goOrdineDettaglio.getQtaDaConsegnare() == 0) {
                     continue;
                 }
                 Double qtaDaConsegnare = (e.getQuantita() - e.getQtaBolla());
-                if(goOrdineDettaglio.getQtaDaConsegnare() == null || !Objects.equals(goOrdineDettaglio.getQtaDaConsegnare(), qtaDaConsegnare)){
-                    Double diffQtaCons = (e.getQuantita() - (goOrdineDettaglio.getQtaDaConsegnare()==null?0: goOrdineDettaglio.getQtaDaConsegnare()));
-                    if(qtaDaConsegnare == 0 ){
+                if (goOrdineDettaglio.getQtaDaConsegnare() == null || !Objects.equals(goOrdineDettaglio.getQtaDaConsegnare(), qtaDaConsegnare)) {
+                    Double diffQtaCons = (e.getQuantita() - (goOrdineDettaglio.getQtaDaConsegnare() == null ? 0 : goOrdineDettaglio.getQtaDaConsegnare()));
+                    if (qtaDaConsegnare == 0) {
                         goOrdineDettaglio.setQtaConsegnatoSenzaBolla(null);
                     }
-                    goOrdineDettaglio.setFlagConsegnato((qtaDaConsegnare == 0 ));
-                    if(!diffQtaCons.equals(e.getQtaBolla())) {
+                    goOrdineDettaglio.setFlagConsegnato((qtaDaConsegnare == 0));
+                    if (!diffQtaCons.equals(e.getQtaBolla())) {
                         goOrdineDettaglio.setQtaProntoConsegna(null);
                         goOrdineDettaglio.setQtaRiservata(null);
                     }
@@ -109,27 +109,27 @@ public class ArticoloService {
                     goOrdineDettaglio.setFlBolla(Boolean.TRUE);
                     listToSave.add(goOrdineDettaglio);
                     OrdineId ordineId = new OrdineId(e.getAnno(), e.getSerie(), e.getProgressivo());
-                    if(!ids.contains(ordineId)){
+                    if (!ids.contains(ordineId)) {
                         ids.add(ordineId);
                     }
                 }
             }
         }
 
-        if(!listToSave.isEmpty()) {
+        if (!listToSave.isEmpty()) {
             GoOrdineDettaglio.persist(listToSave);
             Map<OrdineId, List<GoOrdineDettaglio>> goMap = new HashMap<>();
             for (OrdineId e : ids) {
                 List<GoOrdineDettaglio> ordineDettaglioList = GoOrdineDettaglio
-                            .find("anno =:anno AND serie =:serie AND progressivo =:progressivo",
-                                    Parameters.with("anno", e.getAnno()).and( "serie", e.getSerie())
-                                            .and("progressivo", e.getProgressivo())).list();
+                        .find("anno =:anno AND serie =:serie AND progressivo =:progressivo",
+                                Parameters.with("anno", e.getAnno()).and("serie", e.getSerie())
+                                        .and("progressivo", e.getProgressivo())).list();
                 goMap.put(e, ordineDettaglioList);
             }
 
             for (OrdineId id : goMap.keySet()) {
-                if(goMap.get(id).stream()
-                        .allMatch(b-> b.getQtaConsegnatoSenzaBolla() == null || b.getQtaConsegnatoSenzaBolla() == 0)) {
+                if (goMap.get(id).stream()
+                        .allMatch(b -> b.getQtaConsegnatoSenzaBolla() == null || b.getQtaConsegnatoSenzaBolla() == 0)) {
                     GoOrdine.update("warnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
                             Parameters.with("anno", id.getAnno())
                                     .and("serie", id.getSerie())
@@ -139,7 +139,7 @@ public class ArticoloService {
         }
 
         long fine = System.currentTimeMillis();
-        Log.info("UpdateArticoliBolle: " + (fine - inizio)/1000 + " sec");
+        Log.info("UpdateArticoliBolle: " + (fine - inizio) / 1000 + " sec");
         return listToSave.size();
     }
 
@@ -153,13 +153,13 @@ public class ArticoloService {
     public void checkNoBolle() {
         long inizio = System.currentTimeMillis();
         GoOrdineDettaglio.update("flagConsegnato = 'F', qtaDaConsegnare = null," +
-                            " flBolla = 'F' WHERE progrGenerale IN (" +
-                            "select god.progrGenerale " +
-                            "FROM GoOrdineDettaglio god " +
-                            "WHERE NOT EXISTS (SELECT 1 FROM FattureDettaglio f2 WHERE f2.progrOrdCli = god.progrGenerale) " +
-                            "AND god.flBolla = 'T' " +
-                            "AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = god.progrGenerale))"
-            );
+                " flBolla = 'F' WHERE progrGenerale IN (" +
+                "select god.progrGenerale " +
+                "FROM GoOrdineDettaglio god " +
+                "WHERE NOT EXISTS (SELECT 1 FROM FattureDettaglio f2 WHERE f2.progrOrdCli = god.progrGenerale) " +
+                "AND god.flBolla = 'T' " +
+                "AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = god.progrGenerale))"
+        );
         long fine = System.currentTimeMillis();
         Log.info("CheckNoBolle: " + (fine - inizio) + " msec");
     }
@@ -268,7 +268,7 @@ public class ArticoloService {
         if (!ordineDettaglioList.isEmpty()) {
             OrdineDettaglio.persist(ordineDettaglioList);
         }
-        if(!listToCheck.isEmpty()){
+        if (!listToCheck.isEmpty()) {
             checkCodArtFornitore(listToCheck);
         }
         try {
@@ -304,7 +304,7 @@ public class ArticoloService {
                     .and("serie", serie)
                     .and("progressivo", progressivo)).list().isEmpty()) {
                 ordine.setStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
-            } else if(!GoOrdineDettaglio.find(" SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
+            } else if (!GoOrdineDettaglio.find(" SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
                     " and flagOrdinato = 'T' and flagRiservato IN (null, 'F')" +
                     " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
@@ -328,7 +328,7 @@ public class ArticoloService {
         }
 
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
-            if(GoOrdineDettaglio.find("SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
+            if (GoOrdineDettaglio.find("SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
                     " and progressivo =:progressivo" +
                     " and (flagOrdinato = 'T' AND (flagRiservato = 'F' OR flagRiservato is null) ) " +
                     " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
@@ -367,25 +367,25 @@ public class ArticoloService {
     public List<String> codificaArticoli(List<OrdineDettaglioDto> list, String user) {
         List<String> errors = new ArrayList<>();
         for (OrdineDettaglioDto dto : list) {
-            if(StringUtils.isBlank(dto.getFDescrArticolo()) || !dto.getFDescrArticolo().contains("*")){
+            if (StringUtils.isBlank(dto.getFDescrArticolo()) || !dto.getFDescrArticolo().contains("*")) {
                 Log.error("Articolo " + dto.getFDescrArticolo() + ": Fornitore senza *");
                 errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore senza *");
                 continue;
             }
             String nomeFornitore = StringUtils.substringBetween(dto.getFDescrArticolo(), "*");
-            if(StringUtils.isBlank(nomeFornitore)){
+            if (StringUtils.isBlank(nomeFornitore)) {
                 Log.error("Articolo " + dto.getFDescrArticolo() + ": Fornitore non codificato correttamente");
                 errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore non codificato correttamente");
                 continue;
             }
             Optional<ArticoloClasseFornitore> fornitore = ArticoloClasseFornitore.find("descrizione like '%:nome%' OR descrUser = :nome", Parameters.with("nome", nomeFornitore)).firstResultOptional();
-            if(fornitore.isEmpty()){
+            if (fornitore.isEmpty()) {
                 Log.error("Articolo " + dto.getFDescrArticolo() + ": Fornitore non trovato in TCA1");
                 errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore non trovato in TCA1");
                 continue;
             }
 
-            if(StringUtils.isBlank(fornitore.get().getDescrUser2())){
+            if (StringUtils.isBlank(fornitore.get().getDescrUser2())) {
                 Log.error("Articolo " + dto.getFDescrArticolo() + ": Sottoconto Fornitore non presente in TCA1");
                 errors.add("Articolo " + dto.getFDescrArticolo() + ": Sottoconto Fornitore non presente in TCA1");
                 continue;
@@ -396,25 +396,25 @@ public class ArticoloService {
             String codiceArticolo = this.creaId(codArtFornitore, classeFornitore);
             int length = StringUtils.length(codArtFornitore);
             Articolo articolo = new Articolo();
-            if(length >= 13){
+            if (length >= 13) {
                 Log.info("Codice articolo forn: " + codArtFornitore);
                 Log.info("Codice articolo interno: " + codiceArticolo);
-                Optional<Articolo> optArticolo =  Articolo.find("articolo = :codArt",
+                Optional<Articolo> optArticolo = Articolo.find("articolo = :codArt",
                         Parameters.with("codArt", codiceArticolo)).firstResultOptional();
-                if(optArticolo.isPresent()){
+                if (optArticolo.isPresent()) {
                     Log.info("Trovato un articolo con codice: " + codiceArticolo + ". Codifico eliminando le prime 3 lettere");
-                    codiceArticolo = this.creaId(StringUtils.truncate(codArtFornitore, 3,13), classeFornitore);
+                    codiceArticolo = this.creaId(StringUtils.truncate(codArtFornitore, 3, 13), classeFornitore);
                 }
                 //Crea articolo
                 createArticolo(articolo, codiceArticolo, user, dto, codArtFornitore, classeFornitore);
                 salvaArticolo(user, errors, fornitore, articolo);
             } else {
-                Optional<Articolo> optArticolo =  Articolo.find("descrArtSuppl = :codArt OR descrArticolo LIKE '%:codArt%'",
+                Optional<Articolo> optArticolo = Articolo.find("descrArtSuppl = :codArt OR descrArticolo LIKE '%:codArt%'",
                         Parameters.with("codArt", codArtFornitore)).firstResultOptional();
-                if(optArticolo.isPresent()){
+                if (optArticolo.isPresent()) {
                     Log.info("Articolo: " + dto.getFDescrArticolo() + " già presente");
                     articolo = optArticolo.get();
-                    if(articolo.getFlTrattato() == null || "N".equals(articolo.getFlTrattato())){
+                    if (articolo.getFlTrattato() == null || "N".equals(articolo.getFlTrattato())) {
                         articolo.setFlTrattato("S");
                         articolo.persist();
                     }
@@ -438,7 +438,7 @@ public class ArticoloService {
 
     private void salvaArticolo(String user, List<String> errors, Optional<ArticoloClasseFornitore> fornitore, Articolo articolo) {
         Optional<Articolo> optARticolo = Articolo.findByIdOptional(articolo.getArticolo());
-        if(optARticolo.isEmpty()){
+        if (optARticolo.isEmpty()) {
             articolo.persist();
             //Crea fornitore alternativo
             FornitoreArticolo fornitoreArticolo = createFornArticolo(user, articolo, fornitore.get());
@@ -450,7 +450,7 @@ public class ArticoloService {
         }
     }
 
-    private void createArticolo(Articolo articolo, String codiceArticolo, String user, OrdineDettaglioDto dto, String codArtFornitore, String classeFornitore){
+    private void createArticolo(Articolo articolo, String codiceArticolo, String user, OrdineDettaglioDto dto, String codArtFornitore, String classeFornitore) {
         articolo.setArticolo(codiceArticolo);
         articolo.setCreateDate(new Date());
         articolo.setUpdateDate(new Date());
@@ -466,7 +466,7 @@ public class ArticoloService {
         articolo.setFlagSconti("S");
     }
 
-    private FornitoreArticolo createFornArticolo(String user, Articolo articolo, ArticoloClasseFornitore fornitore){
+    private FornitoreArticolo createFornArticolo(String user, Articolo articolo, ArticoloClasseFornitore fornitore) {
         FornitoreArticolo fornitoreArticolo = new FornitoreArticolo();
         fornitoreArticolo.setTempoConsegna(0);
         fornitoreArticolo.setCoefPrezzo(0f);
@@ -489,11 +489,11 @@ public class ArticoloService {
     private String creaId(String codiceArticolo, String classeFornitore) {
         String id = classeFornitore + codiceArticolo;
         int length = StringUtils.length(id);
-        if(length == 13){
+        if (length == 13) {
             return id;
         }
         String result;
-        if(length>13){
+        if (length > 13) {
             result = StringUtils.truncate(id, 13);
         } else {
             result = classeFornitore + StringUtils.leftPad(codiceArticolo, 10, '0');
@@ -513,7 +513,7 @@ public class ArticoloService {
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ";
-        if(bolla){
+        if (bolla) {
             query += " AND god.flProntoConsegna = 'T'";
         } else {
             query += " AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
@@ -524,7 +524,14 @@ public class ArticoloService {
 
     @Transactional
     private void checkCodArtFornitore(List<OrdineDettaglio> ordineDettaglioDtos) {
-        ordineDettaglioDtos.forEach(o -> Articolo.update("descrArtSuppl =:cod WHERE articolo = :desc"
-                , Parameters.with("cod", o.getCodArtFornitore()).and("desc", o.getFArticolo())));
+        ordineDettaglioDtos.forEach(o -> {
+            try {
+                Articolo.update("descrArtSuppl =:cod WHERE articolo = :desc"
+                        , Parameters.with("cod", o.getCodArtFornitore()).and("desc", o.getFArticolo()));
+            } catch (Exception e) {
+                Log.error("Cod art non aggiornato per articolo: " + o.getFArticolo());
+            }
+        });
+
     }
 }
