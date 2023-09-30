@@ -79,6 +79,12 @@ public class FetchScheduler {
         ordineService.addNuoviOrdini();
     }
 
+    @Scheduled(every = "${cron.expr.find.carichi}")
+    @Transactional
+    public void findCarichi() throws ParseException{
+        articoloService.findCarichi();
+    }
+
     @Scheduled(cron = "${cron.expr.invio.mail}")
     @Transactional
     public void invioMail() {

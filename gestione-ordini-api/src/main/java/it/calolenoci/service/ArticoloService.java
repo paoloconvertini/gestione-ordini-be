@@ -17,10 +17,13 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class ArticoloService {
@@ -35,11 +38,10 @@ public class ArticoloService {
     @Inject
     ArticoloMapper mapper;
 
-    @Inject
-    MailService mailService;
+    @ConfigProperty(name = "data.inizio")
+    String dataCongig;
 
-    @ConfigProperty(name = "ordini.path")
-    String pathReport;
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     public ResponseOrdineDettaglio findById(FiltroArticoli filtro) {
         long inizio = System.currentTimeMillis();
@@ -522,7 +524,6 @@ public class ArticoloService {
                 .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
     }
 
-    @Transactional
     private void checkCodArtFornitore(List<OrdineDettaglio> ordineDettaglioDtos) {
         ordineDettaglioDtos.forEach(o -> {
             try {
@@ -533,5 +534,55 @@ public class ArticoloService {
             }
         });
 
+    }
+
+    @Transactional
+    public void findCarichi() throws ParseException {
+        try {
+            long inizio = System.currentTimeMillis();
+            List<CaricoDto> data = OrdineDettaglio.find("SELECT og, d, m, o2 FROM OrdineDettaglio o2 " +
+                            " JOIN GoOrdineDettaglio d ON d.progrGenerale = o2.progrGenerale " +
+                            " JOIN GoOrdine og ON og.anno = d.anno AND og.serie = d.serie AND og.progressivo = d.progressivo " +
+                            " JOIN Ordine o ON o.anno = d.anno AND o.serie = d.serie AND o.progressivo = d.progressivo " +
+                            " JOIN OrdineFornitoreDettaglio f ON f.pid = o2.progrGenerale " +
+                            " JOIN Magazzino m ON m.pid = f.progrGenerale " +
+                            " WHERE og.status <> 'ARCHIVIATO' and o.dataConferma >= :data " +
+                            " and d.flagOrdinato = 'T' AND d.flagRiservato <> 'T' and m.serie = 'CF' and d.flagConsegnato = 'F'",
+                    Parameters.with("data", sdf.parse(dataCongig))).project(CaricoDto.class).list();
+
+            if(!data.isEmpty()){
+                List<RegistroAzioni> registroAzioniList = new ArrayList<>();
+                List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();
+                List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
+
+                for (CaricoDto dto : data) {
+                }
+
+                goOrdineDettaglioList.forEach(go -> {
+                    go.setFlagRiservato(Boolean.TRUE);
+                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(go.getAnno(), go.getSerie(),
+                            go.getProgressivo(), "Automatico", AzioneEnum.RISERVATO.getDesczrizione()
+                            , go.getRigo(), null, null, null, null));
+                });
+                if(!registroAzioniList.isEmpty()) {
+                    RegistroAzioni.persist(registroAzioniList);
+                }
+                if(!goOrdineDettaglioList.isEmpty()){
+                    GoOrdineDettaglio.persist(goOrdineDettaglioList);
+                }
+
+                Set<GoOrdine> ordines = data.stream().map(CaricoDto::getGoOrdine).filter(goOrdine ->
+                        StatoOrdineEnum.INCOMPLETO.getDescrizione()
+                                .equals(goOrdine.getStatus())).collect(Collectors.toSet());
+                ordines.forEach(o->{
+                    Log.debug("Ordine n." + o.getAnno() + " " + o.getSerie() + " " + o.getProgressivo() +", status: " + o.getStatus());
+                    chiudi(o.getAnno(), o.getSerie(), o.getProgressivo());
+                });
+            }
+            long fine = System.currentTimeMillis();
+            Log.info("find carichi: " + (fine - inizio) / 1000 + " sec");
+        } catch (Exception e){
+            Log.error("Errore find carichi");
+        }
     }
 }

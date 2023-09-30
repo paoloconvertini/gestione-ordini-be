@@ -164,9 +164,8 @@ public class FatturaService {
             for (OrdineId id : map.keySet()) {
                 if (accontoDtos != null && !accontoDtos.isEmpty()) {
                     final List<OrdineDettaglioDto> dtos = map.get(id);
-                    accontoDtos.stream().filter(a -> AccontoDto.checkOrdineEsiste(a, id))
-                            .findFirst()
-                            .ifPresent(a -> dtos.add(0, fattureMapper.fromAccontoToOrdineDettaglio(a, id)));
+                    accontoDtos.stream().filter(a -> AccontoDto.checkOrdineEsiste(a, id)).toList()
+                            .forEach(a -> dtos.add(0, fattureMapper.fromAccontoToOrdineDettaglio(a, id)));
                 }
             }
 
