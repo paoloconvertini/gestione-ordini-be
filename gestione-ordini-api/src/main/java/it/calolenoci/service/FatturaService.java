@@ -178,6 +178,7 @@ public class FatturaService {
             List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
             List<Magazzino> magazzinoList = new ArrayList<>();
             List<SaldiMagazzino> saldiMagazzinoList = new ArrayList<>();
+            List<GoTmpScarico> goTmpScaricoList = new ArrayList<>();
             FattureDettaglio fd;
             Integer progressivo = Magazzino.find("select MAX(m.magazzinoId.progressivo)+1 from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
                     Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
@@ -209,6 +210,15 @@ public class FatturaService {
                         saldiMagazzino.setQscarichi(qtaScarico);
                         saldiMagazzino.setQgiacenza(qtaGiacenza);
                         saldiMagazzinoList.add(saldiMagazzino);
+                    } else {
+                        if(StringUtils.equals(o.getTipoRigo(), "" ) || StringUtils.equals(o.getTipoRigo(), " ")) {
+                            GoTmpScarico goTmpScarico = new GoTmpScarico();
+                            goTmpScarico.setId(new GoTmpScaricoPK(o.getFArticolo(), o.getMagazz()));
+                            goTmpScarico.setIdBolla(fd.getProgrGenerale());
+                            goTmpScarico.setAttivo(Boolean.TRUE);
+                            goTmpScaricoList.add(goTmpScarico);
+                        }
+
                     }
 
                     MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i+1);
@@ -229,6 +239,9 @@ public class FatturaService {
             }
             if (!saldiMagazzinoList.isEmpty()) {
                 SaldiMagazzino.persist(saldiMagazzinoList);
+            }
+            if(!goTmpScaricoList.isEmpty()){
+                GoTmpScarico.persist(goTmpScaricoList);
             }
             result = StringUtils.join("Creata bolla n. ", f.getAnno(), "/", f.getSerie(), "/", f.getProgressivo());
         } catch (Exception e) {

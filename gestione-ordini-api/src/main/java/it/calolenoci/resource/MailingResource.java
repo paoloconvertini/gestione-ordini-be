@@ -71,14 +71,8 @@ public class MailingResource {
     @PermitAll
     @Path("/test")
     public Response test() throws IOException, ParseException, InterruptedException, org.jose4j.json.internal.json_simple.parser.ParseException {
-        //scheduler.geoLocation();
-        ZoneId zone = ZoneId.of("Europe/Paris");
-        ZonedDateTime zonedDateTime = ZonedDateTime.now(zone);
-        //ZonedDateTime t = zonedDateTime.withYear(1899).withMonth(12).withDayOfMonth(30);
-        //Date d = java.sql.Date.valueOf(String.valueOf(zonedDateTime.toLocalDateTime()));
-
-        Date entity = Timestamp.valueOf(zonedDateTime.toLocalDateTime());
-        return Response.ok(entity).build();
+        scheduler.findCaricoMagazzino();
+        return Response.ok().build();
     }
 
     @POST

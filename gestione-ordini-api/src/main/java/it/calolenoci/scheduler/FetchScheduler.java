@@ -51,6 +51,8 @@ public class FetchScheduler {
     @Inject
     GeoLocationService geoLocationService;
 
+    @Inject
+    SaldiMagazzinoService saldiMagazzinoService;
 
     @Scheduled(every = "${cron.expr:1m}")
     @Transactional
@@ -83,6 +85,13 @@ public class FetchScheduler {
     @Transactional
     public void findCarichi(){
         articoloService.findCarichi();
+    }
+
+    @Scheduled(cron = "${cron.expr.find.carico.mag}")
+    @Transactional
+    @TransactionConfiguration(timeout = 50000)
+    public void findCaricoMagazzino(){
+        saldiMagazzinoService.findCaricoMagazzino();
     }
 
  /*   @Scheduled(every = "${cron.expr.sinc.cod.art}")
