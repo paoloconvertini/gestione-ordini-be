@@ -4,10 +4,7 @@ import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
-import it.calolenoci.entity.GoOrdine;
-import it.calolenoci.entity.GoOrdineDettaglio;
-import it.calolenoci.entity.Ordine;
-import it.calolenoci.entity.OrdineDettaglio;
+import it.calolenoci.entity.*;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.GoOrdineDettaglioMapper;
 import it.calolenoci.mapper.GoOrdineMapper;
@@ -65,7 +62,7 @@ public class OrdineService {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
-                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, go.hasCarico " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' ";
@@ -86,7 +83,7 @@ public class OrdineService {
             map.put("venditore", filtro.getCodVenditore());
         }
         long inizioQuery = System.currentTimeMillis();
-        List<OrdineDTO> list = Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
+        List<OrdineDTO> list = Ordine.find(query, Sort.descending("go.hasCarico", "dataConferma"), map).project(OrdineDTO.class).list();
         long fineQuery = System.currentTimeMillis();
         Log.info("Query all ordini: " + (fineQuery - inizioQuery)/1000 + " sec");
         long fine = System.currentTimeMillis();
@@ -323,16 +320,41 @@ public class OrdineService {
             query += " AND go.status = :status";
             map.put("status", filtro.getStatus());
         }
-
-
-
-
         map.put("dataConfig", sdf.parse(dataCongig));
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());
         }
-        return Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
+        List<OrdineDTO> dtoList = Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
+        dtoList.forEach( o-> o.setVeicoloList(Veicolo.find("SELECT v.id.idVeicolo FROM GoOrdVeicolo v " +
+                        "WHERE v.id.anno = :anno AND v.id.serie = :serie AND v.id.progressivo =:progressivo"
+                , Parameters.with("anno", o.getAnno()).and("serie", o.getSerie())
+                        .and("progressivo", o.getProgressivo())).project(Integer.class).list()));
+        return dtoList;
+    }
 
+    @Transactional
+    public boolean updateVeicolo(OrdineDTO dto) {
+        try {
+            List<GoOrdVeicolo> list = new ArrayList<>();
+            if (!dto.getVeicoloList().isEmpty()) {
+                dto.getVeicoloList().forEach(v -> list.add(new GoOrdVeicolo(
+                        new GoOrdVeicoloPK(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), v))));
+            }
+            long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
+                    , Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
+                            .and("progressivo", dto.getProgressivo()));
+            if(list.isEmpty() && delete > 0) {
+                return true;
+            }
+            if (!list.isEmpty()) {
+                GoOrdVeicolo.persist(list);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            Log.error("Error saving veicoli", e);
+            return false;
+        }
     }
 }

@@ -50,5 +50,6 @@ public class ArticoloMapper {
         if(StringUtils.isNotBlank(dto.getNote())){
             o.setNote(dto.getNote());
         }
+       // o.setFArticolo(dto.getFArticolo());
     }
 }

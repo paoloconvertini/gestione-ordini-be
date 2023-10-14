@@ -60,6 +60,10 @@ public class GoOrdine extends PanacheEntityBase {
     @Column(length = 2000, name = "NOTELOGISTICA")
     private String noteLogistica;
 
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Column(length = 1, name = "HAS_CARICO", columnDefinition = "CHAR(1)")
+    private Boolean hasCarico;
+
     public static List<GoOrdine> findOrdiniByStatus(List<String> param) {
         return list("status in (:param)", Parameters.with("param", param));
     }

@@ -9,6 +9,7 @@ import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.mapper.ArticoloMapper;
+import it.calolenoci.mapper.GoOrdineDettaglioMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -41,6 +42,9 @@ public class ArticoloService {
     @ConfigProperty(name = "data.inizio")
     String dataCongig;
 
+    @Inject
+    GoOrdineDettaglioMapper goOrdineDettaglioMapper;
+
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     public ResponseOrdineDettaglio findById(FiltroArticoli filtro) {
@@ -49,6 +53,7 @@ public class ArticoloService {
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
         list = OrdineDettaglio.findArticoliById(filtro);
+
         Optional<Double> aDouble = OrdineDettaglio.find("SELECT SUM(((CaSE WHEN prezzo is null then 0 ELSE prezzo end)*(CASE WHEN quantita is null then 0 else quantita end))*(1-scontoArticolo/100)*(1-scontoC1/100)*(1-scontoC2/100)*(1-scontoP/100)) FROM OrdineDettaglio o " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo"
                         , Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie()).and("progressivo", filtro.getProgressivo()))
@@ -71,13 +76,6 @@ public class ArticoloService {
 
     public List<OrdineDettaglioDto> findForReport(Integer anno, String serie, Integer progressivo) {
         return OrdineDettaglio.findArticoliForReport(anno, serie, progressivo);
-    }
-
-    public boolean findAnyNoStatus(Integer anno, String serie, Integer progressivo) {
-        return !OrdineDettaglio.find("SELECT o FROM OrdineDettaglio o" +
-                        " WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo and tipoRigo NOT IN ('C', 'AC')" +
-                        " AND NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o.progrGenerale = god.progrGenerale)",
-                Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).list().isEmpty();
     }
 
     @Transactional
@@ -179,6 +177,7 @@ public class ArticoloService {
         List<OrdineDettaglio> listToCheck = new ArrayList<>();
         AtomicBoolean warnNoBolla = new AtomicBoolean(false);
         AtomicBoolean hasProntoConsegna = new AtomicBoolean(false);
+        AtomicBoolean hasCarico = new AtomicBoolean(false);
         list.forEach(dto -> {
             if (!"C".equals(dto.getTipoRigo()) && !"AC".equals(dto.getTipoRigo())) {
                 if (!hasProntoConsegna.get() && dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna()) {
@@ -254,6 +253,10 @@ public class ArticoloService {
                     warnNoBolla.set(dto.getQtaConsegnatoSenzaBolla() != null && dto.getQtaConsegnatoSenzaBolla() != 0);
                 }
 
+                if (!hasCarico.get()) {
+                    hasCarico.set(dto.getFlagOrdinato() != null && !dto.getFlagRiservato() && dto.getNumDoc() != null);
+                }
+
                 mapper.fromDtoToEntity(goOrdineDettaglio, dto);
                 goOrdineDettaglioList.add(goOrdineDettaglio);
                 ordineDettaglioList.add(ordineDettaglio);
@@ -261,12 +264,13 @@ public class ArticoloService {
             }
         });
         OrdineDettaglioDto dto = list.get(0);
-        GoOrdine.update("warnNoBolla =:warn, hasProntoConsegna =:pc where anno =:anno and serie =:serie and progressivo = :progressivo",
+        GoOrdine.update("hasCarico =:hasCarico, warnNoBolla =:warn, hasProntoConsegna =:pc where anno =:anno and serie =:serie and progressivo = :progressivo",
                 Parameters.with("anno", dto.getAnno())
                         .and("serie", dto.getSerie())
                         .and("progressivo", dto.getProgressivo())
                         .and("warn", warnNoBolla.get())
-                        .and("pc", hasProntoConsegna.get()));
+                        .and("pc", hasProntoConsegna.get())
+                        .and("hasCarico", hasCarico.get()));
         if (!ordineDettaglioList.isEmpty()) {
             OrdineDettaglio.persist(ordineDettaglioList);
         }
@@ -433,6 +437,10 @@ public class ArticoloService {
                             .and("fDescrArticolo", articolo.getDescrArticolo()).and("anno", dto.getAnno())
                             .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo())
                             .and("rigo", dto.getRigo()));
+          /*  if (dto.getProgrGenerale() != null) {
+                GoOrdineDettaglio.update("fArticolo =:fArticolo WHERE progrGenerale = :progrGenerale",
+                        Parameters.with("fArticolo", articolo.getArticolo()).and("progrGenerale", dto.getProgrGenerale()));
+            }*/
         }
         return errors;
 
@@ -509,9 +517,10 @@ public class ArticoloService {
                 "  o.fUnitaMisura,  god.flagNonDisponibile, god.flagOrdinato, god.flagRiservato, " +
                 "(CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, " +
                 "god.note, " +
-                "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF " +
+                "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF, god.progrGenerale " +
                 "FROM OrdineDettaglio o " +
                 "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
+                //"AND god.fArticolo = o.fArticolo" +
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ";
@@ -537,52 +546,97 @@ public class ArticoloService {
     }
 
     @Transactional
-    public void findCarichi() throws ParseException {
+    public void findCarichi() {
         try {
             long inizio = System.currentTimeMillis();
-            List<CaricoDto> data = OrdineDettaglio.find("SELECT og, d, m, o2 FROM OrdineDettaglio o2 " +
+            List<CaricoDto> data = OrdineDettaglio.find("SELECT og, d, m  FROM OrdineDettaglio o2 " +
                             " JOIN GoOrdineDettaglio d ON d.progrGenerale = o2.progrGenerale " +
                             " JOIN GoOrdine og ON og.anno = d.anno AND og.serie = d.serie AND og.progressivo = d.progressivo " +
                             " JOIN Ordine o ON o.anno = d.anno AND o.serie = d.serie AND o.progressivo = d.progressivo " +
                             " JOIN OrdineFornitoreDettaglio f ON f.pid = o2.progrGenerale " +
                             " JOIN Magazzino m ON m.pid = f.progrGenerale " +
-                            " WHERE og.status <> 'ARCHIVIATO' and o.dataConferma >= :data " +
-                            " and d.flagOrdinato = 'T' AND d.flagRiservato <> 'T' and m.serie = 'CF' and d.flagConsegnato = 'F'",
+                            " WHERE og.status <> 'ARCHIVIATO' and o.dataConferma >= :data and f.saldo IN ('S', 'A')" +
+                            " and d.flagOrdinato = 'T' AND d.flagRiservato <> 'T' and d.flagConsegnato = 'F'",
                     Parameters.with("data", sdf.parse(dataCongig))).project(CaricoDto.class).list();
 
-            if(!data.isEmpty()){
-                List<RegistroAzioni> registroAzioniList = new ArrayList<>();
+            if (!data.isEmpty()) {
                 List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();
-                List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
-
+                List<GoOrdine> ordineList = new ArrayList<>();
                 for (CaricoDto dto : data) {
+                    GoOrdineDettaglio goOrdineDettaglio = dto.getGoOrdineDettaglio();
+                    Magazzino magazzino = dto.getMagazzino();
+                    goOrdineDettaglio.setNumDoc(magazzino.getNumdocmagazzino());
+                    goOrdineDettaglio.setDataCarico(magazzino.getDataMagazzino());
+                    goOrdineDettaglio.setDataDoc(magazzino.getDatadocmag());
+                    goOrdineDettaglio.setAnnoMag(magazzino.getMagazzinoId().getAnno());
+                    goOrdineDettaglio.setSerieMag(magazzino.getMagazzinoId().getSerie());
+                    goOrdineDettaglio.setProgressivoMag(magazzino.getMagazzinoId().getProgressivo());
+                    goOrdineDettaglioList.add(goOrdineDettaglio);
+                    ordineList.add(dto.getGoOrdine());
                 }
 
-                goOrdineDettaglioList.forEach(go -> {
-                    go.setFlagRiservato(Boolean.TRUE);
-                    registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(go.getAnno(), go.getSerie(),
-                            go.getProgressivo(), "Automatico", AzioneEnum.RISERVATO.getDesczrizione()
-                            , go.getRigo(), null, null, null, null));
-                });
-                if(!registroAzioniList.isEmpty()) {
-                    RegistroAzioni.persist(registroAzioniList);
-                }
-                if(!goOrdineDettaglioList.isEmpty()){
+                if (!goOrdineDettaglioList.isEmpty()) {
                     GoOrdineDettaglio.persist(goOrdineDettaglioList);
                 }
 
-                Set<GoOrdine> ordines = data.stream().map(CaricoDto::getGoOrdine).filter(goOrdine ->
-                        StatoOrdineEnum.INCOMPLETO.getDescrizione()
-                                .equals(goOrdine.getStatus())).collect(Collectors.toSet());
-                ordines.forEach(o->{
-                    Log.debug("Ordine n." + o.getAnno() + " " + o.getSerie() + " " + o.getProgressivo() +", status: " + o.getStatus());
-                    chiudi(o.getAnno(), o.getSerie(), o.getProgressivo());
-                });
+                if(!ordineList.isEmpty()){
+                    Set<GoOrdine> ordines = new HashSet<>(ordineList);
+                    ordines.forEach(o -> {
+                        Log.debug("Ordine n." + o.getAnno() + " " + o.getSerie() + " " + o.getProgressivo());
+                        o.setHasCarico(Boolean.TRUE);
+                    });
+                    GoOrdine.persist(ordines);
+                }
+
+
             }
             long fine = System.currentTimeMillis();
             Log.info("find carichi: " + (fine - inizio) / 1000 + " sec");
-        } catch (Exception e){
-            Log.error("Errore find carichi");
+        } catch (Exception e) {
+            Log.error("Errore find carichi", e);
+        }
+    }
+
+    @Transactional
+    public void sincronizzaCodiceArticolo() {
+        try {
+            long inizio = System.currentTimeMillis();
+            int i = GoOrdineDettaglio.getEntityManager().createNativeQuery(" " +
+                    "UPDATE d SET d.fArticolo = o.fArticolo " +
+                    "FROM GO_ORDINE_DETTAGLIO d " +
+                    "JOIN ORDCLI2 o ON d.PROGRGENERALE = o.PROGRGENERALE " +
+                    "WHERE d.FARTICOLO IN ('*PZ', '*MQ', '*ML', '*QL', '*MD') " +
+                    "AND o.FARTICOLO NOT IN ('*PZ', '*MQ', '*ML', '*QL', '*MD')").executeUpdate();
+            Log.debug("sincronizzaCodiceArticolo: Aggiornati n. " + i + " records");
+            long fine = System.currentTimeMillis();
+            Log.info("sincronizzaCodiceArticolo: " + (fine - inizio) / 1000 + " sec");
+        } catch (Exception e) {
+            Log.error("Errore sincronizzaCodiceArticolo");
+        }
+    }
+
+    @Transactional
+    public void resetGoOrdineDettaglio() {
+        try {
+            long inizio = System.currentTimeMillis();
+            List<OrdineClienteDto> list = OrdineDettaglio.find("SELECT o, d " +
+                    "FROM OrdineDettaglio o " +
+                    "JOIN GoOrdineDettaglio d ON o.progrGenerale = d.progrGenerale AND o.fArticolo <> d.fArticolo " +
+                    "WHERE d.FARTICOLO NOT IN ('*PZ', '*MQ', '*ML', '*QL', '*MD') ").project(OrdineClienteDto.class).list();
+            if(!list.isEmpty()) {
+                List<GoOrdineDettaglio> goOrdineDettaglios = new ArrayList<>();
+                list.forEach(e->{
+                    Log.debug("*** Ordine n. " + e.getOrdineDettaglio().getAnno() + "/" + e.getOrdineDettaglio().getSerie() + "/" + e.getOrdineDettaglio().getProgressivo() + "*****");
+                    Log.debug("GO_Articolo " +  e.getGoOrdineDettaglio().toString());
+                    Log.debug("Articolo " + e.getOrdineDettaglio().getFArticolo() + ", " + e.getOrdineDettaglio().getProgrGenerale() + " resettato");
+                    goOrdineDettaglios.add(goOrdineDettaglioMapper.fromOrdineDettaglioToGoOrdineDettaglio(e.getOrdineDettaglio()));
+                });
+                GoOrdineDettaglio.persist(goOrdineDettaglios);
+            }
+            long fine = System.currentTimeMillis();
+            Log.info("resetGoOrdineDettaglio: " + (fine - inizio) / 1000 + " sec");
+        } catch (Exception e) {
+            Log.error("Errore resetGoOrdineDettaglio");
         }
     }
 }

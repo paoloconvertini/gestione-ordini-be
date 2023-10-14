@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 @RegisterForReflection
 @Getter
@@ -60,6 +61,10 @@ public class OrdineDTO implements Serializable {
     private String noteLogistica;
 
     private String modalitaPagamento;
+
+    private Boolean hasCarico = Boolean.FALSE;
+
+    private List<Integer> veicoloList;
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,
@@ -174,7 +179,8 @@ public class OrdineDTO implements Serializable {
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
                      Boolean locked, String userLock, Boolean warnNoBolla, Boolean hasFirma,
-                     Boolean hasProntoConsegna, String note, String noteLogistica) {
+                     Boolean hasProntoConsegna, String note, String noteLogistica
+            , Boolean hasCarico) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
@@ -201,6 +207,7 @@ public class OrdineDTO implements Serializable {
         this.hasProntoConsegna = hasProntoConsegna;
         this.note = note;
         this.noteLogistica = noteLogistica;
+        this.hasCarico = hasCarico;
     }
 
     public OrdineDTO(String intestazione, String localita, String provincia, String telefono, String email) {

@@ -7,8 +7,7 @@ import io.vertx.core.file.OpenOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.file.AsyncFile;
 import it.calolenoci.dto.*;
-import it.calolenoci.entity.GoOrdine;
-import it.calolenoci.entity.Ordine;
+import it.calolenoci.entity.*;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.*;
@@ -286,6 +285,18 @@ public class OrdineResource {
     @Path("/cercaAltriOrdiniCliente/{anno}/{serie}/{progressivo}/{sottoConto}")
     public Response findAltriOrdiniCliente(Integer anno, String serie, Integer progressivo, String sottoConto) throws ParseException {
         return Response.ok(ordineService.findAltriOrdiniCliente(anno, serie, progressivo, sottoConto)).build();
+    }
+
+    @RolesAllowed({ADMIN, LOGISTICA})
+    @PUT
+    @Path("/updateVeicolo")
+    @Consumes(APPLICATION_JSON)
+    public Response update(OrdineDTO dto) {
+        if(ordineService.updateVeicolo(dto)){
+            return Response.ok(new ResponseDto("Veicoli aggiornati con successo", false)).build();
+        } else {
+            return Response.notModified().build();
+        }
     }
 
 }

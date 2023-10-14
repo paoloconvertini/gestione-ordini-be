@@ -81,9 +81,21 @@ public class FetchScheduler {
 
     @Scheduled(every = "${cron.expr.find.carichi}")
     @Transactional
-    public void findCarichi() throws ParseException{
+    public void findCarichi(){
         articoloService.findCarichi();
     }
+
+ /*   @Scheduled(every = "${cron.expr.sinc.cod.art}")
+    @Transactional
+    public void sincronizzaCodiceArticolo() throws ParseException{
+        articoloService.sincronizzaCodiceArticolo();
+    }
+
+    @Scheduled(every = "${cron.expr.sinc.cod.art}")
+    @Transactional
+    public void resetGoOrdineDettaglio() throws ParseException{
+        articoloService.resetGoOrdineDettaglio();
+    }*/
 
     @Scheduled(cron = "${cron.expr.invio.mail}")
     @Transactional

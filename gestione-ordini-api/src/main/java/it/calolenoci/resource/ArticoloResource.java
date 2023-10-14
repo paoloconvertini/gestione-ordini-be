@@ -49,15 +49,8 @@ public class ArticoloResource {
     FatturaService fatturaService;
 
     @Inject
-    OrdineService ordineService;
-
-    @Inject
     @Claim(standard = Claims.upn)
     String user;
-
-    @Inject
-    @Claim(standard = Claims.email)
-    String email;
 
     @Inject
     DropBoxService dropBoxService;

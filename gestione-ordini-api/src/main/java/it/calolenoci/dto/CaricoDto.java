@@ -21,5 +21,4 @@ public class CaricoDto implements Serializable {
 
     private Magazzino magazzino;
 
-    private OrdineDettaglio ordineDettaglio;
 }

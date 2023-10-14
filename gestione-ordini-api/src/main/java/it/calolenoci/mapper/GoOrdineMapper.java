@@ -23,6 +23,7 @@ public class GoOrdineMapper {
         go.setLocked(Boolean.FALSE);
         go.setHasFirma(Boolean.FALSE);
         go.setWarnNoBolla(Boolean.FALSE);
+        go.setHasCarico(Boolean.FALSE);
         return go;
     }
 }

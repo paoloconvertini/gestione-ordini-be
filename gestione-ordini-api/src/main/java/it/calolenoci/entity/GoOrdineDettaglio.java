@@ -7,6 +7,7 @@ import it.calolenoci.dto.FiltroArticoli;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.Type;
 import org.jfree.util.Log;
 
@@ -20,6 +21,7 @@ import java.util.Optional;
 @Table(name = "GO_ORDINE_DETTAGLIO")
 @Getter
 @Setter
+@ToString
 public class GoOrdineDettaglio extends PanacheEntityBase {
 
     @Column(length = 4)
@@ -83,6 +85,25 @@ public class GoOrdineDettaglio extends PanacheEntityBase {
     @Column(name = "QTA_PRONTO_CONSEGNA")
     private Double qtaProntoConsegna;
 
+    @Column(name = "DATA_CARICO")
+    private Date dataCarico;
+
+    @Column(name = "NUM_DOC", nullable = true, length = 15)
+    private String numDoc;
+
+    @Column(name = "DATA_DOC", nullable = true)
+    private Date dataDoc;
+
+    @Column(name = "ANNO_MAG", nullable = true)
+    private Integer annoMag;
+    @Column(name = "SERIE_MAG", nullable = true, length = 3)
+    private String serieMag;
+    @Column(name = "PROGRESSIVO_MAG", nullable = true)
+    private Integer progressivoMag;
+
+/*    @Column(name="FARTICOLO", length = 13)
+    private String fArticolo;*/
+
 
     public static Optional<GoOrdineDettaglio> getById(Integer progrGenerale) {
         return find("progrGenerale = :progrGenerale",
@@ -94,6 +115,7 @@ public class GoOrdineDettaglio extends PanacheEntityBase {
                 Parameters.with("stato", stato).and("anno", anno).and("serie", serie)
                         .and("progressivo", progressivo));
     }
+
 
 
 }
