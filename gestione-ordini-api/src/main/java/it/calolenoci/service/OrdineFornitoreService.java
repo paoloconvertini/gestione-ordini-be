@@ -7,6 +7,7 @@ import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.mapper.GoOrdineFornitoreMapper;
+import it.calolenoci.mapper.OrdineFornitoreMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,8 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class OrdineFornitoreService {
 
+    @Inject
+    OrdineFornitoreMapper ordineFornitoreMapper;
     @Inject
     GoOrdineFornitoreMapper goOrdineFornitoreMapper;
     @Inject
@@ -79,23 +82,7 @@ public class OrdineFornitoreService {
                 String serieOAF = "B";
                 if (!articoloDtoList.isEmpty()) {
                     ArticoloDto articoloDto = articoloDtoList.get(0);
-                    OrdineFornitore ordineFornitore = new OrdineFornitore();
-                    ordineFornitore.setProgressivo(prog);
-                    ordineFornitore.setAnno(Year.now().getValue());
-                    ordineFornitore.setSerie(serieOAF);
-                    ordineFornitore.setDataOrdine(new Date());
-                    ordineFornitore.setCreateDate(new Date());
-                    ordineFornitore.setUpdateDate(new Date());
-                    ordineFornitore.setDataModifica(new Date());
-                    ordineFornitore.setMagazzino("B");
-                    ordineFornitore.setNumRevisione(0);
-                    ordineFornitore.setGruppo(articoloDto.getGruppoConto());
-                    ordineFornitore.setConto(articoloDto.getSottoConto());
-                    ordineFornitore.setCodicePagamento(articoloDto.getCodPagamento());
-                    ordineFornitore.setBancaPagamento(articoloDto.getBanca());
-                    ordineFornitore.setCreateUser(user);
-                    ordineFornitore.setProvvisorio("F");
-                    fornitoreList.add(ordineFornitore);
+                    fornitoreList.add(ordineFornitoreMapper.buildOAF(articoloDto, prog, serieOAF, user));
                     for (ArticoloDto a : articoloDtoList) {
                         Log.debug("Creo ordine per articolo: " + a.getArticolo() + " - " + a.getDescrArticolo());
                         OrdineFornitoreDettaglio fornitoreDettaglio = new OrdineFornitoreDettaglio();
@@ -296,7 +283,7 @@ public class OrdineFornitoreService {
                             , params)
                     .project(OrdineFornitoreDto.class).list();
         } else {
-            query += " AND  (o.provvisorio is null OR o.provvisorio = '')";
+            query += " AND  (o.provvisorio is null OR o.provvisorio = '' OR o.provvisorio = ' ')";
             return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"), params)
                     .project(OrdineFornitoreDto.class).list();
         }

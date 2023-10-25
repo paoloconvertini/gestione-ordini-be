@@ -214,7 +214,7 @@ public class OrdineResource {
 
     @GET
     @Path("/apriOrdine/{anno}/{serie}/{progressivo}/{status}")
-    @RolesAllowed({ADMIN, MAGAZZINIERE})
+    @RolesAllowed({ADMIN, MAGAZZINIERE, AMMINISTRATIVO})
     public Response apriOrdine(Integer anno, String serie, Integer progressivo, String status) {
         ordineService.changeStatus(anno, serie, progressivo, status);
         return Response.ok(new ResponseDto("Ordine riaperto", false)).build();

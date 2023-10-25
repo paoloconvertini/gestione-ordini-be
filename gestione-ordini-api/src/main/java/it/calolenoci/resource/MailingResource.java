@@ -71,7 +71,7 @@ public class MailingResource {
     @PermitAll
     @Path("/test")
     public Response test() throws IOException, ParseException, InterruptedException, org.jose4j.json.internal.json_simple.parser.ParseException {
-        scheduler.findCaricoMagazzino();
+        scheduler.calcolaAmmortamentoCespiti();
         return Response.ok().build();
     }
 

@@ -54,6 +54,9 @@ public class FetchScheduler {
     @Inject
     SaldiMagazzinoService saldiMagazzinoService;
 
+    @Inject
+    AmmortamentoCespiteService ammortamentoCespiteService;
+
     @Scheduled(every = "${cron.expr:1m}")
     @Transactional
     @TransactionConfiguration(timeout = 500)
@@ -120,6 +123,12 @@ public class FetchScheduler {
         for (PianoContiDto pianoContiDto : clienti) {
             updateLatLon(pianoContiDto);
         }
+    }
+
+    @Scheduled(cron = "${cron.expr.cespiti}")
+    @TransactionConfiguration(timeout = 50000)
+    public void calcolaAmmortamentoCespiti() throws ParseException {
+        ammortamentoCespiteService.calcola();
     }
 
     @Transactional
