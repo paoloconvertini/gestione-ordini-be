@@ -66,6 +66,8 @@ public class OrdineDTO implements Serializable {
 
     private List<Integer> veicoloList;
 
+    private Double importoRiservati;
+
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,
                      String statoResidenza, String statoEstero, String telefono, String cellulare, String email, String pec) {
@@ -172,6 +174,33 @@ public class OrdineDTO implements Serializable {
         this.hasProntoConsegna = hasProntoConsegna;
         this.note = note;
         this.noteLogistica = noteLogistica;
+    }
+
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+                     String intestazione, String sottoConto, String riferimento, String indirizzo,
+                     String localita, String cap, String provincia, String statoResidenza, String statoEstero,
+                     String telefono, String cellulare, String status,
+                     String note, String noteLogistica, Double importoRiservati) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.sottoConto = sottoConto;
+        this.riferimento = riferimento;
+        this.indirizzo = indirizzo;
+        this.localita = localita;
+        this.cap = cap;
+        this.provincia = provincia;
+        this.statoResidenza = statoResidenza;
+        this.statoEstero = statoEstero;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.status = status;
+        this.note = note;
+        this.noteLogistica = noteLogistica;
+        this.importoRiservati = importoRiservati;
     }
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,

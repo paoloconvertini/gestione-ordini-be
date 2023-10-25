@@ -128,17 +128,6 @@ public class OrdineResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @POST
-    @RolesAllowed({ADMIN})
-    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
-    @APIResponse(responseCode = "204", description = "No Ordini")
-    @Consumes(APPLICATION_JSON)
-    @Path("/fixStati")
-    public Response fixStati() {
-        return Response.ok().build();
-    }
-
-    @Operation(summary = "Returns all the ordini from the database")
-    @POST
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
@@ -170,6 +159,26 @@ public class OrdineResource {
             filtro.setStatus(null);
         }
         return Response.ok(ordineService.findAllByStati(filtro)).build();
+    }
+
+    @Operation(summary = "Returns all the ordini from the database")
+    @POST
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
+    @Consumes(APPLICATION_JSON)
+    @Path("/riservati")
+    public Response getAllOrdiniRiservati(FiltroOrdini filtro) throws ParseException {
+        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
+            List<String> stati = new ArrayList<>();
+            stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+            stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+            stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
+            stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+            filtro.setStati(stati);
+            filtro.setStatus(null);
+        }
+        return Response.ok(ordineService.findAllRiservati(filtro)).build();
     }
 
     @Operation(summary = "Returns all the ordini from the database")

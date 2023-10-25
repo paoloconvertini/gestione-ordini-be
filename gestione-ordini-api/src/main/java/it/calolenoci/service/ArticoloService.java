@@ -212,6 +212,11 @@ public class ArticoloService {
                             dto.getRigo(), null, dto.getQuantita(), null, null));
                     ordineDettaglio.setQuantita(dto.getQuantita());
                     ordineDettaglio.setQuantitaV(dto.getQuantita());
+                    Optional<Double> aSum = FattureDettaglio.find("Select SUM(f.quantita) as qta " +
+                            "FROM FattureDettaglio f " +
+                            "WHERE f.progrOrdCli = :id ",
+                            Parameters.with("id", ordineDettaglio.getProgrGenerale())).project(Double.class).singleResultOptional();
+                    dto.setQtaDaConsegnare(aSum.map(aDouble -> dto.getQuantita() - aDouble).orElseGet(dto::getQuantita));
                 }
                 if (!Objects.equals(ordineDettaglio.getTono(), dto.getTono())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
