@@ -341,12 +341,18 @@ public class OrdineService {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare, go.status, " +
-                "go.note, go.noteLogistica, SUM(o2.prezzo) " +
+                "go.note, go.noteLogistica, SUM((o2.prezzo*(1-o2.scontoArticolo/100)*(1-o2.scontoC1/100)*(1-o2.scontoC2/100)*(1-o2.scontoP/100))*d.qtaDaConsegnare) " +
                 "FROM Ordine o " +
                 "INNER JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                 "INNER JOIN OrdineDettaglio o2 ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
                 "INNER JOIN GoOrdineDettaglio d ON d.progrGenerale = o2.progrGenerale " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' " ;
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
+                "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' " +
+                "AND d.flagConsegnato <> 'T' AND go.status <> 'ARCHIVIATO' AND ( " +
+                "        (d.flagRiservato = 'T' )" +
+                "            OR" +
+                "        (go.status <> 'DA_PROCESSARE' AND d.flagRiservato = 'F' AND d.flagNonDisponibile = 'F' AND d.flagOrdinato = 'F')" +
+                "    ) ";
 
         Map<String, Object> map = new HashMap<>();
 

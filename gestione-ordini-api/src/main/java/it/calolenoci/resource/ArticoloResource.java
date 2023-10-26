@@ -124,6 +124,17 @@ public class ArticoloResource {
         return Response.ok(articoloService.getArticoli(StringUtils.equals("Y",bolla), anno, serie, progressivo)).build();
     }
 
+    @Operation(summary = "Returns all the articoli riservati from the database")
+    @GET
+    @RolesAllowed({ADMIN, VENDITORE})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Transactional
+    @Path("/getArticoliRiservati/{anno}/{serie}/{progressivo}")
+    public Response getArticoliRiservati(Integer anno, String serie, Integer progressivo) {
+        return Response.ok(articoloService.getArticoliRiservati(anno, serie, progressivo)).build();
+    }
+
     @Operation(summary = "Returns all the articoli from the database")
     @GET
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})

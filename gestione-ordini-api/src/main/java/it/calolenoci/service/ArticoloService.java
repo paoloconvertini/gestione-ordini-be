@@ -538,6 +538,29 @@ public class ArticoloService {
                 .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
     }
 
+    public List<OrdineDettaglioDto> getArticoliRiservati(Integer anno, String serie, Integer progressivo) {
+        String query = "SELECT o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
+                "o.codArtFornitore,  o.fDescrArticolo,   " +
+                "(CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, " +
+                "o.fUnitaMisura, god.note, " +
+                "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF, god.progrGenerale, " +
+                "o.prezzo*(1-o.scontoArticolo/100)*(1-o.scontoC1/100)*(1-o.scontoC2/100)*(1-o.scontoP/100) " +
+                "FROM OrdineDettaglio o " +
+                "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
+                "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
+                "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
+                "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
+                "AND god.flagConsegnato <> 'T' AND (" +
+                "   (god.flagRiservato = 'T' ) " +
+                "       OR" +
+                "   (god.flagRiservato = 'F' AND god.flagNonDisponibile = 'F' AND god.flagOrdinato = 'F') " +
+                " ) "
+                ;
+        List<OrdineDettaglioDto> list = OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
+                .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
+        return list;
+    }
+
     private void checkCodArtFornitore(List<OrdineDettaglio> ordineDettaglioDtos) {
         ordineDettaglioDtos.forEach(o -> {
             try {
