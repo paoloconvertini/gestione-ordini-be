@@ -29,8 +29,7 @@ public class AmmortamentoCespiteService {
     public void calcola() {
         try {
             List<Cespite> cespitiAttivi = Cespite.find("attivo = 'T'").list();
-            //LocalDate dataCorrente = LocalDate.now();
-            LocalDate dataCorrente = LocalDate.of(2023, Month.OCTOBER, 23);
+            LocalDate dataCorrente = LocalDate.now();
             for (Cespite cespite : cespitiAttivi) {
                 List<AmmortamentoCespite> ammList = AmmortamentoCespite.find("idAmmortamento =:id",
                         Sort.descending("dataAmm"),
