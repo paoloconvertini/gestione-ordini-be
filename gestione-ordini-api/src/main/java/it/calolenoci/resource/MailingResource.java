@@ -6,6 +6,7 @@ import it.calolenoci.dto.EmailDto;
 import it.calolenoci.dto.InlineAttachment;
 import it.calolenoci.dto.MailAttachment;
 import it.calolenoci.scheduler.FetchScheduler;
+import it.calolenoci.service.AmmortamentoCespiteService;
 import it.calolenoci.service.MailService;
 import it.calolenoci.service.PianoContiService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -26,6 +27,7 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -57,9 +59,7 @@ public class MailingResource {
     PianoContiService pianoContiService;
 
     @Inject
-    FetchScheduler scheduler;
-
-
+    AmmortamentoCespiteService ammortamentoCespiteService;
 
     @CheckedTemplate
     static class Templates {
@@ -69,9 +69,11 @@ public class MailingResource {
     @GET
     @Produces(APPLICATION_JSON)
     @PermitAll
-    @Path("/test")
-    public Response test() throws IOException, ParseException, InterruptedException, org.jose4j.json.internal.json_simple.parser.ParseException {
-        scheduler.calcolaAmmortamentoCespiti();
+    @Path("/test/{d}")
+    public Response test(String d) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+        LocalDate localDate = LocalDate.parse(d, formatter);
+        ammortamentoCespiteService.calcola(localDate);
         return Response.ok().build();
     }
 

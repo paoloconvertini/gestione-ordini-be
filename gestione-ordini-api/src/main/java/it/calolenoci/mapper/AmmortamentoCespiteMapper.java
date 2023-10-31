@@ -4,9 +4,13 @@ import it.calolenoci.entity.AmmortamentoCespite;
 import it.calolenoci.entity.Cespite;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Objects;
+
+import static it.calolenoci.service.AmmortamentoCespiteService.df;
 
 @ApplicationScoped
 public class AmmortamentoCespiteMapper {
