@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -23,7 +24,7 @@ public class CespiteViewDto implements Serializable {
 
     private String cespite;
 
-    private Date dataAcq;
+    private LocalDate dataAcq;
 
     private String numDocAcq;
 
@@ -32,6 +33,8 @@ public class CespiteViewDto implements Serializable {
     private Double importo;
 
     private Double ammortamento;
+
+    private Integer anno;
 
     private List<AmmortamentoCespite> ammortamentoCespiteList;
 

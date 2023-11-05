@@ -66,7 +66,7 @@ public class OrdineDTO implements Serializable {
 
     private List<Integer> veicoloList;
 
-    private Double importoRiservati;
+    private Double importoRiservati = 0D;
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,

@@ -34,10 +34,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
+import static java.util.stream.Collectors.groupingBy;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static it.calolenoci.enums.Ruolo.*;
@@ -178,7 +177,22 @@ public class OrdineResource {
             filtro.setStati(stati);
             filtro.setStatus(null);
         }
-        return Response.ok(ordineService.findAllRiservati(filtro)).build();
+        List<OrdineDTO> allRiservati = ordineService.findAllRiservati(filtro);
+
+        allRiservati.forEach(ordineDTO -> {
+            if(ordineDTO.getImportoRiservati() == null) {
+                ordineDTO.setImportoRiservati(0D);
+            }
+        });
+        OrdineResponseDto dto = new OrdineResponseDto();
+        dto.setOrdineDTOList(allRiservati);
+        Map<String, Double> map = new HashMap<>();
+        Map<String, List<OrdineDTO>> listMap = allRiservati.stream().collect(groupingBy(OrdineDTO::getSerie));
+        for (String venditore : listMap.keySet()) {
+           map.put(venditore, listMap.get(venditore).stream().mapToDouble(OrdineDTO::getImportoRiservati).sum());
+        }
+        dto.setImportoRiservatiMap(map);
+        return Response.ok(dto).build();
     }
 
     @Operation(summary = "Returns all the ordini from the database")

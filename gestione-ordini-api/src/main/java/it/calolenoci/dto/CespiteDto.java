@@ -19,5 +19,7 @@ public class CespiteDto implements Serializable {
 
     private String categoria;
 
+    private CespiteSommaDto somma;
+
     private List<CespiteProgressivoDto> cespiteProgressivoDtoList;
 }

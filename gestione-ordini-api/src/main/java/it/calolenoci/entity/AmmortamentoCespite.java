@@ -7,6 +7,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.sql.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "GO_AMMORT_CESPITE")
@@ -27,7 +28,7 @@ public class AmmortamentoCespite extends PanacheEntityBase {
     private String idAmmortamento;
     
     @Column(name = "DATA_AMM", nullable = true)
-    private Date dataAmm;
+    private LocalDate dataAmm;
     
     @Column(name = "DESCRIZIONE", nullable = true, length = 200)
     private String descrizione;

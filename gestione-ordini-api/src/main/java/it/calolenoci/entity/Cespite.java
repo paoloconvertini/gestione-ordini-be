@@ -8,6 +8,7 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.sql.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "GO_CESPITE")
@@ -40,7 +41,7 @@ public class Cespite extends PanacheEntityBase {
     private String cespite;
     
     @Column(name = "DATA_ACQ", nullable = true)
-    private Date dataAcq;
+    private LocalDate dataAcq;
     
     @Column(name = "NUM_DOC_ACQ", nullable = true, length = 20)
     private String numDocAcq;
@@ -57,5 +58,17 @@ public class Cespite extends PanacheEntityBase {
     @Type(type = "org.hibernate.type.TrueFalseType")
     @Column(name="ATTIVO", nullable = false, columnDefinition = "CHAR(1)")
     private Boolean attivo;
+
+    @Column(name = "DATA_VEND", nullable = true)
+    private LocalDate dataVendita;
+
+    @Column(name = "NUM_DOC_VEND", nullable = true, length = 20)
+    private String numDocVendita;
+
+    @Column(name = "INTESTATARIO_VEND", nullable = true, length = 250)
+    private String intestatarioVendita;
+
+    @Column(name = "IMPORTO_VEND", nullable = true, precision = 0)
+    private Double importoVendita;
 
 }
