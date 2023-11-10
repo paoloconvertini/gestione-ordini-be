@@ -36,6 +36,10 @@ public class CespiteViewDto implements Serializable {
 
     private Integer anno;
 
+    private String superAmmDesc;
+
+    private Double importoVendita;
+
     private List<AmmortamentoCespite> ammortamentoCespiteList;
 
 }

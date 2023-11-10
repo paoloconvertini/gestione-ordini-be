@@ -18,16 +18,16 @@ import static it.calolenoci.service.AmmortamentoCespiteService.df;
 
 @ApplicationScoped
 public class AmmortamentoCespiteMapper {
-    public AmmortamentoCespite buildAmmortamento(String id, double perc, double ammortamentoAnnuo, double ammortamentoCumulativo, double valoreResiduo, int anno, LocalDate dataCorrente) {
+    public AmmortamentoCespite buildAmmortamento(String id, double perc, double ammortamentoAnnuo, double ammortamentoCumulativo, double valoreResiduo, LocalDate dataCorrente) {
         AmmortamentoCespite a = new AmmortamentoCespite();
         a.setIdAmmortamento(id);
-        a.setDataAmm(Objects.requireNonNullElseGet(dataCorrente, () -> LocalDate.of(anno, 12, 31)));
+        a.setDataAmm(dataCorrente);
         a.setDescrizione("Ammortamento ordinario deducibile");
         a.setPercAmm(perc);
         a.setFondo(ammortamentoCumulativo);
         a.setQuota(ammortamentoAnnuo);
         a.setResiduo(valoreResiduo);
-        a.setAnno(anno);
+        a.setAnno(dataCorrente.getYear());
         return a;
     }
 
@@ -36,21 +36,29 @@ public class AmmortamentoCespiteMapper {
         ammEliminato.setIdAmmortamento(id);
         ammEliminato.setDescrizione("ELIMINAZIONE CESPITE");
         ammEliminato.setDataAmm(dataVendita);
+        int anno = dataVendita.getYear();
+        ammEliminato.setAnno(anno);
         return ammEliminato;
     }
 
     public List<AmmortamentoCespite> buildVenduto(Cespite cespite, Double residuo){
+        int anno = cespite.getDataVendita().getYear();
         List<AmmortamentoCespite> list = new ArrayList<>();
         AmmortamentoCespite ammVenduto = new AmmortamentoCespite();
         ammVenduto.setIdAmmortamento(cespite.getId());
-        ammVenduto.setDescrizione("Vendita CESPITE");
+        ammVenduto.setDescrizione("VENDITA CESPITE");
         ammVenduto.setDataAmm(cespite.getDataVendita());
+        ammVenduto.setAnno(anno);
         AmmortamentoCespite ammVenduto1 = new AmmortamentoCespite();
+        ammVenduto1.setIdAmmortamento(cespite.getId());
         ammVenduto1.setDescrizione("venduto a " + cespite.getIntestatarioVendita());
         ammVenduto1.setQuota(cespite.getImportoVendita());
+        ammVenduto1.setAnno(anno);
         AmmortamentoCespite ammVenduto2 = new AmmortamentoCespite();
+        ammVenduto2.setIdAmmortamento(cespite.getId());
         ammVenduto2.setDescrizione("Plus/Minus valenza");
         ammVenduto2.setQuota(cespite.getImportoVendita() - residuo);
+        ammVenduto2.setAnno(anno);
         list.add(ammVenduto);
         list.add(ammVenduto1);
         list.add(ammVenduto2);

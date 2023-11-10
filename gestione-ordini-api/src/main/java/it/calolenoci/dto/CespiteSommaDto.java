@@ -15,4 +15,8 @@ public class CespiteSommaDto {
     private FiscaleRiepilogo ammortamentiDeducibili;
     private FiscaleRiepilogo ammortamentiNonDeducibili;
     private FiscaleRiepilogo fineEsercizio;
+    private SuperAmmDto superAmm1;
+    private SuperAmmDto superAmm2;
+    private SuperAmmDto superAmm3;
+    private SuperAmmDto plusMinus;
 }

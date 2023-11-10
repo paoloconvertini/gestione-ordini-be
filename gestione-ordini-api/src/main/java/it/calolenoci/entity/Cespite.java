@@ -71,4 +71,7 @@ public class Cespite extends PanacheEntityBase {
     @Column(name = "IMPORTO_VEND", nullable = true, precision = 0)
     private Double importoVendita;
 
+    @Column(name = "SUPER_AMMORTAMENTO")
+    private Long superAmm;
+
 }

@@ -47,4 +47,10 @@ public class AmmortamentoCespite extends PanacheEntityBase {
 
     @Column(name = "ANNO")
     private Integer anno;
+
+    @Column(name = "PERC_SUPER")
+    private Double superPercentuale;
+
+    @Column(name = "QUOTA_SUPER")
+    private Double superQuota;
 }

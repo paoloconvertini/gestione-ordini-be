@@ -126,9 +126,21 @@ public class FetchScheduler {
     }
 
     @Scheduled(cron = "${cron.expr.cespiti}")
-    @TransactionConfiguration(timeout = 50000)
+    @TransactionConfiguration(timeout = 500000)
     public void calcolaAmmortamentoCespiti() throws ParseException {
         ammortamentoCespiteService.calcola(null);
+    }
+
+    @Scheduled(cron = "${cron.expr.cespiti.venduti}")
+    @TransactionConfiguration(timeout = 50000)
+    public void cercaCespitiVenduti() throws ParseException {
+        ammortamentoCespiteService.cercaCespitiVenduti();
+    }
+
+    @Scheduled(cron = "${cron.expr.cespiti.nuovi}")
+    @TransactionConfiguration(timeout = 50000)
+    public void cercaCespiti() throws ParseException {
+        ammortamentoCespiteService.cercaCespiti();
     }
 
     @Transactional
