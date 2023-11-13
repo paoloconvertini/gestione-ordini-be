@@ -3,7 +3,6 @@ package it.calolenoci.dto;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.*;
 
-import java.util.Date;
 import java.util.List;
 
 @Data

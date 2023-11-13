@@ -1,8 +1,6 @@
 package it.calolenoci.mapper;
 
-import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.GoOrdineDettaglio;
-import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.enums.StatoOrdineEnum;
 

@@ -4,13 +4,8 @@ import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.RegistroAzioniDto;
 import it.calolenoci.entity.RegistroAzioni;
-import it.calolenoci.enums.AzioneEnum;
-import it.calolenoci.mapper.RegistroAzioniMapper;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import java.util.Date;
 import java.util.List;
 
 @ApplicationScoped

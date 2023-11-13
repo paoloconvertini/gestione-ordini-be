@@ -4,26 +4,23 @@ import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.scheduler.Scheduled;
-import it.calolenoci.dto.Coordinate;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.PianoContiDto;
 import it.calolenoci.entity.PianoConti;
 import it.calolenoci.service.*;
-import net.sf.jasperreports.components.iconlabel.IconLabelElementOdsHandler;
+import it.calolenoci.dto.Coordinate;
+import it.calolenoci.trading.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static java.util.stream.Collectors.joining;
 

@@ -1,17 +1,15 @@
 package it.calolenoci.resource;
 
-import com.dropbox.core.DbxException;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.GoOrdineDettaglio;
 import it.calolenoci.entity.OrdineDettaglio;
+import it.calolenoci.enums.Ruolo;
 import it.calolenoci.service.ArticoloService;
 import it.calolenoci.service.DropBoxService;
 import it.calolenoci.service.FatturaService;
-import it.calolenoci.service.OrdineService;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
@@ -32,7 +30,6 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.util.List;
 
-import static it.calolenoci.enums.Ruolo.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
@@ -57,7 +54,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Crea ordine a fornitore")
     @POST
-    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
     @Path("/codificaArticoli")
     public Response codificaArticoli(List<OrdineDettaglioDto> list) {
         try {
@@ -78,7 +75,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Crea ordine a fornitore")
     @POST
-    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
     @Path("/uploadSchedeTecniche")
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadSchedaTecnica(DbxMultipartBody body) {
@@ -98,7 +95,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Returns all the articoli from the database")
     @POST
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Transactional
@@ -115,7 +112,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Transactional
@@ -126,7 +123,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Returns all the articoli riservati from the database")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Transactional
@@ -137,7 +134,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/getBolle/{progrCliente}")
@@ -147,7 +144,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Creazione bolle a partire da articoli in pronta consegna")
     @POST
-    @RolesAllowed({ADMIN, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.LOGISTICA})
     @Path("/creaBolla")
     public Response creaBolla(Body body) {
         String result = fatturaService.creaBolla(body.getList(), body.getAccontoDtos(), user);
@@ -156,7 +153,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Returns all the articoli from the database")
     @POST
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/cercaAcconti/{sottoConto}")
@@ -166,7 +163,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Returns all the articoli from the database")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/getAcconti/{sottoConto}")
@@ -176,7 +173,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Save dettaglio ordine")
     @PUT
-    @RolesAllowed({ADMIN, MAGAZZINIERE, AMMINISTRATIVO})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO})
     public Response saveArticoli(List<OrdineDettaglioDto> list) {
         if (!list.isEmpty()) {
             articoloService.save(list, user);
@@ -187,7 +184,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Save dettaglio ordine")
     @POST
-    @RolesAllowed({ADMIN, MAGAZZINIERE, AMMINISTRATIVO})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO})
     @Path("/chiudi")
     public Response chiudi(List<OrdineDettaglioDto> list) {
         if (!list.isEmpty()) {
@@ -198,7 +195,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Save dettaglio ordine")
     @POST
-    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
     @Path("/addFornitore")
     public Response addFornitore(PianoContiDto dto) {
         boolean ok = this.articoloService.addFornitore(dto, user);
@@ -210,7 +207,7 @@ public class ArticoloResource {
 
     @POST
     @Path("/addNotes")
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @Transactional
     @Consumes(APPLICATION_JSON)
     public Response addNotes(OrdineDettaglioDto dto){

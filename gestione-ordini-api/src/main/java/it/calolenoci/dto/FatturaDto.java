@@ -1,16 +1,14 @@
 package it.calolenoci.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import it.calolenoci.entity.FattureDettaglio;
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import java.io.Serializable;
 import java.util.Date;
 
 /**
- * A DTO for the {@link it.calolenoci.entity.FattureDettaglio} entity
+ * A DTO for the {@link FattureDettaglio} entity
  */
 @Getter
 @Setter

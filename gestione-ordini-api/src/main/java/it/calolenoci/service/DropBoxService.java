@@ -17,7 +17,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;

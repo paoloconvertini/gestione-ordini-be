@@ -3,8 +3,6 @@ package it.calolenoci.entity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.Date;

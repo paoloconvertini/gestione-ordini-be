@@ -1,8 +1,5 @@
 package it.calolenoci.dto;
 
-import it.calolenoci.entity.AmmortamentoCespite;
-import it.calolenoci.entity.CategoriaCespite;
-import it.calolenoci.entity.Cespite;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

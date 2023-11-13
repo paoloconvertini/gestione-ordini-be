@@ -5,8 +5,6 @@ import it.calolenoci.dto.BoxDocciaDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.BoxDoccia;
 import it.calolenoci.entity.Ordine;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;

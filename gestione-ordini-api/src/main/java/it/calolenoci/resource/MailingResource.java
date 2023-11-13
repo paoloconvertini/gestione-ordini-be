@@ -5,14 +5,13 @@ import io.quarkus.qute.CheckedTemplate;
 import it.calolenoci.dto.EmailDto;
 import it.calolenoci.dto.InlineAttachment;
 import it.calolenoci.dto.MailAttachment;
-import it.calolenoci.scheduler.FetchScheduler;
+import it.calolenoci.enums.Ruolo;
 import it.calolenoci.service.AmmortamentoCespiteService;
 import it.calolenoci.service.MailService;
 import it.calolenoci.service.PianoContiService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
-import org.jfree.util.Log;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -21,20 +20,9 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.File;
-import java.io.IOException;
-import java.sql.Timestamp;
-import java.text.ParseException;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 
-import static it.calolenoci.enums.Ruolo.ADMIN;
-import static it.calolenoci.enums.Ruolo.VENDITORE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Consumes(APPLICATION_JSON)
@@ -79,7 +67,7 @@ public class MailingResource {
 
     @POST
     @Produces(APPLICATION_JSON)
-    @RolesAllowed({ADMIN, VENDITORE})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE})
     @Path("/confermato")
     public Response send(EmailDto dto) {
         File f = new File(pathReport + "/" + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getSottoConto() + "_" + dto.getAnno() + "_" + dto.getSerie() + "_" + dto.getProgressivo() + ".pdf");

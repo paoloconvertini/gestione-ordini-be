@@ -1,12 +1,8 @@
 package it.calolenoci.mapper;
 
-import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.entity.GoOrdine;
-import it.calolenoci.entity.GoOrdineDettaglio;
 import it.calolenoci.entity.Ordine;
+import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.enums.StatoOrdineEnum;
-import jdk.jshell.Snippet;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 

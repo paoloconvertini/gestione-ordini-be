@@ -3,19 +3,16 @@ package it.calolenoci.mapper;
 import it.calolenoci.dto.AccontoDto;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.entity.*;
+import it.calolenoci.trading.entity.*;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 
 @ApplicationScoped
 public class FattureMapper {

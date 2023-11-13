@@ -1,8 +1,10 @@
 package it.calolenoci.resource;
 
-import it.calolenoci.dto.*;
+import it.calolenoci.dto.ArticoloDto;
+import it.calolenoci.dto.FiltroArticoli;
+import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
+import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.OrdineDettaglio;
-import it.calolenoci.service.ArticoloService;
 import it.calolenoci.service.OAFArticoloService;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.jwt.Claim;
@@ -21,8 +23,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static it.calolenoci.enums.Ruolo.*;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path("api/oaf/articoli")
 @Produces(APPLICATION_JSON)

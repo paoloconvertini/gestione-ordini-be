@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
- * A DTO for the {@link it.calolenoci.entity.GoOrdine} entity
+ * A DTO for the {@link GoOrdine} entity
  */
 @Data
 @AllArgsConstructor

@@ -1,16 +1,16 @@
 package it.calolenoci.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import it.calolenoci.entity.RegistroAzioni;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
 import java.io.Serializable;
 import java.util.Date;
 
 /**
- * A DTO for the {@link it.calolenoci.entity.RegistroAzioni} entity
+ * A DTO for the {@link RegistroAzioni} entity
  */
 @Data
 @NoArgsConstructor

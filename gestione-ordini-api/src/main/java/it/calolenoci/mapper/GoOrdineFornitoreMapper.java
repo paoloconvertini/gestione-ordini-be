@@ -1,12 +1,8 @@
 package it.calolenoci.mapper;
 
-import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.GoOrdineFornitore;
-import it.calolenoci.entity.Ordine;
-import it.calolenoci.enums.StatoOrdineEnum;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.Date;
 
 
 @ApplicationScoped

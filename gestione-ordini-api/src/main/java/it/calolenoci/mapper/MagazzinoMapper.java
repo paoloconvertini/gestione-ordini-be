@@ -1,14 +1,11 @@
 package it.calolenoci.mapper;
 
-import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.entity.*;
-import org.apache.commons.lang3.StringUtils;
+import it.calolenoci.trading.entity.*;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.ZonedDateTime;
 import java.util.Date;
 
 

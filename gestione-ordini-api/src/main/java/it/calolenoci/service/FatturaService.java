@@ -1,6 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.AccontoDto;
@@ -10,8 +9,6 @@ import it.calolenoci.entity.*;
 import it.calolenoci.mapper.FattureMapper;
 import it.calolenoci.mapper.MagazzinoMapper;
 import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.CharSet;
-import org.apache.commons.lang3.CharSetUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;

@@ -2,18 +2,13 @@ package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
-import io.quarkus.panache.common.Sort;
-import it.calolenoci.dto.FiltroArticoli;
-import it.calolenoci.dto.OrdineDettaglioDto;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.Type;
-import org.jfree.util.Log;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 

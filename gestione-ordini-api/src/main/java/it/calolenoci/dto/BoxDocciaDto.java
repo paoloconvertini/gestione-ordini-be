@@ -1,6 +1,7 @@
 package it.calolenoci.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import it.calolenoci.entity.BoxDoccia;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
- * A DTO for the {@link it.calolenoci.entity.BoxDoccia} entity
+ * A DTO for the {@link BoxDoccia} entity
  */
 @Data
 @AllArgsConstructor

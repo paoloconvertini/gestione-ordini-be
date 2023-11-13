@@ -1,6 +1,6 @@
 package it.calolenoci.dto;
 
-import lombok.AllArgsConstructor;
+import it.calolenoci.entity.Articolo;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * A DTO for the {@link it.calolenoci.entity.Articolo} entity
+ * A DTO for the {@link Articolo} entity
  */
 @Data
 @NoArgsConstructor

@@ -1,6 +1,5 @@
 package it.calolenoci.dto;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

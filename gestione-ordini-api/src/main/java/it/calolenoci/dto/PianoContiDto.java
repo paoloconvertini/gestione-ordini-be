@@ -1,14 +1,14 @@
 package it.calolenoci.dto;
 
+import it.calolenoci.entity.PianoConti;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
 import java.io.Serializable;
 
 /**
- * A DTO for the {@link it.calolenoci.entity.PianoConti} entity
+ * A DTO for the {@link PianoConti} entity
  */
 @Data
 @AllArgsConstructor

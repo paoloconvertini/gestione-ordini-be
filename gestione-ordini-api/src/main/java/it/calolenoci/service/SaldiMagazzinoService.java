@@ -1,24 +1,14 @@
 package it.calolenoci.service;
 
-import io.quarkus.logging.Log;
-import io.quarkus.panache.common.Parameters;
-import io.quarkus.panache.common.Sort;
-import it.calolenoci.dto.*;
-import it.calolenoci.entity.*;
-import it.calolenoci.enums.AzioneEnum;
-import it.calolenoci.enums.StatoOrdineEnum;
-import it.calolenoci.mapper.ArticoloMapper;
-import it.calolenoci.mapper.GoOrdineDettaglioMapper;
-import it.calolenoci.mapper.RegistroAzioniMapper;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import it.calolenoci.dto.SaldiMagazzinoDTO;
+import it.calolenoci.entity.FattureDettaglio;
+import it.calolenoci.entity.GoTmpScarico;
+import it.calolenoci.entity.SaldiMagazzino;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.ArrayList;
+import java.util.List;
 
 @ApplicationScoped
 public class SaldiMagazzinoService {

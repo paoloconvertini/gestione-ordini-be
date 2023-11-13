@@ -6,7 +6,6 @@ import it.calolenoci.dto.OrdineReportDto;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.text.SimpleDateFormat;
 
 @ApplicationScoped
 public class OrdineClienteReportMapper {

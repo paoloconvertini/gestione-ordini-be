@@ -1,12 +1,11 @@
 package it.calolenoci.resource;
 
 import io.quarkus.logging.Log;
-import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.dto.ResponseDto;
-import it.calolenoci.entity.GoOrdineFornitore;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
+import it.calolenoci.enums.Ruolo;
 import it.calolenoci.service.JasperService;
 import it.calolenoci.service.OrdineFornitoreService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -29,7 +28,6 @@ import java.io.File;
 import java.text.ParseException;
 import java.util.List;
 
-import static it.calolenoci.enums.Ruolo.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Produces(APPLICATION_JSON)
@@ -81,7 +79,7 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Crea ordine a fornitore")
     @POST
-    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
     public Response createOAF(List<OrdineDettaglio> articoli) {
         try {
             if (articoli.isEmpty()) {
@@ -100,7 +98,7 @@ public class OrdineFornitoreResource {
 
     @GET
     @Path("/apriOrdine/{anno}/{serie}/{progressivo}")
-    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
     public Response apriOrdine(Integer anno, String serie, Integer progressivo) {
         service.changeStatus(anno, serie, progressivo);
         return Response.ok(new ResponseDto("Ordine riaperto", false)).build();
@@ -108,7 +106,7 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Richiedi approvazione ordine a fornitore")
     @DELETE
-    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @RolesAllowed({Ruolo.AMMINISTRATIVO, Ruolo.ADMIN})
     @Path("/eliminaOrdine/{anno}/{serie}/{progressivo}")
     public Response eliminaOrdine(Integer anno, String serie, Integer progressivo) {
         return Response.status(Response.Status.OK).entity(service.eliminaOrdine(anno, serie, progressivo)).build();
@@ -117,7 +115,7 @@ public class OrdineFornitoreResource {
     @Operation(summary = "Unisci ordine a fornitore")
     @POST
     @Path("/unisciOrdini")
-    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
     public Response unisciOrdini(List<OrdineFornitoreDto> ordini) {
         try {
             if (ordini.isEmpty()) {
@@ -133,7 +131,7 @@ public class OrdineFornitoreResource {
     @Operation(summary = "Returns all the ordini from the database")
     @GET
     @Path("/{status}")
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     public Response getAllOrdini(String status) throws ParseException {
@@ -142,7 +140,7 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     public Response getAllOrdini() throws ParseException {
@@ -151,7 +149,7 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Richiedi approvazione ordine a fornitore")
     @GET
-    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @RolesAllowed({Ruolo.AMMINISTRATIVO, Ruolo.ADMIN})
     @Path("/richiediApprovazione/{anno}/{serie}/{progressivo}")
     public Response richiediApprovazione(Integer anno, String serie, Integer progressivo) {
         this.service.richiediApprovazione(anno, serie, progressivo);
@@ -160,7 +158,7 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Richiedi approvazione ordine a fornitore")
     @POST
-    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @RolesAllowed({Ruolo.AMMINISTRATIVO, Ruolo.ADMIN})
     @Path("/richiediApprovazione")
     public Response richiediApprovazione(List<OrdineFornitoreDto> list) {
         if (list.isEmpty()) {
@@ -172,7 +170,7 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Richiedi approvazione ordine a fornitore")
     @PUT
-    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @RolesAllowed({Ruolo.AMMINISTRATIVO, Ruolo.ADMIN})
     @Path("/inviato")
     public Response inviato(List<OrdineFornitoreDto> list) {
         if (list.isEmpty()) {
@@ -184,7 +182,7 @@ public class OrdineFornitoreResource {
 
     @POST
     @Path("/addNotes")
-    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @Transactional
     @Consumes(APPLICATION_JSON)
     public Response addNotes(OrdineFornitoreDto dto) {

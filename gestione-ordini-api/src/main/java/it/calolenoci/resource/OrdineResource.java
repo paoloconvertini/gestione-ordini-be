@@ -1,16 +1,19 @@
 package it.calolenoci.resource;
 
-import com.dropbox.core.DbxException;
 import io.quarkus.panache.common.Parameters;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.file.OpenOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.file.AsyncFile;
 import it.calolenoci.dto.*;
-import it.calolenoci.entity.*;
+import it.calolenoci.entity.GoOrdine;
+import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.scheduler.FetchScheduler;
-import it.calolenoci.service.*;
+import it.calolenoci.service.ArticoloService;
+import it.calolenoci.service.FirmaService;
+import it.calolenoci.service.JasperService;
+import it.calolenoci.service.OrdineService;
 import net.sf.jasperreports.engine.JRException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
@@ -30,16 +33,15 @@ import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
 
+import static it.calolenoci.enums.Ruolo.*;
 import static java.util.stream.Collectors.groupingBy;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static it.calolenoci.enums.Ruolo.*;
 
 @Produces(APPLICATION_JSON)
 @Path("api/ordini-clienti")

@@ -1,6 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import it.calolenoci.entity.FirmaOrdineCliente;
 
 import javax.enterprise.context.ApplicationScoped;

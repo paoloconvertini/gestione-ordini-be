@@ -3,7 +3,6 @@ package it.calolenoci.dto;
 import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.GoOrdineDettaglio;
 import it.calolenoci.entity.Magazzino;
-import it.calolenoci.entity.OrdineDettaglio;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

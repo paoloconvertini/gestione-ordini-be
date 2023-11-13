@@ -1,14 +1,14 @@
 package it.calolenoci.dto;
 
+import it.calolenoci.entity.OrdineFornitoreDettaglio;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
 import java.io.Serializable;
 
 /**
- * A DTO for the {@link it.calolenoci.entity.OrdineFornitoreDettaglio} entity
+ * A DTO for the {@link OrdineFornitoreDettaglio} entity
  */
 @Data
 @AllArgsConstructor
