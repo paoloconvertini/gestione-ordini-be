@@ -49,4 +49,10 @@ alter table GO_CESPITE
 go
 
 
+alter table GO_CESPITE
+    add
+        DT_INIZIO_CALCOLO_AMM datetime,
+        FL_PRIMO_ANNO varchar(1)
+go
+
 
