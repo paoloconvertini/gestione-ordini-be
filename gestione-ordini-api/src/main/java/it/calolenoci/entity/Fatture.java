@@ -378,7 +378,7 @@ public class Fatture extends PanacheEntityBase {
     @Column(length = 5000, name = "FNOTEFATTURA", columnDefinition = "text")
     private String fnotefattura;
 
-    @Column(name = "FNOTEPIEDE")
+    @Column(name = "FNOTEPIEDE", length = -1)
     private String fnotepiede;
 
     @Column(name = "DATAPDF")

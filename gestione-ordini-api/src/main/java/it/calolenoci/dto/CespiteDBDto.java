@@ -1,6 +1,7 @@
 package it.calolenoci.dto;
 
 import it.calolenoci.entity.AmmortamentoCespite;
+import it.calolenoci.entity.CategoriaCespite;
 import it.calolenoci.entity.Cespite;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,5 +18,5 @@ public class CespiteDBDto implements Serializable {
 
     private AmmortamentoCespite ammortamentoCespite;
 
-    private String categoria;
+    private CategoriaCespite categoria;
 }

@@ -49,7 +49,7 @@ public class CespiteResource {
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Path("/cespiti")
     public Response getAllCespiti() {
-        return Response.ok(Cespite.find("attivo <> 'T'").list()).build();
+        return Response.ok(Cespite.find("attivo <> 'F'").list()).build();
     }
 
     @RolesAllowed({ADMIN})

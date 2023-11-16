@@ -3,7 +3,6 @@ package it.calolenoci.mapper;
 import it.calolenoci.dto.AccontoDto;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.entity.*;
-import it.calolenoci.trading.entity.*;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;

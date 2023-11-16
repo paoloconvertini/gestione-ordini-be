@@ -1,7 +1,6 @@
 package it.calolenoci.mapper;
 
 import it.calolenoci.entity.*;
-import it.calolenoci.trading.entity.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.text.ParseException;

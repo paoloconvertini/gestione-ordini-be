@@ -1,9 +1,12 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
+import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.AmmortamentoCespite;
+import it.calolenoci.entity.CategoriaCespite;
 import it.calolenoci.entity.Cespite;
 import it.calolenoci.entity.TipoSuperAmm;
 import it.calolenoci.mapper.AmmortamentoCespiteMapper;
@@ -28,8 +31,6 @@ public class AmmortamentoCespiteService {
     @Inject
     AmmortamentoCespiteMapper mapper;
 
-    public static final DecimalFormat df = new DecimalFormat("0.00");
-
     @Transactional
     public void calcola(LocalDate date) {
         try {
@@ -40,13 +41,14 @@ public class AmmortamentoCespiteService {
             }
             AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(Cespite::getId).collect(Collectors.toList())));
             for (Cespite cespite : cespitiAttivi) {
+                CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite=:t", Parameters.with("t", cespite.getTipoCespite())).firstResult();
                 boolean eliminato = cespite.getDataVendita() != null && StringUtils.isBlank(cespite.getIntestatarioVendita());
                 boolean venduto = cespite.getDataVendita() != null && StringUtils.isNotBlank(cespite.getIntestatarioVendita());
                 if (eliminato || venduto) {
                     dataCorrente = cespite.getDataVendita();
                 }
-                double percAmmortamento = cespite.getAmmortamento();
-                double percAmmPrimoAnno = cespite.getAmmortamento() / 2;
+                double percAmmortamento = categoriaCespite.getPercAmmortamento();
+                double percAmmPrimoAnno = categoriaCespite.getPercAmmortamento() / 2;
                 double perc;
                 double quotaDaSalvare;
                 double quota = cespite.getImporto() * (percAmmortamento / 100);
@@ -113,17 +115,17 @@ public class AmmortamentoCespiteService {
         final CespiteView view = new CespiteView();
         List<CespiteDto> result = new ArrayList<>();
         try {
-            List<CespiteDBDto> cespiteDtos = Cespite.find("SELECT c, a, cat.descrtipocesp " +
+            List<CespiteDBDto> cespiteDtos = Cespite.find("SELECT c, a, cat " +
                     "FROM Cespite c " +
                     "JOIN AmmortamentoCespite a ON c.id = a.idAmmortamento " +
-                    "JOIN CategoriaCespite cat ON cat.tipocespite = c.tipoCespite").project(CespiteDBDto.class).list();
+                    "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite").project(CespiteDBDto.class).list();
             Map<String, List<CespiteDBDto>> map = cespiteDtos.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getTipoCespite()));
             for (String tipoCespite : map.keySet()) {
                 List<CespiteDBDto> dtoList = map.get(tipoCespite);
                 CespiteDto cespiteDto = new CespiteDto();
                 cespiteDto.setTipoCespite(tipoCespite);
                 CespiteDBDto dbDto = dtoList.get(0);
-                cespiteDto.setCategoria(dbDto.getCategoria());
+                cespiteDto.setCategoria(dbDto.getCategoria().getTipoCespite());
                 Map<Integer, List<CespiteDBDto>> progr1Map = dtoList.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getProgressivo1()));
                 List<CespiteProgressivoDto> cespiteProgressivoDtoList = new ArrayList<>();
                 for (Integer progressivo : progr1Map.keySet()) {
@@ -135,12 +137,12 @@ public class AmmortamentoCespiteService {
                         CespiteDBDto dbDto1 = progr2List.get(0);
                         CespiteViewDto v = new CespiteViewDto();
                         Cespite cespite = dbDto1.getCespite();
-                        v.setCodice(cespite.getCodice());
+                        v.setCodice(dbDto.getCategoria().getCodice());
                         v.setProgressivo1(progressivo);
                         v.setProgressivo2(progr2);
                         v.setCespite(cespite.getCespite());
                         v.setDataAcq(cespite.getDataAcq());
-                        v.setAmmortamento(cespite.getAmmortamento());
+                        v.setAmmortamento(dbDto.getCategoria().getPercAmmortamento());
                         v.setImporto(cespite.getImporto());
                         v.setFornitore(cespite.getFornitore());
                         v.setNumDocAcq(cespite.getNumDocAcq());
@@ -325,4 +327,26 @@ public class AmmortamentoCespiteService {
     public void cercaCespiti() {
 
     }
+
+    public void createCespite(PrimanotaDto dto) {
+        Cespite c = new Cespite();
+        c.setCespite(dto.getDescrsuppl());
+        c.setAttivo(Boolean.TRUE);
+        c.setImporto(dto.getImporto());
+        c.setDataAcq(dto.getDatamovimento());
+        c.setNumDocAcq(dto.getNumerodocumento());
+        CategoriaCespite categoriaCespite = CategoriaCespite.find("costoGruppo=:g AND costoConto=:c",
+                Parameters.with("g", dto.getGruppoconto()).and("c", dto.getSottoconto())).firstResult();
+        c.setTipoCespite(categoriaCespite.getTipoCespite());
+        Cespite cespite = Cespite.find("tipoCespite=:t", Sort.descending("progressivo1"),
+                Parameters.with("t", categoriaCespite.getTipoCespite())).firstResult();
+        c.setProgressivo1(cespite.getProgressivo1() + 1);
+        c.setProgressivo2(cespite.getProgressivo2());
+        c.setProtocollo(dto.getProtocollo());
+        c.setGiornale(dto.getGiornale());
+        c.setAnno(dto.getAnno());
+        c.persist();
+    }
+
+
 }

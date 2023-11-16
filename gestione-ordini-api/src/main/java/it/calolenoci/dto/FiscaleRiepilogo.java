@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FiscaleRiepilogo {
 
+
     Double valoreAggiornato = 0D;
     Double ammortamentoOrdinario = 0D;
     Double ammortamentoAnticipato = 0D;
