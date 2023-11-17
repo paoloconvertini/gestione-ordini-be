@@ -40,6 +40,12 @@ public class CespiteViewDto implements Serializable {
 
     private LocalDate dataVend;
 
+    private Integer protocollo;
+
+    private String giornale;
+
+    private Integer annoProtocollo;
+
     private List<AmmortamentoCespite> ammortamentoCespiteList;
 
 }

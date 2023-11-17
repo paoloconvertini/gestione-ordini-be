@@ -2,7 +2,9 @@ package it.calolenoci.resource;
 
 import it.calolenoci.dto.CespiteRequest;
 import it.calolenoci.dto.CespiteView;
+import it.calolenoci.dto.FiltroCespite;
 import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.entity.CategoriaCespite;
 import it.calolenoci.entity.Cespite;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.service.AmmortamentoCespiteService;
@@ -34,12 +36,17 @@ public class CespiteResource {
     AmmortamentoCespiteService service;
 
     @Operation(summary = "Returns all the ordini from the database")
-    @GET
+    @POST
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = CespiteView.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ammortamenti")
-    public Response getAll() {
-        return Response.ok(service.getAll()).build();
+    public Response getAll(FiltroCespite filtroCespite) {
+        try {
+            return Response.ok().entity(service.getAll(filtroCespite)).build();
+        } catch (Exception e) {
+            return Response.status(400).entity(new ResponseDto("Error getting registro cespiti", true)).build();
+        }
+
     }
 
     @Operation(summary = "Returns all the ordini from the database")

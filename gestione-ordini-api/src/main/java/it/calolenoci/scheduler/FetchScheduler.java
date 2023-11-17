@@ -91,18 +91,6 @@ public class FetchScheduler {
         saldiMagazzinoService.findCaricoMagazzino();
     }
 
- /*   @Scheduled(every = "${cron.expr.sinc.cod.art}")
-    @Transactional
-    public void sincronizzaCodiceArticolo() throws ParseException{
-        articoloService.sincronizzaCodiceArticolo();
-    }
-
-    @Scheduled(every = "${cron.expr.sinc.cod.art}")
-    @Transactional
-    public void resetGoOrdineDettaglio() throws ParseException{
-        articoloService.resetGoOrdineDettaglio();
-    }*/
-
     @Scheduled(cron = "${cron.expr.invio.mail}")
     @Transactional
     public void invioMail() {
@@ -123,18 +111,6 @@ public class FetchScheduler {
     @TransactionConfiguration(timeout = 500000)
     public void calcolaAmmortamentoCespiti() throws ParseException {
         ammortamentoCespiteService.calcola(null);
-    }
-
-    @Scheduled(cron = "${cron.expr.cespiti.venduti}")
-    @TransactionConfiguration(timeout = 50000)
-    public void cercaCespitiVenduti() throws ParseException {
-        ammortamentoCespiteService.cercaCespitiVenduti();
-    }
-
-    @Scheduled(cron = "${cron.expr.cespiti.nuovi}")
-    @TransactionConfiguration(timeout = 50000)
-    public void cercaCespiti() throws ParseException {
-        ammortamentoCespiteService.cercaCespiti();
     }
 
     @Transactional

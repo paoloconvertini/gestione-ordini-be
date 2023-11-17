@@ -1,28 +1,21 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
+import it.calolenoci.dto.FiscaleRiepilogo;
 import it.calolenoci.dto.*;
-import it.calolenoci.entity.AmmortamentoCespite;
-import it.calolenoci.entity.CategoriaCespite;
-import it.calolenoci.entity.Cespite;
-import it.calolenoci.entity.TipoSuperAmm;
+import it.calolenoci.entity.*;
 import it.calolenoci.mapper.AmmortamentoCespiteMapper;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -113,14 +106,20 @@ public class AmmortamentoCespiteService {
         }
     }
 
-    public CespiteView getAll() {
+    public CespiteView getAll(FiltroCespite filtroCespite) {
         final CespiteView view = new CespiteView();
         List<CespiteDto> result = new ArrayList<>();
         try {
-            List<CespiteDBDto> cespiteDtos = Cespite.find("SELECT c, a, cat " +
+            String query = "SELECT c, a, cat " +
                     "FROM Cespite c " +
                     "JOIN AmmortamentoCespite a ON c.id = a.idAmmortamento " +
-                    "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite").project(CespiteDBDto.class).list();
+                    "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite ";
+            Map<String, Object> params = new HashMap<>();
+            if(filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())){
+                query += "WHERE cat.tipoCespite = :q";
+                params.put("q", filtroCespite.getTipoCespite());
+            }
+            List<CespiteDBDto> cespiteDtos = Cespite.find(query, params).project(CespiteDBDto.class).list();
             Map<String, List<CespiteDBDto>> map = cespiteDtos.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getTipoCespite()));
             for (String tipoCespite : map.keySet()) {
                 List<CespiteDBDto> dtoList = map.get(tipoCespite);
@@ -150,6 +149,9 @@ public class AmmortamentoCespiteService {
                         v.setNumDocAcq(cespite.getNumDocAcq());
                         v.setAnno(cespite.getDataAcq().getYear());
                         v.setDataVend(cespite.getDataVendita());
+                        v.setProtocollo(cespite.getProtocollo());
+                        v.setAnnoProtocollo(cespite.getAnno());
+                        v.setGiornale(cespite.getGiornale());
                         if (cespite.getSuperAmm() != null && cespite.getSuperAmm() != 0L) {
                             TipoSuperAmm tipoSuperAmm = TipoSuperAmm.findById(cespite.getSuperAmm());
                             v.setSuperAmmDesc(tipoSuperAmm.getDescrizione());
@@ -328,8 +330,8 @@ public class AmmortamentoCespiteService {
             sommaDto.setFineEsercizio(fine);
             view.setCespiteSommaDto(sommaDto);
         } catch (Exception e) {
-            Log.error("Errore get all cespiti", e);
-            return view;
+            Log.error("Errore get Registro cespiti", e);
+            throw e;
         }
         return view;
     }
@@ -342,32 +344,42 @@ public class AmmortamentoCespiteService {
         }
     }
 
-    public void cercaCespitiVenduti() {
-
-    }
-
-    public void cercaCespiti() {
-
-    }
-
     public void createCespite(PrimanotaDto dto) {
-        Cespite c = new Cespite();
-        c.setCespite(dto.getDescrsuppl());
-        c.setAttivo(Boolean.TRUE);
-        c.setImporto(dto.getImporto());
-        c.setDataAcq(dto.getDatamovimento());
-        c.setNumDocAcq(dto.getNumerodocumento());
-        CategoriaCespite categoriaCespite = CategoriaCespite.find("costoGruppo=:g AND costoConto=:c",
-                Parameters.with("g", dto.getGruppoconto()).and("c", dto.getSottoconto())).firstResult();
-        c.setTipoCespite(categoriaCespite.getTipoCespite());
-        Cespite cespite = Cespite.find("tipoCespite=:t", Sort.descending("progressivo1"),
-                Parameters.with("t", categoriaCespite.getTipoCespite())).firstResult();
-        c.setProgressivo1(cespite.getProgressivo1() + 1);
-        c.setProgressivo2(cespite.getProgressivo2());
-        c.setProtocollo(dto.getProtocollo());
-        c.setGiornale(dto.getGiornale());
-        c.setAnno(dto.getAnno());
-        c.persist();
+        try {
+            Optional<CategoriaCespite> categoriaCespiteOptional = CategoriaCespite.find("costoGruppo=:g AND costoConto=:c",
+                    Parameters.with("g", dto.getGruppoconto()).and("c", dto.getSottoconto())).firstResultOptional();
+            if(categoriaCespiteOptional.isPresent()) {
+                Cespite c = new Cespite();
+                c.setCespite(dto.getDescrsuppl());
+                c.setAttivo(Boolean.TRUE);
+                c.setImporto(dto.getImporto());
+                c.setDataAcq(dto.getDatamovimento());
+                c.setNumDocAcq(dto.getNumerodocumento());
+                CategoriaCespite categoriaCespite = CategoriaCespite.find("costoGruppo=:g AND costoConto=:c",
+                        Parameters.with("g", dto.getGruppoconto()).and("c", dto.getSottoconto())).firstResult();
+                c.setTipoCespite(categoriaCespite.getTipoCespite());
+                Cespite cespite = Cespite.find("tipoCespite=:t", Sort.descending("progressivo1"),
+                        Parameters.with("t", categoriaCespite.getTipoCespite())).firstResult();
+                Primanota primanota = Primanota.find("anno = :a AND giornale=:g AND protocollo=:p AND progrprimanota=1",
+                        Parameters.with("a", dto.getAnno()).and("g", dto.getGiornale())
+                                .and("p", dto.getProtocollo())).firstResult();
+                FatturepaixIn fattura = FatturepaixIn.findById(primanota.getPid());
+                c.setFornitore(fattura.getFornitoreDenom() + StringUtils.SPACE + primanota.getGruppoconto() + " - " + primanota.getSottoconto());
+                c.setProgressivo1(cespite.getProgressivo1() + 1);
+                c.setProgressivo2(cespite.getProgressivo2());
+                c.setProtocollo(dto.getProtocollo());
+                c.setGiornale(dto.getGiornale());
+                c.setAnno(dto.getAnno());
+                c.setFlPrimoAnno(Boolean.TRUE);
+                c.setDataInizioCalcoloAmm(c.getDataAcq());
+                c.persist();
+            } else {
+                Log.debug("Cespite non creato");
+            }
+        } catch (Exception e){
+            Log.error("Error creating new cespite", e);
+            throw e;
+        }
     }
 
 

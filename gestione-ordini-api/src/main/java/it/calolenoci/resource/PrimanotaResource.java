@@ -40,17 +40,19 @@ public class PrimanotaResource {
     public Response getById(FiltroPrimanota filtroPrimanota) {
         return Response.ok(service.getById(filtroPrimanota)).build();
     }
-
-
-
     @Operation(summary = "salva cespite")
-    @PUT
+    @POST
     @RolesAllowed({ADMIN})
+    @Path("/salva")
     public Response salva(PrimanotaDto dto) {
         if (dto == null) {
             return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("no save", true)).build();
         }
-        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Primanota salvata", !service.save(dto))).build();
+        try {
+            service.salva(dto);
+        } catch (Exception e) {
+            return Response.status(400).entity(new ResponseDto("Errore salva primanota", true)).build();
+        }
+        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Primanota salvata con successo", false)).build();
     }
-
 }

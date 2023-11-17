@@ -1,17 +1,16 @@
 package it.calolenoci.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDate;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @RegisterForReflection
+@Getter
+@Setter
 public class PrimanotaDto implements Serializable {
     LocalDate datamovimento;
     String numerodocumento;
@@ -24,4 +23,5 @@ public class PrimanotaDto implements Serializable {
     Integer protocollo;
     Integer anno;
     String giornale;
+    Integer progrprimanota;
 }
