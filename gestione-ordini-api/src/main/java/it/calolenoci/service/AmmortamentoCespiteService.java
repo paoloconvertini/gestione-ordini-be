@@ -55,16 +55,15 @@ public class AmmortamentoCespiteService {
                 double quotaPrimoAnno = cespite.getImporto() * (percAmmPrimoAnno / 100);
                 double fondo = 0;
                 double residuo = cespite.getImporto();
-                LocalDate dataInizio = cespite.getDataAcq();
+                LocalDate dataInizio = cespite.getDataInizioCalcoloAmm();
                 List<AmmortamentoCespite> cespiteList = new ArrayList<>();
                 int counter = 1;
                 LocalDate dataAmmortamento = LocalDate.of(dataInizio.getYear(), Month.DECEMBER, 31);
-                while (residuo > 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()
-                ) {
+                while (residuo > 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()) {
                     if (dataAmmortamento.getYear() == dataCorrente.getYear()) {
                         dataAmmortamento = dataCorrente;
                     }
-                    if (counter == 1) {
+                    if (counter == 1 && cespite.getFlPrimoAnno()) {
                         quotaDaSalvare = quotaPrimoAnno * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
                     } else {
                         quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
@@ -106,6 +105,9 @@ public class AmmortamentoCespiteService {
             TipoSuperAmm tipoSuperAmm = TipoSuperAmm.findById(cespite.getSuperAmm());
             double importSuperAmm = (tipoSuperAmm.getPerc() * cespite.getImporto()) / 100;
             double quotaSuperAmm = (perc * importSuperAmm) / 100;
+            if(a.getResiduo() < quotaSuperAmm){
+                quotaSuperAmm = a.getResiduo();
+            }
             a.setSuperPercentuale(perc);
             a.setSuperQuota(quotaSuperAmm);
         }
@@ -125,7 +127,7 @@ public class AmmortamentoCespiteService {
                 CespiteDto cespiteDto = new CespiteDto();
                 cespiteDto.setTipoCespite(tipoCespite);
                 CespiteDBDto dbDto = dtoList.get(0);
-                cespiteDto.setCategoria(dbDto.getCategoria().getTipoCespite());
+                cespiteDto.setCategoria(dbDto.getCategoria().getDescrizione());
                 Map<Integer, List<CespiteDBDto>> progr1Map = dtoList.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getProgressivo1()));
                 List<CespiteProgressivoDto> cespiteProgressivoDtoList = new ArrayList<>();
                 for (Integer progressivo : progr1Map.keySet()) {
@@ -147,6 +149,7 @@ public class AmmortamentoCespiteService {
                         v.setFornitore(cespite.getFornitore());
                         v.setNumDocAcq(cespite.getNumDocAcq());
                         v.setAnno(cespite.getDataAcq().getYear());
+                        v.setDataVend(cespite.getDataVendita());
                         if (cespite.getSuperAmm() != null && cespite.getSuperAmm() != 0L) {
                             TipoSuperAmm tipoSuperAmm = TipoSuperAmm.findById(cespite.getSuperAmm());
                             v.setSuperAmmDesc(tipoSuperAmm.getDescrizione());
@@ -172,15 +175,25 @@ public class AmmortamentoCespiteService {
                     cespiteProgressivoDtoList.add(cespiteProgressivoDto);
                 }
                 List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
+                List<AmmortamentoCespite> ammortamentoCespiteList2 = new ArrayList<>();
                 List<CespiteViewDto> cespiteViewDtoList = new ArrayList<>();
                 cespiteProgressivoDtoList.forEach(p -> cespiteViewDtoList.addAll(p.getCespiteViewDtoList()));
                 CespiteSommaDto sommaDto = new CespiteSommaDto();
                 FiscaleRiepilogo inizioEsercizio = new FiscaleRiepilogo();
                 inizioEsercizio.setValoreAggiornato(cespiteViewDtoList.stream().filter(c -> c.getAnno() < Year.now().getValue()).mapToDouble(CespiteViewDto::getImporto).sum());
-                cespiteViewDtoList.forEach(c -> ammortamentoCespiteList.addAll(c.getAmmortamentoCespiteList()));
+                cespiteViewDtoList.forEach(c -> {
+                    AmmortamentoCespite a;
+                    if(c.getAmmortamentoCespiteList().stream().anyMatch(m-> m.getAnno().equals(Year.now().minusYears(1).getValue()))) {
+                        a = c.getAmmortamentoCespiteList().stream().filter(m-> m.getAnno().equals(Year.now().minusYears(1).getValue())).findFirst().get();
+                    } else {
+                        a = c.getAmmortamentoCespiteList().get(c.getAmmortamentoCespiteList().size() - 1);
+                    }
+                    ammortamentoCespiteList.add(a);
+                });
+
+
                 inizioEsercizio.setFondoAmmortamenti(ammortamentoCespiteList
                         .stream()
-                        .filter(a -> a.getAnno() == Year.now().minusYears(1).getValue())
                         .mapToDouble(AmmortamentoCespite::getFondo)
                         .sum()
                 );
@@ -215,17 +228,26 @@ public class AmmortamentoCespiteService {
                 vendite.setValoreAggiornato(cespiteViewDtoList.stream()
                         .filter(c -> c.getAnno() == Year.now().getValue() && c.getImportoVendita() != null).mapToDouble(CespiteViewDto::getImportoVendita).sum());
 
+
+
+                cespiteViewDtoList.forEach(c -> ammortamentoCespiteList2.addAll(c.getAmmortamentoCespiteList()));
+                List<AmmortamentoCespite> ammortamentoCespitesVend = new ArrayList<>();
+                cespiteViewDtoList.stream()
+                        .filter(c -> c.getImportoVendita() != null).toList().forEach(c -> ammortamentoCespitesVend.add(c.getAmmortamentoCespiteList().get(c.getAmmortamentoCespiteList().size() - 1)));
+                vendite.setTotaleAmmortamento(ammortamentoCespitesVend.stream().mapToDouble(AmmortamentoCespite::getFondo).sum());
+                vendite.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() - vendite.getTotaleAmmortamento());
                 FiscaleRiepilogo ammortamentiDeducibili = new FiscaleRiepilogo();
-                ammortamentiDeducibili.setAmmortamentoOrdinario(ammortamentoCespiteList.stream().filter(a -> a.getAnno() == Year.now().minusYears(1).getValue() && a.getQuota() != null).mapToDouble(AmmortamentoCespite::getQuota).sum());
+                ammortamentiDeducibili.setAmmortamentoOrdinario(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == Year.now().getValue() && a.getQuota() != null).mapToDouble(AmmortamentoCespite::getQuota).sum());
                 ammortamentiDeducibili.setTotaleAmmortamento(ammortamentiDeducibili.getAmmortamentoOrdinario() + ammortamentiDeducibili.getAmmortamentoAnticipato());
-                ammortamentiDeducibili.setFondoAmmortamenti(ammortamentiDeducibili.getTotaleAmmortamento() + inizioEsercizio.getFondoAmmortamenti());
+                ammortamentiDeducibili.setFondoAmmortamenti(ammortamentiDeducibili.getTotaleAmmortamento() + vendite.getFondoAmmortamenti());
 
                 FiscaleRiepilogo fineEsercizio = new FiscaleRiepilogo();
                 fineEsercizio.setValoreAggiornato(inizioEsercizio.getValoreAggiornato() + acquisti.getValoreAggiornato() - vendite.getValoreAggiornato());
                 fineEsercizio.setFondoAmmortamenti(ammortamentiDeducibili.getFondoAmmortamenti());
+                fineEsercizio.setTotaleAmmortamento(ammortamentiDeducibili.getTotaleAmmortamento());
                 fineEsercizio.setResiduo(fineEsercizio.getValoreAggiornato() - fineEsercizio.getFondoAmmortamenti());
 
-                double plus = ammortamentoCespiteList
+                double plus = ammortamentoCespiteList2
                         .stream()
                         .filter(a -> a.getAnno() == Year.now().getValue()
                                 && StringUtils.startsWith(a.getDescrizione(), "Plus"))

@@ -77,4 +77,11 @@ public class Cespite extends PanacheEntityBase {
     @Column(name = "GIORNALE", length = 1)
     private String giornale;
 
+    @Column(name = "DT_INIZIO_CALCOLO_AMM", nullable = true)
+    private LocalDate dataInizioCalcoloAmm;
+
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Column(name="FL_PRIMO_ANNO", nullable = false, columnDefinition = "CHAR(1)")
+    private Boolean flPrimoAnno;
+
 }
