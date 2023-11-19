@@ -17,6 +17,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
@@ -87,7 +88,7 @@ public class CespiteResource {
     @Path("/{id}")
     public Response delete(Long id) {
         Cespite.deleteById(id);
-        return Response.ok().entity(new ResponseDTO("Cespite eliminato", false)).build();
+        return Response.ok().entity(new ResponseDto("Cespite eliminato", false)).build();
     }
 
 }

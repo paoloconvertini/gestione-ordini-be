@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
@@ -370,7 +371,14 @@ public class AmmortamentoCespiteService {
                     progr2 = optionalCespite.get().getProgressivo2();
                 }
                 FatturepaixIn fattura = FatturepaixIn.findById(primanota.getPid());
-                c.setFornitore(fattura.getFornitoreDenom() + StringUtils.SPACE + primanota.getGruppoconto() + " - " + primanota.getSottoconto());
+                if(fattura != null) {
+                    c.setFornitore(fattura.getFornitoreDenom() + StringUtils.SPACE + primanota.getGruppoconto() + " - " + primanota.getSottoconto());
+                    //TODO salvare nomefile fattura
+                } else {
+                    PianoConti pianoConti = PianoConti.find("gruppoConto=:g AND sottoConto =:c", Parameters.with("g", primanota.getGruppoconto())
+                            .and("c", primanota.getSottoconto())).firstResult();
+                    c.setFornitore(pianoConti.getIntestazione() + StringUtils.SPACE + primanota.getGruppoconto() + " - " + primanota.getSottoconto());
+                }
                 c.setProgressivo1(progr1);
                 c.setProgressivo2(progr2);
                 c.setProtocollo(dto.getProtocollo());
