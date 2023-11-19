@@ -82,4 +82,12 @@ public class CespiteResource {
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("Record salvati", false)).build();
     }
 
+    @DELETE
+    @Transactional
+    @Path("/{id}")
+    public Response delete(Long id) {
+        Cespite.deleteById(id);
+        return Response.ok().entity(new ResponseDTO("Cespite eliminato", false)).build();
+    }
+
 }

@@ -358,15 +358,21 @@ public class AmmortamentoCespiteService {
                 CategoriaCespite categoriaCespite = CategoriaCespite.find("costoGruppo=:g AND costoConto=:c",
                         Parameters.with("g", dto.getGruppoconto()).and("c", dto.getSottoconto())).firstResult();
                 c.setTipoCespite(categoriaCespite.getTipoCespite());
-                Cespite cespite = Cespite.find("tipoCespite=:t", Sort.descending("progressivo1"),
-                        Parameters.with("t", categoriaCespite.getTipoCespite())).firstResult();
+                Optional<Cespite> optionalCespite = Cespite.find("tipoCespite=:t", Sort.descending("progressivo1"),
+                        Parameters.with("t", categoriaCespite.getTipoCespite())).firstResultOptional();
                 Primanota primanota = Primanota.find("anno = :a AND giornale=:g AND protocollo=:p AND progrprimanota=1",
                         Parameters.with("a", dto.getAnno()).and("g", dto.getGiornale())
                                 .and("p", dto.getProtocollo())).firstResult();
+                int progr1 = 1;
+                Integer progr2 = 1;
+                if(optionalCespite.isPresent()) {
+                    progr1 = optionalCespite.get().getProgressivo1() + 1;
+                    progr2 = optionalCespite.get().getProgressivo2();
+                }
                 FatturepaixIn fattura = FatturepaixIn.findById(primanota.getPid());
                 c.setFornitore(fattura.getFornitoreDenom() + StringUtils.SPACE + primanota.getGruppoconto() + " - " + primanota.getSottoconto());
-                c.setProgressivo1(cespite.getProgressivo1() + 1);
-                c.setProgressivo2(cespite.getProgressivo2());
+                c.setProgressivo1(progr1);
+                c.setProgressivo2(progr2);
                 c.setProtocollo(dto.getProtocollo());
                 c.setGiornale(dto.getGiornale());
                 c.setAnno(dto.getAnno());
