@@ -339,9 +339,36 @@ public class AmmortamentoCespiteService {
 
     @Transactional
     public void updateCespiti(CespiteRequest c) {
-        int update = Cespite.update("ammortamento = :p WHERE id =:id", Parameters.with("p", c.getPerc()).and("id", c.getId()));
-        if (update > 0) {
-            AmmortamentoCespite.deleteById(c.getId());
+        Cespite cespite = Cespite.findById(c.getId());
+        int update = 0;
+        if(cespite != null) {
+            if(c.getPerc() != null){
+                update = Cespite.update("ammortamento = :p WHERE id =:id", Parameters.with("p", c.getPerc()).and("id", c.getId()));
+            }
+            if(StringUtils.isNotBlank(c.getTipoCespite())){
+                Optional<Cespite> optCat = Cespite.find("tipoCespite = :t", Sort.descending("progressivo1"), Parameters.with("t", c.getTipoCespite())).firstResultOptional();
+                int progr1 = 1;
+                if(optCat.isPresent()) {
+                    progr1 = optCat.get().getProgressivo1() + 1;
+                }
+                update = Cespite.update("tipoCespite = :t, progressivo1 =:p, progressivo2 = 1 WHERE id =:id",
+                        Parameters.with("t", c.getTipoCespite()).and("p", progr1).and("id", c.getId()));
+                if(update > 0) {
+                    CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite = :t", Parameters.with("t", c.getTipoCespite())).firstResult();
+                    Optional<Primanota> optional = Primanota.find("anno =:a AND giornale =:g AND protocollo =:p AND importo =:i",
+                            Parameters.with("a", cespite.getAnno()).and("g", cespite.getGiornale())
+                                    .and("p", cespite.getProtocollo()).and("i", cespite.getImporto())).firstResultOptional();
+                    if(optional.isPresent()){
+                        Primanota primanota = optional.get();
+                        primanota.setGruppoconto(categoriaCespite.getCostoGruppo());
+                        primanota.setSottoconto(categoriaCespite.getCostoConto());
+                        primanota.persist();
+                    }
+                }
+            }
+            if (update > 0) {
+                AmmortamentoCespite.deleteById(c.getId());
+            }
         }
     }
 
