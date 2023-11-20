@@ -1,5 +1,6 @@
 package it.calolenoci.resource;
 
+import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.CespiteRequest;
 import it.calolenoci.dto.CespiteView;
 import it.calolenoci.dto.FiltroCespite;
@@ -57,7 +58,7 @@ public class CespiteResource {
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Path("/cespiti")
     public Response getAllCespiti() {
-        return Response.ok(Cespite.find("attivo <> 'F'").list()).build();
+        return Response.ok(Cespite.find("attivo <> 'F'", Sort.ascending("tipoCespite, progressivo1, progressivo2")).list()).build();
     }
 
     @RolesAllowed({ADMIN})
