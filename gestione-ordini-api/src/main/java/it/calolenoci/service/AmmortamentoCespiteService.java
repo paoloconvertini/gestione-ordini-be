@@ -174,6 +174,7 @@ public class AmmortamentoCespiteService {
                     }
                     CespiteProgressivoDto cespiteProgressivoDto = new CespiteProgressivoDto();
                     cespiteProgressivoDto.setProgressivo(progressivo);
+                    cespiteViewDtoList.sort(Comparator.comparing(CespiteViewDto::getDataAcq));
                     cespiteProgressivoDto.setCespiteViewDtoList(cespiteViewDtoList);
                     cespiteProgressivoDtoList.add(cespiteProgressivoDto);
                 }
@@ -188,10 +189,12 @@ public class AmmortamentoCespiteService {
                     AmmortamentoCespite a;
                     if(c.getAmmortamentoCespiteList().stream().anyMatch(m-> m.getAnno().equals(Year.now().minusYears(1).getValue()))) {
                         a = c.getAmmortamentoCespiteList().stream().filter(m-> m.getAnno().equals(Year.now().minusYears(1).getValue())).findFirst().get();
-                    } else {
+                        ammortamentoCespiteList.add(a);
+                    } else if(c.getAmmortamentoCespiteList().stream().noneMatch(m-> m.getAnno().equals(Year.now().getValue()))) {
                         a = c.getAmmortamentoCespiteList().get(c.getAmmortamentoCespiteList().size() - 1);
+                        ammortamentoCespiteList.add(a);
                     }
-                    ammortamentoCespiteList.add(a);
+
                 });
 
 
@@ -267,6 +270,7 @@ public class AmmortamentoCespiteService {
                 sommaDto.setAmmortamentiDeducibili(ammortamentiDeducibili);
                 sommaDto.setFineEsercizio(fineEsercizio);
                 cespiteDto.setSomma(sommaDto);
+                cespiteProgressivoDtoList.sort(Comparator.comparing(CespiteProgressivoDto::getProgressivo));
                 cespiteDto.setCespiteProgressivoDtoList(cespiteProgressivoDtoList);
                 result.add(cespiteDto);
             }

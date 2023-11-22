@@ -87,7 +87,7 @@ public class CespiteResource {
     @DELETE
     @Transactional
     @Path("/{id}")
-    public Response delete(Long id) {
+    public Response delete(String id) {
         Cespite.deleteById(id);
         return Response.ok().entity(new ResponseDto("Cespite eliminato", false)).build();
     }
