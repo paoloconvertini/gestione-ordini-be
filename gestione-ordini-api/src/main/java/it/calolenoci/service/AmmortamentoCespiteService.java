@@ -1,12 +1,12 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.FiscaleRiepilogo;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
+import it.calolenoci.enums.FiscaleRiepilogoEnum;
 import it.calolenoci.mapper.AmmortamentoCespiteMapper;
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,6 +28,7 @@ public class AmmortamentoCespiteService {
     @Transactional
     public void calcola(LocalDate date) {
         try {
+            long inizio = System.currentTimeMillis();
             List<Cespite> cespitiAttivi = Cespite.find("attivo = 'T'").list();
             LocalDate dataCorrente = LocalDate.now();
             if (date != null) {
@@ -50,7 +51,7 @@ public class AmmortamentoCespiteService {
                 double fondo = 0;
                 double residuo = cespite.getImporto();
                 LocalDate dataInizio = cespite.getDataInizioCalcoloAmm();
-                List<AmmortamentoCespite> cespiteList = new ArrayList<>();
+                List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
                 int counter = 1;
                 LocalDate dataAmmortamento = LocalDate.of(dataInizio.getYear(), Month.DECEMBER, 31);
                 while (residuo > 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()) {
@@ -73,22 +74,24 @@ public class AmmortamentoCespiteService {
                     perc = quotaDaSalvare / cespite.getImporto() * 100;
                     AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, fondo, residuo, dataAmmortamento);
                     calcolaSuperAmm(cespite, perc, a);
-                    cespiteList.add(a);
+                    ammortamentoCespiteList.add(a);
                     dataAmmortamento = dataAmmortamento.plusYears(1);
                     counter++;
                 }
                 if (eliminato) {
-                    cespiteList.add(mapper.buildEliminato(cespite.getId(), cespite.getDataVendita()));
+                    ammortamentoCespiteList.add(mapper.buildEliminato(cespite.getId(), cespite.getDataVendita()));
                 }
                 if (venduto) {
-                    cespiteList.addAll(mapper.buildVenduto(cespite, residuo));
+                    ammortamentoCespiteList.addAll(mapper.buildVenduto(cespite, residuo));
                 }
                 if (eliminato || venduto) {
                     cespite.setAttivo(Boolean.FALSE);
                     Cespite.persist(cespite);
                 }
-                AmmortamentoCespite.persist(cespiteList);
+                AmmortamentoCespite.persist(ammortamentoCespiteList);
             }
+            long fine = System.currentTimeMillis();
+            Log.info("Metodo calcola ammortamenti: " + (fine - inizio)/1000 + " sec");
         } catch (Exception e) {
             Log.error("Errore calcolo ammortamento", e);
         }
@@ -108,6 +111,7 @@ public class AmmortamentoCespiteService {
     }
 
     public CespiteView getAll(FiltroCespite filtroCespite) {
+        long inizioTempo = System.currentTimeMillis();
         final CespiteView view = new CespiteView();
         List<CespiteDto> result = new ArrayList<>();
         try {
@@ -121,9 +125,9 @@ public class AmmortamentoCespiteService {
                 params.put("q", filtroCespite.getTipoCespite());
             }
             List<CespiteDBDto> cespiteDtos = Cespite.find(query, params).project(CespiteDBDto.class).list();
-            Map<String, List<CespiteDBDto>> map = cespiteDtos.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getTipoCespite()));
-            for (String tipoCespite : map.keySet()) {
-                List<CespiteDBDto> dtoList = map.get(tipoCespite);
+            Map<String, List<CespiteDBDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getTipoCespite()));
+            for (String tipoCespite : mapTipoCespite.keySet()) {
+                List<CespiteDBDto> dtoList = mapTipoCespite.get(tipoCespite);
                 CespiteDto cespiteDto = new CespiteDto();
                 cespiteDto.setTipoCespite(tipoCespite);
                 CespiteDBDto dbDto = dtoList.get(0);
@@ -334,6 +338,8 @@ public class AmmortamentoCespiteService {
             sommaDto.setAmmortamentiDeducibili(ammortamentiDeducibili);
             sommaDto.setFineEsercizio(fine);
             view.setCespiteSommaDto(sommaDto);
+            long fineTempo = System.currentTimeMillis();
+            Log.info("Metodo get ammortamenti: " + (fineTempo - inizioTempo)/1000 + " sec");
         } catch (Exception e) {
             Log.error("Errore get Registro cespiti", e);
             throw e;
