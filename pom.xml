@@ -9,6 +9,8 @@
   <modules>
     <module>authentication</module>
     <module>gestione-ordini-api</module>
+    <module>gestione-ordini-ostuni-api</module>
+    <module>gestione-ordini-ceglie-api</module>
   </modules>
   <properties>
     <compiler-plugin.version>3.10.1</compiler-plugin.version>
