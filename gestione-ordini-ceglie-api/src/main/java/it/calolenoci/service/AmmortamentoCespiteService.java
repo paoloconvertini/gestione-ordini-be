@@ -41,6 +41,9 @@ public class AmmortamentoCespiteService {
                 if (eliminato || venduto) {
                     dataCorrente = cespite.getDataVendita();
                 }
+                if(categoriaCespite.getPercAmmortamento() == null || categoriaCespite.getPercAmmortamento() == 0){
+                    continue;
+                }
                 double percAmmortamento = categoriaCespite.getPercAmmortamento();
                 double percAmmPrimoAnno = categoriaCespite.getPercAmmortamento() / 2;
                 double perc;
@@ -124,6 +127,19 @@ public class AmmortamentoCespiteService {
                 params.put("q", filtroCespite.getTipoCespite());
             }
             List<CespiteDBDto> cespiteDtos = Cespite.find(query, params).project(CespiteDBDto.class).list();
+            String queryNoAmm = "SELECT c, cat " +
+                    "FROM Cespite c " +
+                    "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite " +
+                    "WHERE NOT EXISTS (SELECT 1 FROM AmmortamentoCespite a WHERE a.idAmmortamento = c.id) ";
+            Map<String, Object> paramsNoAmm = new HashMap<>();
+            if(filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())){
+                queryNoAmm += "AND cat.tipoCespite = :q";
+                paramsNoAmm.put("q", filtroCespite.getTipoCespite());
+            }
+            List<CespiteDBDto> listNoAmm = Cespite.find(queryNoAmm, paramsNoAmm).project(CespiteDBDto.class).list();
+            if(!listNoAmm.isEmpty()) {
+                cespiteDtos.addAll(listNoAmm);
+            }
             Map<String, List<CespiteDBDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getTipoCespite()));
             for (String tipoCespite : mapTipoCespite.keySet()) {
                 List<CespiteDBDto> dtoList = mapTipoCespite.get(tipoCespite);
@@ -162,14 +178,14 @@ public class AmmortamentoCespiteService {
                         }
                         List<AmmortamentoCespite> list = new ArrayList<>();
                         progr2List.forEach(d -> list.add(d.getAmmortamentoCespite()));
-                        List<AmmortamentoCespite> collect = list.stream().filter(a -> a.getDataAmm() != null && !StringUtils.startsWith(a.getDescrizione(), "VENDITA")).sorted(Comparator.comparing(AmmortamentoCespite::getDataAmm)).collect(Collectors.toList());
+                        List<AmmortamentoCespite> collect = list.stream().filter(a -> a != null && a.getDataAmm() != null && !StringUtils.startsWith(a.getDescrizione(), "VENDITA")).sorted(Comparator.comparing(AmmortamentoCespite::getDataAmm)).collect(Collectors.toList());
                         if (!cespite.getAttivo()) {
                             if (StringUtils.isNotBlank(cespite.getIntestatarioVendita())) {
-                                collect.addAll(collect.size(), list.stream().filter(a -> StringUtils.startsWith(a.getDescrizione(), "VENDITA")).toList());
-                                collect.addAll(collect.size(), list.stream().filter(a -> StringUtils.startsWith(a.getDescrizione(), "venduto")).toList());
-                                collect.addAll(collect.size(), list.stream().filter(a -> StringUtils.startsWith(a.getDescrizione(), "Plus")).toList());
+                                collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "VENDITA")).toList());
+                                collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "venduto")).toList());
+                                collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "Plus")).toList());
                             } else {
-                                collect.addAll(collect.size(), list.stream().filter(a -> StringUtils.startsWith(a.getDescrizione(), "ELIMINAZIONE")).toList());
+                                collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "ELIMINAZIONE")).toList());
                             }
                         }
                         v.setAmmortamentoCespiteList(collect);
@@ -190,19 +206,21 @@ public class AmmortamentoCespiteService {
                 inizioEsercizio.setValoreAggiornato(cespiteViewDtoList.stream().filter(c -> c.getAnno() < Year.now().getValue()).mapToDouble(CespiteViewDto::getImporto).sum());
                 cespiteViewDtoList.forEach(c -> {
                     AmmortamentoCespite a;
-                    if(c.getAmmortamentoCespiteList().stream().anyMatch(m-> m.getAnno().equals(Year.now().minusYears(1).getValue()))) {
-                        a = c.getAmmortamentoCespiteList().stream().filter(m-> m.getAnno().equals(Year.now().minusYears(1).getValue())).findFirst().get();
-                        ammortamentoCespiteList.add(a);
-                    } else if(c.getAmmortamentoCespiteList().stream().noneMatch(m-> m.getAnno().equals(Year.now().getValue()))) {
-                        a = c.getAmmortamentoCespiteList().get(c.getAmmortamentoCespiteList().size() - 1);
-                        ammortamentoCespiteList.add(a);
+                    if(!c.getAmmortamentoCespiteList().isEmpty()) {
+                        if(c.getAmmortamentoCespiteList().stream().anyMatch(m-> m.getAnno().equals(Year.now().minusYears(1).getValue()))) {
+                            a = c.getAmmortamentoCespiteList().stream().filter(m-> m.getAnno().equals(Year.now().minusYears(1).getValue())).findFirst().get();
+                            ammortamentoCespiteList.add(a);
+                        } else if(c.getAmmortamentoCespiteList().stream().noneMatch(m-> m.getAnno().equals(Year.now().getValue()))) {
+                            a = c.getAmmortamentoCespiteList().get(c.getAmmortamentoCespiteList().size() - 1);
+                            ammortamentoCespiteList.add(a);
+                        }
                     }
-
                 });
 
 
                 inizioEsercizio.setFondoAmmortamenti(ammortamentoCespiteList
                         .stream()
+                                .filter(a -> a.getFondo() != null)
                         .mapToDouble(AmmortamentoCespite::getFondo)
                         .sum()
                 );

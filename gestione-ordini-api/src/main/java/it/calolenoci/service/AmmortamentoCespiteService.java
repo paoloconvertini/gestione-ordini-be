@@ -42,6 +42,9 @@ public class AmmortamentoCespiteService {
                 if (eliminato || venduto) {
                     dataCorrente = cespite.getDataVendita();
                 }
+                if(categoriaCespite.getPercAmmortamento() == null || categoriaCespite.getPercAmmortamento() == 0){
+                    continue;
+                }
                 double percAmmortamento = categoriaCespite.getPercAmmortamento();
                 double percAmmPrimoAnno = categoriaCespite.getPercAmmortamento() / 2;
                 double perc;
@@ -91,7 +94,7 @@ public class AmmortamentoCespiteService {
                 AmmortamentoCespite.persist(ammortamentoCespiteList);
             }
             long fine = System.currentTimeMillis();
-            Log.info("Metodo calcola ammortamenti: " + (fine - inizio)/1000 + " sec");
+            Log.info("Metodo calcola ammortamenti: " + (fine - inizio) / 1000 + " sec");
         } catch (Exception e) {
             Log.error("Errore calcolo ammortamento", e);
         }
@@ -102,7 +105,7 @@ public class AmmortamentoCespiteService {
             TipoSuperAmm tipoSuperAmm = TipoSuperAmm.findById(cespite.getSuperAmm());
             double importSuperAmm = (tipoSuperAmm.getPerc() * cespite.getImporto()) / 100;
             double quotaSuperAmm = (perc * importSuperAmm) / 100;
-            if(a.getResiduo() < quotaSuperAmm){
+            if (a.getResiduo() < quotaSuperAmm) {
                 quotaSuperAmm = a.getResiduo();
             }
             a.setSuperPercentuale(perc);
@@ -120,11 +123,24 @@ public class AmmortamentoCespiteService {
                     "JOIN AmmortamentoCespite a ON c.id = a.idAmmortamento " +
                     "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite ";
             Map<String, Object> params = new HashMap<>();
-            if(filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())){
+            if (filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())) {
                 query += "WHERE cat.tipoCespite = :q";
                 params.put("q", filtroCespite.getTipoCespite());
             }
             List<CespiteDBDto> cespiteDtos = Cespite.find(query, params).project(CespiteDBDto.class).list();
+            String queryNoAmm = "SELECT c, cat " +
+                    "FROM Cespite c " +
+                    "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite " +
+                    "WHERE NOT EXISTS (SELECT 1 FROM AmmortamentoCespite a WHERE a.idAmmortamento = c.id) ";
+            Map<String, Object> paramsNoAmm = new HashMap<>();
+            if(filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())){
+                queryNoAmm += "AND cat.tipoCespite = :q";
+                paramsNoAmm.put("q", filtroCespite.getTipoCespite());
+            }
+            List<CespiteDBDto> listNoAmm = Cespite.find(queryNoAmm, paramsNoAmm).project(CespiteDBDto.class).list();
+            if(!listNoAmm.isEmpty()) {
+                cespiteDtos.addAll(listNoAmm);
+            }
             Map<String, List<CespiteDBDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getTipoCespite()));
             for (String tipoCespite : mapTipoCespite.keySet()) {
                 List<CespiteDBDto> dtoList = mapTipoCespite.get(tipoCespite);
@@ -163,14 +179,14 @@ public class AmmortamentoCespiteService {
                         }
                         List<AmmortamentoCespite> list = new ArrayList<>();
                         progr2List.forEach(d -> list.add(d.getAmmortamentoCespite()));
-                        List<AmmortamentoCespite> collect = list.stream().filter(a -> a.getDataAmm() != null && !StringUtils.startsWith(a.getDescrizione(), "VENDITA")).sorted(Comparator.comparing(AmmortamentoCespite::getDataAmm)).collect(Collectors.toList());
+                        List<AmmortamentoCespite> collect = list.stream().filter(a -> a != null && a.getDataAmm() != null && !StringUtils.startsWith(a.getDescrizione(), "VENDITA")).sorted(Comparator.comparing(AmmortamentoCespite::getDataAmm)).collect(Collectors.toList());
                         if (!cespite.getAttivo()) {
                             if (StringUtils.isNotBlank(cespite.getIntestatarioVendita())) {
-                                collect.addAll(collect.size(), list.stream().filter(a -> StringUtils.startsWith(a.getDescrizione(), "VENDITA")).toList());
-                                collect.addAll(collect.size(), list.stream().filter(a -> StringUtils.startsWith(a.getDescrizione(), "venduto")).toList());
-                                collect.addAll(collect.size(), list.stream().filter(a -> StringUtils.startsWith(a.getDescrizione(), "Plus")).toList());
+                                collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "VENDITA")).toList());
+                                collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "venduto")).toList());
+                                collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "Plus")).toList());
                             } else {
-                                collect.addAll(collect.size(), list.stream().filter(a -> StringUtils.startsWith(a.getDescrizione(), "ELIMINAZIONE")).toList());
+                                collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "ELIMINAZIONE")).toList());
                             }
                         }
                         v.setAmmortamentoCespiteList(collect);
@@ -191,12 +207,14 @@ public class AmmortamentoCespiteService {
                 inizioEsercizio.setValoreAggiornato(cespiteViewDtoList.stream().filter(c -> c.getAnno() < Year.now().getValue()).mapToDouble(CespiteViewDto::getImporto).sum());
                 cespiteViewDtoList.forEach(c -> {
                     AmmortamentoCespite a;
-                    if(c.getAmmortamentoCespiteList().stream().anyMatch(m-> m.getAnno().equals(Year.now().minusYears(1).getValue()))) {
-                        a = c.getAmmortamentoCespiteList().stream().filter(m-> m.getAnno().equals(Year.now().minusYears(1).getValue())).findFirst().get();
-                        ammortamentoCespiteList.add(a);
-                    } else if(c.getAmmortamentoCespiteList().stream().noneMatch(m-> m.getAnno().equals(Year.now().getValue()))) {
-                        a = c.getAmmortamentoCespiteList().get(c.getAmmortamentoCespiteList().size() - 1);
-                        ammortamentoCespiteList.add(a);
+                    if (!c.getAmmortamentoCespiteList().isEmpty()) {
+                        if (c.getAmmortamentoCespiteList().stream().anyMatch(m -> m.getAnno().equals(Year.now().minusYears(1).getValue()))) {
+                            a = c.getAmmortamentoCespiteList().stream().filter(m -> m.getAnno().equals(Year.now().minusYears(1).getValue())).findFirst().get();
+                            ammortamentoCespiteList.add(a);
+                        } else if (c.getAmmortamentoCespiteList().stream().noneMatch(m -> m.getAnno().equals(Year.now().getValue()))) {
+                            a = c.getAmmortamentoCespiteList().get(c.getAmmortamentoCespiteList().size() - 1);
+                            ammortamentoCespiteList.add(a);
+                        }
                     }
 
                 });
@@ -204,6 +222,7 @@ public class AmmortamentoCespiteService {
 
                 inizioEsercizio.setFondoAmmortamenti(ammortamentoCespiteList
                         .stream()
+                        .filter(a -> a.getFondo() != null)
                         .mapToDouble(AmmortamentoCespite::getFondo)
                         .sum()
                 );
@@ -237,7 +256,6 @@ public class AmmortamentoCespiteService {
                         .filter(c -> c.getAnno() == Year.now().getValue()).mapToDouble(CespiteViewDto::getImporto).sum());
                 vendite.setValoreAggiornato(cespiteViewDtoList.stream()
                         .filter(c -> c.getAnno() == Year.now().getValue() && c.getImportoVendita() != null).mapToDouble(CespiteViewDto::getImportoVendita).sum());
-
 
 
                 cespiteViewDtoList.forEach(c -> ammortamentoCespiteList2.addAll(c.getAmmortamentoCespiteList()));
@@ -339,7 +357,7 @@ public class AmmortamentoCespiteService {
             sommaDto.setFineEsercizio(fine);
             view.setCespiteSommaDto(sommaDto);
             long fineTempo = System.currentTimeMillis();
-            Log.info("Metodo get ammortamenti: " + (fineTempo - inizioTempo)/1000 + " sec");
+            Log.info("Metodo get ammortamenti: " + (fineTempo - inizioTempo) / 1000 + " sec");
         } catch (Exception e) {
             Log.error("Errore get Registro cespiti", e);
             throw e;
@@ -351,24 +369,24 @@ public class AmmortamentoCespiteService {
     public void updateCespiti(CespiteRequest c) {
         Cespite cespite = Cespite.findById(c.getId());
         int update = 0;
-        if(cespite != null) {
-            if(c.getPerc() != null){
+        if (cespite != null) {
+            if (c.getPerc() != null) {
                 update = Cespite.update("ammortamento = :p WHERE id =:id", Parameters.with("p", c.getPerc()).and("id", c.getId()));
             }
-            if(StringUtils.isNotBlank(c.getTipoCespite())){
+            if (StringUtils.isNotBlank(c.getTipoCespite())) {
                 Optional<Cespite> optCat = Cespite.find("tipoCespite = :t", Sort.descending("progressivo1"), Parameters.with("t", c.getTipoCespite())).firstResultOptional();
                 int progr1 = 1;
-                if(optCat.isPresent()) {
+                if (optCat.isPresent()) {
                     progr1 = optCat.get().getProgressivo1() + 1;
                 }
                 update = Cespite.update("tipoCespite = :t, progressivo1 =:p, progressivo2 = 1 WHERE id =:id",
                         Parameters.with("t", c.getTipoCespite()).and("p", progr1).and("id", c.getId()));
-                if(update > 0) {
+                if (update > 0) {
                     CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite = :t", Parameters.with("t", c.getTipoCespite())).firstResult();
                     Optional<Primanota> optional = Primanota.find("anno =:a AND giornale =:g AND protocollo =:p AND importo =:i",
                             Parameters.with("a", cespite.getAnno()).and("g", cespite.getGiornale())
                                     .and("p", cespite.getProtocollo()).and("i", cespite.getImporto())).firstResultOptional();
-                    if(optional.isPresent()){
+                    if (optional.isPresent()) {
                         Primanota primanota = optional.get();
                         primanota.setGruppoconto(categoriaCespite.getCostoGruppo());
                         primanota.setSottoconto(categoriaCespite.getCostoConto());
@@ -386,7 +404,7 @@ public class AmmortamentoCespiteService {
         try {
             Optional<CategoriaCespite> categoriaCespiteOptional = CategoriaCespite.find("costoGruppo=:g AND costoConto=:c",
                     Parameters.with("g", dto.getGruppoconto()).and("c", dto.getSottoconto())).firstResultOptional();
-            if(categoriaCespiteOptional.isPresent()) {
+            if (categoriaCespiteOptional.isPresent()) {
                 Cespite c = new Cespite();
                 c.setCespite(dto.getDescrsuppl());
                 c.setAttivo(Boolean.TRUE);
@@ -403,12 +421,12 @@ public class AmmortamentoCespiteService {
                                 .and("p", dto.getProtocollo())).firstResult();
                 int progr1 = 1;
                 Integer progr2 = 1;
-                if(optionalCespite.isPresent()) {
+                if (optionalCespite.isPresent()) {
                     progr1 = optionalCespite.get().getProgressivo1() + 1;
                     progr2 = optionalCespite.get().getProgressivo2();
                 }
                 FatturepaixIn fattura = FatturepaixIn.findById(primanota.getPid());
-                if(fattura != null) {
+                if (fattura != null) {
                     c.setFornitore(fattura.getFornitoreDenom() + StringUtils.SPACE + primanota.getGruppoconto() + " - " + primanota.getSottoconto());
                     //TODO salvare nomefile fattura
                 } else {
@@ -427,7 +445,7 @@ public class AmmortamentoCespiteService {
             } else {
                 Log.debug("Cespite non creato");
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.error("Error creating new cespite", e);
             throw e;
         }
