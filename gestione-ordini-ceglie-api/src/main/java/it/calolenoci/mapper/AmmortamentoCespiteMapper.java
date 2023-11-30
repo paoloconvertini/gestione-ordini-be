@@ -43,7 +43,7 @@ public class AmmortamentoCespiteMapper {
         ammVenduto.setAnno(anno);
         AmmortamentoCespite ammVenduto1 = new AmmortamentoCespite();
         ammVenduto1.setIdAmmortamento(cespite.getId());
-        ammVenduto1.setDescrizione("venduto a " + cespite.getIntestatarioVendita() + " n. fatt.: " + cespite.getIntestatarioVendita());
+        ammVenduto1.setDescrizione("venduto a " + cespite.getIntestatarioVendita() + " n. fatt.: " + cespite.getNumDocVendita());
         ammVenduto1.setQuota(cespite.getImportoVendita());
         ammVenduto1.setAnno(anno);
         AmmortamentoCespite ammVenduto2 = new AmmortamentoCespite();
