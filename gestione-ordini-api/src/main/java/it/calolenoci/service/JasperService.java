@@ -1,12 +1,10 @@
 package it.calolenoci.service;
 
 import io.quarkus.logging.Log;
-import it.calolenoci.dto.OrdineDTO;
-import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.dto.OrdineFornitoreDto;
-import it.calolenoci.dto.OrdineReportDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.mapper.OrdineClienteReportMapper;
 import net.sf.jasperreports.engine.*;
+import net.sf.jasperreports.engine.data.JRBeanArrayDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRSaver;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +18,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +39,9 @@ public class JasperService {
     @ConfigProperty(name = "ordini.tmp")
     String tmpFolder;
 
+    @Inject
+    AmmortamentoCespiteService ammortamentoCespiteService;
+
     public List<OrdineReportDto> getOrdiniReport(OrdineDTO dto, List<OrdineDettaglioDto> articoli, String filename, String firmaVenditore) {
         List<OrdineReportDto> dtoList = new ArrayList<>();
         articoli.forEach(a -> dtoList.add(mapper.fromEntityToDto(dto, a, filename, firmaVenditore)));
@@ -54,7 +56,8 @@ public class JasperService {
         JasperReport jasperReport = compileReport("Invoice.jrxml");
 
         // 2. parameters "empty"
-        Map<String, Object> parameters = getParameters(articoli);
+        Map<String, Object> parameters = getParameters(articoli.stream().filter(a -> !"C".equals(a.getTIPORIGO())).mapToDouble(OrdineReportDto::getValoreTotale).sum());
+        parameters.put("totaleNetto", parameters.get("totaleDocumento"));
 
         // 3. datasource "java object"
         JRDataSource dataSource = getDataSource(articoli);
@@ -91,10 +94,10 @@ public class JasperService {
                 JasperReport jasperReport = compileReport("OAF.jrxml");
 
                 // 2. parameters "empty"
-                Map<String, Object> parameters = getParametersOAF(dtoList);
+                Map<String, Object> parameters = getParameters(dtoList.stream().filter(a -> StringUtils.isBlank(a.getTipoRigo())).mapToDouble(OrdineFornitoreDto::getValoreTotale).sum());
 
                 // 3. datasource "java object"
-                JRDataSource dataSource = getDataSourceOAF(dtoList);
+                JRDataSource dataSource = getDataSource(dtoList);
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
                 String destFileName = ordineId + ".pdf";
@@ -111,6 +114,39 @@ public class JasperService {
         }
     }
 
+    public File createReport() {
+        CespiteView cespiteView = ammortamentoCespiteService.getAll(new FiltroCespite());
+        if (cespiteView != null && !cespiteView.getCespiteList().isEmpty()) {
+            try {
+
+                // 1. compile template ".jrxml" file
+                JasperReport jasperReport = compileReport("RegistroCespiti.jrxml");
+
+                // 2. parameters "empty"
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("inizioEsercizio", cespiteView.getCespiteSommaDto().getInizioEsercizio());
+                parameters.put("acquisti", cespiteView.getCespiteSommaDto().getAcquisti());
+                parameters.put("vendite", cespiteView.getCespiteSommaDto().getVendite());
+                parameters.put("ammortamentoDeducibile", cespiteView.getCespiteSommaDto().getAmmortamentiDeducibili());
+                parameters.put("ammortamentoNonDeducibile", cespiteView.getCespiteSommaDto().getAmmortamentiNonDeducibili());
+                parameters.put("fineEsercizio", cespiteView.getCespiteSommaDto().getFineEsercizio());
+
+                // 3. datasource "java object"
+                JRDataSource dataSource = new JRBeanArrayDataSource((new CespiteView[]{cespiteView}));
+
+                JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+                String destFileName = "Registro_cespiti_" + Year.now().getValue() + ".pdf";
+                File f = new File(destFileName);
+                JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
+                return f;
+            } catch (JRException e) {
+                Log.error("Errore nella creazione del report registro cespiti ", e);
+                throw new RuntimeException(e);
+            }
+        }
+        return null;
+    }
+
     private JasperReport compileReport(String reportName) {
         JasperReport jasperReport = null;
         try {
@@ -123,28 +159,15 @@ public class JasperService {
         return jasperReport;
     }
 
-    private static Map<String, Object> getParameters(List<OrdineReportDto> articoli) {
+    private static Map<String, Object> getParameters(double sum) {
         Map<String, Object> map = new HashMap<>();
-        map.put("totaleImponibile", articoli.stream().filter(a -> !"C".equals(a.getTIPORIGO())).mapToDouble(OrdineReportDto::getValoreTotale).sum());
-        map.put("totaleIVA", (Double) map.get("totaleImponibile") * 22 / 100);
-        map.put("totaleDocumento", (Double) map.get("totaleImponibile") + (Double) map.get("totaleIVA"));
-        map.put("totaleNetto", map.get("totaleDocumento"));
-        return map;
-    }
-
-    private static Map<String, Object> getParametersOAF(List<OrdineFornitoreDto> articoli) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("totaleImponibile", articoli.stream().filter(a -> StringUtils.isBlank(a.getTipoRigo())).mapToDouble(OrdineFornitoreDto::getValoreTotale).sum());
+        map.put("totaleImponibile", sum);
         map.put("totaleIVA", (Double) map.get("totaleImponibile") * 22 / 100);
         map.put("totaleDocumento", (Double) map.get("totaleImponibile") + (Double) map.get("totaleIVA"));
         return map;
     }
 
-    private static JRDataSource getDataSource(List<OrdineReportDto> articoli) {
-        return new JRBeanCollectionDataSource(articoli);
-    }
-
-    private static JRDataSource getDataSourceOAF(List<OrdineFornitoreDto> articoli) {
-        return new JRBeanCollectionDataSource(articoli);
+    private <T> JRDataSource getDataSource(List<T> list) {
+        return new JRBeanCollectionDataSource(list);
     }
 }

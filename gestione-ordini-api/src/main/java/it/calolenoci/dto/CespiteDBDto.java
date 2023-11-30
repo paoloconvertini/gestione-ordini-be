@@ -19,4 +19,9 @@ public class CespiteDBDto implements Serializable {
     private AmmortamentoCespite ammortamentoCespite;
 
     private CategoriaCespite categoria;
+
+    public CespiteDBDto(Cespite cespite, CategoriaCespite categoria) {
+        this.cespite = cespite;
+        this.categoria = categoria;
+    }
 }

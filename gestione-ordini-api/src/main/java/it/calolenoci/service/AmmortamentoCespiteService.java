@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.io.File;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
@@ -24,6 +25,9 @@ public class AmmortamentoCespiteService {
 
     @Inject
     AmmortamentoCespiteMapper mapper;
+
+    @Inject
+    JasperService jasperService;
 
     @Transactional
     public void calcola(LocalDate date) {
@@ -42,7 +46,7 @@ public class AmmortamentoCespiteService {
                 if (eliminato || venduto) {
                     dataCorrente = cespite.getDataVendita();
                 }
-                if(categoriaCespite.getPercAmmortamento() == null || categoriaCespite.getPercAmmortamento() == 0){
+                if (categoriaCespite.getPercAmmortamento() == null || categoriaCespite.getPercAmmortamento() == 0) {
                     continue;
                 }
                 double percAmmortamento = categoriaCespite.getPercAmmortamento();
@@ -133,12 +137,12 @@ public class AmmortamentoCespiteService {
                     "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite " +
                     "WHERE NOT EXISTS (SELECT 1 FROM AmmortamentoCespite a WHERE a.idAmmortamento = c.id) ";
             Map<String, Object> paramsNoAmm = new HashMap<>();
-            if(filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())){
+            if (filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())) {
                 queryNoAmm += "AND cat.tipoCespite = :q";
                 paramsNoAmm.put("q", filtroCespite.getTipoCespite());
             }
             List<CespiteDBDto> listNoAmm = Cespite.find(queryNoAmm, paramsNoAmm).project(CespiteDBDto.class).list();
-            if(!listNoAmm.isEmpty()) {
+            if (!listNoAmm.isEmpty()) {
                 cespiteDtos.addAll(listNoAmm);
             }
             Map<String, List<CespiteDBDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getTipoCespite()));
@@ -204,7 +208,7 @@ public class AmmortamentoCespiteService {
                 cespiteProgressivoDtoList.forEach(p -> cespiteViewDtoList.addAll(p.getCespiteViewDtoList()));
                 CespiteSommaDto sommaDto = new CespiteSommaDto();
                 FiscaleRiepilogo inizioEsercizio = new FiscaleRiepilogo();
-                inizioEsercizio.setValoreAggiornato(cespiteViewDtoList.stream().filter(c -> c.getAnno() < Year.now().getValue()).mapToDouble(CespiteViewDto::getImporto).sum());
+                inizioEsercizio.setValoreAggiornato(cespiteViewDtoList.stream().filter(c -> (c.getDataVend() == null || c.getDataVend().getYear() == Year.now().getValue()) && c.getAnno() < Year.now().getValue()).mapToDouble(CespiteViewDto::getImporto).sum());
                 cespiteViewDtoList.forEach(c -> {
                     AmmortamentoCespite a;
                     if (!c.getAmmortamentoCespiteList().isEmpty()) {
@@ -452,4 +456,14 @@ public class AmmortamentoCespiteService {
     }
 
 
+    public File scaricaRegistroCespiti() {
+        File report;
+        try {
+            report = jasperService.createReport();
+        } catch (Exception e) {
+            report = null;
+            Log.error("error scarica regisro");
+        }
+        return report;
+    }
 }
