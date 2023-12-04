@@ -7,6 +7,7 @@ import it.calolenoci.entity.CategoriaCespite;
 import it.calolenoci.entity.Cespite;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.service.AmmortamentoCespiteService;
+import it.calolenoci.service.PrimanotaService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -38,6 +39,9 @@ public class CespiteResource {
     @Inject
     AmmortamentoCespiteService service;
 
+    @Inject
+    PrimanotaService primanotaService;
+
     @Operation(summary = "Returns all the ordini from the database")
     @POST
     //@RolesAllowed({ADMIN})
@@ -51,7 +55,6 @@ public class CespiteResource {
         } catch (Exception e) {
             return Response.status(400).entity(new ResponseDto("Error getting registro cespiti", true)).build();
         }
-
     }
 
     @Operation(summary = "Returns all the ordini from the database")
@@ -95,6 +98,7 @@ public class CespiteResource {
     @Transactional
     @Path("/{id}")
     @RolesAllowed(ADMIN)
+    @Produces(APPLICATION_JSON)
     public Response delete(String id) {
         Cespite.deleteById(id);
         return Response.ok().entity(new ResponseDto("Cespite eliminato", false)).build();
@@ -114,9 +118,31 @@ public class CespiteResource {
                 return Response.noContent().build();
             }
         } catch (Exception e) {
-            Log.error("Errore scarica dropbox file", e);
+            Log.error("Errore scarica registro cespite", e);
         }
         return Response.noContent().build();
     }
 
+    @Operation(summary = "salva quadratura cespite")
+    @POST
+    @RolesAllowed({ADMIN})
+    @Produces(APPLICATION_JSON)
+    @Path("/salvaQuadratura")
+    public Response salvaQuadratura(QuadraturaCespiteRequest cespite) {
+        if (cespite == null) {
+            return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("no save", true)).build();
+        }
+        service.saveQuadratura(cespite);
+        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Record salvati", false)).build();
+    }
+
+    @Operation(summary = "contabilizza")
+    @GET
+    @RolesAllowed({ADMIN})
+    @Produces(APPLICATION_JSON)
+    @Path("/contabilizzaAmm")
+    public Response contabilizzaAmm() {
+        primanotaService.contabilizzaAmm();
+        return Response.ok().entity(new ResponseDto("contabilizzazione completata con successo", false)).build();
+    }
 }

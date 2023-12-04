@@ -14,6 +14,8 @@ import java.util.List;
 @AllArgsConstructor
 public class CespiteViewDto implements Serializable {
 
+    private String id;
+
     private String codice;
 
     private Integer progressivo1;

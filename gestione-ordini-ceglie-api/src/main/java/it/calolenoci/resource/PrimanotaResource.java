@@ -1,9 +1,6 @@
 package it.calolenoci.resource;
 
-import it.calolenoci.dto.CespiteView;
-import it.calolenoci.dto.FiltroPrimanota;
-import it.calolenoci.dto.PrimanotaDto;
-import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.service.PrimanotaService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
@@ -52,8 +49,25 @@ public class PrimanotaResource {
         try {
             service.salva(dto);
         } catch (Exception e) {
-            return Response.status(400).entity(new ResponseDto("Errore salva primanota", true)).build();
+            return Response.status(500).entity(new ResponseDto(e.getCause().getMessage(), true)).build();
         }
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("Primanota salvata con successo", false)).build();
     }
+
+    @Operation(summary = "salva cespite")
+    @POST
+    @RolesAllowed({ADMIN})
+    @Path("/registraVendita")
+    public Response registraVendita(VenditaCespiteDto dto) {
+        if (dto == null) {
+            return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("no save", true)).build();
+        }
+        try {
+            service.registraVendita(dto);
+        } catch (Exception e) {
+            return Response.status(500).entity(new ResponseDto(e.getCause().getMessage(), true)).build();
+        }
+        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Registrato vendita con successo", false)).build();
+    }
+
 }

@@ -6,6 +6,7 @@ import it.calolenoci.mapper.OrdineClienteReportMapper;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanArrayDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.util.JRSaver;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -19,10 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Year;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Singleton
 public class JasperService {
@@ -132,11 +130,12 @@ public class JasperService {
                 parameters.put("fineEsercizio", cespiteView.getCespiteSommaDto().getFineEsercizio());
 
                 // 3. datasource "java object"
-                JRDataSource dataSource = new JRBeanArrayDataSource((new CespiteView[]{cespiteView}));
+                JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Collections.singletonList(cespiteView));
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
                 String destFileName = "Registro_cespiti_" + Year.now().getValue() + ".pdf";
-                File f = new File(destFileName);
+                String tempDir = System.getProperty("java.io.tmpdir");
+                File f = new File(tempDir + destFileName);
                 JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
                 return f;
             } catch (JRException e) {
