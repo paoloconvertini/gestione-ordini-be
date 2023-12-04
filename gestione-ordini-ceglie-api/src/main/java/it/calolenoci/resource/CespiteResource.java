@@ -139,7 +139,11 @@ public class CespiteResource {
     @Produces(APPLICATION_JSON)
     @Path("/contabilizzaAmm")
     public Response contabilizzaAmm() {
-        primanotaService.contabilizzaAmm();
-        return Response.ok().entity(new ResponseDto("contabilizzazione completata con successo", false)).build();
+        try {
+            primanotaService.contabilizzaAmm();
+            return Response.ok().entity(new ResponseDto("contabilizzazione completata con successo", false)).build();
+        } catch (Exception e) {
+            return Response.status(500).entity(new ResponseDto(e.getCause().getMessage(), true)).build();
+        }
     }
 }
