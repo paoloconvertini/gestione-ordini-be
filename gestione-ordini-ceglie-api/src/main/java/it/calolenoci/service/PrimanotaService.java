@@ -184,14 +184,13 @@ public class PrimanotaService {
                         } else {
                             gruppoPlusMinus = cespiteDto.getCategoria().getPlusGruppo();
                             contoPlusMinus = cespiteDto.getCategoria().getMinusConto();
-                            plusMinus = -plusMinus;
                         }
                         listToSave.add(mapper.buildPrimanotaContabile(cespiteDto, protocollo, rigo++, progrGenerale++,
                                 "RIL. PLUS/MINUSVALENZA", gruppoPlusMinus, contoPlusMinus,
-                                plusMinus));
+                                -plusMinus));
                         listToSave.add(mapper.buildPrimanotaContabile(cespiteDto, protocollo, rigo++, progrGenerale++,
                                 "RIL. PLUS/MINUSVALENZA", cespiteDto.getCategoria().getCostoGruppo(), cespiteDto.getCategoria().getCostoConto(),
-                                -plusMinus));
+                                plusMinus));
                         listToSave.add(mapper.buildPrimanotaContabile(cespiteDto, protocollo, rigo++, progrGenerale++, "RIL. FONDO AMMORTAMENTO", cespiteDto.getCategoria().getFondoGruppo(), cespiteDto.getCategoria().getFondoConto(), a.getFondo()));
                         listToSave.add(mapper.buildPrimanotaContabile(cespiteDto, protocollo, rigo, progrGenerale, "RIL. QUOTA AMMORTAMENTO", cespiteDto.getCategoria().getCostoGruppo(), cespiteDto.getCategoria().getCostoConto(), -a.getQuota()));
                         Primanota.persist(listToSave);

@@ -101,14 +101,14 @@ public class CespiteResource {
         return Response.ok().entity(new ResponseDto("Cespite eliminato", false)).build();
     }
 
-    @GET
+    @POST
     @Path("/scaricaRegistroCespiti")
     @Produces(MediaType.TEXT_PLAIN)
     @PermitAll
-    public Response scaricaRegistroCespiti() {
+    public Response scaricaRegistroCespiti(FiltroCespite filtroCespite) {
         File pdf;
         try {
-            pdf = service.scaricaRegistroCespiti();
+            pdf = service.scaricaRegistroCespiti(filtroCespite);
             if(pdf != null){
                 return Response.ok(pdf).header("Content-Disposition", "attachment;filename=" + pdf.getName()).build();
             } else {

@@ -16,6 +16,7 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -137,6 +138,12 @@ public class AmmortamentoCespiteService {
     }
 
     public CespiteView getAll(FiltroCespite filtroCespite) {
+        LocalDate localDate = LocalDate.now();
+        if(StringUtils.isNotBlank(filtroCespite.getData())) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+            localDate = LocalDate.parse(filtroCespite.getData(), formatter);
+        }
+        int anno = localDate.getYear();
         long inizioTempo = System.currentTimeMillis();
         final CespiteView view = new CespiteView();
         List<CespiteDto> result = new ArrayList<>();
@@ -146,7 +153,7 @@ public class AmmortamentoCespiteService {
                     "JOIN AmmortamentoCespite a ON c.id = a.idAmmortamento " +
                     "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite ";
             Map<String, Object> params = new HashMap<>();
-            if (filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())) {
+            if (StringUtils.isNotBlank(filtroCespite.getTipoCespite())) {
                 query += "WHERE cat.tipoCespite = :q";
                 params.put("q", filtroCespite.getTipoCespite());
             }
@@ -229,14 +236,14 @@ public class AmmortamentoCespiteService {
                 cespiteProgressivoDtoList.forEach(p -> cespiteViewDtoList.addAll(p.getCespiteViewDtoList()));
                 CespiteSommaDto sommaDto = new CespiteSommaDto();
                 FiscaleRiepilogo inizioEsercizio = new FiscaleRiepilogo();
-                inizioEsercizio.setValoreAggiornato(cespiteViewDtoList.stream().filter(c -> (c.getDataVend() == null || c.getDataVend().getYear() == Year.now().getValue()) && c.getAnno() < Year.now().getValue()).mapToDouble(CespiteViewDto::getImporto).sum());
+                inizioEsercizio.setValoreAggiornato(cespiteViewDtoList.stream().filter(c -> (c.getDataVend() == null || c.getDataVend().getYear() == anno) && c.getAnno() < anno).mapToDouble(CespiteViewDto::getImporto).sum());
                 cespiteViewDtoList.forEach(c -> {
                     AmmortamentoCespite a;
                     if (!c.getAmmortamentoCespiteList().isEmpty()) {
-                        if (c.getAmmortamentoCespiteList().stream().anyMatch(m -> m.getAnno().equals(Year.now().minusYears(1).getValue()))) {
-                            a = c.getAmmortamentoCespiteList().stream().filter(m -> m.getAnno().equals(Year.now().minusYears(1).getValue())).findFirst().get();
+                        if (c.getAmmortamentoCespiteList().stream().anyMatch(m -> m.getAnno().equals(anno - 1))) {
+                            a = c.getAmmortamentoCespiteList().stream().filter(m -> m.getAnno().equals(anno - 1)).findFirst().get();
                             ammortamentoCespiteList.add(a);
-                        } else if (c.getAmmortamentoCespiteList().stream().noneMatch(m -> m.getAnno().equals(Year.now().getValue()))) {
+                        } else if (c.getAmmortamentoCespiteList().stream().noneMatch(m -> m.getAnno().equals(anno))) {
                             a = c.getAmmortamentoCespiteList().get(c.getAmmortamentoCespiteList().size() - 1);
                             ammortamentoCespiteList.add(a);
                         }
@@ -259,7 +266,7 @@ public class AmmortamentoCespiteService {
                     List<AmmortamentoCespite> list = new ArrayList<>();
                     viewDtoList.forEach(c -> list.addAll(c.getAmmortamentoCespiteList()));
                     double sum = list.stream()
-                            .filter(a -> a.getAnno() == Year.now().minusYears(1).getValue() && a.getSuperQuota() != null)
+                            .filter(a -> a.getAnno() == anno - 1 && a.getSuperQuota() != null)
                             .mapToDouble(AmmortamentoCespite::getSuperQuota)
                             .sum();
                     TipoSuperAmm t = TipoSuperAmm.find("descrizione = :desc", Parameters.with("desc", superAmmDesc)).firstResult();
@@ -278,10 +285,10 @@ public class AmmortamentoCespiteService {
                 FiscaleRiepilogo acquisti = new FiscaleRiepilogo();
                 FiscaleRiepilogo vendite = new FiscaleRiepilogo();
                 acquisti.setValoreAggiornato(cespiteViewDtoList.stream()
-                        .filter(c -> c.getAnno() == Year.now().getValue()).mapToDouble(CespiteViewDto::getImporto).sum());
+                        .filter(c -> c.getAnno() == anno).mapToDouble(CespiteViewDto::getImporto).sum());
                 vendite.setValoreAggiornato(-(cespiteViewDtoList.stream()
-                        .filter(c -> c.getImportoVendita() != null && c.getDataVend().getYear() == Year.now().getValue())
-                        .mapToDouble(CespiteViewDto::getImportoVendita)
+                        .filter(c -> c.getImportoVendita() != null && c.getDataVend().getYear() == anno)
+                        .mapToDouble(CespiteViewDto::getImporto)
                         .sum()));
 
 
@@ -295,10 +302,10 @@ public class AmmortamentoCespiteService {
                                 .filter(a -> StringUtils.startsWith(a.getDescrizione(), "Ammortamento"))
                                 .max(Comparator.comparing(AmmortamentoCespite::getAnno))
                                 .get()));
-                vendite.setTotaleAmmortamento(-(ammortamentoCespitesVend.stream().mapToDouble(AmmortamentoCespite::getFondo).sum()));
+                vendite.setTotaleAmmortamento(-(ammortamentoCespitesVend.stream().filter(a -> a.getAnno() == anno).mapToDouble(AmmortamentoCespite::getFondo).sum()));
                 vendite.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() + vendite.getTotaleAmmortamento());
                 FiscaleRiepilogo ammortamentiDeducibili = new FiscaleRiepilogo();
-                ammortamentiDeducibili.setAmmortamentoOrdinario(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == Year.now().getValue() && a.getQuota() != null).mapToDouble(AmmortamentoCespite::getQuota).sum());
+                ammortamentiDeducibili.setAmmortamentoOrdinario(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == anno && a.getQuota() != null && StringUtils.startsWith(a.getDescrizione(), "Ammortamento")).mapToDouble(AmmortamentoCespite::getQuota).sum());
                 ammortamentiDeducibili.setTotaleAmmortamento(ammortamentiDeducibili.getAmmortamentoOrdinario() + ammortamentiDeducibili.getAmmortamentoAnticipato());
                 ammortamentiDeducibili.setFondoAmmortamenti(ammortamentiDeducibili.getTotaleAmmortamento() + vendite.getFondoAmmortamenti());
 
@@ -310,7 +317,7 @@ public class AmmortamentoCespiteService {
 
                 double plus = ammortamentoCespiteList2
                         .stream()
-                        .filter(a -> a.getAnno() == Year.now().getValue()
+                        .filter(a -> a.getAnno() == anno
                                 && StringUtils.startsWith(a.getDescrizione(), "Plus"))
                         .mapToDouble(AmmortamentoCespite::getQuota).sum();
                 if (plus != 0) {
@@ -485,10 +492,10 @@ public class AmmortamentoCespiteService {
     }
 
 
-    public File scaricaRegistroCespiti() {
+    public File scaricaRegistroCespiti(FiltroCespite filtroCespite) {
         File report;
         try {
-            report = jasperService.createReport();
+            report = jasperService.createReport(filtroCespite);
         } catch (Exception e) {
             report = null;
             Log.error("error scarica regisro");

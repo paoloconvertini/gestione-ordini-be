@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Cespite" pageWidth="595" pageHeight="842" whenNoDataType="BlankPage" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
+    <property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter_RegistroCespiti.jrdax"/>
+    <property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="430"/>
+    <property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="556"/>
+    <parameter name="data" class="net.sf.jasperreports.engine.data.JRBeanCollectionDataSource"/>
+    <queryString language="JSON">
+        <![CDATA[cespiteList]]>
+    </queryString>
+    <field name="tipoCespite" class="java.lang.String">
+        <property name="net.sf.jasperreports.json.field.expression" value="tipoCespite"/>
+        <fieldDescription><![CDATA[tipoCespite]]></fieldDescription>
+    </field>
+    <field name="categoria" class="java.lang.String">
+        <property name="net.sf.jasperreports.json.field.expression" value="categoria"/>
+        <fieldDescription><![CDATA[categoria]]></fieldDescription>
+    </field>
+    <background>
+        <band splitType="Stretch"/>
+    </background>
+    <detail>
+        <band height="180" splitType="Stretch">
+            <property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+            <textField>
+                <reportElement mode="Opaque" x="0" y="0" width="555" height="30" forecolor="#FFFFFF" backcolor="#242222" uuid="288e46d8-ad96-4366-81ce-c538fc3e9633"/>
+                <box padding="3"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{tipoCespite} + " - " +$F{categoria}]]></textFieldExpression>
+            </textField>
+            <subreport overflowType="Stretch">
+                <reportElement x="0" y="30" width="555" height="150" uuid="e3e07d72-de9c-4a02-8549-d189255d4fb8"/>
+                <dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("cespiteProgressivoDtoList")]]></dataSourceExpression>
+                <subreportExpression><![CDATA["Ammortamento.jasper"]]></subreportExpression>
+            </subreport>
+        </band>
+        <band height="100">
+            <subreport>
+                <reportElement x="0" y="0" width="554" height="100" uuid="16448079-1672-4b7c-8435-ecd5a872e6fa"/>
+                <dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("somma")]]></dataSourceExpression>
+                <subreportExpression><![CDATA["RiepilogoFiscale.jasper"]]></subreportExpression>
+            </subreport>
+        </band>
+    </detail>
+</jasperReport>
