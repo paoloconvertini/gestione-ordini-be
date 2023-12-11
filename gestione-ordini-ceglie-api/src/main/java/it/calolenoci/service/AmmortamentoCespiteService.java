@@ -178,6 +178,7 @@ public class AmmortamentoCespiteService {
                 cespiteDto.setTipoCespite(tipoCespite);
                 CespiteDBDto dbDto = dtoList.get(0);
                 cespiteDto.setCategoria(dbDto.getCategoria().getDescrizione());
+                cespiteDto.setPerc(dbDto.getCategoria().getPercAmmortamento());
                 Map<Integer, List<CespiteDBDto>> progr1Map = dtoList.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getProgressivo1()));
                 List<CespiteProgressivoDto> cespiteProgressivoDtoList = new ArrayList<>();
                 for (Integer progressivo : progr1Map.keySet()) {

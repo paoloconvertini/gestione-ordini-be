@@ -1,11 +1,11 @@
-package entity;
+package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
-import javax.persistence.*;
 
+import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
@@ -37,9 +37,15 @@ public class AmmortamentoCespite extends PanacheEntityBase {
     
     @Column(name = "QUOTA", nullable = true, precision = 2)
     private Double quota;
+
+    @Column(name = "QUOTA_RIVALUTAZIONE", nullable = true, precision = 2)
+    private Double quotaRivalutazione;
     
     @Column(name = "FONDO", nullable = true, precision = 0)
     private Double fondo;
+
+    @Column(name = "FONDO_RIVALUTAZIONE", nullable = true, precision = 0)
+    private Double fondoRivalutazione;
     
     @Column(name = "RESIDUO", nullable = true, precision = 0)
     private Double residuo;

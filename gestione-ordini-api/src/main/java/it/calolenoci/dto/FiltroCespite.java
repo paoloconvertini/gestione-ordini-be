@@ -14,4 +14,11 @@ import java.io.Serializable;
 public class FiltroCespite implements Serializable {
     private String tipoCespite;
     private String descrizione;
+
+    private String data;
+
+    public FiltroCespite(String tipoCespite, String descrizione) {
+        this.tipoCespite = tipoCespite;
+        this.descrizione = descrizione;
+    }
 }

@@ -23,6 +23,7 @@
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
     <lombok.version>1.18.24</lombok.version>
+    <jasper.version>6.20.0</jasper.version>
   </properties>
   <dependencyManagement>
     <dependencies>

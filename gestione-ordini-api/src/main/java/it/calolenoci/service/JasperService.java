@@ -19,7 +19,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Singleton
@@ -112,8 +114,14 @@ public class JasperService {
         }
     }
 
-    public File createReport() {
-        CespiteView cespiteView = ammortamentoCespiteService.getAll(new FiltroCespite());
+    public File createReport(FiltroCespite filtroCespite) {
+        CespiteView cespiteView = ammortamentoCespiteService.getAll(filtroCespite);
+        LocalDate localDate = LocalDate.now();
+        if(StringUtils.isNotBlank(filtroCespite.getData())) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+            localDate = LocalDate.parse(filtroCespite.getData(), formatter);
+        }
+        int anno = localDate.getYear();
         if (cespiteView != null && !cespiteView.getCespiteList().isEmpty()) {
             try {
 
@@ -122,18 +130,11 @@ public class JasperService {
 
                 // 2. parameters "empty"
                 Map<String, Object> parameters = new HashMap<>();
-                parameters.put("inizioEsercizio", cespiteView.getCespiteSommaDto().getInizioEsercizio());
-                parameters.put("acquisti", cespiteView.getCespiteSommaDto().getAcquisti());
-                parameters.put("vendite", cespiteView.getCespiteSommaDto().getVendite());
-                parameters.put("ammortamentoDeducibile", cespiteView.getCespiteSommaDto().getAmmortamentiDeducibili());
-                parameters.put("ammortamentoNonDeducibile", cespiteView.getCespiteSommaDto().getAmmortamentiNonDeducibili());
-                parameters.put("fineEsercizio", cespiteView.getCespiteSommaDto().getFineEsercizio());
+                parameters.put("sommaDTO", cespiteView.getCespiteSommaDto());
+                parameters.put("ds", cespiteView.getCespiteList());
 
-                // 3. datasource "java object"
-                JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Collections.singletonList(cespiteView));
-
-                JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
-                String destFileName = "Registro_cespiti_" + Year.now().getValue() + ".pdf";
+                JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
+                String destFileName = "Registro_cespiti_" + anno + ".pdf";
                 String tempDir = System.getProperty("java.io.tmpdir");
                 File f = new File(tempDir + destFileName);
                 JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());

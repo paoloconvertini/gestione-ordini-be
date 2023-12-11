@@ -1,4 +1,4 @@
-package entity;
+package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.Getter;
@@ -27,9 +27,6 @@ public class Cespite extends PanacheEntityBase {
     @Column(name = "TIPO_CESPITE", nullable = false, length = 3)
     private String tipoCespite;
     
-    @Column(name = "CODICE", nullable = true, length = 20)
-    private String codice;
-    
     @Column(name = "PROGRESSIVO1", nullable = true)
     private Integer progressivo1;
     
@@ -50,9 +47,12 @@ public class Cespite extends PanacheEntityBase {
     
     @Column(name = "IMPORTO", nullable = true, precision = 0)
     private Double importo;
-    
-    @Column(name = "AMMORTAMENTO", nullable = true, precision = 0)
-    private Double ammortamento;
+
+    @Column(name = "IMPORTO_RIVALUTAZIONE", nullable = true, precision = 0)
+    private Double importoRivalutazione;
+
+    @Column(name = "FONDO_RIVALUTAZIONE", nullable = true, precision = 0)
+    private Double fondoRivalutazione;
 
     @Type(type = "org.hibernate.type.TrueFalseType")
     @Column(name="ATTIVO", nullable = false, columnDefinition = "CHAR(1)")
@@ -72,5 +72,21 @@ public class Cespite extends PanacheEntityBase {
 
     @Column(name = "SUPER_AMMORTAMENTO")
     private Long superAmm;
+
+    @Column(name = "ANNO")
+    private Integer anno;
+
+    @Column(name = "PROTOCOLLO")
+    private Integer protocollo;
+
+    @Column(name = "GIORNALE", length = 1)
+    private String giornale;
+
+    @Column(name = "DT_INIZIO_CALCOLO_AMM", nullable = true)
+    private LocalDate dataInizioCalcoloAmm;
+
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Column(name="FL_PRIMO_ANNO", nullable = false, columnDefinition = "CHAR(1)")
+    private Boolean flPrimoAnno;
 
 }

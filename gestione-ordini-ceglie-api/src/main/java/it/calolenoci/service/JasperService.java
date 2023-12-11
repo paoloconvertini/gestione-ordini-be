@@ -6,6 +6,7 @@ import it.calolenoci.dto.FiltroCespite;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRSaver;
+import net.sf.jasperreports.view.JasperViewer;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -42,8 +43,8 @@ public class JasperService {
 
                 // 2. parameters "empty"
                 Map<String, Object> parameters = new HashMap<>();
-                parameters.put("sommaDTO", cespiteView.getCespiteSommaDto());
-                parameters.put("ds", cespiteView.getCespiteList());
+                parameters.put("cespiteReport", compileReport("Cespite.jrxml"));
+                parameters.put("cespiteParameter", getCespiteParam(cespiteView));
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
                 String destFileName = "Registro_cespiti_" + anno + ".pdf";
@@ -57,6 +58,12 @@ public class JasperService {
             }
         }
         return null;
+    }
+
+    private static Map getCespiteParam(CespiteView cespiteView ){
+        Map<String, Object> cespiteParam = new HashMap<>();
+        cespiteParam.put("cespiteDataset", cespiteView.getCespiteList());
+        return cespiteParam;
     }
 
     private JasperReport compileReport(String reportName) {
