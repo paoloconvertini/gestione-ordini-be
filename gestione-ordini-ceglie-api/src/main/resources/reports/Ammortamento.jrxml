@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RiepilogoRow" pageWidth="595" pageHeight="842" whenNoDataType="BlankPage" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="NO_DATA_ADAPTER"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter_RegistroCespiti.jrdax"/>
+	<parameter name="ammortamentoRowReport" class="net.sf.jasperreports.engine.JRReport"/>
 	<queryString language="JSON">
 		<![CDATA[cespiteList.cespiteProgressivoDtoList.cespiteViewDtoList]]>
 	</queryString>
@@ -52,6 +53,7 @@
 			</textField>
 			<subreport>
 				<reportElement x="120" y="30" width="434" height="50" uuid="f1fee9db-387d-4f0b-8e01-1d2366adf952"/>
+				<subreportExpression><![CDATA[$P{ammortamentoRowReport}]]></subreportExpression>
 			</subreport>
 		</band>
 	</detail>

@@ -61,12 +61,10 @@
 	</subDataset>
 	<parameter name="cespiteParameter" class="java.util.Map" isForPrompting="false"/>
 	<parameter name="cespiteReport" class="net.sf.jasperreports.engine.JRReport"/>
+	<parameter name="riepilogoFiscaleReport" class="net.sf.jasperreports.engine.JRReport"/>
 	<queryString language="JSON">
 		<![CDATA[cespiteList]]>
 	</queryString>
-	<field name="data" class="java.util.Collection">
-		<fieldDescription><![CDATA[data]]></fieldDescription>
-	</field>
 	<title>
 		<band height="89" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -127,8 +125,8 @@ Tel 0831-377180   Fax 0831-383047
 		<band height="110">
 			<subreport>
 				<reportElement x="0" y="12" width="554" height="98" uuid="0f0b5029-6695-4d21-85ce-040a71e9ecab"/>
-				<parametersMapExpression><![CDATA[$P{sommaDTO}]]></parametersMapExpression>
-				<subreportExpression><![CDATA["/RiepilogoFiscale.jasper"]]></subreportExpression>
+				<parametersMapExpression><![CDATA[$P{cespiteParameter}]]></parametersMapExpression>
+				<subreportExpression><![CDATA[$P{riepilogoFiscaleReport}]]></subreportExpression>
 			</subreport>
 		</band>
 	</lastPageFooter>

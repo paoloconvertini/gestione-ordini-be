@@ -108,10 +108,10 @@ public class CespiteResource {
     @Path("/scaricaRegistroCespiti")
     @Produces(MediaType.TEXT_PLAIN)
     @PermitAll
-    public Response scaricaRegistroCespiti(FiltroCespite filtroCespite) {
+    public Response scaricaRegistroCespiti(CespiteView view) {
         File pdf;
         try {
-            pdf = service.scaricaRegistroCespiti(filtroCespite);
+            pdf = service.scaricaRegistroCespiti(view);
             if(pdf != null){
                 return Response.ok(pdf).header("Content-Disposition", "attachment;filename=" + pdf.getName()).build();
             } else {

@@ -44,6 +44,11 @@ public class JasperService {
                 // 2. parameters "empty"
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put("cespiteReport", compileReport("Cespite.jrxml"));
+                parameters.put("ammortamentoReport", compileReport("Ammortamento.jrxml"));
+                parameters.put("ammortamentoRowReport", compileReport("AmmortamentoRow.jrxml"));
+                parameters.put("riepilogoFiscaleReport", compileReport("RiepilogoFiscale.jrxml"));
+                parameters.put("riepilogoFiscaleRowReport", compileReport("RiepilogoFiscaleRow.jrxml"));
+
                 parameters.put("cespiteParameter", getCespiteParam(cespiteView));
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());

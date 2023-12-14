@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RiepilogoFiscale" pageWidth="555" pageHeight="802" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="5b1bf43d-f0be-4463-b7f8-34cf2ca75051">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="NO_DATA_ADAPTER"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter_RegistroCespiti.jrdax"/>
+	<parameter name="riepilogoFiscaleRowReport" class="net.sf.jasperreports.engine.JRReport"/>
 	<queryString language="JSON">
 		<![CDATA[]]>
 	</queryString>
@@ -212,34 +213,34 @@
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("inizioEsercizio")]]></dataSourceExpression>
-				<subreportExpression><![CDATA["RiepilogoRow.jrxml"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
 			</subreport>
 			<subreport>
 				<reportElement x="81" y="61" width="474" height="31" uuid="a3e492b1-7051-4730-86e5-d86e029770c6"/>
 				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("acquisti")]]></dataSourceExpression>
-				<subreportExpression><![CDATA["RiepilogoRow.jrxml"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
 			</subreport>
 			<subreport>
 				<reportElement x="81" y="90" width="474" height="30" uuid="0d585688-0e43-40f1-a9fb-23fa9bf949d2">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("vendite")]]></dataSourceExpression>
-				<subreportExpression><![CDATA["RiepilogoRow.jrxml"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
 			</subreport>
 			<subreport>
 				<reportElement x="80" y="122" width="474" height="31" uuid="b48087bf-bb2b-46bf-b0f2-749d124b5de0"/>
 				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("ammortamentiDeducibili")]]></dataSourceExpression>
-				<subreportExpression><![CDATA["RiepilogoRow.jrxml"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
 			</subreport>
 			<subreport>
 				<reportElement x="80" y="151" width="474" height="31" uuid="0d36ee28-ffee-4d5e-95f6-2301fc52fbae"/>
 				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("ammortamentiNonDeducibili")]]></dataSourceExpression>
-				<subreportExpression><![CDATA["RiepilogoRow.jrxml"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
 			</subreport>
 			<subreport>
 				<reportElement x="80" y="180" width="474" height="31" uuid="e0a3bc05-abdc-4caa-8c12-b24da6b55dc1"/>
 				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("fineEsercizio")]]></dataSourceExpression>
-				<subreportExpression><![CDATA["RiepilogoRow.jrxml"]]></subreportExpression>
+				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
 			</subreport>
 			<staticText>
 				<reportElement x="488" y="0" width="66" height="30" uuid="8fa0949c-1369-4035-829d-a0e6f0674345"/>

@@ -114,14 +114,7 @@ public class JasperService {
         }
     }
 
-    public File createReport(FiltroCespite filtroCespite) {
-        CespiteView cespiteView = ammortamentoCespiteService.getAll(filtroCespite);
-        LocalDate localDate = LocalDate.now();
-        if(StringUtils.isNotBlank(filtroCespite.getData())) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-            localDate = LocalDate.parse(filtroCespite.getData(), formatter);
-        }
-        int anno = localDate.getYear();
+    public File createReport(CespiteView cespiteView) {
         if (cespiteView != null && !cespiteView.getCespiteList().isEmpty()) {
             try {
 
@@ -130,11 +123,16 @@ public class JasperService {
 
                 // 2. parameters "empty"
                 Map<String, Object> parameters = new HashMap<>();
-                parameters.put("sommaDTO", cespiteView.getCespiteSommaDto());
-                parameters.put("ds", cespiteView.getCespiteList());
+                parameters.put("cespiteReport", compileReport("Cespite.jrxml"));
+                parameters.put("ammortamentoReport", compileReport("Ammortamento.jrxml"));
+                parameters.put("ammortamentoRowReport", compileReport("AmmortamentoRow.jrxml"));
+                parameters.put("riepilogoFiscaleReport", compileReport("RiepilogoFiscale.jrxml"));
+                parameters.put("riepilogoFiscaleRowReport", compileReport("RiepilogoRow.jrxml"));
+                parameters.put("cespiteParameter", getCespiteParam(cespiteView));
+
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
-                String destFileName = "Registro_cespiti_" + anno + ".pdf";
+                String destFileName = "Registro_cespiti.pdf";
                 String tempDir = System.getProperty("java.io.tmpdir");
                 File f = new File(tempDir + destFileName);
                 JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
@@ -165,6 +163,12 @@ public class JasperService {
         map.put("totaleIVA", (Double) map.get("totaleImponibile") * 22 / 100);
         map.put("totaleDocumento", (Double) map.get("totaleImponibile") + (Double) map.get("totaleIVA"));
         return map;
+    }
+
+    private static Map getCespiteParam(CespiteView cespiteView ){
+        Map<String, Object> cespiteParam = new HashMap<>();
+        cespiteParam.put("cespiteDataset", cespiteView.getCespiteList());
+        return cespiteParam;
     }
 
     private <T> JRDataSource getDataSource(List<T> list) {

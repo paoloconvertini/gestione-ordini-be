@@ -493,13 +493,13 @@ public class AmmortamentoCespiteService {
     }
 
 
-    public File scaricaRegistroCespiti(FiltroCespite filtroCespite) {
+    public File scaricaRegistroCespiti(CespiteView view) {
         File report;
         try {
-            report = jasperService.createReport(filtroCespite);
+            report = jasperService.createReport(view);
         } catch (Exception e) {
             report = null;
-            Log.error("error scarica regisro");
+            Log.error("error scarica regisro", e);
         }
         return report;
     }
