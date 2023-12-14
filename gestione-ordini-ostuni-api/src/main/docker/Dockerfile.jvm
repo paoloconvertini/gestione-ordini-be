@@ -87,7 +87,6 @@ COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
 COPY --chown=185 target/quarkus-app/*.jar /deployments/
 COPY --chown=185 target/quarkus-app/app/ /deployments/app/
 COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
-#ADD target/classes/conf/java.config /etc/crypto-policies/back-ends/java.config
 ADD target/classes/conf/java.security /usr/lib/jvm/java-17-openjdk-17.0.9.0.9-2.el8.x86_64/conf/security/java.security
 ADD target/classes/conf/java.security /usr/lib/jvm/java-17-openjdk-17/conf/security/java.security
 ADD target/classes/conf/java.security /usr/lib/jvm/java-openjdk/conf/security/java.security

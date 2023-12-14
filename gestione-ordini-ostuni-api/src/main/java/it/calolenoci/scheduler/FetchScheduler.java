@@ -16,7 +16,7 @@ public class FetchScheduler {
     AmmortamentoCespiteService ammortamentoCespiteService;
 
     @Scheduled(cron = "${cron.expr.cespiti}")
-    @TransactionConfiguration(timeout = 500000)
+    @TransactionConfiguration(timeout = 5000000)
     public void calcolaAmmortamentoCespiti() throws ParseException {
         ammortamentoCespiteService.calcola(null);
     }

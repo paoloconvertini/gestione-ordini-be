@@ -158,7 +158,12 @@ public class PrimanotaService {
                 cespite.setImportoVendita(-dto.getImporto());
                 cespite.persist();
                 AmmortamentoCespite.delete("idAmmortamento =:id", Parameters.with("id", cespite.getId()));
-                List<AmmortamentoCespite> ammortamentoCespiteList = ammortamentoCespiteService.calcoloSingoloCespite(cespite, cespite.getDataVendita());
+                List<AmmortamentoCespite> ammortamentoCespiteList;
+                if (cespiteDto.getCespite().getImportoRivalutazione() != null) {
+                    ammortamentoCespiteList = ammortamentoCespiteService.calcoloSingoloCespiteRivalutato(cespiteDto, cespite.getDataVendita());
+                } else {
+                    ammortamentoCespiteList = ammortamentoCespiteService.calcoloSingoloCespite(cespiteDto, cespite.getDataVendita());
+                }
                 if(ammortamentoCespiteList.isEmpty()){
                     //TODO che si fa??
                 } else {

@@ -3,15 +3,14 @@ package it.calolenoci.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import it.calolenoci.entity.Role;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 import java.util.List;
 
 @RegisterForReflection
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class UserResponseDTO extends SuperUserDTO{
 
