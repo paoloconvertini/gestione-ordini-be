@@ -33,7 +33,7 @@ public class PrimanotaResource {
     @Operation(summary = "Returns all the ordini from the database")
     @POST
     @RolesAllowed({ADMIN})
-    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = CespiteView.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = RegistroCespitiDto.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ammortamenti")
     public Response getById(FiltroPrimanota filtroPrimanota) {
         return Response.ok(service.getById(filtroPrimanota)).build();

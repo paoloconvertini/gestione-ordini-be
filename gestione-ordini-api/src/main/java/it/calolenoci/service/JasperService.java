@@ -4,9 +4,7 @@ import io.quarkus.logging.Log;
 import it.calolenoci.dto.*;
 import it.calolenoci.mapper.OrdineClienteReportMapper;
 import net.sf.jasperreports.engine.*;
-import net.sf.jasperreports.engine.data.JRBeanArrayDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.util.JRSaver;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -19,9 +17,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
-import java.time.Year;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Singleton
@@ -114,8 +109,8 @@ public class JasperService {
         }
     }
 
-    public File createReport(CespiteView cespiteView) {
-        if (cespiteView != null && !cespiteView.getCespiteList().isEmpty()) {
+    public File createReport(RegistroCespitiDto registroCespitiDto) {
+        if (registroCespitiDto != null && !registroCespitiDto.getCespiteCategoriaDtoList().isEmpty()) {
             try {
 
                 // 1. compile template ".jrxml" file
@@ -128,7 +123,7 @@ public class JasperService {
                 parameters.put("ammortamentoRowReport", compileReport("AmmortamentoRow.jrxml"));
                 parameters.put("riepilogoFiscaleReport", compileReport("RiepilogoFiscale.jrxml"));
                 parameters.put("riepilogoFiscaleRowReport", compileReport("RiepilogoRow.jrxml"));
-                parameters.put("cespiteParameter", getCespiteParam(cespiteView));
+                parameters.put("cespiteParameter", getCespiteParam(registroCespitiDto));
 
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
@@ -165,9 +160,9 @@ public class JasperService {
         return map;
     }
 
-    private static Map getCespiteParam(CespiteView cespiteView ){
+    private static Map getCespiteParam(RegistroCespitiDto registroCespitiDto){
         Map<String, Object> cespiteParam = new HashMap<>();
-        cespiteParam.put("cespiteDataset", cespiteView.getCespiteList());
+        cespiteParam.put("cespiteDataset", registroCespitiDto.getCespiteCategoriaDtoList());
         return cespiteParam;
     }
 

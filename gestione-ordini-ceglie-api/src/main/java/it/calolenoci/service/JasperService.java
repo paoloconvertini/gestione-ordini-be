@@ -1,23 +1,18 @@
 package it.calolenoci.service;
 
 import io.quarkus.logging.Log;
-import it.calolenoci.dto.CespiteView;
+import it.calolenoci.dto.RegistroCespitiDto;
 import it.calolenoci.dto.FiltroCespite;
 import net.sf.jasperreports.engine.*;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRSaver;
-import net.sf.jasperreports.view.JasperViewer;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.File;
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.time.Year;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,14 +23,14 @@ public class JasperService {
     AmmortamentoCespiteService ammortamentoCespiteService;
 
     public File createReport(FiltroCespite filtroCespite) {
-        CespiteView cespiteView = ammortamentoCespiteService.getAll(filtroCespite);
+        RegistroCespitiDto registroCespitiDto = ammortamentoCespiteService.getAll(filtroCespite);
         LocalDate localDate = LocalDate.now();
         if(StringUtils.isNotBlank(filtroCespite.getData())) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
             localDate = LocalDate.parse(filtroCespite.getData(), formatter);
         }
         int anno = localDate.getYear();
-        if (cespiteView != null && !cespiteView.getCespiteList().isEmpty()) {
+        if (registroCespitiDto != null && !registroCespitiDto.getCespiteCategoriaDtoList().isEmpty()) {
             try {
 
                 // 1. compile template ".jrxml" file
@@ -49,7 +44,7 @@ public class JasperService {
                 parameters.put("riepilogoFiscaleReport", compileReport("RiepilogoFiscale.jrxml"));
                 parameters.put("riepilogoFiscaleRowReport", compileReport("RiepilogoFiscaleRow.jrxml"));
 
-                parameters.put("cespiteParameter", getCespiteParam(cespiteView));
+                parameters.put("cespiteParameter", getCespiteParam(registroCespitiDto));
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
                 String destFileName = "Registro_cespiti_" + anno + ".pdf";
@@ -65,9 +60,9 @@ public class JasperService {
         return null;
     }
 
-    private static Map getCespiteParam(CespiteView cespiteView ){
+    private static Map getCespiteParam(RegistroCespitiDto registroCespitiDto){
         Map<String, Object> cespiteParam = new HashMap<>();
-        cespiteParam.put("cespiteDataset", cespiteView.getCespiteList());
+        cespiteParam.put("cespiteDataset", registroCespitiDto.getCespiteCategoriaDtoList());
         return cespiteParam;
     }
 

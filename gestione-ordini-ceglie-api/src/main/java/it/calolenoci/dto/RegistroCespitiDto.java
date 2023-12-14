@@ -11,9 +11,9 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CespiteView implements Serializable {
+public class RegistroCespitiDto implements Serializable {
 
     private CespiteSommaDto cespiteSommaDto = new CespiteSommaDto();
 
-    private List<CespiteDto> cespiteList = new ArrayList<>();
+    private List<CespiteCategoriaDto> cespiteCategoriaDtoList = new ArrayList<>();
 }

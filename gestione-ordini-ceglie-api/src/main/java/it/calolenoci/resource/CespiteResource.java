@@ -44,7 +44,7 @@ public class CespiteResource {
     //@RolesAllowed({ADMIN})
     @PermitAll
     @Produces(APPLICATION_JSON)
-    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = CespiteView.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = RegistroCespitiDto.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ammortamenti")
     public Response getAll(FiltroCespite filtroCespite) {
         try {

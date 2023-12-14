@@ -1,7 +1,6 @@
 package it.calolenoci.resource;
 
 import io.quarkus.logging.Log;
-import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.Cespite;
@@ -45,7 +44,7 @@ public class CespiteResource {
     //@RolesAllowed({ADMIN})
     @PermitAll
     @Produces(APPLICATION_JSON)
-    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = CespiteView.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = RegistroCespitiDto.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ammortamenti")
     public Response getAll(FiltroCespite filtroCespite) {
         try {
@@ -69,13 +68,11 @@ public class CespiteResource {
     //@RolesAllowed({ADMIN})
     @PermitAll
     @Operation(summary = "calcola ammortamenti")
-    @Path("/calcola/{date}")
-    @GET
+    @Path("/calcola")
+    @POST
     @Produces(APPLICATION_JSON)
-    public Response calcola(String date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-        LocalDate localDate = LocalDate.parse(date, formatter);
-        service.calcola(localDate);
+    public Response calcola(FiltroCespite filtroCespite) {
+        service.calcola(filtroCespite);
         return Response.ok(new ResponseDto("Ammortamento calcolato correttamente", false)).build();
     }
 

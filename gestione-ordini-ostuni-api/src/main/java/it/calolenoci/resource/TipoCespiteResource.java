@@ -33,7 +33,7 @@ public class TipoCespiteResource {
     @Operation(summary = "Returns all the ordini from the database")
     @GET
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
-    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = CespiteView.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = RegistroCespitiDto.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ammortamenti")
     public Response getAll() {
         return Response.ok(CategoriaCespite.find("SELECT t.tipoCespite, t.descrizione, t.costoGruppo, t.costoConto " +
