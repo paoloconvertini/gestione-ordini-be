@@ -1,14 +1,21 @@
 CREATE TABLE GO_FISCALE_RIEPILOGO
 (
-    ID                int not null,
+    ID                varchar(36)    not null,
     TIPO_CESPITE     varchar(3) not null,
     DESCRIZIONE      varchar(100)  NOT NULL,
     VALORE_AGGIORNATO float,
     AMMORTAMENTO_ORDINARIO float,
-    AMMORTAMENTO_ANTICIPATO float,
+    AMMORTAMENTO_RIVALUTATO float,
     TOTALE_AMMORTAMENTO float,
     NON_AMMORTABILE float,
     FONDO_AMMORTAMENTI float,
+    FONDO_AMMORTAMENTI_RIV float,
+    SUPER_AMM1 float,
+    SUPER_AMM2 float,
+    SUPER_AMM3 float,
+    SUPER_AMM4 float,
+    PLUS float,
+    MINUS float,
     RESIDUO float
 );
 
