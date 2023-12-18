@@ -13,5 +13,5 @@ public class CespiteCompletoDto {
 
     CespiteSommaDto cespiteSommaDto;
 
-    List<CespiteCategoriaDto> cespiteCategoriaDtoList;
+    List<CategoriaCespitiDto> categoriaCespitiDtoList;
 }

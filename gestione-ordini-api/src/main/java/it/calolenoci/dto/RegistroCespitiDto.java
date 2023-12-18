@@ -15,5 +15,5 @@ public class RegistroCespitiDto implements Serializable {
 
     private CespiteSommaDto cespiteSommaDto = new CespiteSommaDto();
 
-    private List<CespiteCategoriaDto> cespiteCategoriaDtoList = new ArrayList<>();
+    private List<CategoriaCespitiDto> cespiteList = new ArrayList<>();
 }

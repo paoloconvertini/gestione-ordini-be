@@ -30,7 +30,7 @@ public class JasperService {
             localDate = LocalDate.parse(filtroCespite.getData(), formatter);
         }
         int anno = localDate.getYear();
-        if (registroCespitiDto != null && !registroCespitiDto.getCespiteCategoriaDtoList().isEmpty()) {
+        if (registroCespitiDto != null && !registroCespitiDto.getCespiteList().isEmpty()) {
             try {
 
                 // 1. compile template ".jrxml" file
@@ -62,7 +62,7 @@ public class JasperService {
 
     private static Map getCespiteParam(RegistroCespitiDto registroCespitiDto){
         Map<String, Object> cespiteParam = new HashMap<>();
-        cespiteParam.put("cespiteDataset", registroCespitiDto.getCespiteCategoriaDtoList());
+        cespiteParam.put("cespiteDataset", registroCespitiDto.getCespiteList());
         return cespiteParam;
     }
 

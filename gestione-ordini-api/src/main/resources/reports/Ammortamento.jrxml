@@ -4,7 +4,7 @@
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter_RegistroCespiti.jrdax"/>
 	<parameter name="ammortamentoRowReport" class="net.sf.jasperreports.engine.JRReport"/>
 	<queryString language="JSON">
-		<![CDATA[cespiteList.cespiteProgressivoDtoList.cespiteViewDtoList]]>
+		<![CDATA[cespiteList.cespiteProgressivoDtoList.cespiteDtoList]]>
 	</queryString>
 	<field name="codice" class="java.lang.String">
 		<property name="net.sf.jasperreports.json.field.expression" value="codice"/>

@@ -10,15 +10,9 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CespiteCategoriaDto implements Serializable {
+public class CespiteProgressivoDto implements Serializable {
 
-    private String tipoCespite;
-
-    private String categoria;
-
-    private Double perc;
-
-    private CespiteSommaDto somma;
+    private Integer progressivo;
 
     private List<CespiteDto> cespiteDtoList;
 }
