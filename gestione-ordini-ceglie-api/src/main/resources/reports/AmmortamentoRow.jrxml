@@ -3,7 +3,7 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="AmmortamentoRow" pageWidth="595" pageHeight="842" whenNoDataType="BlankPage" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter_RegistroCespiti.jrdax"/>
 	<queryString language="JSON">
-		<![CDATA[cespiteList.cespiteProgressivoDtoList.cespiteViewDtoList.ammortamentoCespiteList]]>
+		<![CDATA[cespiteList.cespiteProgressivoDtoList.cespiteDtoList.ammortamentoCespiteList]]>
 	</queryString>
 	<field name="dataAmm" class="java.lang.String">
 		<property name="net.sf.jasperreports.json.field.expression" value="dataAmm"/>
