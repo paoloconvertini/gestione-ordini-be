@@ -60,6 +60,7 @@ public class CalcoloCespiteRun implements Runnable{
 
     }
 
+    @Transactional
     private List<AmmortamentoCespite> calcoloSingoloCespite(CespiteDBDto dto, LocalDate dataCorrente) {
         Cespite cespite = dto.getCespite();
         CategoriaCespite categoriaCespite = dto.getCategoria();
@@ -92,12 +93,12 @@ public class CalcoloCespiteRun implements Runnable{
                 } else {
                     quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
                 }
-                QuadraturaCespite q = em.createQuery("select q FROM QuadraturaCespite q WHERE q.idCespite=:id AND q.anno=:a", QuadraturaCespite.class)
+/*                QuadraturaCespite q = em.createQuery("select q FROM QuadraturaCespite q WHERE q.idCespite=:id AND q.anno=:a", QuadraturaCespite.class)
                                 .setParameter("id", cespite.getId()).setParameter("a", dataAmmortamento.getYear()).getSingleResult();
                 if (q != null) {
                     quota = cespite.getImporto() * (q.getAmmortamento() / 100);
                     quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
-                }
+                }*/
                 if (residuo < quotaDaSalvare) {
                     quotaDaSalvare = residuo;
                     residuo = 0;
@@ -124,6 +125,7 @@ public class CalcoloCespiteRun implements Runnable{
         return ammortamentoCespiteList;
     }
 
+    @Transactional
     private List<AmmortamentoCespite> calcoloSingoloCespiteRivalutato(CespiteDBDto dto, LocalDate dataCorrente) {
         Cespite cespite = dto.getCespite();
         CategoriaCespite categoriaCespite = dto.getCategoria();
@@ -172,12 +174,12 @@ public class CalcoloCespiteRun implements Runnable{
                 } else {
                     quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
                 }
-                QuadraturaCespite q = em.createQuery("select q FROM QuadraturaCespite q WHERE q.idCespite=:id AND q.anno=:a", QuadraturaCespite.class)
+               /* QuadraturaCespite q = em.createQuery("select q FROM QuadraturaCespite q WHERE q.idCespite=:id AND q.anno=:a", QuadraturaCespite.class)
                         .setParameter("id", cespite.getId()).setParameter("a", dataAmmortamento.getYear()).getSingleResult();
                 if (q != null) {
                     quota = cespite.getImporto() * (q.getAmmortamento() / 100);
                     quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
-                }
+                }*/
 
                 if (cespite.getImportoRivalutazione() != null) {
                     if (dataAmmortamento.getYear() < 2021) {

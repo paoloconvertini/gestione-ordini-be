@@ -4,6 +4,7 @@ import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.Cespite;
+import it.calolenoci.mapper.AmmortamentoCespiteMapper;
 import it.calolenoci.service.AmmortamentoCespiteService;
 import it.calolenoci.service.PrimanotaService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -16,13 +17,12 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 import static it.calolenoci.enums.Ruolo.ADMIN;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -41,14 +41,13 @@ public class CespiteResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @POST
-    //@RolesAllowed({ADMIN})
-    @PermitAll
+    @RolesAllowed({ADMIN})
     @Produces(APPLICATION_JSON)
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = RegistroCespitiDto.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ammortamenti")
-    public Response getAll(FiltroCespite filtroCespite) {
+    public Response getRegistroCespiti(FiltroCespite filtroCespite) {
         try {
-            return Response.ok().entity(service.getAll(filtroCespite)).build();
+            return Response.ok().entity(service.getRegistroCespiti(filtroCespite)).build();
         } catch (Exception e) {
             return Response.status(400).entity(new ResponseDto("Error getting registro cespiti", true)).build();
         }
@@ -65,8 +64,7 @@ public class CespiteResource {
         return Response.ok(Cespite.find("attivo <> 'F'", Sort.ascending("tipoCespite, progressivo1, progressivo2")).list()).build();
     }
 
-    //@RolesAllowed({ADMIN})
-    @PermitAll
+    @RolesAllowed({ADMIN})
     @Operation(summary = "calcola ammortamenti")
     @Path("/calcola")
     @POST

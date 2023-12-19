@@ -1,7 +1,9 @@
 package it.calolenoci.mapper;
 
+import it.calolenoci.dto.RegistroCespiteDto;
 import it.calolenoci.entity.AmmortamentoCespite;
 import it.calolenoci.entity.Cespite;
+import it.calolenoci.entity.RegistroCespite;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.time.LocalDate;
@@ -59,5 +61,19 @@ public class AmmortamentoCespiteMapper {
         return list;
     }
 
+    public AmmortamentoCespite buildAmmortamento(RegistroCespiteDto d) {
+        AmmortamentoCespite a = new AmmortamentoCespite();
+        //a.setIdAmmortamento(id);
+        a.setDataAmm(d.getDataAmm());
+        a.setDescrizione("Ammortamento ordinario deducibile");
+        a.setPercAmm(d.getPercAmm());
+        a.setFondo(d.getFondo());
+        a.setFondoRivalutazione(d.getFondoRivalutazione());
+        a.setQuota(d.getQuota());
+        a.setQuotaRivalutazione(d.getQuotaRivalutazione());
+        a.setResiduo(d.getResiduo());
+        a.setAnno(d.getAnnoAmm());
+        return a;
+    }
 }
 

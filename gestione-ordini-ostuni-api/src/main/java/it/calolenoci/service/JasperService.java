@@ -1,6 +1,7 @@
 package it.calolenoci.service;
 
 import io.quarkus.logging.Log;
+import it.calolenoci.dto.FiltroRegistroCespite;
 import it.calolenoci.dto.RegistroCespitiDto;
 import it.calolenoci.dto.FiltroCespite;
 import net.sf.jasperreports.engine.*;
@@ -23,14 +24,14 @@ public class JasperService {
     AmmortamentoCespiteService ammortamentoCespiteService;
 
     public File createReport(FiltroCespite filtroCespite) {
-        RegistroCespitiDto registroCespitiDto = ammortamentoCespiteService.getAll(filtroCespite);
+        RegistroCespitiDto registroCespitiDto = ammortamentoCespiteService.getRegistroCespiti(filtroCespite);
         LocalDate localDate = LocalDate.now();
         if(StringUtils.isNotBlank(filtroCespite.getData())) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
             localDate = LocalDate.parse(filtroCespite.getData(), formatter);
         }
         int anno = localDate.getYear();
-        if (registroCespitiDto != null && !registroCespitiDto.getCespiteCategoriaDtoList().isEmpty()) {
+        if (registroCespitiDto != null && !registroCespitiDto.getCespiteList().isEmpty()) {
             try {
 
                 // 1. compile template ".jrxml" file
@@ -61,7 +62,7 @@ public class JasperService {
 
     private static Map getCespiteParam(RegistroCespitiDto registroCespitiDto){
         Map<String, Object> cespiteParam = new HashMap<>();
-        cespiteParam.put("cespiteDataset", registroCespitiDto.getCespiteCategoriaDtoList());
+        cespiteParam.put("cespiteDataset", registroCespitiDto.getCespiteList());
         return cespiteParam;
     }
 
