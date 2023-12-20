@@ -41,28 +41,15 @@ public class AmmortamentoCespiteService {
 
     @Transactional
     @TransactionConfiguration(timeout = 5000000)
-    public void calcola(LocalDate date) {
+    public void calcola(LocalDate dataCorrente) {
         try {
             long inizio = System.currentTimeMillis();
             Log.debug("### Inizio calcolo registro cespiti");
-            LocalDate dataCorrente = LocalDate.now();
-            if (date != null) {
-                dataCorrente = date;
-            }
             String query = "SELECT c, cat " +
                                     "FROM Cespite c " +
                                     "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite " +
                                     "WHERE c.attivo = 'T'";
-            Map<String, Object> params = new HashMap<>();
-            if (StringUtils.isNotBlank(filtroCespite.getTipoCespite())) {
-                query += "WHERE c.tipoCespite = :q";
-                params.put("q", filtroCespite.getTipoCespite());
-            }
-            List<CespiteDBDto> cespitiAttivi = Cespite.find(query, params).project(CespiteDBDto.class).list();
-            LocalDate dataCorrente = LocalDate.now();
-            if (date != null) {
-                dataCorrente = date;
-            }
+            List<CespiteDBDto> cespitiAttivi = Cespite.find(query).project(CespiteDBDto.class).list();
             if (storico) {
                 AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(c -> c.getCespite().getId()).collect(Collectors.toList())));
                 for (CespiteDBDto cespite : cespitiAttivi) {

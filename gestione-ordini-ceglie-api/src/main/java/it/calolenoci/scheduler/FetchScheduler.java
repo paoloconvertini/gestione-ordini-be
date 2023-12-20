@@ -7,6 +7,7 @@ import it.calolenoci.service.AmmortamentoCespiteService;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.text.ParseException;
+import java.time.LocalDate;
 
 @ApplicationScoped
 public class FetchScheduler {
@@ -18,7 +19,7 @@ public class FetchScheduler {
     @Scheduled(cron = "${cron.expr.cespiti}")
     @TransactionConfiguration(timeout = 500000)
     public void calcolaAmmortamentoCespiti() throws ParseException {
-        ammortamentoCespiteService.calcola(null);
+        ammortamentoCespiteService.calcola(LocalDate.now());
     }
 
 }
