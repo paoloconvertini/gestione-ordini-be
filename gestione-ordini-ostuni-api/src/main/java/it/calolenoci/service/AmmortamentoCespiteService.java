@@ -45,19 +45,17 @@ public class AmmortamentoCespiteService {
         try {
             long inizio = System.currentTimeMillis();
             Log.debug("### Inizio calcolo registro cespiti");
-            String query = "SELECT c, cat " +
-                                    "FROM Cespite c " +
-                                    "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite " +
-                                    "WHERE c.attivo = 'T'";
-            List<CespiteDBDto> cespitiAttivi = Cespite.find(query).project(CespiteDBDto.class).list();
+            List<Cespite> cespitiAttivi = Cespite.find("attivo = 'T'").list();
             if (storico) {
-                AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(c -> c.getCespite().getId()).collect(Collectors.toList())));
-                for (CespiteDBDto cespite : cespitiAttivi) {
+                AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(Cespite::getId).collect(Collectors.toList())));
+                for (Cespite cespite : cespitiAttivi) {
+                    CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite=:t", Parameters.with("t", cespite.getTipoCespite())).firstResult();
                     List<AmmortamentoCespite> ammortamentoCespites;
-                    if (cespite.getCespite().getImportoRivalutazione() != null) {
-                        ammortamentoCespites = calcoloSingoloCespiteRivalutato(cespite, dataCorrente);
+                    if (cespite.getImportoRivalutazione() != null) {
+
+                        ammortamentoCespites = calcoloSingoloCespiteRivalutato(categoriaCespite.getPercAmmortamento(), cespite, dataCorrente);
                     } else {
-                        ammortamentoCespites = calcoloSingoloCespite(cespite, dataCorrente);
+                        ammortamentoCespites = calcoloSingoloCespite(categoriaCespite.getPercAmmortamento(), cespite, dataCorrente);
                     }
 
                     if (ammortamentoCespites.isEmpty()) {
@@ -66,9 +64,11 @@ public class AmmortamentoCespiteService {
                     AmmortamentoCespite.persist(ammortamentoCespites);
                 }
             } else {
-                AmmortamentoCespite.delete("idAmmortamento in (:list) and anno >=:a", Parameters.with("list", cespitiAttivi.stream().map(c -> c.getCespite().getId()).collect(Collectors.toList())).and("a", dataCorrente.getYear()));
-                for (CespiteDBDto cespite : cespitiAttivi) {
-                    List<AmmortamentoCespite> ammortamentoCespites = calcoloAnnoCorrente(cespite, dataCorrente);
+                Log.debug("--- flag storico disattivato");
+                AmmortamentoCespite.delete("idAmmortamento in (:list) and anno >=:a", Parameters.with("list", cespitiAttivi.stream().map(Cespite::getId).collect(Collectors.toList())).and("a", dataCorrente.getYear()));
+                for (Cespite cespite : cespitiAttivi) {
+                    CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite=:t", Parameters.with("t", cespite.getTipoCespite())).firstResult();
+                    List<AmmortamentoCespite> ammortamentoCespites = calcoloAnnoCorrente(categoriaCespite.getPercAmmortamento(), cespite, dataCorrente);
                     if (ammortamentoCespites.isEmpty()) {
                         continue;
                     }
@@ -82,27 +82,27 @@ public class AmmortamentoCespiteService {
         }
     }
 
-    private List<AmmortamentoCespite> calcoloAnnoCorrente(CespiteDBDto dto, LocalDate dataCorrente) {
-        Cespite cespite = dto.getCespite();
-        CategoriaCespite categoriaCespite = dto.getCategoria();
+    private List<AmmortamentoCespite> calcoloAnnoCorrente(Double percAmm, Cespite cespite, LocalDate dataCorrente) {
+        CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite=:t", Parameters.with("t", cespite.getTipoCespite())).firstResult();
+        Double perc = categoriaCespite.getPercAmmortamento();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
         int anno = dataCorrente.getYear();
         Optional<AmmortamentoCespite> optAmmAnnoPrec = AmmortamentoCespite.find("idAmmortamento =:id and anno=:a", Parameters.with("id", cespite.getId()).and("a", anno - 1)).singleResultOptional();
         List<AmmortamentoCespite> listAmmortamenti = AmmortamentoCespite.find("idAmmortamento =:id", Parameters.with("id", cespite.getId())).list();
-        if (categoriaCespite.getPercAmmortamento() != null && categoriaCespite.getPercAmmortamento() != 0) {
+        if (perc != null && perc != 0) {
             if (listAmmortamenti.isEmpty()) {
                 // cespite nuovo
-                if (dto.getCespite().getImportoRivalutazione() != null) {
-                    ammortamentoCespiteList = calcoloSingoloCespiteRivalutato(dto, dataCorrente);
+                if (cespite.getImportoRivalutazione() != null) {
+                    ammortamentoCespiteList = calcoloSingoloCespiteRivalutato(percAmm, cespite, dataCorrente);
                 } else {
-                    ammortamentoCespiteList = calcoloSingoloCespite(dto, dataCorrente);
+                    ammortamentoCespiteList = calcoloSingoloCespite(percAmm, cespite, dataCorrente);
                 }
             } else if (optAmmAnnoPrec.isPresent()) {
                 // cespite presente, calcolo anni a partire da data selezionata
                 AmmortamentoCespite ammPrecedente = optAmmAnnoPrec.get();
                 if (ammPrecedente.getResiduo() != 0) {
-                    if (dto.getCespite().getImportoRivalutazione() != null) {
-                        calcoloAnnoCorrenteRivalutato(ammortamentoCespiteList, ammPrecedente, dto.getCespite(), dataCorrente);
+                    if (cespite.getImportoRivalutazione() != null) {
+                        calcoloAnnoCorrenteRivalutato(perc, ammortamentoCespiteList, ammPrecedente, cespite, dataCorrente);
                     } else {
                         calcoloAnnoCorrenteAmmortamento(dataCorrente, cespite, ammortamentoCespiteList, ammPrecedente);
                     }
@@ -145,7 +145,7 @@ public class AmmortamentoCespiteService {
             dataAmmortamento = dataAmmortamento.plusYears(1);
         }
     }
-    private void calcoloAnnoCorrenteRivalutato(List<AmmortamentoCespite> ammortamentoCespiteList, AmmortamentoCespite ammPrecedente, Cespite cespite, LocalDate dataCorrente) {
+    private void calcoloAnnoCorrenteRivalutato(Double percAmm, List<AmmortamentoCespite> ammortamentoCespiteList, AmmortamentoCespite ammPrecedente, Cespite cespite, LocalDate dataCorrente) {
         double residuo = ammPrecedente.getResiduo();
         int annoPrecedente = ammPrecedente.getAnno();
         LocalDate dataAmmortamento = LocalDate.of(annoPrecedente + 1, Month.DECEMBER, 31);
@@ -153,8 +153,8 @@ public class AmmortamentoCespiteService {
             if (dataAmmortamento.getYear() == dataCorrente.getYear()) {
                 dataAmmortamento = dataCorrente;
             }
-            double quota = cespite.getImporto() * (ammPrecedente.getPercAmm() / 100);
-            double quotaRiv = cespite.getImportoRivalutazione() * (ammPrecedente.getPercAmm() / 100);
+            double quota = cespite.getImporto() * (percAmm / 100);
+            double quotaRiv = cespite.getImportoRivalutazione() * (percAmm / 100);
             double fondo = ammPrecedente.getFondo();
             double fondoRiv = ammPrecedente.getFondoRivalutazione();
             double residuoDaSalvare;
@@ -168,12 +168,12 @@ public class AmmortamentoCespiteService {
                 quota = cespite.getImporto() * (q.getAmmortamento() / 100);
                 quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
             }
-            if (residuo < quotaRiv) {
-                quotaRiv = residuo;
+            if (residuo < quotaRivDaSalvare) {
+                quotaRivDaSalvare = residuo;
                 residuo = 0;
                 fondoRiv = cespite.getImporto() + cespite.getImportoRivalutazione();
             } else {
-                fondoRiv += quotaRiv;
+                fondoRiv += quotaRivDaSalvare;
                 residuo = cespite.getImportoRivalutazione() - fondoRiv;
             }
 
@@ -186,7 +186,7 @@ public class AmmortamentoCespiteService {
                // residuoNoRiv = cespite.getImporto() - fondo;
             }
             residuoDaSalvare = residuo;
-            quotaRivDaSalvare = quotaRiv;
+            //quotaRivDaSalvare = quotaRiv;
             double perc;
             if (cespite.getImporto() == 0) {
                 perc = 0;
@@ -198,9 +198,7 @@ public class AmmortamentoCespiteService {
         }
     }
 
-    public List<AmmortamentoCespite> calcoloSingoloCespite(CespiteDBDto dto, LocalDate dataCorrente) {
-        Cespite cespite = dto.getCespite();
-        CategoriaCespite categoriaCespite = dto.getCategoria();
+    public List<AmmortamentoCespite> calcoloSingoloCespite(Double percAmm, Cespite cespite, LocalDate dataCorrente) {
         Log.info("Inizio calcolo cespite: " + cespite.getCespite());
         long inizio = System.currentTimeMillis();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
@@ -209,9 +207,9 @@ public class AmmortamentoCespiteService {
         if (eliminato || venduto) {
             dataCorrente = cespite.getDataVendita();
         }
-        if (categoriaCespite.getPercAmmortamento() != null && categoriaCespite.getPercAmmortamento() != 0) {
-            double percAmmortamento = categoriaCespite.getPercAmmortamento();
-            double percAmmPrimoAnno = categoriaCespite.getPercAmmortamento() / 2;
+        if (percAmm != null && percAmm != 0) {
+            double percAmmortamento = percAmm;
+            double percAmmPrimoAnno = percAmm / 2;
             double perc;
             double quotaDaSalvare;
             double quota = cespite.getImporto() * (percAmmortamento / 100);
@@ -263,9 +261,7 @@ public class AmmortamentoCespiteService {
         return ammortamentoCespiteList;
     }
 
-    public List<AmmortamentoCespite> calcoloSingoloCespiteRivalutato(CespiteDBDto dto, LocalDate dataCorrente) {
-        Cespite cespite = dto.getCespite();
-        CategoriaCespite categoriaCespite = dto.getCategoria();
+    public List<AmmortamentoCespite> calcoloSingoloCespiteRivalutato(Double percAmm, Cespite cespite, LocalDate dataCorrente) {
         Log.info("Inizio calcolo cespite: " + cespite.getCespite());
         long inizio = System.currentTimeMillis();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
@@ -274,9 +270,9 @@ public class AmmortamentoCespiteService {
         if (eliminato || venduto) {
             dataCorrente = cespite.getDataVendita();
         }
-        if (categoriaCespite.getPercAmmortamento() != null && categoriaCespite.getPercAmmortamento() != 0) {
-            double percAmmortamento = categoriaCespite.getPercAmmortamento();
-            double percAmmPrimoAnno = categoriaCespite.getPercAmmortamento() / 2;
+        if (percAmm != null && percAmm != 0) {
+            double percAmmortamento = percAmm;
+            double percAmmPrimoAnno = percAmm / 2;
             double perc;
             double quotaDaSalvare;
             double quota = cespite.getImporto() * (percAmmortamento / 100);
@@ -750,9 +746,9 @@ public class AmmortamentoCespiteService {
                 AmmortamentoCespite.deleteById(c.getId());
                 List<AmmortamentoCespite> ammortamentoCespites;
                 if (cespiteDBDto.getCespite().getImportoRivalutazione() != null) {
-                    ammortamentoCespites = calcoloSingoloCespiteRivalutato(cespiteDBDto, LocalDate.now());
+                    ammortamentoCespites = calcoloSingoloCespiteRivalutato(cespiteDBDto.getCategoria().getPercAmmortamento(), cespite, LocalDate.now());
                 } else {
-                    ammortamentoCespites = calcoloSingoloCespite(cespiteDBDto, LocalDate.now());
+                    ammortamentoCespites = calcoloSingoloCespite(cespiteDBDto.getCategoria().getPercAmmortamento(), cespite, LocalDate.now());
                 }
                 if(!ammortamentoCespites.isEmpty()){
                     AmmortamentoCespite.persist(ammortamentoCespites);
