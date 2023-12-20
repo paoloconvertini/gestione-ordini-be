@@ -23,6 +23,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import static it.calolenoci.enums.Ruolo.ADMIN;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -66,11 +68,13 @@ public class CespiteResource {
 
     @RolesAllowed({ADMIN})
     @Operation(summary = "calcola ammortamenti")
-    @Path("/calcola")
-    @POST
+    @Path("/calcola/{date}")
+    @GET
     @Produces(APPLICATION_JSON)
-    public Response calcola(FiltroCespite filtroCespite) {
-        service.calcola(filtroCespite);
+    public Response calcola(String date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+        LocalDate localDate = LocalDate.parse(date, formatter);
+        service.calcola(localDate);
         return Response.ok(new ResponseDto("Ammortamento calcolato correttamente", false)).build();
     }
 

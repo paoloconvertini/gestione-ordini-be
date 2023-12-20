@@ -14,7 +14,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.time.LocalDate;
@@ -22,8 +21,6 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static it.calolenoci.enums.FiscaleRiepilogoEnum.*;
 
 @ApplicationScoped
 public class AmmortamentoCespiteService {
@@ -42,16 +39,16 @@ public class AmmortamentoCespiteService {
     @ConfigProperty(name = "storico")
     boolean storico;
 
-    @Inject
-    EntityManager em;
-
     @Transactional
     @TransactionConfiguration(timeout = 5000000)
-    public void calcola(FiltroCespite filtroCespite) {
+    public void calcola(LocalDate date) {
         try {
             long inizio = System.currentTimeMillis();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-            LocalDate date = LocalDate.parse(filtroCespite.getData(), formatter);
+            Log.debug("### Inizio calcolo registro cespiti");
+            LocalDate dataCorrente = LocalDate.now();
+            if (date != null) {
+                dataCorrente = date;
+            }
             String query = "SELECT c, cat " +
                                     "FROM Cespite c " +
                                     "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite " +
@@ -117,31 +114,10 @@ public class AmmortamentoCespiteService {
                 // cespite presente, calcolo anni a partire da data selezionata
                 AmmortamentoCespite ammPrecedente = optAmmAnnoPrec.get();
                 if (ammPrecedente.getResiduo() != 0) {
-
-                    //Es devo calcolare 2022 e 2023
-                    // calcolo quota intera 2022, aggiungo al fondo anno prec e setto residuo diminuendo importo del fondo calcolato
-                    // il residuo così calcolato è la var per fermare il while
-                    // l'ammortamento appena calcolato sarà il mio nuovo annoPrecedente
-
-                    //Forse meglio separare la rivalutazione
-                    double residuo = ammPrecedente.getResiduo();
-                    int annoPrecedente = ammPrecedente.getAnno();
-                    LocalDate dataAmmortamento = LocalDate.of(annoPrecedente + 1, Month.DECEMBER, 31);
-                    while(residuo != 0){
-                        double quota = cespite.getImporto() * (ammPrecedente.getPercAmm() / 100);
-                        Optional<QuadraturaCespite> optQuad = QuadraturaCespite.find("idCespite =:id AND anno=:a",
-                                Parameters.with("id", cespite.getId()).and("a", dataCorrente.getYear())).singleResultOptional();
-                        if (optQuad.isPresent()) {
-                            QuadraturaCespite q = optQuad.get();
-                            quota = cespite.getImporto() * (q.getAmmortamento() / 100);
-                        }
-                        double quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
-                        double fondo = ammPrecedente.getFondo() + quotaDaSalvare;
-                        double perc = quotaDaSalvare / cespite.getImporto() * 100;
-                        residuo = cespite.getImporto() - fondo;
-                        AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, 0, fondo, 0, residuo, dataAmmortamento);
-                        ammortamentoCespiteList.add(a);
-                        dataAmmortamento = dataAmmortamento.plusYears(1);
+                    if (dto.getCespite().getImportoRivalutazione() != null) {
+                        calcoloAnnoCorrenteRivalutato(ammortamentoCespiteList, ammPrecedente, dto.getCespite(), dataCorrente);
+                    } else {
+                        calcoloAnnoCorrenteAmmortamento(dataCorrente, cespite, ammortamentoCespiteList, ammPrecedente);
                     }
                 }
             } else {
@@ -151,42 +127,88 @@ public class AmmortamentoCespiteService {
         }
         return ammortamentoCespiteList;
     }
-
-    private List<AmmortamentoCespite> calcoloAnnoCorrenteRivalutato(AmmortamentoCespite ammPrecedente, int anno, Cespite cespite, LocalDate dataCorrente) {
-        List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
+    private void calcoloAnnoCorrenteAmmortamento(LocalDate dataCorrente, Cespite cespite, List<AmmortamentoCespite> ammortamentoCespiteList, AmmortamentoCespite ammPrecedente) {
+        double residuo = ammPrecedente.getResiduo();
         int annoPrecedente = ammPrecedente.getAnno();
         LocalDate dataAmmortamento = LocalDate.of(annoPrecedente + 1, Month.DECEMBER, 31);
-        while (ammPrecedente.getResiduo() != 0 && annoPrecedente < anno) {
-            double quota = cespite.getImporto() * (ammPrecedente.getPercAmm() / 100);
-            double quotaRiv = 0;
-            double fondo = ammPrecedente.getFondo();
-            double fondoRiv = ammPrecedente.getFondoRivalutazione();
-            double residuoDaSalvare = ammPrecedente.getResiduo();
-            if (cespite.getImportoRivalutazione() != null) {
-                quotaRiv = cespite.getImportoRivalutazione() * (ammPrecedente.getPercAmm() / 100);
-                if (cespite.getFondoRivalutazione() != null) {
-                    fondoRiv = cespite.getFondoRivalutazione();
-                }
+        while(residuo != 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()){
+            if (dataAmmortamento.getYear() == dataCorrente.getYear()) {
+                dataAmmortamento = dataCorrente;
             }
-            double quotaDaSalvare;
-            double quotaRivDaSalvare;
+            double quota = cespite.getImporto() * (ammPrecedente.getPercAmm() / 100);
             Optional<QuadraturaCespite> optQuad = QuadraturaCespite.find("idCespite =:id AND anno=:a",
                     Parameters.with("id", cespite.getId()).and("a", dataCorrente.getYear())).singleResultOptional();
             if (optQuad.isPresent()) {
                 QuadraturaCespite q = optQuad.get();
                 quota = cespite.getImporto() * (q.getAmmortamento() / 100);
             }
-            quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
-            quotaRivDaSalvare = quotaRiv * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
-            fondo += quotaDaSalvare;
-            fondoRiv += quotaRivDaSalvare;
+            double quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
+            double fondo = ammPrecedente.getFondo() + quotaDaSalvare;
+            if (residuo < quotaDaSalvare) {
+                quotaDaSalvare = residuo;
+                residuo = 0;
+                fondo = cespite.getImporto();
+            } else {
+                fondo += quotaDaSalvare;
+                residuo = cespite.getImporto() - fondo;
+            }
             double perc = quotaDaSalvare / cespite.getImporto() * 100;
-            residuoDaSalvare -= quotaDaSalvare;
-            residuoDaSalvare -= quotaRivDaSalvare;
+            AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, 0, fondo, 0, residuo, dataAmmortamento);
+            ammortamentoCespiteList.add(a);
+            dataAmmortamento = dataAmmortamento.plusYears(1);
+        }
+    }
+    private void calcoloAnnoCorrenteRivalutato(List<AmmortamentoCespite> ammortamentoCespiteList, AmmortamentoCespite ammPrecedente, Cespite cespite, LocalDate dataCorrente) {
+        double residuo = ammPrecedente.getResiduo();
+        int annoPrecedente = ammPrecedente.getAnno();
+        LocalDate dataAmmortamento = LocalDate.of(annoPrecedente + 1, Month.DECEMBER, 31);
+        while (residuo != 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()) {
+            if (dataAmmortamento.getYear() == dataCorrente.getYear()) {
+                dataAmmortamento = dataCorrente;
+            }
+            double quota = cespite.getImporto() * (ammPrecedente.getPercAmm() / 100);
+            double quotaRiv = cespite.getImportoRivalutazione() * (ammPrecedente.getPercAmm() / 100);
+            double fondo = ammPrecedente.getFondo();
+            double fondoRiv = ammPrecedente.getFondoRivalutazione();
+            double residuoDaSalvare;
+            double quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
+            double quotaRivDaSalvare = quotaRiv * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
+            double residuoNoRiv = cespite.getImporto();
+            Optional<QuadraturaCespite> optQuad = QuadraturaCespite.find("idCespite =:id AND anno=:a",
+                    Parameters.with("id", cespite.getId()).and("a", dataCorrente.getYear())).singleResultOptional();
+            if (optQuad.isPresent()) {
+                QuadraturaCespite q = optQuad.get();
+                quota = cespite.getImporto() * (q.getAmmortamento() / 100);
+                quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
+            }
+            if (residuo < quotaRiv) {
+                quotaRiv = residuo;
+                residuo = 0;
+                fondoRiv = cespite.getImporto() + cespite.getImportoRivalutazione();
+            } else {
+                fondoRiv += quotaRiv;
+                residuo = cespite.getImportoRivalutazione() - fondoRiv;
+            }
+
+            if (residuoNoRiv < quotaDaSalvare) {
+                quotaDaSalvare = residuoNoRiv;
+               // residuoNoRiv = 0;
+                fondo = cespite.getImporto();
+            } else {
+                fondo += quotaDaSalvare;
+               // residuoNoRiv = cespite.getImporto() - fondo;
+            }
+            residuoDaSalvare = residuo;
+            quotaRivDaSalvare = quotaRiv;
+            double perc;
+            if (cespite.getImporto() == 0) {
+                perc = 0;
+            } else {
+                perc = quotaDaSalvare / cespite.getImporto() * 100;
+            }
             ammortamentoCespiteList.add(mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, quotaRivDaSalvare, fondo, fondoRiv, residuoDaSalvare, dataAmmortamento));
             dataAmmortamento = dataAmmortamento.plusYears(1);
         }
-        return ammortamentoCespiteList;
     }
 
     public List<AmmortamentoCespite> calcoloSingoloCespite(CespiteDBDto dto, LocalDate dataCorrente) {

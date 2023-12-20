@@ -8,6 +8,7 @@ import it.calolenoci.entity.*;
 import it.calolenoci.mapper.AmmortamentoCespiteMapper;
 import it.calolenoci.mapper.QuadCespiteMapper;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -31,22 +32,35 @@ public class AmmortamentoCespiteService {
     @Inject
     QuadCespiteMapper quadCespiteMapper;
 
+    @ConfigProperty(name = "storico")
+    boolean storico;
+
     @Transactional
-    public void calcola(LocalDate date) {
+    public void calcola(LocalDate dataCorrente) {
         try {
             long inizio = System.currentTimeMillis();
+            Log.debug("### Inizio calcolo registro cespiti");
             List<Cespite> cespitiAttivi = Cespite.find("attivo = 'T'").list();
-            LocalDate dataCorrente = LocalDate.now();
-            if (date != null) {
-                dataCorrente = date;
-            }
-            AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(Cespite::getId).collect(Collectors.toList())));
-            for (Cespite cespite : cespitiAttivi) {
-                List<AmmortamentoCespite> ammortamentoCespites = calcoloSingoloCespite(cespite, dataCorrente);
-                if(ammortamentoCespites.isEmpty()) {
-                    continue;
+            if (storico) {
+                AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(Cespite::getId).collect(Collectors.toList())));
+                for (Cespite cespite : cespitiAttivi) {
+                    List<AmmortamentoCespite> ammortamentoCespites = calcoloSingoloCespite(cespite, dataCorrente);
+                    if (ammortamentoCespites.isEmpty()) {
+                        continue;
+                    }
+                    AmmortamentoCespite.persist(ammortamentoCespites);
                 }
-                AmmortamentoCespite.persist(ammortamentoCespites);
+            } else {
+                Log.debug("--- flag storico disattivato");
+                AmmortamentoCespite.delete("idAmmortamento in (:list) and anno >=:a", Parameters.with("list", cespitiAttivi.stream().map(Cespite::getId).collect(Collectors.toList())).and("a", dataCorrente.getYear()));
+
+                for (Cespite cespite : cespitiAttivi) {
+                    List<AmmortamentoCespite> ammortamentoCespites = calcoloAnnoCorrente(cespite, dataCorrente);
+                    if (ammortamentoCespites.isEmpty()) {
+                        continue;
+                    }
+                    AmmortamentoCespite.persist(ammortamentoCespites);
+                }
             }
             long fine = System.currentTimeMillis();
             Log.info("Metodo calcola ammortamenti: " + (fine - inizio) / 1000 + " sec");
@@ -122,6 +136,63 @@ public class AmmortamentoCespiteService {
         }
         return ammortamentoCespiteList;
     }
+    private List<AmmortamentoCespite> calcoloAnnoCorrente(Cespite cespite, LocalDate dataCorrente) {
+        CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite=:t", Parameters.with("t", cespite.getTipoCespite())).firstResult();
+        List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
+        int anno = dataCorrente.getYear();
+        Optional<AmmortamentoCespite> optAmmAnnoPrec = AmmortamentoCespite.find("idAmmortamento =:id and anno=:a", Parameters.with("id", cespite.getId()).and("a", anno - 1)).singleResultOptional();
+        List<AmmortamentoCespite> listAmmortamenti = AmmortamentoCespite.find("idAmmortamento =:id", Parameters.with("id", cespite.getId())).list();
+        if (categoriaCespite.getPercAmmortamento() != null && categoriaCespite.getPercAmmortamento() != 0) {
+            if (listAmmortamenti.isEmpty()) {
+                ammortamentoCespiteList = calcoloSingoloCespite(cespite, dataCorrente);
+            } else if (optAmmAnnoPrec.isPresent()) {
+                // cespite presente, calcolo anni a partire da data selezionata
+                AmmortamentoCespite ammPrecedente = optAmmAnnoPrec.get();
+                if (ammPrecedente.getResiduo() != 0 ) {
+
+                    //Es devo calcolare 2022 e 2023
+                    // calcolo quota intera 2022, aggiungo al fondo anno prec e setto residuo diminuendo importo del fondo calcolato
+                    // il residuo così calcolato è la var per fermare il while
+                    // l'ammortamento appena calcolato sarà il mio nuovo annoPrecedente
+
+                    //Forse meglio separare la rivalutazione
+                    double residuo = ammPrecedente.getResiduo();
+                    int annoPrecedente = ammPrecedente.getAnno();
+                    LocalDate dataAmmortamento = LocalDate.of(annoPrecedente + 1, Month.DECEMBER, 31);
+                    while(residuo != 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()){
+                        if (dataAmmortamento.getYear() == dataCorrente.getYear()) {
+                            dataAmmortamento = dataCorrente;
+                        }
+                        double quota = cespite.getImporto() * (ammPrecedente.getPercAmm() / 100);
+                        Optional<QuadraturaCespite> optQuad = QuadraturaCespite.find("idCespite =:id AND anno=:a",
+                                Parameters.with("id", cespite.getId()).and("a", dataCorrente.getYear())).singleResultOptional();
+                        if (optQuad.isPresent()) {
+                            QuadraturaCespite q = optQuad.get();
+                            quota = cespite.getImporto() * (q.getAmmortamento() / 100);
+                        }
+                        double quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
+                        double fondo = ammPrecedente.getFondo() + quotaDaSalvare;
+                        if (residuo < quotaDaSalvare) {
+                            quotaDaSalvare = residuo;
+                            residuo = 0;
+                            fondo = cespite.getImporto();
+                        } else {
+                            fondo += quotaDaSalvare;
+                            residuo = cespite.getImporto() - fondo;
+                        }
+                        double perc = quotaDaSalvare / cespite.getImporto() * 100;
+                        AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, fondo, residuo, dataAmmortamento);
+                        ammortamentoCespiteList.add(a);
+                        dataAmmortamento = dataAmmortamento.plusYears(1);
+                    }
+                }
+            } else {
+                //cespite presente ma già consolidato
+                return ammortamentoCespiteList;
+            }
+        }
+        return ammortamentoCespiteList;
+    }
 
     private void calcolaSuperAmm(Cespite cespite, double perc, AmmortamentoCespite a) {
         if (cespite.getSuperAmm() != null && cespite.getSuperAmm() != 0L) {
@@ -182,7 +253,6 @@ public class AmmortamentoCespiteService {
             }
             Map<String, List<RegistroCespiteDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(RegistroCespiteDto::getTipoCespite));
             for (String tipoCespite : mapTipoCespite.keySet()) {
-                Log.debug("### Processo tipoCespite: " + tipoCespite + " ###");
                 List<RegistroCespiteDto> dtoList = mapTipoCespite.get(tipoCespite);
                 CategoriaCespitiDto categoriaCespitiDto = new CategoriaCespitiDto();
                 categoriaCespitiDto.setTipoCespite(tipoCespite);
