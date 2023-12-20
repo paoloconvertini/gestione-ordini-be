@@ -23,7 +23,7 @@ public class JasperService {
     AmmortamentoCespiteService ammortamentoCespiteService;
 
     public File createReport(FiltroCespite filtroCespite) {
-        RegistroCespitiDto registroCespitiDto = ammortamentoCespiteService.getAll(filtroCespite);
+        RegistroCespitiDto registroCespitiDto = ammortamentoCespiteService.getRegistroCespiti(filtroCespite);
         LocalDate localDate = LocalDate.now();
         if(StringUtils.isNotBlank(filtroCespite.getData())) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");

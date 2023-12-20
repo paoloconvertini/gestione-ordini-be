@@ -136,7 +136,8 @@ public class AmmortamentoCespiteService {
         }
     }
 
-    public RegistroCespitiDto getAll(FiltroCespite filtroCespite) {
+    public RegistroCespitiDto getRegistroCespiti(FiltroCespite filtroCespite) {
+        Log.debug("### INIZIO get Registro cespiti");
         LocalDate localDate = LocalDate.now();
         if(StringUtils.isNotBlank(filtroCespite.getData())) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
@@ -147,73 +148,82 @@ public class AmmortamentoCespiteService {
         final RegistroCespitiDto view = new RegistroCespitiDto();
         List<CategoriaCespitiDto> result = new ArrayList<>();
         try {
-            String query = "SELECT c, a, cat " +
+            String query = "SELECT c.id, c.tipoCespite, c.progressivo1, c.progressivo2, c.cespite, c.dataAcq, c.numDocAcq, c.fornitore, " +
+                    "c.importo, c.attivo, c.dataVendita, c.numDocVendita, c.intestatarioVendita, c.importoVendita," +
+                    " c.superAmm, c.protocollo, c.giornale, c.anno, c.dataInizioCalcoloAmm, c.flPrimoAnno, a.dataAmm, " +
+                    "a.descrizione, a.percAmm, a.quota, a.fondo, a.residuo, a.anno, a.superPercentuale, a.superQuota, " +
+                    " t.id, t.codice, t.descrizione, t.percAmmortamento, t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
+                    "t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto " +
                     "FROM Cespite c " +
                     "JOIN AmmortamentoCespite a ON c.id = a.idAmmortamento " +
-                    "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite ";
+                    "JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite ";
             Map<String, Object> params = new HashMap<>();
             if (filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())) {
-                query += "WHERE cat.tipoCespite = :q";
+                query += "WHERE c.tipoCespite = :q";
                 params.put("q", filtroCespite.getTipoCespite());
             }
-            List<CespiteDBDto> cespiteDtos = Cespite.find(query, params).project(CespiteDBDto.class).list();
-            String queryNoAmm = "SELECT c, cat " +
+            List<RegistroCespiteDto> cespiteDtos = Cespite.find(query, params).project(RegistroCespiteDto.class).list();
+            String queryNoAmm = "SELECT c.id, c.tipoCespite, c.progressivo1, c.progressivo2, c.cespite, c.dataAcq, c.numDocAcq, c.fornitore, " +
+                    "c.importo, c.attivo, c.dataVendita, c.numDocVendita, c.intestatarioVendita, c.importoVendita," +
+                    " c.superAmm, c.protocollo, c.giornale, c.anno, c.dataInizioCalcoloAmm, c.flPrimoAnno, " +
+                    " t.id, t.codice, t.descrizione, t.percAmmortamento, t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
+                    "t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto " +
                     "FROM Cespite c " +
-                    "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite " +
+                    "JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite " +
                     "WHERE NOT EXISTS (SELECT 1 FROM AmmortamentoCespite a WHERE a.idAmmortamento = c.id) ";
             Map<String, Object> paramsNoAmm = new HashMap<>();
             if (filtroCespite != null && StringUtils.isNotBlank(filtroCespite.getTipoCespite())) {
-                queryNoAmm += "AND cat.tipoCespite = :q";
+                queryNoAmm += "AND c.tipoCespite = :q";
                 paramsNoAmm.put("q", filtroCespite.getTipoCespite());
             }
-            List<CespiteDBDto> listNoAmm = Cespite.find(queryNoAmm, paramsNoAmm).project(CespiteDBDto.class).list();
+            List<RegistroCespiteDto> listNoAmm = Cespite.find(queryNoAmm, paramsNoAmm).project(RegistroCespiteDto.class).list();
             if (!listNoAmm.isEmpty()) {
                 cespiteDtos.addAll(listNoAmm);
             }
-            Map<String, List<CespiteDBDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getTipoCespite()));
+            Map<String, List<RegistroCespiteDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(RegistroCespiteDto::getTipoCespite));
             for (String tipoCespite : mapTipoCespite.keySet()) {
-                List<CespiteDBDto> dtoList = mapTipoCespite.get(tipoCespite);
+                Log.debug("### Processo tipoCespite: " + tipoCespite + " ###");
+                List<RegistroCespiteDto> dtoList = mapTipoCespite.get(tipoCespite);
                 CategoriaCespitiDto categoriaCespitiDto = new CategoriaCespitiDto();
                 categoriaCespitiDto.setTipoCespite(tipoCespite);
-                CespiteDBDto dbDto = dtoList.get(0);
-                categoriaCespitiDto.setCategoria(dbDto.getCategoria().getDescrizione());
-                categoriaCespitiDto.setPerc(dbDto.getCategoria().getPercAmmortamento());
-                Map<Integer, List<CespiteDBDto>> progr1Map = dtoList.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getProgressivo1()));
+                RegistroCespiteDto dbDto = dtoList.get(0);
+                categoriaCespitiDto.setCategoria(dbDto.getDescrTipoCesp());
+                categoriaCespitiDto.setPerc(dbDto.getPercAmmortamento());
+                Map<Integer, List<RegistroCespiteDto>> progr1Map = dtoList.stream().collect(Collectors.groupingBy(RegistroCespiteDto::getProgressivo1));
                 List<CespiteProgressivoDto> cespiteProgressivoDtoList = new ArrayList<>();
                 for (Integer progressivo : progr1Map.keySet()) {
-                    List<CespiteDBDto> progressivo1List = progr1Map.get(progressivo);
-                    Map<Integer, List<CespiteDBDto>> progr2Map = progressivo1List.stream().collect(Collectors.groupingBy(dto -> dto.getCespite().getProgressivo2()));
+                    List<RegistroCespiteDto> progressivo1List = progr1Map.get(progressivo);
+                    Map<Integer, List<RegistroCespiteDto>> progr2Map = progressivo1List.stream().collect(Collectors.groupingBy(RegistroCespiteDto::getProgressivo2));
                     List<CespiteDto> cespiteDtoList = new ArrayList<>();
                     for (Integer progr2 : progr2Map.keySet()) {
-                        List<CespiteDBDto> progr2List = progr2Map.get(progr2);
-                        CespiteDBDto dbDto1 = progr2List.get(0);
+                        List<RegistroCespiteDto> progr2List = progr2Map.get(progr2);
+                        RegistroCespiteDto dbDto1 = progr2List.get(0);
                         CespiteDto v = new CespiteDto();
-                        Cespite cespite = dbDto1.getCespite();
-                        v.setId(cespite.getId());
-                        v.setCodice(dbDto.getCategoria().getCodice());
+                        v.setId(dbDto1.getId());
+                        v.setCodice(dbDto.getCodice());
                         v.setProgressivo1(progressivo);
                         v.setProgressivo2(progr2);
-                        v.setCespite(cespite.getCespite());
-                        v.setDataAcq(cespite.getDataAcq());
-                        v.setAmmortamento(dbDto.getCategoria().getPercAmmortamento());
-                        v.setImporto(cespite.getImporto());
-                        v.setFornitore(cespite.getFornitore());
-                        v.setNumDocAcq(cespite.getNumDocAcq());
-                        v.setAnno(cespite.getDataAcq().getYear());
-                        v.setDataVend(cespite.getDataVendita());
-                        v.setImportoVendita(cespite.getImportoVendita());
-                        v.setProtocollo(cespite.getProtocollo());
-                        v.setAnnoProtocollo(cespite.getAnno());
-                        v.setGiornale(cespite.getGiornale());
-                        if (cespite.getSuperAmm() != null && cespite.getSuperAmm() != 0L) {
-                            TipoSuperAmm tipoSuperAmm = TipoSuperAmm.findById(cespite.getSuperAmm());
+                        v.setCespite(dbDto1.getCespite());
+                        v.setDataAcq(dbDto1.getDataAcq());
+                        v.setAmmortamento(dbDto1.getPercAmmortamento());
+                        v.setImporto(dbDto1.getImporto());
+                        v.setFornitore(dbDto1.getFornitore());
+                        v.setNumDocAcq(dbDto1.getNumDocAcq());
+                        v.setAnno(dbDto1.getDataAcq().getYear());
+                        v.setDataVend(dbDto1.getDataVendita());
+                        v.setImportoVendita(dbDto1.getImportoVendita());
+                        v.setProtocollo(dbDto1.getProtocollo());
+                        v.setAnnoProtocollo(dbDto1.getAnno());
+                        v.setGiornale(dbDto1.getGiornale());
+                        if (dbDto1.getSuperAmm() != null && dbDto1.getSuperAmm() != 0L) {
+                            TipoSuperAmm tipoSuperAmm = TipoSuperAmm.findById(dbDto1.getSuperAmm());
                             v.setSuperAmmDesc(tipoSuperAmm.getDescrizione());
                         }
                         List<AmmortamentoCespite> list = new ArrayList<>();
-                        progr2List.forEach(d -> list.add(d.getAmmortamentoCespite()));
+                        progr2List.forEach(d -> list.add(mapper.buildAmmortamento(d)));
                         List<AmmortamentoCespite> collect = list.stream().filter(a -> a != null && a.getDataAmm() != null && !StringUtils.startsWith(a.getDescrizione(), "VENDITA")).sorted(Comparator.comparing(AmmortamentoCespite::getDataAmm)).collect(Collectors.toList());
-                        if (!cespite.getAttivo()) {
-                            if (StringUtils.isNotBlank(cespite.getIntestatarioVendita())) {
+                        if (!dbDto1.getAttivo()) {
+                            if (StringUtils.isNotBlank(dbDto1.getIntestatarioVendita())) {
                                 collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "VENDITA")).toList());
                                 collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "venduto")).toList());
                                 collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "Plus")).toList());

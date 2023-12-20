@@ -1,5 +1,6 @@
 package it.calolenoci.mapper;
 
+import it.calolenoci.dto.RegistroCespiteDto;
 import it.calolenoci.entity.AmmortamentoCespite;
 import it.calolenoci.entity.Cespite;
 
@@ -57,5 +58,19 @@ public class AmmortamentoCespiteMapper {
         return list;
     }
 
+    public AmmortamentoCespite buildAmmortamento(RegistroCespiteDto d) {
+        AmmortamentoCespite a = new AmmortamentoCespite();
+        //a.setIdAmmortamento(id);
+        a.setDataAmm(d.getDataAmm());
+        a.setDescrizione(d.getDescrAmm());
+        a.setPercAmm(d.getPercAmm());
+        a.setFondo(d.getFondo());
+        a.setQuota(d.getQuota());
+        a.setResiduo(d.getResiduo());
+        a.setAnno(d.getAnnoAmm());
+        a.setSuperQuota(d.getQuotaSuper());
+        a.setSuperPercentuale(d.getPercSuper());
+        return a;
+    }
 }
 

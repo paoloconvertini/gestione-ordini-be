@@ -18,5 +18,6 @@ public class CespiteSommaDto {
     private SuperAmmDto superAmm1;
     private SuperAmmDto superAmm2;
     private SuperAmmDto superAmm3;
+    private SuperAmmDto superAmm4;
     private SuperAmmDto plusMinus;
 }

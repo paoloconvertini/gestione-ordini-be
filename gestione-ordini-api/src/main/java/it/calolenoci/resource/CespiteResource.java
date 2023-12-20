@@ -49,7 +49,7 @@ public class CespiteResource {
     @APIResponse(responseCode = "204", description = "No Ammortamenti")
     public Response getAll(FiltroCespite filtroCespite) {
         try {
-            return Response.ok().entity(service.getAll(filtroCespite)).build();
+            return Response.ok().entity(service.getRegistroCespiti(filtroCespite)).build();
         } catch (Exception e) {
             return Response.status(400).entity(new ResponseDto("Error getting registro cespiti", true)).build();
         }

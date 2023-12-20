@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.time.LocalDate;
 
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,7 +21,6 @@ public class RegistroCespiteDto implements Serializable {
     private String numDocAcq;
     private String fornitore;
     private Double importo;
-    private Double importoRivalutazione;
     private Boolean attivo;
     private LocalDate dataVendita;
     private String numDocVend;
@@ -32,7 +32,6 @@ public class RegistroCespiteDto implements Serializable {
     private Integer anno;
     private LocalDate dtInizioCalcoloAmm;
     private Boolean flPrimoAnno;
-    private Double fondoRivalutazione;
     private LocalDate dataAmm;
     private String descrAmm;
     private Double percAmm;
@@ -42,9 +41,9 @@ public class RegistroCespiteDto implements Serializable {
     private Integer annoAmm;
     private Double percSuper;
     private Double quotaSuper;
-    private Double quotaRivalutazione;
-    private Double fondoRivAmm;
     private String idTipoCesp;
+
+    private String codice;
     private String descrTipoCesp;
     private Double percAmmortamento;
     private Integer costoGruppo;
@@ -60,10 +59,10 @@ public class RegistroCespiteDto implements Serializable {
 
 
     public RegistroCespiteDto(String id, String tipoCespite, Integer progressivo1, Integer progressivo2, String cespite,
-                              LocalDate dataAcq, String numDocAcq, String fornitore, Double importo, Double importoRivalutazione,
+                              LocalDate dataAcq, String numDocAcq, String fornitore, Double importo,
                               Boolean attivo, LocalDate dataVendita, String numDocVend, String intestatarioVendita, Double importoVendita,
                               Long superAmm, Integer protocollo, String giornale, Integer anno, LocalDate dtInizioCalcoloAmm,
-                              Boolean flPrimoAnno, Double fondoRivalutazione, String idTipoCesp, String descrTipoCesp,
+                              Boolean flPrimoAnno, String idTipoCesp, String codice, String descrTipoCesp,
                               Double percAmmortamento, Integer costoGruppo, String costoConto, Integer ammGruppo, String ammConto,
                               Integer fondoGruppo, String fondoConto, Integer plusGruppo, String plusConto, Integer minusGruppo, String minusConto) {
         this.id = id;
@@ -75,7 +74,6 @@ public class RegistroCespiteDto implements Serializable {
         this.numDocAcq = numDocAcq;
         this.fornitore = fornitore;
         this.importo = importo;
-        this.importoRivalutazione = importoRivalutazione;
         this.attivo = attivo;
         this.dataVendita = dataVendita;
         this.numDocVend = numDocVend;
@@ -87,8 +85,8 @@ public class RegistroCespiteDto implements Serializable {
         this.anno = anno;
         this.dtInizioCalcoloAmm = dtInizioCalcoloAmm;
         this.flPrimoAnno = flPrimoAnno;
-        this.fondoRivalutazione = fondoRivalutazione;
         this.idTipoCesp = idTipoCesp;
+        this.codice = codice;
         this.descrTipoCesp = descrTipoCesp;
         this.percAmmortamento = percAmmortamento;
         this.costoGruppo = costoGruppo;

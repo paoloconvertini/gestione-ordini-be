@@ -102,11 +102,6 @@ public class AmmortamentoCespiteService {
         Cespite cespite = dto.getCespite();
         CategoriaCespite categoriaCespite = dto.getCategoria();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
-//        boolean eliminato = cespite.getDataVendita() != null && StringUtils.isBlank(cespite.getIntestatarioVendita());
-//        boolean venduto = cespite.getDataVendita() != null && StringUtils.isNotBlank(cespite.getIntestatarioVendita());
-//        if (eliminato || venduto) {
-//            dataCorrente = cespite.getDataVendita();
-//        }
         int anno = dataCorrente.getYear();
         Optional<AmmortamentoCespite> optAmmAnnoPrec = AmmortamentoCespite.find("idAmmortamento =:id and anno=:a", Parameters.with("id", cespite.getId()).and("a", anno - 1)).singleResultOptional();
         List<AmmortamentoCespite> listAmmortamenti = AmmortamentoCespite.find("idAmmortamento =:id", Parameters.with("id", cespite.getId())).list();
@@ -558,6 +553,9 @@ public class AmmortamentoCespiteService {
                             .filter(a -> a.getAnno() == anno - 1 && a.getSuperQuota() != null)
                             .mapToDouble(AmmortamentoCespite::getSuperQuota)
                             .sum();
+                    if(sum == 0){
+                        continue;
+                    }
                     TipoSuperAmm t = TipoSuperAmm.find("descrizione = :desc", Parameters.with("desc", superAmmDesc)).firstResult();
                     SuperAmmDto dto = new SuperAmmDto();
                     dto.setDesc(superAmmDesc);
@@ -566,8 +564,10 @@ public class AmmortamentoCespiteService {
                         sommaDto.setSuperAmm1(dto);
                     } else if (t.id == 2) {
                         sommaDto.setSuperAmm2(dto);
-                    } else {
+                    } else if(t.id == 3) {
                         sommaDto.setSuperAmm3(dto);
+                    } else {
+                        sommaDto.setSuperAmm4(dto);
                     }
                 }
 
@@ -698,210 +698,6 @@ public class AmmortamentoCespiteService {
         }
         return view;
     }
-
-    @Transactional
-    public void aggiornaTotali(FiltroCespite filtroCespite) {
-        LocalDate localDate = LocalDate.now();
-        if (StringUtils.isNotBlank(filtroCespite.getData())) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-            localDate = LocalDate.parse(filtroCespite.getData(), formatter);
-        }
-        int anno = localDate.getYear();
-        long inizioTempo = System.currentTimeMillis();
-        try {
-            calcolaInizioEsercizio(anno);
-            calcolaSuperAmm(anno);
-            calcolaAcquisti(anno);
-            calcolaVendite(anno);
-
-
-
-
-            long fineTempo = System.currentTimeMillis();
-            Log.info("Metodo get ammortamenti: " + (fineTempo - inizioTempo) / 1000 + " sec");
-        } catch (Exception e) {
-            Log.error("Errore get Registro cespiti", e);
-            throw e;
-        }
-    }
-
-    private void calcolaVendite(int anno){
-        List<SommaCategoria> sommaCategorias = Cespite.find("select c.tipoCespite, " +
-                " sum(c.importo + CASE WHEN c.importoRivalutazione IS NOT NULL THEN c.importoRivalutazione ELSE 0 end ),  " +
-                " from Cespite c " +
-                " where c.importoVendita is not null AND Year(c.dataVendita) = :a)" +
-                " GROUP BY c.tipoCespite", Parameters.with("a", anno)).project(SommaCategoria.class).list();
-        List<FiscaleRiepilogo> result = new ArrayList<>();
-        for (SommaCategoria sommaCategoria : sommaCategorias) {
-            List<AmmortamentoCespite> ammortamentoCespiteList = AmmortamentoCespite.find("tipoCespite = :t " +
-                    " AND descrizione = 'Ammortamento ordinario deducibile'", Parameters.with("t", sommaCategoria.getTipoCespite())).list();
-            FiscaleRiepilogo f = FiscaleRiepilogo.find("tipoCespite = :t AND descrizione = :d",
-                    Parameters.with("t", sommaCategoria.getTipoCespite()).and("d", INIZIO_ESERCIZIO.getDescrizione())).singleResult();
-            double fondo = ammortamentoCespiteList.stream()
-                    .filter(a -> StringUtils.startsWith(a.getDescrizione(), "Ammortamento"))
-                    .max(Comparator.comparing(AmmortamentoCespite::getAnno))
-                    .stream().mapToDouble(AmmortamentoCespite::getFondo).sum();
-            fondo += ammortamentoCespiteList.stream()
-                            .filter(a -> StringUtils.startsWith(a.getDescrizione(), "Ammortamento") && a.getFondoRivalutazione() != null)
-                                    .max(Comparator.comparing(AmmortamentoCespite::getAnno))
-                    .stream().mapToDouble(AmmortamentoCespite::getFondoRivalutazione).sum();
-            result.add(fiscaleRiepilogoMapper.buildVendita(VENDITE.getDescrizione(), sommaCategoria.getTipoCespite(),
-                    -sommaCategoria.getSomma(), -fondo, f.getFondoAmmortamenti() + fondo));
-        }
-        result.add(fiscaleRiepilogoMapper.buildFiscaleRiepilogo(null, null,
-                result.stream().mapToDouble(FiscaleRiepilogo::getValoreAggiornato).sum(),
-                result.stream().mapToDouble(FiscaleRiepilogo::getTotaleAmmortamento).sum(),
-                result.stream().mapToDouble(FiscaleRiepilogo::getFondoAmmortamenti).sum()));
-        FiscaleRiepilogo.persist(result);
-    }
-
-    /*private void calcolaAmmortamenti(int anno) {
-        FiscaleRiepilogoDto ammortamentiDeducibili = new FiscaleRiepilogoDto();
-        List<SommaCategoria> sommaCategorias = AmmortamentoCespite.find("select c.tipoCespite, sum(a.quota) " +
-                "FROM AmmortamentoCespite a " +
-                "JOIN cespite c ON c.id = a.idAmmortamento " +
-                "WHERE a.anno = :a AND a.quota is not null AND a.descrizione = 'Ammortamento ordinario deducibile' " +
-                "group by c.tipoCespite").project(SommaCategoria.class).list();
-        List<SommaCategoria> sommaCategoriasRiv = AmmortamentoCespite.find("select c.tipoCespite, sum(a.quotaRivalutazione) " +
-                "FROM AmmortamentoCespite a " +
-                "JOIN cespite c ON c.id = a.idAmmortamento " +
-                "WHERE a.anno = :a AND a.quotaRivalutazione is not null AND a.descrizione = 'Ammortamento ordinario deducibile' " +
-                "group by c.tipoCespite").project(SommaCategoria.class).list();
-        List<FiscaleRiepilogo> result = new ArrayList<>();
-        for (SommaCategoria sommaCategoria : sommaCategoriasRiv) {
-                result.add(fiscaleRiepilogoMapper.buildAmmortamento(AMMORTAMENTI_DEDUCIBILI.getDescrizione(),
-                        sommaCategoria.getTipoCespite(), so,
-                        sommaFondo.stream().filter(s -> s.getTipoCespite().equals(sommaCategoria.getTipoCespite())).findFirst().get().getSomma(),
-                        sommaFondoRiv.stream().filter(s -> s.getTipoCespite().equals(sommaCategoria.getTipoCespite())).findFirst().get().getSomma()));
-
-        }
-        ammortamentiDeducibili.setAmmortamentoOrdinario(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == anno && a.getQuota() != null && StringUtils.startsWith(a.getDescrizione(), "Ammortamento")).mapToDouble(AmmortamentoCespite::getQuota).sum());
-        ammortamentiDeducibili.setAmmortamentoAnticipato(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == anno && a.getQuotaRivalutazione() != null && StringUtils.startsWith(a.getDescrizione(), "Ammortamento")).mapToDouble(AmmortamentoCespite::getQuotaRivalutazione).sum());
-        ammortamentiDeducibili.setTotaleAmmortamento(ammortamentiDeducibili.getAmmortamentoOrdinario() + ammortamentiDeducibili.getAmmortamentoAnticipato());
-        ammortamentiDeducibili.setFondoAmmortamenti(ammortamentiDeducibili.getTotaleAmmortamento() + vendite.getFondoAmmortamenti());
-
-    }*/
-
-    private void calcolaInizioEsercizio(int anno){
-        List<SommaCategoria> sommaCostoStorico = Cespite.find("select c.tipoCespite, " +
-                " sum(c.importo + CASE WHEN c.importoRivalutazione IS NOT NULL THEN c.importoRivalutazione ELSE 0 end ),  " +
-                " from Cespite c" +
-                " where (Year(c.dataAcq) < :a) AND (c.dataVendita is null OR Year(dataVendita) = :a)" +
-                " GROUP BY c.tipoCespite", Parameters.with("a", anno)).project(SommaCategoria.class).list();
-        List<SommaCategoria> sommaFondo = AmmortamentoCespite.find("select c.tipoCespite, " +
-                " sum(a.fondo) " +
-                " FROM AmmortamentoCespite  a " +
-                " JOIN Cespite c ON c.id = a.idAmmortamento " +
-                " WHERE a.anno =:a " +
-                " GROUP BY c.tipoCespite", Parameters.with("a", anno-1)).project(SommaCategoria.class).list();
-        List<SommaCategoria> sommaFondoVecchi = AmmortamentoCespite.find("select c.tipoCespite, " +
-                " sum(a.fondo) " +
-                " FROM AmmortamentoCespite  a " +
-                " JOIN Cespite c ON c.id = a.idAmmortamento " +
-                " WHERE a.anno < :a and a.residuo = 0 " +
-                " GROUP BY c.tipoCespite", Parameters.with("a", anno-1)).project(SommaCategoria.class).list();
-        unisciFondi(sommaFondo, sommaFondoVecchi);
-        List<SommaCategoria> sommaFondoRiv = AmmortamentoCespite.find("select c.tipoCespite, " +
-                " sum(CASE WHEN a.fondoRivalutazione is not null THEN a.fondoRivalutazione ELSE 0 END) " +
-                " FROM AmmortamentoCespite  a " +
-                " JOIN Cespite c ON c.id = a.idAmmortamento " +
-                " WHERE a.anno =:a " +
-                " GROUP BY c.tipoCespite", Parameters.with("a", anno-1)).project(SommaCategoria.class).list();
-        List<SommaCategoria> sommaFondoVecchiRiv = AmmortamentoCespite.find("select c.tipoCespite, " +
-                " sum(CASE WHEN a.fondoRivalutazione is not null THEN a.fondoRivalutazione ELSE 0 END) " +
-                " FROM AmmortamentoCespite  a " +
-                " JOIN Cespite c ON c.id = a.idAmmortamento " +
-                " WHERE a.anno < :a and a.residuo = 0 " +
-                " GROUP BY c.tipoCespite", Parameters.with("a", anno-1)).project(SommaCategoria.class).list();
-        unisciFondi(sommaFondoRiv, sommaFondoVecchiRiv);
-        List<FiscaleRiepilogo> result = new ArrayList<>();
-        for (SommaCategoria sommaCategoria : sommaCostoStorico) {
-            result.add(fiscaleRiepilogoMapper.buildFiscaleRiepilogo(INIZIO_ESERCIZIO.getDescrizione(),
-                    sommaCategoria.getTipoCespite(), sommaCategoria.getSomma(),
-                    sommaFondo.stream().filter(s -> s.getTipoCespite().equals(sommaCategoria.getTipoCespite())).findFirst().get().getSomma(),
-                    sommaFondoRiv.stream().filter(s -> s.getTipoCespite().equals(sommaCategoria.getTipoCespite())).findFirst().get().getSomma()));
-        }
-        result.add(fiscaleRiepilogoMapper.buildFiscaleRiepilogo(null, null,
-                result.stream().mapToDouble(FiscaleRiepilogo::getValoreAggiornato).sum(),
-                result.stream().mapToDouble(FiscaleRiepilogo::getFondoAmmortamenti).sum(),
-                result.stream().mapToDouble(FiscaleRiepilogo::getFondoAmmortamentiRiv).sum()));
-        FiscaleRiepilogo.persist(result);
-    }
-
-    private void calcolaAcquisti(int anno){
-        List<SommaCategoria> sommaCostoStorico = Cespite.find("select c.tipoCespite, " +
-                " sum(c.importo + CASE WHEN c.importoRivalutazione IS NOT NULL THEN c.importoRivalutazione ELSE 0 end ),  " +
-                " from Cespite c" +
-                " where (Year(c.dataAcq) = :a) " +
-                " GROUP BY c.tipoCespite", Parameters.with("a", anno)).project(SommaCategoria.class).list();
-        List<FiscaleRiepilogo> result = new ArrayList<>();
-        for (SommaCategoria sommaCategoria : sommaCostoStorico) {
-            FiscaleRiepilogo inizio = new FiscaleRiepilogo();
-
-            inizio.setTipoCespite(sommaCategoria.getTipoCespite());
-            inizio.setDescrizione(ACQUISTO.getDescrizione());
-            inizio.setValoreAggiornato(sommaCategoria.getSomma());
-            result.add(inizio);
-        }
-        FiscaleRiepilogo f = new FiscaleRiepilogo();
-        f.setValoreAggiornato(result.stream().mapToDouble(FiscaleRiepilogo::getValoreAggiornato).sum());
-        result.add(f);
-        FiscaleRiepilogo.persist(result);
-    }
-
-    private void calcolaSuperAmm(int anno){
-        List<FiscaleRiepilogo> result = new ArrayList<>();
-        List<SommaCategoria> sommaSuperAmm = AmmortamentoCespite.find("select t.id, c.tipoCespite, t.descrizione, sum(a.superQuota) " +
-                "FROM AmmortamentoCespite a " +
-                "join Cespite c ON a.idAmmortamento = c.id " +
-                "join TipoSuperAmm t ON c.superAmm = t.id " +
-                "where c.superAmm is not null and a.superQuota is not null and a.anno = :a and t.id = 1" +
-                "group by t.id, c.tipoCespite, t.descrizione", Parameters.with("a", anno - 1 )).project(SommaCategoria.class).list();
-        Map<String, List<SommaCategoria>> map = sommaSuperAmm.stream().collect(Collectors.groupingBy(SommaCategoria::getTipoCespite));
-        for (String tipoCespite : map.keySet()) {
-            List<SommaCategoria> sommaCategoriaList = map.get(tipoCespite);
-            for (SommaCategoria sommaCategoria : sommaCategoriaList) {
-                FiscaleRiepilogo f;
-                Double s1 = 0D;
-                Double s2 = 0D;
-                Double s3 = 0D;
-                Double s4 = 0D;
-                switch (sommaCategoria.getIdSuperAmm()) {
-                    case 1 ->
-                            s1 = sommaCategoria.getSomma();
-                    case 2 ->
-                            s2 = sommaCategoria.getSomma();
-                    case 3 ->
-                            s3 = sommaCategoria.getSomma();
-                    case 4 ->
-                            s4 = sommaCategoria.getSomma();
-                    default -> {}
-                }
-                f = fiscaleRiepilogoMapper.buildSuperAmmortamento(sommaCategoria.getSuperAmmDescr(), tipoCespite, s1, s2, s3, s4);
-                result.add(f);
-            }
-
-        }
-        result.add(fiscaleRiepilogoMapper.buildSuperAmmortamento(null, null,
-                result.stream().mapToDouble(FiscaleRiepilogo::getSuperAmm1).sum(),
-                result.stream().mapToDouble(FiscaleRiepilogo::getSuperAmm2).sum(),
-                result.stream().mapToDouble(FiscaleRiepilogo::getSuperAmm3).sum(),
-                result.stream().mapToDouble(FiscaleRiepilogo::getSuperAmm4).sum()));
-        FiscaleRiepilogo.persist(result);
-
-    }
-
-    private void unisciFondi(List<SommaCategoria> sommaList, List<SommaCategoria> sommaOldList) {
-        for (SommaCategoria sommaCategoria : sommaOldList) {
-            for (SommaCategoria categoria : sommaList) {
-                if(categoria.getTipoCespite().equals(sommaCategoria.getTipoCespite())){
-                    categoria.setSomma(categoria.getSomma() + sommaCategoria.getSomma());
-                    break;
-                }
-            }
-        }
-    }
-
 
     @Transactional
     public void updateCespiti(CespiteRequest c) {
