@@ -23,14 +23,7 @@ public class JasperService {
     @Inject
     AmmortamentoCespiteService ammortamentoCespiteService;
 
-    public File createReport(FiltroCespite filtroCespite) {
-        RegistroCespitiDto registroCespitiDto = ammortamentoCespiteService.getRegistroCespiti(filtroCespite);
-        LocalDate localDate = LocalDate.now();
-        if(StringUtils.isNotBlank(filtroCespite.getData())) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-            localDate = LocalDate.parse(filtroCespite.getData(), formatter);
-        }
-        int anno = localDate.getYear();
+    public File createReport(RegistroCespitiDto registroCespitiDto) {
         if (registroCespitiDto != null && !registroCespitiDto.getCespiteList().isEmpty()) {
             try {
 
@@ -47,7 +40,7 @@ public class JasperService {
                 parameters.put("cespiteParameter", getCespiteParam(registroCespitiDto));
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
-                String destFileName = "Registro_cespiti_" + anno + ".pdf";
+                String destFileName = "Registro_cespiti.pdf";
                 String tempDir = System.getProperty("java.io.tmpdir");
                 File f = new File(tempDir + destFileName);
                 JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
@@ -60,7 +53,7 @@ public class JasperService {
         return null;
     }
 
-    private static Map getCespiteParam(RegistroCespitiDto registroCespitiDto){
+    private static Map getCespiteParam(RegistroCespitiDto registroCespitiDto) {
         Map<String, Object> cespiteParam = new HashMap<>();
         cespiteParam.put("cespiteDataset", registroCespitiDto.getCespiteList());
         return cespiteParam;

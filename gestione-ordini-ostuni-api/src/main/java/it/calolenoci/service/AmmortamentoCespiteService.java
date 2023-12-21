@@ -557,8 +557,11 @@ public class AmmortamentoCespiteService {
                         .sum()
                 );
                 double sum2 = ammortamentoCespiteList.stream().filter(a -> a.getFondoRivalutazione() != null).mapToDouble(AmmortamentoCespite::getFondoRivalutazione).sum();
-                inizioEsercizio.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() + sum2);
-                inizioEsercizio.setResiduo(inizioEsercizio.getValoreAggiornato() - inizioEsercizio.getFondoAmmortamenti());
+                if(sum2 != 0){
+                    inizioEsercizio.setFondoAmmortamentiRiv(sum2);
+                }
+                inizioEsercizio.setFondoAmmortamentiTot((inizioEsercizio.getFondoAmmortamenti() + inizioEsercizio.getFondoAmmortamentiRiv()));
+                inizioEsercizio.setResiduo(inizioEsercizio.getValoreAggiornato() - inizioEsercizio.getFondoAmmortamentiTot());
                 sommaDto.setInizioEsercizio(inizioEsercizio);
                 Map<String, List<CespiteDto>> superAmmMap = cespiteDtoList.stream().filter(c -> StringUtils.isNotBlank(c.getSuperAmmDesc())).collect(Collectors.groupingBy(CespiteDto::getSuperAmmDesc));
                 for (String superAmmDesc : superAmmMap.keySet()) {
@@ -607,19 +610,26 @@ public class AmmortamentoCespiteService {
                                 .filter(a -> StringUtils.startsWith(a.getDescrizione(), "Ammortamento"))
                                 .max(Comparator.comparing(AmmortamentoCespite::getAnno))
                                 .get()));
-                vendite.setTotaleAmmortamento(-(ammortamentoCespitesVend.stream().mapToDouble(AmmortamentoCespite::getFondo).sum()));
-                vendite.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() + vendite.getTotaleAmmortamento());
+
+                vendite.setTotaleAmmortamento(-(ammortamentoCespitesVend.stream().mapToDouble(a -> a.getFondo() + a.getFondoRivalutazione()).sum()));
+                vendite.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() + vendite.getAmmortamentoOrdinario());
+                vendite.setFondoAmmortamentiRiv(inizioEsercizio.getFondoAmmortamentiRiv() + vendite.getAmmortamentoAnticipato());
+                vendite.setFondoAmmortamentiTot(inizioEsercizio.getFondoAmmortamentiTot() + vendite.getTotaleAmmortamento());
                 FiscaleRiepilogoDto ammortamentiDeducibili = new FiscaleRiepilogoDto();
                 ammortamentiDeducibili.setAmmortamentoOrdinario(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == anno && a.getQuota() != null && StringUtils.startsWith(a.getDescrizione(), "Ammortamento")).mapToDouble(AmmortamentoCespite::getQuota).sum());
                 ammortamentiDeducibili.setAmmortamentoAnticipato(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == anno && a.getQuotaRivalutazione() != null && StringUtils.startsWith(a.getDescrizione(), "Ammortamento")).mapToDouble(AmmortamentoCespite::getQuotaRivalutazione).sum());
                 ammortamentiDeducibili.setTotaleAmmortamento(ammortamentiDeducibili.getAmmortamentoOrdinario() + ammortamentiDeducibili.getAmmortamentoAnticipato());
-                ammortamentiDeducibili.setFondoAmmortamenti(ammortamentiDeducibili.getTotaleAmmortamento() + vendite.getFondoAmmortamenti());
+                ammortamentiDeducibili.setFondoAmmortamenti(ammortamentiDeducibili.getAmmortamentoOrdinario() + vendite.getFondoAmmortamenti());
+                ammortamentiDeducibili.setFondoAmmortamentiRiv(ammortamentiDeducibili.getAmmortamentoAnticipato() + vendite.getFondoAmmortamentiRiv());
+                ammortamentiDeducibili.setFondoAmmortamentiTot(ammortamentiDeducibili.getTotaleAmmortamento() + vendite.getFondoAmmortamentiTot());
 
                 FiscaleRiepilogoDto fineEsercizio = new FiscaleRiepilogoDto();
                 fineEsercizio.setValoreAggiornato(inizioEsercizio.getValoreAggiornato() + acquisti.getValoreAggiornato() + vendite.getValoreAggiornato());
                 fineEsercizio.setFondoAmmortamenti(ammortamentiDeducibili.getFondoAmmortamenti());
+                fineEsercizio.setFondoAmmortamentiRiv(ammortamentiDeducibili.getFondoAmmortamentiRiv());
+                fineEsercizio.setFondoAmmortamentiTot(fineEsercizio.getFondoAmmortamenti() + fineEsercizio.getFondoAmmortamentiRiv());
                 fineEsercizio.setTotaleAmmortamento(ammortamentiDeducibili.getTotaleAmmortamento());
-                fineEsercizio.setResiduo(fineEsercizio.getValoreAggiornato() - fineEsercizio.getFondoAmmortamenti());
+                fineEsercizio.setResiduo(fineEsercizio.getValoreAggiornato() - fineEsercizio.getFondoAmmortamentiTot());
 
                 double plus = ammortamentoCespiteList2
                         .stream()
@@ -820,10 +830,10 @@ public class AmmortamentoCespiteService {
     }
 
 
-    public File scaricaRegistroCespiti(FiltroCespite filtroCespite) {
+    public File scaricaRegistroCespiti(RegistroCespitiDto view) {
         File report;
         try {
-            report = jasperService.createReport(filtroCespite);
+            report = jasperService.createReport(view);
         } catch (Exception e) {
             report = null;
             Log.error("error scarica regisro");

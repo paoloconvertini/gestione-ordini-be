@@ -18,6 +18,7 @@ public class FiscaleRiepilogoDto {
     Double nonAmmortabile = 0D;
     Double fondoAmmortamenti = 0D;
     Double fondoAmmortamentiRiv = 0D;
+    Double fondoAmmortamentiTot = 0D;
     Double residuo = 0D;
 
     public FiscaleRiepilogoDto(String tipoCespite, Double valoreAggiornato) {
