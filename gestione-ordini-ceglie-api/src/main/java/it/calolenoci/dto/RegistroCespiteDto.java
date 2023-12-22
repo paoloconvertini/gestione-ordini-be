@@ -101,4 +101,22 @@ public class RegistroCespiteDto implements Serializable {
         this.minusConto = minusConto;
     }
 
+    public RegistroCespiteDto(String tipoCespite, Integer progressivo1, Integer progressivo2, Double quota,
+                              Integer costoGruppo, String costoConto, Integer ammGruppo, String ammConto, Integer fondoGruppo,
+                              String fondoConto, Integer plusGruppo, String plusConto, Integer minusGruppo, String minusConto) {
+        this.tipoCespite = tipoCespite;
+        this.progressivo1 = progressivo1;
+        this.progressivo2 = progressivo2;
+        this.quota = quota;
+        this.costoGruppo = costoGruppo;
+        this.costoConto = costoConto;
+        this.ammGruppo = ammGruppo;
+        this.ammConto = ammConto;
+        this.fondoGruppo = fondoGruppo;
+        this.fondoConto = fondoConto;
+        this.plusGruppo = plusGruppo;
+        this.plusConto = plusConto;
+        this.minusGruppo = minusGruppo;
+        this.minusConto = minusConto;
+    }
 }

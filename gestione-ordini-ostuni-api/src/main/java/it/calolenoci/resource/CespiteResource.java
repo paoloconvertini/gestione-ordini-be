@@ -4,9 +4,10 @@ import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.Cespite;
-import it.calolenoci.mapper.AmmortamentoCespiteMapper;
 import it.calolenoci.service.AmmortamentoCespiteService;
 import it.calolenoci.service.PrimanotaService;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -17,7 +18,6 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -143,6 +143,7 @@ public class CespiteResource {
             primanotaService.contabilizzaAmm();
             return Response.ok().entity(new ResponseDto("contabilizzazione completata con successo", false)).build();
         } catch (Exception e) {
+            Log.error("Errore contabilizzaAmm", e);
             return Response.status(500).entity(new ResponseDto(e.getCause().getMessage(), true)).build();
         }
     }
