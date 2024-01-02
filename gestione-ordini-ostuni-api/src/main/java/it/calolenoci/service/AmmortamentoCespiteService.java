@@ -70,29 +70,6 @@ public class AmmortamentoCespiteService {
                     }
                     AmmortamentoCespite.persist(ammortamentoCespites);
                 }
-/*
-                List<RegistroCespiteDto> registroCespiteDtos = Cespite.find(
-                        "SELECT c.id, c.tipoCespite, c.progressivo1, c.progressivo2, c.cespite, c.dataAcq, c.numDocAcq, c.fornitore, " +
-                                " c.importo, c.importoRivalutazione, c.attivo, c.dataVendita, c.numDocVendita, c.intestatarioVendita, c.importoVendita," +
-                                " c.superAmm, c.protocollo, c.giornale, c.anno, c.dataInizioCalcoloAmm, c.flPrimoAnno, c.fondoRivalutazione, " +
-                                " t.id, t.descrizione, t.percAmmortamento, t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
-                                " t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto " +
-                                " FROM Cespite c " +
-                                " JOIN AmmortamentoCespite a ON a.idAmmortamento = c.id " +
-                                " JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite " +
-                                " WHERE c.attivo = 'T' AND a.anno >=:a ",
-                        Parameters.with("a", dataCorrente.getYear())).project(RegistroCespiteDto.class).list();
-                Log.debug("--- flag storico disattivato ---");
-                Log.debug("Numero di cepiti da processare: " + registroCespiteDtos.size());
-                AmmortamentoCespite.delete("idAmmortamento in (:list) and anno >=:a", Parameters.with("list", registroCespiteDtos.stream().map(RegistroCespiteDto::getId).collect(Collectors.toList())).and("a", dataCorrente.getYear()));
-                for (RegistroCespiteDto dto : registroCespiteDtos) {
-                    Cespite cespite = cespiteMapper.buildCespite(dto);
-                    List<AmmortamentoCespite> ammortamentoCespites = calcoloAnnoCorrente(dto.getPercAmmortamento(), cespite, dataCorrente);
-                    if (ammortamentoCespites.isEmpty()) {
-                        continue;
-                    }
-                    AmmortamentoCespite.persist(ammortamentoCespites);
-                }*/
             }
             long fine = System.currentTimeMillis();
             Log.info("Metodo calcola ammortamenti: " + (fine - inizio) / 1000 + " sec");
@@ -149,14 +126,15 @@ public class AmmortamentoCespiteService {
             }
             double quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
             double fondo = ammPrecedente.getFondo() + quotaDaSalvare;
-            if (residuo <= quotaDaSalvare) {
+
+            if(fondo > cespite.getImporto()) {
                 quotaDaSalvare = residuo;
                 residuo = 0;
                 fondo = cespite.getImporto();
             } else {
-                fondo += quotaDaSalvare;
                 residuo = cespite.getImporto() - fondo;
             }
+
             double perc = quotaDaSalvare / cespite.getImporto() * 100;
             AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, 0, fondo, 0, residuo, dataAmmortamento);
             ammortamentoCespiteList.add(a);
@@ -186,25 +164,22 @@ public class AmmortamentoCespiteService {
                 quota = cespite.getImporto() * (q.getAmmortamento() / 100);
                 quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
             }
-            if (residuo <= quotaRivDaSalvare) {
-                quotaRivDaSalvare = residuo;
+
+            fondoRiv += quotaDaSalvare;
+            if(fondoRiv > (cespite.getImporto() + cespite.getImportoRivalutazione())){
+                quotaDaSalvare = residuo;
                 residuo = 0;
                 fondoRiv = cespite.getImporto() + cespite.getImportoRivalutazione();
             } else {
-                fondoRiv += quotaRivDaSalvare;
                 residuo = cespite.getImportoRivalutazione() - fondoRiv;
             }
 
-            if (residuoNoRiv <= quotaDaSalvare) {
+            fondo += quotaDaSalvare;
+            if (fondo > cespite.getImporto()) {
                 quotaDaSalvare = residuoNoRiv;
-               // residuoNoRiv = 0;
                 fondo = cespite.getImporto();
-            } else {
-                fondo += quotaDaSalvare;
-               // residuoNoRiv = cespite.getImporto() - fondo;
             }
             residuoDaSalvare = residuo;
-            //quotaRivDaSalvare = quotaRiv;
             double perc;
             if (cespite.getImporto() == 0) {
                 perc = 0;
@@ -251,12 +226,13 @@ public class AmmortamentoCespiteService {
                     quota = cespite.getImporto() * (q.getAmmortamento() / 100);
                     quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
                 }
-                if (residuo <= quotaDaSalvare) {
+
+                fondo += quotaDaSalvare;
+                if(fondo > cespite.getImporto()){
                     quotaDaSalvare = residuo;
                     residuo = 0;
                     fondo = cespite.getImporto();
                 } else {
-                    fondo += quotaDaSalvare;
                     residuo = cespite.getImporto() - fondo;
                 }
 
@@ -331,44 +307,44 @@ public class AmmortamentoCespiteService {
 
                 if (cespite.getImportoRivalutazione() != null) {
                     if (dataAmmortamento.getYear() < 2021) {
-                        if (residuoNoRiv <= quotaDaSalvare) {
+                        fondo += quotaDaSalvare;
+                        if (fondo > cespite.getImporto()) {
                             quotaDaSalvare = residuoNoRiv;
                             residuoNoRiv = 0;
                             fondo = cespite.getImporto();
                         } else {
-                            fondo += quotaDaSalvare;
                             residuoNoRiv = cespite.getImporto() - fondo;
                         }
                         residuoDaSalvare = residuoNoRiv;
                         quotaRivDaSalvare = 0;
                     } else {
-                        if (residuo <= quotaRiv) {
+                        fondoRiv += quotaRiv;
+                        if (fondoRiv > cespite.getImporto() + cespite.getImportoRivalutazione()) {
                             quotaRiv = residuo;
                             residuo = 0;
                             fondoRiv = cespite.getImporto() + cespite.getImportoRivalutazione();
                         } else {
-                            fondoRiv += quotaRiv;
                             residuo = cespite.getImportoRivalutazione() - fondoRiv;
                         }
 
-                        if (residuoNoRiv <= quotaDaSalvare) {
+                        fondo += quotaDaSalvare;
+                        if (fondo > cespite.getImporto()) {
                             quotaDaSalvare = residuoNoRiv;
                             residuoNoRiv = 0;
                             fondo = cespite.getImporto();
                         } else {
-                            fondo += quotaDaSalvare;
                             residuoNoRiv = cespite.getImporto() - fondo;
                         }
                         residuoDaSalvare = residuo;
                         quotaRivDaSalvare = quotaRiv;
                     }
                 } else {
-                    if (residuoNoRiv <= quotaDaSalvare) {
+                    fondo += quotaDaSalvare;
+                    if (fondo > cespite.getImporto()) {
                         quotaDaSalvare = residuoNoRiv;
                         residuoNoRiv = 0;
                         fondo = cespite.getImporto();
                     } else {
-                        fondo += quotaDaSalvare;
                         residuoNoRiv = cespite.getImporto() - fondo;
                     }
                     residuoDaSalvare = residuoNoRiv;
