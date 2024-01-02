@@ -1,37 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RiepilogoFiscale" pageWidth="555" pageHeight="802" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="5b1bf43d-f0be-4463-b7f8-34cf2ca75051">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter_RegistroCespiti.jrdax"/>
 	<parameter name="riepilogoFiscaleRowReport" class="net.sf.jasperreports.engine.JRReport"/>
-	<queryString language="JSON">
+	<queryString>
 		<![CDATA[]]>
 	</queryString>
 	<field name="valoreAggiornato" class="java.lang.String">
-		<property name="net.sf.jasperreports.json.field.expression" value="valoreAggiornato"/>
 		<fieldDescription><![CDATA[valoreAggiornato]]></fieldDescription>
 	</field>
 	<field name="ammortamentoOrdinario" class="java.lang.String">
-		<property name="net.sf.jasperreports.json.field.expression" value="ammortamentoOrdinario"/>
 		<fieldDescription><![CDATA[ammortamentoOrdinario]]></fieldDescription>
 	</field>
 	<field name="ammortamentoAnticipato" class="java.lang.String">
-		<property name="net.sf.jasperreports.json.field.expression" value="ammortamentoAnticipato"/>
 		<fieldDescription><![CDATA[ammortamentoAnticipato]]></fieldDescription>
 	</field>
 	<field name="totaleAmmortamento" class="java.lang.String">
-		<property name="net.sf.jasperreports.json.field.expression" value="totaleAmmortamento"/>
 		<fieldDescription><![CDATA[totaleAmmortamento]]></fieldDescription>
 	</field>
 	<field name="nonAmmortabile" class="java.lang.String">
-		<property name="net.sf.jasperreports.json.field.expression" value="nonAmmortabile"/>
 		<fieldDescription><![CDATA[nonAmmortabile]]></fieldDescription>
 	</field>
 	<field name="fondoAmmortamenti" class="java.lang.String">
-		<property name="net.sf.jasperreports.json.field.expression" value="fondoAmmortamenti"/>
 		<fieldDescription><![CDATA[fondoAmmortamenti]]></fieldDescription>
 	</field>
 	<field name="residuo" class="java.lang.String">
-		<property name="net.sf.jasperreports.json.field.expression" value="residuo"/>
 		<fieldDescription><![CDATA[residuo]]></fieldDescription>
 	</field>
 	<background>
@@ -208,40 +200,6 @@
 				</textElement>
 				<text><![CDATA[Fiscale]]></text>
 			</staticText>
-			<subreport>
-				<reportElement x="81" y="30" width="474" height="30" uuid="746cb334-e866-43cd-a4f0-687a2e984afe">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("inizioEsercizio")]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
-			</subreport>
-			<subreport>
-				<reportElement x="81" y="61" width="474" height="31" uuid="a3e492b1-7051-4730-86e5-d86e029770c6"/>
-				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("acquisti")]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
-			</subreport>
-			<subreport>
-				<reportElement x="81" y="90" width="474" height="30" uuid="0d585688-0e43-40f1-a9fb-23fa9bf949d2">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("vendite")]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
-			</subreport>
-			<subreport>
-				<reportElement x="80" y="122" width="474" height="31" uuid="b48087bf-bb2b-46bf-b0f2-749d124b5de0"/>
-				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("ammortamentiDeducibili")]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
-			</subreport>
-			<subreport>
-				<reportElement x="80" y="151" width="474" height="31" uuid="0d36ee28-ffee-4d5e-95f6-2301fc52fbae"/>
-				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("ammortamentiNonDeducibili")]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
-			</subreport>
-			<subreport>
-				<reportElement x="80" y="180" width="474" height="31" uuid="e0a3bc05-abdc-4caa-8c12-b24da6b55dc1"/>
-				<dataSourceExpression><![CDATA[((net.sf.jasperreports.engine.data.JsonDataSource)$P{REPORT_DATA_SOURCE}).subDataSource("fineEsercizio")]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{riepilogoFiscaleRowReport}]]></subreportExpression>
-			</subreport>
 			<staticText>
 				<reportElement x="488" y="0" width="66" height="30" uuid="8fa0949c-1369-4035-829d-a0e6f0674345"/>
 				<box topPadding="0" leftPadding="3">
@@ -255,6 +213,62 @@
 				</textElement>
 				<text><![CDATA[Residuo]]></text>
 			</staticText>
+			<textField>
+				<reportElement x="488" y="31" width="66" height="30" uuid="5308b122-a171-480d-a023-b4a74c1ae45a"/>
+				<textFieldExpression><![CDATA[$F{residuo}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="80" y="31" width="78" height="30" uuid="803daf7e-5fb6-4844-9634-207855209b63"/>
+				<textFieldExpression><![CDATA[$F{valoreAggiornato}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="360" y="31" width="57" height="30" uuid="0a933d5d-5e45-4ff6-975e-70a444dfa18c"/>
+				<textFieldExpression><![CDATA[$F{nonAmmortabile}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="288" y="31" width="69" height="30" uuid="48950660-fdfb-407c-8145-7940f4e82941"/>
+				<textFieldExpression><![CDATA[$F{totaleAmmortamento}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="219" y="31" width="69" height="30" uuid="c09989db-bb2b-4970-818f-148933eab73a"/>
+				<textFieldExpression><![CDATA[$F{ammortamentoAnticipato}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="160" y="31" width="58" height="30" uuid="aaab82df-8969-4dff-a7ca-d542cb952f60"/>
+				<textFieldExpression><![CDATA[$F{ammortamentoOrdinario}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="417" y="30" width="71" height="30" uuid="30b36625-8349-46aa-9987-b7cc6672a1f5"/>
+				<textFieldExpression><![CDATA[$F{fondoAmmortamenti}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="360" y="60" width="57" height="30" uuid="24148378-1052-4f74-8f2d-240cf912ef61"/>
+				<textFieldExpression><![CDATA[$F{nonAmmortabile}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="80" y="60" width="78" height="30" uuid="ebe6bf1a-7434-4220-84cf-e9617ec78305"/>
+				<textFieldExpression><![CDATA[$F{valoreAggiornato}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="160" y="60" width="58" height="30" uuid="b07f49d6-fa0a-434f-b307-05ddea8d7338"/>
+				<textFieldExpression><![CDATA[$F{ammortamentoOrdinario}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="219" y="60" width="69" height="30" uuid="7c352e29-4536-4014-8845-be25e3d6121a"/>
+				<textFieldExpression><![CDATA[$F{ammortamentoAnticipato}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="288" y="60" width="69" height="30" uuid="d36552bb-bd90-4393-84de-70c599c4a18b"/>
+				<textFieldExpression><![CDATA[$F{totaleAmmortamento}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="488" y="60" width="66" height="30" uuid="56c97488-af53-4628-83ae-cdf7678baf7b"/>
+				<textFieldExpression><![CDATA[$F{residuo}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="416" y="60" width="71" height="30" uuid="a00e2494-b1ed-4583-b62f-069b1b81bb1f"/>
+				<textFieldExpression><![CDATA[$F{fondoAmmortamenti}]]></textFieldExpression>
+			</textField>
 		</band>
 	</detail>
 </jasperReport>

@@ -149,7 +149,7 @@ public class AmmortamentoCespiteService {
             }
             double quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
             double fondo = ammPrecedente.getFondo() + quotaDaSalvare;
-            if (residuo < quotaDaSalvare) {
+            if (residuo <= quotaDaSalvare) {
                 quotaDaSalvare = residuo;
                 residuo = 0;
                 fondo = cespite.getImporto();
@@ -186,7 +186,7 @@ public class AmmortamentoCespiteService {
                 quota = cespite.getImporto() * (q.getAmmortamento() / 100);
                 quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
             }
-            if (residuo < quotaRivDaSalvare) {
+            if (residuo <= quotaRivDaSalvare) {
                 quotaRivDaSalvare = residuo;
                 residuo = 0;
                 fondoRiv = cespite.getImporto() + cespite.getImportoRivalutazione();
@@ -195,7 +195,7 @@ public class AmmortamentoCespiteService {
                 residuo = cespite.getImportoRivalutazione() - fondoRiv;
             }
 
-            if (residuoNoRiv < quotaDaSalvare) {
+            if (residuoNoRiv <= quotaDaSalvare) {
                 quotaDaSalvare = residuoNoRiv;
                // residuoNoRiv = 0;
                 fondo = cespite.getImporto();
@@ -251,7 +251,7 @@ public class AmmortamentoCespiteService {
                     quota = cespite.getImporto() * (q.getAmmortamento() / 100);
                     quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
                 }
-                if (residuo < quotaDaSalvare) {
+                if (residuo <= quotaDaSalvare) {
                     quotaDaSalvare = residuo;
                     residuo = 0;
                     fondo = cespite.getImporto();
@@ -331,7 +331,7 @@ public class AmmortamentoCespiteService {
 
                 if (cespite.getImportoRivalutazione() != null) {
                     if (dataAmmortamento.getYear() < 2021) {
-                        if (residuoNoRiv < quotaDaSalvare) {
+                        if (residuoNoRiv <= quotaDaSalvare) {
                             quotaDaSalvare = residuoNoRiv;
                             residuoNoRiv = 0;
                             fondo = cespite.getImporto();
@@ -342,7 +342,7 @@ public class AmmortamentoCespiteService {
                         residuoDaSalvare = residuoNoRiv;
                         quotaRivDaSalvare = 0;
                     } else {
-                        if (residuo < quotaRiv) {
+                        if (residuo <= quotaRiv) {
                             quotaRiv = residuo;
                             residuo = 0;
                             fondoRiv = cespite.getImporto() + cespite.getImportoRivalutazione();
@@ -351,7 +351,7 @@ public class AmmortamentoCespiteService {
                             residuo = cespite.getImportoRivalutazione() - fondoRiv;
                         }
 
-                        if (residuoNoRiv < quotaDaSalvare) {
+                        if (residuoNoRiv <= quotaDaSalvare) {
                             quotaDaSalvare = residuoNoRiv;
                             residuoNoRiv = 0;
                             fondo = cespite.getImporto();
@@ -363,7 +363,7 @@ public class AmmortamentoCespiteService {
                         quotaRivDaSalvare = quotaRiv;
                     }
                 } else {
-                    if (residuoNoRiv < quotaDaSalvare) {
+                    if (residuoNoRiv <= quotaDaSalvare) {
                         quotaDaSalvare = residuoNoRiv;
                         residuoNoRiv = 0;
                         fondo = cespite.getImporto();
@@ -831,9 +831,11 @@ public class AmmortamentoCespiteService {
 
 
     public File scaricaRegistroCespiti(RegistroCespitiDto view) {
+        Log.debug(" ### INIZIO generazione report Registro cespiti ###");
         File report;
         try {
             report = jasperService.createReport(view);
+            Log.debug(" ### FINE generazione report Registro cespiti ###");
         } catch (Exception e) {
             report = null;
             Log.error("error scarica regisro");

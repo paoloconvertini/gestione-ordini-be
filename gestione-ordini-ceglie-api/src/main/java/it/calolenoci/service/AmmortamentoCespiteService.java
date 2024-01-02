@@ -107,7 +107,7 @@ public class AmmortamentoCespiteService {
                     quota = cespite.getImporto() * (q.getAmmortamento() / 100);
                     quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
                 }
-                if (residuo < quotaDaSalvare) {
+                if (residuo <= quotaDaSalvare) {
                     quotaDaSalvare = residuo;
                     residuo = 0;
                     fondo = cespite.getImporto();
@@ -172,7 +172,7 @@ public class AmmortamentoCespiteService {
                         }
                         double quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
                         double fondo = ammPrecedente.getFondo() + quotaDaSalvare;
-                        if (residuo < quotaDaSalvare) {
+                        if (residuo <= quotaDaSalvare) {
                             quotaDaSalvare = residuo;
                             residuo = 0;
                             fondo = cespite.getImporto();

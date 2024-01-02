@@ -1,36 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RiepilogoRow" pageWidth="595" pageHeight="842" whenNoDataType="BlankPage" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter_RegistroCespiti.jrdax"/>
-	<queryString language="JSON">
-		<![CDATA[cespiteSommaDto.inizioEsercizio]]>
+	<queryString>
+		<![CDATA[]]>
 	</queryString>
 	<field name="valoreAggiornato" class="java.lang.Double">
-		<property name="net.sf.jasperreports.json.field.expression" value="valoreAggiornato"/>
 		<fieldDescription><![CDATA[valoreAggiornato]]></fieldDescription>
 	</field>
 	<field name="ammortamentoOrdinario" class="java.lang.Double">
-		<property name="net.sf.jasperreports.json.field.expression" value="ammortamentoOrdinario"/>
 		<fieldDescription><![CDATA[ammortamentoOrdinario]]></fieldDescription>
 	</field>
 	<field name="ammortamentoAnticipato" class="java.lang.Double">
-		<property name="net.sf.jasperreports.json.field.expression" value="ammortamentoAnticipato"/>
 		<fieldDescription><![CDATA[ammortamentoAnticipato]]></fieldDescription>
 	</field>
 	<field name="totaleAmmortamento" class="java.lang.Double">
-		<property name="net.sf.jasperreports.json.field.expression" value="totaleAmmortamento"/>
 		<fieldDescription><![CDATA[totaleAmmortamento]]></fieldDescription>
 	</field>
 	<field name="nonAmmortabile" class="java.lang.Double">
-		<property name="net.sf.jasperreports.json.field.expression" value="nonAmmortabile"/>
 		<fieldDescription><![CDATA[nonAmmortabile]]></fieldDescription>
 	</field>
 	<field name="fondoAmmortamenti" class="java.lang.Double">
-		<property name="net.sf.jasperreports.json.field.expression" value="fondoAmmortamenti"/>
 		<fieldDescription><![CDATA[fondoAmmortamenti]]></fieldDescription>
 	</field>
 	<field name="residuo" class="java.lang.Double">
-		<property name="net.sf.jasperreports.json.field.expression" value="residuo"/>
 		<fieldDescription><![CDATA[residuo]]></fieldDescription>
 	</field>
 	<background>
