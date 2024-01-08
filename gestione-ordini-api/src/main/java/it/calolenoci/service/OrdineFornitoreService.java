@@ -157,6 +157,7 @@ public class OrdineFornitoreService {
     @Transactional
     public void unisciOrdini(List<OrdineFornitoreDto> dtoList) {
         try {
+            dtoList.sort(Comparator.comparing(OrdineFornitoreDto::getAnno).reversed());
             OrdineFornitoreDto ordineDaTenere = dtoList.get(0);
             Integer ultimoRigo = findRigo(ordineDaTenere.getAnno(), ordineDaTenere.getSerie(), ordineDaTenere.getProgressivo());
             List<OrdineFornitoreDto> ordiniDaUnire = dtoList.stream().skip(1).toList();
@@ -168,9 +169,9 @@ public class OrdineFornitoreService {
                                     Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo()))
                             .list()));
             for (OrdineFornitoreDettaglio o : list) {
-                update += OrdineFornitoreDettaglio.update("rigo = :nuovoRigo, progressivo =: nuovoProgressivo " +
+                update += OrdineFornitoreDettaglio.update("anno=:a, rigo = :nuovoRigo, progressivo =: nuovoProgressivo " +
                                 "WHERE anno = :anno and serie =:serie and progressivo =:progressivo and rigo=:rigo",
-                        Parameters.with("anno", o.getAnno()).and("serie", o.getSerie())
+                        Parameters.with("anno", o.getAnno()).and("a", ordineDaTenere.getAnno()).and("serie", o.getSerie())
                                 .and("progressivo", o.getProgressivo()).and("rigo", o.getRigo())
                                 .and("nuovoRigo", count).and("nuovoProgressivo", ordineDaTenere.getProgressivo()));
                 count++;
