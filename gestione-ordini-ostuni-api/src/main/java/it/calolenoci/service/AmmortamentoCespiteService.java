@@ -643,17 +643,26 @@ public class AmmortamentoCespiteService {
             FiscaleRiepilogoDto inizio = new FiscaleRiepilogoDto();
             inizio.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getInizioEsercizio().getValoreAggiornato()).sum());
             inizio.setFondoAmmortamenti(result.stream().mapToDouble(c -> c.getSomma().getInizioEsercizio().getFondoAmmortamenti()).sum());
+            inizio.setFondoAmmortamentiRiv(result.stream().mapToDouble(c -> c.getSomma().getInizioEsercizio().getFondoAmmortamentiRiv()).sum());
+            inizio.setFondoAmmortamentiTot(inizio.getFondoAmmortamenti() + inizio.getFondoAmmortamentiRiv());
             inizio.setResiduo(result.stream().mapToDouble(c -> c.getSomma().getInizioEsercizio().getResiduo()).sum());
 
             FiscaleRiepilogoDto fine = new FiscaleRiepilogoDto();
             fine.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getFineEsercizio().getValoreAggiornato()).sum());
             fine.setFondoAmmortamenti(result.stream().mapToDouble(c -> c.getSomma().getFineEsercizio().getFondoAmmortamenti()).sum());
+            fine.setFondoAmmortamentiRiv(result.stream().mapToDouble(c -> c.getSomma().getFineEsercizio().getFondoAmmortamentiRiv()).sum());
+            fine.setFondoAmmortamentiTot(fine.getFondoAmmortamenti() + fine.getFondoAmmortamentiRiv());
             fine.setResiduo(result.stream().mapToDouble(c -> c.getSomma().getFineEsercizio().getResiduo()).sum());
 
             FiscaleRiepilogoDto acquisti = new FiscaleRiepilogoDto();
             FiscaleRiepilogoDto vendite = new FiscaleRiepilogoDto();
             acquisti.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getAcquisti().getValoreAggiornato()).sum());
             vendite.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getVendite().getValoreAggiornato()).sum());
+            vendite.setTotaleAmmortamento(result.stream().mapToDouble(c -> c.getSomma().getVendite().getTotaleAmmortamento()).sum());
+            vendite.setFondoAmmortamenti(result.stream().mapToDouble(c -> c.getSomma().getVendite().getFondoAmmortamenti()).sum());
+            vendite.setFondoAmmortamentiRiv(result.stream().mapToDouble(c -> c.getSomma().getVendite().getFondoAmmortamentiRiv()).sum());
+            vendite.setFondoAmmortamentiTot(result.stream().mapToDouble(c -> c.getSomma().getVendite().getFondoAmmortamentiTot()).sum());
+
 
             FiscaleRiepilogoDto ammortamentiDeducibili = new FiscaleRiepilogoDto();
             ammortamentiDeducibili.setAmmortamentoOrdinario(result.stream().mapToDouble(c -> c.getSomma().getAmmortamentiDeducibili().getAmmortamentoOrdinario()).sum());
