@@ -67,7 +67,7 @@ public class AmmortamentoCespiteMapper {
         a.setDescrizione(d.getDescrAmm());
         a.setPercAmm(d.getPercAmm());
         a.setFondo(d.getFondo());
-        a.setFondoRivalutazione(d.getFondoRivalutazione());
+        a.setFondoRivalutazione(d.getFondoRivAmm());
         a.setQuota(d.getQuota());
         a.setQuotaRivalutazione(d.getQuotaRivalutazione());
         a.setResiduo(d.getResiduo());

@@ -72,15 +72,19 @@ public class RegistroCespiteReportDto implements Serializable {
     private Double totFineEsercizioFondoAmmortamentiTot = 0D;
     private Double totFineEsercizioResiduo = 0D;
     private String totSuperAmm1Desc;
-    private Double totSuperAmm1Totale;
+    private Double totSuperAmm1Totale = 0D;
     private String totSuperAmm2Desc;
-    private Double totSuperAmm2Totale;
+    private Double totSuperAmm2Totale = 0D;
     private String totSuperAmm3Desc;
-    private Double totSuperAmm3Totale;
+    private Double totSuperAmm3Totale = 0D;
     private String totSuperAmm4Desc;
-    private Double totSuperAmm4Totale;
+    private Double totSuperAmm4Totale = 0D;
+    private Double totSuperAmmortamenti = 0D;
     private String totPlusMinusDesc;
-    private Double totPlusMinusTotale;
+    private Double totPlusMinusTotale = 0D;
+
+    private Boolean showTotali = Boolean.FALSE;
+    private Boolean showPlus = Boolean.FALSE;
 
     List<CategoriaCespiteReportDto> categoriaCespiteReportDtoList;
 

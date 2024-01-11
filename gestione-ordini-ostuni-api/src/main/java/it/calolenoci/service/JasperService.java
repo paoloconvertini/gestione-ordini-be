@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.File;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,18 +30,17 @@ public class JasperService {
                 RegistroCespiteReportDto dto = mapper.buildRegistroCespiteReport(registroCespitiDto);
 
                 // 1. compile template ".jrxml" file
-                JasperReport jasperReport = compileReport("RegistroCespiti.jrxml");
 
                 // 2. parameters "empty"
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put("cespiteReport", compileReport("Cespite.jrxml"));
                 parameters.put("ammortamentoReport", compileReport("Ammortamento.jrxml"));
                 parameters.put("ammortamentoRowReport", compileReport("AmmortamentoRow.jrxml"));
-                parameters.put("riepilogoFiscaleReport", compileReport("RiepilogoFiscale.jrxml"));
-                parameters.put("riepilogoFiscaleRowReport", compileReport("RiepilogoRow.jrxml"));
+                parameters.put("anno",registroCespitiDto.getData() == null ? LocalDate.now().getYear() : registroCespitiDto.getData().getYear());
 
                 JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(Collections.singletonList(dto));
 
+                JasperReport jasperReport = compileReport("RegistroCespiti.jrxml");
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, ds);
                 String destFileName = "Registro_cespiti.pdf";
                 File f = new File(destFileName);

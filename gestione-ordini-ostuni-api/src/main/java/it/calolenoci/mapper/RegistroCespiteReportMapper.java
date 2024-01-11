@@ -1,8 +1,11 @@
 package it.calolenoci.mapper;
 
 import it.calolenoci.dto.*;
+import it.calolenoci.entity.AmmortamentoCespite;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -119,9 +122,15 @@ public class RegistroCespiteReportMapper {
             r.setTotSuperAmm4Desc(s4.getDesc());
             r.setTotSuperAmm4Totale(s4.getTotale());
         }
+        if(r.getTotSuperAmm1Totale() + r.getTotSuperAmm2Totale() + r.getTotSuperAmm3Totale() + r.getTotSuperAmm4Totale() != 0){
+            r.setTotSuperAmmortamenti(r.getTotSuperAmm1Totale() + r.getTotSuperAmm2Totale() + r.getTotSuperAmm3Totale() + r.getTotSuperAmm4Totale());
+            r.setShowTotali(Boolean.TRUE);
+        }
+
         if (p != null) {
             r.setTotPlusMinusDesc(p.getDesc());
             r.setTotPlusMinusTotale(p.getTotale());
+            r.setShowPlus(Boolean.TRUE);
         }
 
         List<CategoriaCespiteReportDto> categoriaCespiteReportDtoList = new ArrayList<>();
@@ -246,9 +255,15 @@ public class RegistroCespiteReportMapper {
             r.setCatSuperAmm4Totale(s4.getTotale());
         }
 
+        if((r.getCatSuperAmm1Totale() + r.getCatSuperAmm2Totale() + r.getCatSuperAmm3Totale() + r.getCatSuperAmm4Totale()) != 0){
+            r.setCatSuperAmmortamenti(r.getCatSuperAmm1Totale() + r.getCatSuperAmm2Totale() + r.getCatSuperAmm3Totale() + r.getCatSuperAmm4Totale());
+            r.setCatShowTotali(Boolean.TRUE);
+        }
+
         if (p != null) {
             r.setCatPlusMinusDesc(p.getDesc());
             r.setCatPlusMinusTotale(p.getTotale());
+            r.setCatShowPlus(Boolean.TRUE);
         }
 
         List<CespiteReportDto> cespiteReportDtoList = new ArrayList<>();
@@ -272,7 +287,11 @@ public class RegistroCespiteReportMapper {
         c.setProgressivo1(d.getProgressivo1());
         c.setProgressivo2(d.getProgressivo2());
         c.setCespite(d.getCespite());
-        c.setDataAcq(d.getDataAcq());
+        if(d.getDataAcq() != null){
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dtFormattata = d.getDataAcq().format(formatter);
+            c.setDataAcq(dtFormattata);
+        }
         c.setNumDocAcq(d.getNumDocAcq());
         c.setFornitore(d.getFornitore());
         c.setImporto(d.getImporto());
@@ -281,13 +300,45 @@ public class RegistroCespiteReportMapper {
         c.setAnno(d.getAnno());
         c.setSuperAmmDesc(d.getSuperAmmDesc());
         c.setImportoVendita(d.getImportoVendita());
-        c.setDataVend(d.getDataVend());
-        c.setProtocollo(d.getProtocollo());
-        c.setGiornale(d.getGiornale());
-        c.setAnnoProtocollo(d.getAnnoProtocollo());
-        c.setAmmortamentoCespiteList(d.getAmmortamentoCespiteList());
+        if(d.getDataVend() != null){
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dtVFormattata = d.getDataVend().format(formatter);
+            c.setDataVend(dtVFormattata);
+        }
+        if(d.getProtocollo() != null) {
+            c.setProtocollo(StringUtils.join("Prot. ", d.getProtocollo(), "/", d.getGiornale(), "/", d.getAnnoProtocollo()));
+        }
+
+        List<AmmortamentoCespiteDto> ammortamentoCespiteDtos = new ArrayList<>();
+        for (AmmortamentoCespite o : d.getAmmortamentoCespiteList()) {
+            ammortamentoCespiteDtos.add(buildAmmortamento(o));
+        }
+        c.setAmmortamentoCespiteList(ammortamentoCespiteDtos);
         return c;
 
+    }
+
+    private AmmortamentoCespiteDto buildAmmortamento(AmmortamentoCespite d) {
+        AmmortamentoCespiteDto a = new AmmortamentoCespiteDto();
+        a.setId(d.getId());
+        a.setIdAmmortamento(d.getIdAmmortamento());
+        a.setDescrizione(d.getDescrizione());
+        a.setFondo(d.getFondo());
+        a.setQuota(d.getQuota());
+        a.setPercAmm(d.getPercAmm());
+        a.setFondoRivalutazione(d.getFondoRivalutazione());
+        a.setFondoTot((a.getFondo()!=null?a.getFondo():0) + (a.getFondoRivalutazione()!=null?a.getFondoRivalutazione():0));
+        a.setResiduo(d.getResiduo());
+        a.setQuotaRivalutazione(d.getQuotaRivalutazione());
+        a.setSuperQuota(d.getSuperQuota());
+        a.setSuperPercentuale(d.getSuperPercentuale());
+        a.setAnno(d.getAnno());
+        if(d.getDataAmm() != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dtFormattata = d.getDataAmm().format(formatter);
+            a.setDataAmm(dtFormattata);
+        }
+        return a;
     }
 
 }

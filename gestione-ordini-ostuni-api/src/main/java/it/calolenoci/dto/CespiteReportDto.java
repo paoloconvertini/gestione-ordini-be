@@ -1,9 +1,7 @@
 package it.calolenoci.dto;
 
 import it.calolenoci.entity.AmmortamentoCespite;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -12,6 +10,8 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
 public class CespiteReportDto implements Serializable {
 
     private String id;
@@ -24,7 +24,7 @@ public class CespiteReportDto implements Serializable {
 
     private String cespite;
 
-    private LocalDate dataAcq;
+    private String dataAcq;
 
     private String numDocAcq;
 
@@ -42,13 +42,9 @@ public class CespiteReportDto implements Serializable {
 
     private Double importoVendita;
 
-    private LocalDate dataVend;
+    private String dataVend;
 
-    private Integer protocollo;
+    private String protocollo;
 
-    private String giornale;
-
-    private Integer annoProtocollo;
-
-    private List<AmmortamentoCespite> ammortamentoCespiteList;
+    private List<AmmortamentoCespiteDto> ammortamentoCespiteList;
 }

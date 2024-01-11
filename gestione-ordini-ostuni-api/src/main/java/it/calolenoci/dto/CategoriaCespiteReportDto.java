@@ -1,6 +1,8 @@
 package it.calolenoci.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -8,6 +10,8 @@ import java.util.List;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CategoriaCespiteReportDto implements Serializable {
 
     private String tipoCespite;
@@ -77,15 +81,19 @@ public class CategoriaCespiteReportDto implements Serializable {
     private Double catFineEsercizioFondoAmmortamentiTot = 0D;
     private Double catFineEsercizioResiduo = 0D;
     private String catSuperAmm1Desc;
-    private Double catSuperAmm1Totale;
+    private Double catSuperAmm1Totale = 0D;
     private String catSuperAmm2Desc;
-    private Double catSuperAmm2Totale;
+    private Double catSuperAmm2Totale = 0D;
     private String catSuperAmm3Desc;
-    private Double catSuperAmm3Totale;
+    private Double catSuperAmm3Totale = 0D;
     private String catSuperAmm4Desc;
-    private Double catSuperAmm4Totale;
+    private Double catSuperAmm4Totale = 0D;
+    private Double catSuperAmmortamenti;
     private String catPlusMinusDesc;
-    private Double catPlusMinusTotale;
-
+    private Double catPlusMinusTotale = 0D;
     private List<CespiteReportDto> cespiteDtoList;
+
+    private Boolean catShowTotali = Boolean.FALSE;
+    private Boolean catShowPlus = Boolean.FALSE;
+
 }
