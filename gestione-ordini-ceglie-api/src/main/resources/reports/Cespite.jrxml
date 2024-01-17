@@ -90,7 +90,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Vendite]]></text>
 			</staticText>
@@ -103,7 +103,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Amm. ord.]]></text>
 			</staticText>
@@ -116,7 +116,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Residuo]]></text>
 			</staticText>
@@ -129,7 +129,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Fiscale]]></text>
 			</staticText>
@@ -142,7 +142,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Amm. ded.ile]]></text>
 			</staticText>
@@ -155,7 +155,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Fondo amm. ord.]]></text>
 			</staticText>
@@ -168,7 +168,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Inizio esercizio]]></text>
 			</staticText>
@@ -181,7 +181,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Tot. amm.to]]></text>
 			</staticText>
@@ -194,7 +194,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Acquisti]]></text>
 			</staticText>
@@ -209,7 +209,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Valore agg.to]]></text>
 			</staticText>
@@ -222,7 +222,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Fine esercizio]]></text>
 			</staticText>
@@ -237,7 +237,7 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catInizioEsercizioValoreAggiornato}]]></textFieldExpression>
 			</textField>
@@ -280,35 +280,35 @@
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="168" y="33" width="85" height="30" uuid="5188e765-4a42-456e-8668-1eea9b0d048c"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catInizioEsercizioAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="253" y="33" width="95" height="30" uuid="cad54214-5129-4e76-8915-55ce8e691f35"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catInizioEsercizioTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="348" y="33" width="101" height="30" uuid="9dd551df-f6fb-4939-a611-2203e5663e3b"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catInizioEsercizioFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="449" y="33" width="124" height="30" uuid="5fb13312-7bb3-4da8-aa69-e8d363efcfd1"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catInizioEsercizioResiduo}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="449" y="63" width="124" height="30" uuid="c9e2e851-1da9-4612-b5a8-d3007461b3d3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAcquistiResiduo}]]></textFieldExpression>
 			</textField>
@@ -323,35 +323,35 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAcquistiValoreAggiornato}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="168" y="63" width="85" height="30" uuid="3f3ae9fd-70d9-40fa-a2b6-a2bc8dbb06d5"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAcquistiAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="253" y="63" width="95" height="30" uuid="78b9aade-18fb-4715-8928-6f72604dd884"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAcquistiTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="348" y="63" width="101" height="30" uuid="d5f4eeb3-0101-4963-868d-7a45d1bafca6"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAcquistiFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="449" y="94" width="124" height="30" uuid="8abd6c51-ceb3-4dcb-8e5d-24f8ab04e406"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catVenditeResiduo}]]></textFieldExpression>
 			</textField>
@@ -366,35 +366,35 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catVenditeValoreAggiornato}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="168" y="94" width="85" height="30" uuid="e496bd5a-10bc-4ea4-971c-9352b9bc536c"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catVenditeAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="253" y="94" width="95" height="30" uuid="87c15dce-efd5-4c96-9777-3d51edf82ad6"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catVenditeTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="348" y="94" width="101" height="30" uuid="206a80c9-bfa2-4851-95dd-399f39365044"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catVenditeFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="449" y="124" width="124" height="30" uuid="e2e79e7b-272f-4374-92a0-56166eda6c2c"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAmmortamentiDeducibiliResiduo}]]></textFieldExpression>
 			</textField>
@@ -409,35 +409,35 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAmmortamentiDeducibiliValoreAggiornato}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="168" y="124" width="85" height="30" uuid="a721aaa7-93c1-4d1a-bfff-46cb16249828"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAmmortamentiDeducibiliAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="253" y="124" width="95" height="30" uuid="510fe715-1eb4-4d87-9c4f-368549f56ccc"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAmmortamentiDeducibiliTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="348" y="124" width="101" height="30" uuid="434791f8-3fd4-4641-a894-8b234c15c9ad"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catAmmortamentiDeducibiliFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="449" y="155" width="124" height="30" uuid="034ae5f0-db14-4d90-b4ac-23b0a0371354"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catFineEsercizioResiduo}]]></textFieldExpression>
 			</textField>
@@ -452,28 +452,28 @@
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catFineEsercizioValoreAggiornato}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="168" y="155" width="85" height="30" uuid="d5df2343-25d6-47c2-8cc6-6c9a0e973dc8"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catFineEsercizioAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="253" y="155" width="95" height="30" uuid="ffa1f961-9f79-4381-b77b-ffb8866251ab"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catFineEsercizioTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="348" y="155" width="101" height="30" uuid="1603efe6-8264-4400-ba58-f2b4e5d5e5a2"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catFineEsercizioFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
@@ -493,7 +493,7 @@
 				</reportElement>
 				<box topPadding="3"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catSuperAmmortamenti}]]></textFieldExpression>
 			</textField>
@@ -503,7 +503,7 @@
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catSuperAmm3Desc}+":"]]></textFieldExpression>
 			</textField>
@@ -513,7 +513,7 @@
 				</reportElement>
 				<box leftPadding="1"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catSuperAmm3Totale}]]></textFieldExpression>
 			</textField>
@@ -523,7 +523,7 @@
 				</reportElement>
 				<box topPadding="3" leftPadding="3"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Totale Maggiorazioni deducibili: "]]></textFieldExpression>
 			</textField>
@@ -539,7 +539,7 @@
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catSuperAmm1Desc} +":"]]></textFieldExpression>
 			</textField>
@@ -549,7 +549,7 @@
 				</reportElement>
 				<box leftPadding="1"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catSuperAmm1Totale}]]></textFieldExpression>
 			</textField>
@@ -559,7 +559,7 @@
 				</reportElement>
 				<box leftPadding="1"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catSuperAmm2Totale}]]></textFieldExpression>
 			</textField>
@@ -569,7 +569,7 @@
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catSuperAmm2Desc}+":"]]></textFieldExpression>
 			</textField>
@@ -582,7 +582,7 @@
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catPlusMinusDesc}+":"]]></textFieldExpression>
 			</textField>
@@ -598,7 +598,7 @@
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catPlusMinusTotale}]]></textFieldExpression>
 			</textField>

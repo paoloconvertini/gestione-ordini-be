@@ -51,7 +51,7 @@
 				<reportElement x="0" y="0" width="50" height="30" uuid="244ccdb2-5ff7-45ad-ba6c-5cb17f8b5442"/>
 				<box topPadding="2" leftPadding="2"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{progressivo1} + "." + $F{progressivo2}]]></textFieldExpression>
 			</textField>
@@ -59,7 +59,7 @@
 				<reportElement stretchType="ContainerHeight" x="51" y="0" width="178" height="30" uuid="ebedb08a-36a6-40e9-bd38-3e44fc965683"/>
 				<box topPadding="2" leftPadding="2"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{cespite}]]></textFieldExpression>
 			</textField>
@@ -75,7 +75,7 @@
 				</reportElement>
 				<box topPadding="2" leftPadding="2"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Costo storico:]]></text>
 			</staticText>
@@ -83,7 +83,7 @@
 				<reportElement x="298" y="0" width="80" height="15" uuid="b39c7a68-3c32-4955-94a5-c2a4e61deb3b"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{importo}]]></textFieldExpression>
 			</textField>
@@ -91,7 +91,7 @@
 				<reportElement x="378" y="0" width="40" height="15" uuid="ff94e361-949b-451c-8801-3bd224844a4a"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Fornitore: "]]></textFieldExpression>
 			</textField>
@@ -99,7 +99,7 @@
 				<reportElement x="1" y="30" width="49" height="15" uuid="b0905efb-2807-40f0-9646-feb86e9a7edc"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{protocollo}]]></textFieldExpression>
 			</textField>
@@ -107,7 +107,7 @@
 				<reportElement x="418" y="0" width="150" height="15" uuid="f69357b0-0b03-4ea3-adc6-7a7bcdf73d4f"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{fornitore}]]></textFieldExpression>
 			</textField>
@@ -115,7 +115,7 @@
 				<reportElement x="418" y="15" width="60" height="15" uuid="3784749c-91ff-4fe0-923f-ec11fece1bcc"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{numDocAcq}]]></textFieldExpression>
 			</textField>
@@ -123,7 +123,7 @@
 				<reportElement x="378" y="15" width="40" height="15" uuid="3d702e7e-c356-45ce-a245-218bf58d99fd"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Fatt. n.: "]]></textFieldExpression>
 			</textField>
@@ -131,7 +131,7 @@
 				<reportElement x="478" y="15" width="20" height="15" uuid="3e7b15f3-da62-4ac1-87e8-e1e767b0a87c"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[" del "]]></textFieldExpression>
 			</textField>
@@ -139,7 +139,7 @@
 				<reportElement x="498" y="15" width="69" height="15" uuid="e206be5a-a495-498c-b093-5acd368f082b"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{dataAcq}]]></textFieldExpression>
 			</textField>
@@ -153,7 +153,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Descrizione"]]></textFieldExpression>
 			</textField>
@@ -166,7 +166,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Data Amm."]]></textFieldExpression>
 			</textField>
@@ -178,7 +178,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["% Amm."]]></textFieldExpression>
 			</textField>
@@ -191,7 +191,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Fondo Ord."]]></textFieldExpression>
 			</textField>
@@ -205,7 +205,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["V.N.C."]]></textFieldExpression>
 			</textField>
@@ -218,7 +218,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Q.ta Super"]]></textFieldExpression>
 			</textField>
@@ -231,7 +231,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Q.ta Amm Ord."]]></textFieldExpression>
 			</textField>
