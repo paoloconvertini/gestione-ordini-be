@@ -87,14 +87,14 @@ public class PrimanotaService {
             Integer progrGenerale = Primanota.find("SELECT MAX(progrgenerale) + 1 FROM Primanota").project(Integer.class).firstResult();
             List<Primanota> primanotaList = Primanota.find("SELECT p " +
                     "FROM Primanota p " +
-                    "where anno =:a AND giornale ='' ", Parameters.with("a", Year.now().getValue())).list();
+                    "where anno =:a AND giornale ='' ", Parameters.with("a", date.getYear())).list();
             int protocollo;
             if(primanotaList.isEmpty()){
                 protocollo = 1;
             } else {
                 protocollo = Primanota.find("SELECT MAX(protocollo) + 1 " +
                         "FROM Primanota " +
-                        "where anno =:a AND giornale ='' ", Parameters.with("a", Year.now().getValue())).project(Integer.class).firstResult();
+                        "where anno =:a AND giornale ='' ", Parameters.with("a", date.getYear())).project(Integer.class).firstResult();
             }
             Map<String, List<RegistroCespiteDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(RegistroCespiteDto::getTipoCespite));
             List<Primanota> listToSave = new ArrayList<>();
@@ -144,14 +144,14 @@ public class PrimanotaService {
                 Integer progrGenerale = Primanota.find("SELECT MAX(progrgenerale) + 1 FROM Primanota").project(Integer.class).firstResult();
                 List<Primanota> primanotas = Primanota.find("SELECT p " +
                         "FROM Primanota p " +
-                        "where anno =:a AND giornale ='' ", Parameters.with("a", Year.now().getValue())).list();
+                        "where anno =:a AND giornale ='' ", Parameters.with("a", dto.getDatamovimento().getYear())).list();
                 int protocollo;
                 if(primanotas.isEmpty()){
                     protocollo = 1;
                 } else {
                     protocollo = Primanota.find("SELECT MAX(protocollo) + 1 " +
                             "FROM Primanota " +
-                            "where anno =:a AND giornale ='' ", Parameters.with("a", Year.now().getValue())).project(Integer.class).firstResult();
+                            "where anno =:a AND giornale ='' ", Parameters.with("a", dto.getDatamovimento().getYear())).project(Integer.class).firstResult();
                 }
                 List<Primanota> listToSave = new ArrayList<>();
                 int rigo = 1;
