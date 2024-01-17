@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="AmmortamentoRow" pageWidth="521" pageHeight="842" whenNoDataType="BlankPage" columnWidth="519" leftMargin="1" rightMargin="1" topMargin="1" bottomMargin="2" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
-	<property name="com.jaspersoft.studio.unit." value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="AmmortamentoRow" pageWidth="521" pageHeight="842" whenNoDataType="BlankPage" columnWidth="521" leftMargin="0" rightMargin="0" topMargin="1" bottomMargin="1" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
 	<queryString>
 		<![CDATA[]]>
 	</queryString>
@@ -38,82 +29,94 @@
 		<band splitType="Stretch"/>
 	</background>
 	<detail>
-		<band height="31" splitType="Stretch">
+		<band height="15" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<textField isBlankWhenNull="true">
-				<reportElement x="0" y="1" width="44" height="30" uuid="dd5aac63-e786-49d1-82b9-add80551bcd5">
+				<reportElement x="0" y="0" width="60" height="15" uuid="dd5aac63-e786-49d1-82b9-add80551bcd5">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
-				<textElement verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{dataAmm}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="45" y="1" width="114" height="30" uuid="355863cf-3f5a-4c26-bbd3-12225ca412c9">
+				<reportElement x="61" y="0" width="104" height="15" uuid="355863cf-3f5a-4c26-bbd3-12225ca412c9">
 					<property name="com.jaspersoft.studio.unit.x" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
-				<textElement verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{descrizione}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.##" isBlankWhenNull="true">
-				<reportElement x="159" y="1" width="40" height="30" uuid="c119e321-437a-4314-aa2b-78e1697ba62e">
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				<reportElement x="165" y="0" width="40" height="15" uuid="c119e321-437a-4314-aa2b-78e1697ba62e">
 					<property name="com.jaspersoft.studio.unit.x" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
-				<textElement verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8" pdfEncoding=""/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{percAmm}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="200" y="1" width="78" height="30" uuid="f6f051ec-e29e-4e6c-a0c5-204aef06aa17"/>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="205" y="0" width="78" height="15" uuid="f6f051ec-e29e-4e6c-a0c5-204aef06aa17">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
-				<textElement verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{quota}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="278" y="1" width="82" height="30" uuid="111c6f0f-091d-4204-8241-ff72f0447608"/>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="283" y="0" width="82" height="15" uuid="111c6f0f-091d-4204-8241-ff72f0447608">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
-				<textElement verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{superQuota}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="360" y="1" width="80" height="30" uuid="4a7db242-5c32-4069-a86c-733c580163e9"/>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="365" y="0" width="80" height="15" uuid="4a7db242-5c32-4069-a86c-733c580163e9">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
-				<textElement verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{fondo}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="440" y="1" width="79" height="30" uuid="0bcec6a4-42b8-43b9-9185-9c1d96192d07"/>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="445" y="0" width="75" height="15" uuid="0bcec6a4-42b8-43b9-9185-9c1d96192d07">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
-				<textElement verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{residuo}]]></textFieldExpression>

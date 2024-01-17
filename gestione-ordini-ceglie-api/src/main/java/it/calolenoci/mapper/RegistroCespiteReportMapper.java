@@ -246,7 +246,11 @@ public class RegistroCespiteReportMapper {
         AmmortamentoCespiteDto a = new AmmortamentoCespiteDto();
         a.setId(d.getId());
         a.setIdAmmortamento(d.getIdAmmortamento());
-        a.setDescrizione(d.getDescrizione());
+        if(StringUtils.startsWith(d.getDescrizione(), "Ammortamento")) {
+            a.setDescrizione("Amm. ord. deducibile");
+        } else {
+            a.setDescrizione(d.getDescrizione());
+        }
         a.setFondo(d.getFondo());
         a.setQuota(d.getQuota());
         a.setPercAmm(d.getPercAmm());

@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Ammortamento" pageWidth="573" pageHeight="842" whenNoDataType="BlankPage" columnWidth="571" leftMargin="1" rightMargin="1" topMargin="3" bottomMargin="3" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Ammortamento" pageWidth="573" pageHeight="842" whenNoDataType="BlankPage" columnWidth="571" leftMargin="1" rightMargin="1" topMargin="1" bottomMargin="1" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
 	<parameter name="ammortamentoRowReport" class="net.sf.jasperreports.engine.JRReport"/>
 	<queryString>
 		<![CDATA[]]>
@@ -40,13 +49,7 @@
 		<band splitType="Stretch"/>
 	</background>
 	<detail>
-		<band height="110" splitType="Stretch">
-			<rectangle>
-				<reportElement stretchType="ContainerBottom" x="0" y="0" width="571" height="110" uuid="d9847700-e9a1-46e6-9163-9c5b355c0e9a"/>
-				<graphicElement>
-					<pen lineWidth="0.75"/>
-				</graphicElement>
-			</rectangle>
+		<band height="82" splitType="Stretch">
 			<textField>
 				<reportElement x="0" y="0" width="50" height="30" uuid="244ccdb2-5ff7-45ad-ba6c-5cb17f8b5442"/>
 				<box topPadding="2" leftPadding="2"/>
@@ -64,7 +67,7 @@
 				<textFieldExpression><![CDATA[$F{cespite}]]></textFieldExpression>
 			</textField>
 			<subreport>
-				<reportElement x="50" y="60" width="521" height="50" uuid="f1fee9db-387d-4f0b-8e01-1d2366adf952"/>
+				<reportElement stretchType="ContainerHeight" x="50" y="46" width="521" height="30" uuid="f1fee9db-387d-4f0b-8e01-1d2366adf952"/>
 				<parametersMapExpression><![CDATA[$P{REPORT_PARAMETERS_MAP}]]></parametersMapExpression>
 				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{ammortamentoCespiteList})]]></dataSourceExpression>
 				<subreportExpression><![CDATA[$P{ammortamentoRowReport}]]></subreportExpression>
@@ -79,7 +82,7 @@
 				</textElement>
 				<text><![CDATA[Costo storico:]]></text>
 			</staticText>
-			<textField pattern="¤###0.##;¤-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="298" y="0" width="80" height="15" uuid="b39c7a68-3c32-4955-94a5-c2a4e61deb3b"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
@@ -95,7 +98,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA["Fornitore: "]]></textFieldExpression>
 			</textField>
-			<textField pattern="¤###0.##;¤-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="1" y="30" width="49" height="15" uuid="b0905efb-2807-40f0-9646-feb86e9a7edc"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
@@ -144,9 +147,8 @@
 				<textFieldExpression><![CDATA[$F{dataAcq}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="96" y="30" width="114" height="29" uuid="b6eafc0e-b8f3-492f-9ada-8c09fce276fa">
+				<reportElement x="112" y="30" width="104" height="15" uuid="b6eafc0e-b8f3-492f-9ada-8c09fce276fa">
 					<property name="com.jaspersoft.studio.unit.x" value="px"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
@@ -158,10 +160,7 @@
 				<textFieldExpression><![CDATA["Descrizione"]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="51" y="30" width="44" height="29" uuid="e1d8e738-9c29-418a-892c-626ec6cd585f">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
+				<reportElement x="50" y="30" width="62" height="15" uuid="e1d8e738-9c29-418a-892c-626ec6cd585f"/>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
@@ -171,9 +170,7 @@
 				<textFieldExpression><![CDATA["Data Amm."]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.##" isBlankWhenNull="true">
-				<reportElement x="210" y="30" width="40" height="29" uuid="8a5dca1a-ab97-4f27-bf78-a57302e75c09">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
+				<reportElement x="216" y="30" width="40" height="15" uuid="8a5dca1a-ab97-4f27-bf78-a57302e75c09"/>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
@@ -182,9 +179,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA["% Amm."]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="410" y="30" width="80" height="29" uuid="b5921e5b-5404-4527-a94e-82b8a917fab2">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="416" y="30" width="80" height="15" uuid="b5921e5b-5404-4527-a94e-82b8a917fab2">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
@@ -195,10 +191,10 @@
 				</textElement>
 				<textFieldExpression><![CDATA["Fondo Ord."]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="490" y="30" width="79" height="29" uuid="60cdf88c-75cb-4f75-8b94-a207f29b3264">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="496" y="30" width="75" height="15" uuid="60cdf88c-75cb-4f75-8b94-a207f29b3264">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
@@ -209,9 +205,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA["V.N.C."]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="328" y="30" width="82" height="29" uuid="43861cd7-ca79-4146-b523-51459cf0ce28">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="334" y="30" width="82" height="15" uuid="43861cd7-ca79-4146-b523-51459cf0ce28">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
@@ -222,9 +217,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA["Q.ta Super"]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="250" y="30" width="78" height="29" uuid="8ec7d908-1fa2-43a5-ad7f-1a1a45c1e530">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="256" y="30" width="78" height="15" uuid="8ec7d908-1fa2-43a5-ad7f-1a1a45c1e530">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
@@ -235,6 +229,12 @@
 				</textElement>
 				<textFieldExpression><![CDATA["Q.ta Amm Ord."]]></textFieldExpression>
 			</textField>
+			<line>
+				<reportElement positionType="FixRelativeToBottom" x="0" y="81" width="569" height="1" uuid="7a226511-5a85-4002-9dce-2e64d04577f7"/>
+				<graphicElement>
+					<pen lineStyle="Dashed"/>
+				</graphicElement>
+			</line>
 		</band>
 	</detail>
 </jasperReport>
