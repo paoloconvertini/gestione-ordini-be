@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CespiteSommaDto {
 
-    private FiscaleRiepilogo inizioEsercizio;
-    private FiscaleRiepilogo acquisti;
-    private FiscaleRiepilogo vendite;
-    private FiscaleRiepilogo ammortamentiDeducibili;
-    private FiscaleRiepilogo ammortamentiNonDeducibili;
-    private FiscaleRiepilogo fineEsercizio;
+    private FiscaleRiepilogoDto inizioEsercizio;
+    private FiscaleRiepilogoDto acquisti;
+    private FiscaleRiepilogoDto vendite;
+    private FiscaleRiepilogoDto ammortamentiDeducibili;
+    private FiscaleRiepilogoDto ammortamentiNonDeducibili;
+    private FiscaleRiepilogoDto fineEsercizio;
     private SuperAmmDto superAmm1;
     private SuperAmmDto superAmm2;
     private SuperAmmDto superAmm3;

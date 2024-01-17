@@ -105,10 +105,10 @@ public class CespiteResource {
     @Path("/scaricaRegistroCespiti")
     @Produces(MediaType.TEXT_PLAIN)
     @PermitAll
-    public Response scaricaRegistroCespiti(FiltroCespite filtroCespite) {
+    public Response scaricaRegistroCespiti(RegistroCespitiDto view) {
         File pdf;
         try {
-            pdf = service.scaricaRegistroCespiti(filtroCespite);
+            pdf = service.scaricaRegistroCespiti(view);
             if(pdf != null){
                 return Response.ok(pdf).header("Content-Disposition", "attachment;filename=" + pdf.getName()).build();
             } else {
@@ -134,13 +134,13 @@ public class CespiteResource {
     }
 
     @Operation(summary = "contabilizza")
-    @GET
+    @POST
     @RolesAllowed({ADMIN})
     @Produces(APPLICATION_JSON)
     @Path("/contabilizzaAmm")
-    public Response contabilizzaAmm() {
+    public Response contabilizzaAmm(LocalDate date) {
         try {
-            primanotaService.contabilizzaAmm();
+            primanotaService.contabilizzaAmm(date);
             return Response.ok().entity(new ResponseDto("contabilizzazione completata con successo", false)).build();
         } catch (Exception e) {
             return Response.status(500).entity(new ResponseDto(e.getCause().getMessage(), true)).build();

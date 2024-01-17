@@ -314,9 +314,14 @@ public class AmmortamentoCespiteService {
                 List<CespiteDto> cespiteDtoList = new ArrayList<>();
                 cespiteProgressivoDtoList.forEach(p -> cespiteDtoList.addAll(p.getCespiteDtoList()));
                 CespiteSommaDto sommaDto = new CespiteSommaDto();
-                FiscaleRiepilogo inizioEsercizio = new FiscaleRiepilogo();
-                inizioEsercizio.setValoreAggiornato(cespiteDtoList.stream().filter(c -> (c.getDataVend() == null || (c.getDataVend().getYear() == anno) && c.getAnno() < anno)).mapToDouble(CespiteDto::getImporto).sum());
-                cespiteDtoList.forEach(c -> {
+                FiscaleRiepilogoDto inizioEsercizio = new FiscaleRiepilogoDto();
+                inizioEsercizio.setValoreAggiornato(cespiteDtoList.stream()
+                        .filter(c -> ((c.getDataVend() == null || (c.getDataVend().getYear() == anno)) && c.getAnno() < anno))
+                        .mapToDouble(CespiteDto::getImporto)
+                        .sum());
+                cespiteDtoList.stream()
+                        .filter(c -> ((c.getDataVend() == null || (c.getDataVend().getYear() == anno)) && c.getAnno() < anno))
+                        .forEach(c -> {
                     AmmortamentoCespite a;
                     if (!c.getAmmortamentoCespiteList().isEmpty()) {
                         if (c.getAmmortamentoCespiteList().stream().anyMatch(m -> m.getAnno().equals(anno - 1))) {
@@ -367,8 +372,8 @@ public class AmmortamentoCespiteService {
                     }
                 }
 
-                FiscaleRiepilogo acquisti = new FiscaleRiepilogo();
-                FiscaleRiepilogo vendite = new FiscaleRiepilogo();
+                FiscaleRiepilogoDto acquisti = new FiscaleRiepilogoDto();
+                FiscaleRiepilogoDto vendite = new FiscaleRiepilogoDto();
                 acquisti.setValoreAggiornato(cespiteDtoList.stream()
                         .filter(c -> c.getAnno() == anno)
                         .mapToDouble(CespiteDto::getImporto)
@@ -390,12 +395,12 @@ public class AmmortamentoCespiteService {
                                 .get()));
                 vendite.setTotaleAmmortamento(-(ammortamentoCespitesVend.stream().mapToDouble(AmmortamentoCespite::getFondo).sum()));
                 vendite.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() + vendite.getTotaleAmmortamento());
-                FiscaleRiepilogo ammortamentiDeducibili = new FiscaleRiepilogo();
+                FiscaleRiepilogoDto ammortamentiDeducibili = new FiscaleRiepilogoDto();
                 ammortamentiDeducibili.setAmmortamentoOrdinario(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == anno && a.getQuota() != null && StringUtils.startsWith(a.getDescrizione(), "Ammortamento")).mapToDouble(AmmortamentoCespite::getQuota).sum());
                 ammortamentiDeducibili.setTotaleAmmortamento(ammortamentiDeducibili.getAmmortamentoOrdinario() + ammortamentiDeducibili.getAmmortamentoAnticipato());
                 ammortamentiDeducibili.setFondoAmmortamenti(ammortamentiDeducibili.getTotaleAmmortamento() + vendite.getFondoAmmortamenti());
 
-                FiscaleRiepilogo fineEsercizio = new FiscaleRiepilogo();
+                FiscaleRiepilogoDto fineEsercizio = new FiscaleRiepilogoDto();
                 fineEsercizio.setValoreAggiornato(inizioEsercizio.getValoreAggiornato() + acquisti.getValoreAggiornato() + vendite.getValoreAggiornato());
                 fineEsercizio.setFondoAmmortamenti(ammortamentiDeducibili.getFondoAmmortamenti());
                 fineEsercizio.setTotaleAmmortamento(ammortamentiDeducibili.getTotaleAmmortamento());
@@ -426,22 +431,22 @@ public class AmmortamentoCespiteService {
             view.setCespiteList(result);
             CespiteSommaDto sommaDto = new CespiteSommaDto();
 
-            FiscaleRiepilogo inizio = new FiscaleRiepilogo();
+            FiscaleRiepilogoDto inizio = new FiscaleRiepilogoDto();
             inizio.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getInizioEsercizio().getValoreAggiornato()).sum());
             inizio.setFondoAmmortamenti(result.stream().mapToDouble(c -> c.getSomma().getInizioEsercizio().getFondoAmmortamenti()).sum());
             inizio.setResiduo(result.stream().mapToDouble(c -> c.getSomma().getInizioEsercizio().getResiduo()).sum());
 
-            FiscaleRiepilogo fine = new FiscaleRiepilogo();
+            FiscaleRiepilogoDto fine = new FiscaleRiepilogoDto();
             fine.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getFineEsercizio().getValoreAggiornato()).sum());
             fine.setFondoAmmortamenti(result.stream().mapToDouble(c -> c.getSomma().getFineEsercizio().getFondoAmmortamenti()).sum());
             fine.setResiduo(result.stream().mapToDouble(c -> c.getSomma().getFineEsercizio().getResiduo()).sum());
 
-            FiscaleRiepilogo acquisti = new FiscaleRiepilogo();
-            FiscaleRiepilogo vendite = new FiscaleRiepilogo();
+            FiscaleRiepilogoDto acquisti = new FiscaleRiepilogoDto();
+            FiscaleRiepilogoDto vendite = new FiscaleRiepilogoDto();
             acquisti.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getAcquisti().getValoreAggiornato()).sum());
             vendite.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getVendite().getValoreAggiornato()).sum());
 
-            FiscaleRiepilogo ammortamentiDeducibili = new FiscaleRiepilogo();
+            FiscaleRiepilogoDto ammortamentiDeducibili = new FiscaleRiepilogoDto();
             ammortamentiDeducibili.setAmmortamentoOrdinario(result.stream().mapToDouble(c -> c.getSomma().getAmmortamentiDeducibili().getAmmortamentoOrdinario()).sum());
             ammortamentiDeducibili.setTotaleAmmortamento(result.stream().mapToDouble(c -> c.getSomma().getAmmortamentiDeducibili().getTotaleAmmortamento()).sum());
             ammortamentiDeducibili.setFondoAmmortamenti(result.stream().mapToDouble(c -> c.getSomma().getAmmortamentiDeducibili().getFondoAmmortamenti()).sum());
@@ -578,10 +583,12 @@ public class AmmortamentoCespiteService {
     }
 
 
-    public File scaricaRegistroCespiti(FiltroCespite filtroCespite) {
+    public File scaricaRegistroCespiti(RegistroCespitiDto view) {
+        Log.debug(" ### INIZIO generazione report Registro cespiti ###");
         File report;
         try {
-            report = jasperService.createReport(filtroCespite);
+            report = jasperService.createReport(view);
+            Log.debug(" ### FINE generazione report Registro cespiti ###");
         } catch (Exception e) {
             report = null;
             Log.error("error scarica regisro");
