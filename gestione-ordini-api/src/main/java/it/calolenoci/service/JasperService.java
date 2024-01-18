@@ -3,6 +3,7 @@ package it.calolenoci.service;
 import io.quarkus.logging.Log;
 import it.calolenoci.dto.*;
 import it.calolenoci.mapper.OrdineClienteReportMapper;
+import it.calolenoci.mapper.RegistroCespiteReportMapper;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRSaver;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.*;
 
 @Singleton
@@ -35,7 +37,7 @@ public class JasperService {
     String tmpFolder;
 
     @Inject
-    AmmortamentoCespiteService ammortamentoCespiteService;
+    RegistroCespiteReportMapper registroCespiteReportMapper;
 
     public List<OrdineReportDto> getOrdiniReport(OrdineDTO dto, List<OrdineDettaglioDto> articoli, String filename, String firmaVenditore) {
         List<OrdineReportDto> dtoList = new ArrayList<>();
@@ -113,23 +115,22 @@ public class JasperService {
         if (registroCespitiDto != null && !registroCespitiDto.getCespiteList().isEmpty()) {
             try {
 
-                // 1. compile template ".jrxml" file
-                JasperReport jasperReport = compileReport("RegistroCespiti.jrxml");
+                RegistroCespiteReportDto dto = registroCespiteReportMapper.buildRegistroCespiteReport(registroCespitiDto);
 
                 // 2. parameters "empty"
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put("cespiteReport", compileReport("Cespite.jrxml"));
                 parameters.put("ammortamentoReport", compileReport("Ammortamento.jrxml"));
                 parameters.put("ammortamentoRowReport", compileReport("AmmortamentoRow.jrxml"));
-                parameters.put("riepilogoFiscaleReport", compileReport("RiepilogoFiscale.jrxml"));
-                parameters.put("riepilogoFiscaleRowReport", compileReport("RiepilogoRow.jrxml"));
-                parameters.put("cespiteParameter", getCespiteParam(registroCespitiDto));
+                parameters.put("anno",registroCespitiDto.getData() == null ? LocalDate.now().getYear() : registroCespitiDto.getData().getYear());
 
+                JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(Collections.singletonList(dto));
 
-                JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
+                JasperReport jasperReport = compileReport("RegistroCespiti.jrxml");
+
+                JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, ds);
                 String destFileName = "Registro_cespiti.pdf";
-                String tempDir = System.getProperty("java.io.tmpdir");
-                File f = new File(tempDir + destFileName);
+                File f = new File( destFileName);
                 JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
                 return f;
             } catch (JRException e) {
@@ -158,12 +159,6 @@ public class JasperService {
         map.put("totaleIVA", (Double) map.get("totaleImponibile") * 22 / 100);
         map.put("totaleDocumento", (Double) map.get("totaleImponibile") + (Double) map.get("totaleIVA"));
         return map;
-    }
-
-    private static Map getCespiteParam(RegistroCespitiDto registroCespitiDto){
-        Map<String, Object> cespiteParam = new HashMap<>();
-        cespiteParam.put("cespiteDataset", registroCespitiDto.getCespiteList());
-        return cespiteParam;
     }
 
     private <T> JRDataSource getDataSource(List<T> list) {

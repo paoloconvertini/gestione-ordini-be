@@ -22,15 +22,13 @@ public class CespiteReportDto implements Serializable {
 
     private String cespite;
 
-    private LocalDate dataAcq;
+    private String dataAcq;
 
     private String numDocAcq;
 
     private String fornitore;
 
     private Double importo;
-
-    private Double importoRivalutazione;
 
     private Double ammortamento;
 
@@ -40,13 +38,9 @@ public class CespiteReportDto implements Serializable {
 
     private Double importoVendita;
 
-    private LocalDate dataVend;
+    private String dataVend;
 
-    private Integer protocollo;
+    private String protocollo;
 
-    private String giornale;
-
-    private Integer annoProtocollo;
-
-    private List<AmmortamentoCespite> ammortamentoCespiteList;
+    private List<AmmortamentoCespiteDto> ammortamentoCespiteList;
 }

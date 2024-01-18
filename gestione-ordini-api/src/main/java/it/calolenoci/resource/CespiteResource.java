@@ -138,10 +138,12 @@ public class CespiteResource {
     @GET
     @RolesAllowed({ADMIN})
     @Produces(APPLICATION_JSON)
-    @Path("/contabilizzaAmm")
-    public Response contabilizzaAmm() {
+    @Path("/contabilizzaAmm/{date}")
+    public Response contabilizzaAmm(String date) {
         try {
-            primanotaService.contabilizzaAmm();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+            LocalDate localDate = LocalDate.parse(date, formatter);
+            primanotaService.contabilizzaAmm(localDate);
             return Response.ok().entity(new ResponseDto("contabilizzazione completata con successo", false)).build();
         } catch (Exception e) {
             return Response.status(500).entity(new ResponseDto(e.getCause().getMessage(), true)).build();
