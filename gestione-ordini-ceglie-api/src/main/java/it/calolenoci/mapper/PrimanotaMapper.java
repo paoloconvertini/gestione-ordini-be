@@ -85,7 +85,7 @@ public class PrimanotaMapper {
         return primanota;
     }
 
-    public Primanota buildPrimanotaContabile(LocalDate date, Integer progressivo1, Integer progressivo2, Integer protocollo, Integer rigo, Integer progrGenerale, String desc, Integer gruppo, String conto, Double quota) {
+    public Primanota buildPrimanotaContabile(String causale, LocalDate date, String tipoCespite, Integer progressivo1, Integer progressivo2, Integer protocollo, Integer rigo, Integer progrGenerale, String desc, Integer gruppo, String conto, Double quota) {
         Primanota primanota = new Primanota();
         primanota.setAnno(date.getYear());
         primanota.setGiornale("");
@@ -97,8 +97,8 @@ public class PrimanotaMapper {
         primanota.setNumpartita(0);
         primanota.setDataoperazione(date);
         primanota.setDatamovimento(date);
-        primanota.setNumerodocumento(progressivo1 + "." + progressivo2);
-        primanota.setCausale("GVM");
+        primanota.setNumerodocumento(tipoCespite + " - " + progressivo1 + "." + progressivo2);
+        primanota.setCausale(causale);
         primanota.setGruppoconto(gruppo);
         primanota.setSottoconto(conto);
         primanota.setDescrsuppl(desc);

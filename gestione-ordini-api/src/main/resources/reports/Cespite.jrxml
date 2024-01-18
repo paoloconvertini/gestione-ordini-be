@@ -81,7 +81,19 @@
 				<subreportExpression><![CDATA[$P{ammortamentoReport}]]></subreportExpression>
 			</subreport>
 		</band>
-		<band height="195">
+		<band height="20">
+			<textField>
+				<reportElement mode="Opaque" x="0" y="0" width="573" height="20" forecolor="#FFFFFF" backcolor="#4D4949" uuid="8cc47d0a-0906-453b-a79c-313a54299950">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box padding="3"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tipoCespite} + " - " +$F{categoria} + " Perc. amm.:  " + $F{perc} + "%"]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="189">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<staticText>
 				<reportElement x="0" y="94" width="80" height="30" uuid="2e257461-5ded-4208-aa7b-c2771a86a84b"/>
@@ -480,7 +492,7 @@
 				</graphicElement>
 			</line>
 		</band>
-		<band height="83">
+		<band height="58">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<printWhenExpression><![CDATA[$F{catShowTotali}]]></printWhenExpression>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
@@ -569,8 +581,11 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{catSuperAmm2Desc}+":"]]></textFieldExpression>
 			</textField>
+		</band>
+		<band height="25">
+			<printWhenExpression><![CDATA[$F{catShowPlus}]]></printWhenExpression>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
-				<reportElement x="111" y="59" width="199" height="24" uuid="6f324023-0982-4318-9a37-018065c9d710">
+				<reportElement x="111" y="1" width="199" height="24" uuid="6f324023-0982-4318-9a37-018065c9d710">
 					<printWhenExpression><![CDATA[$F{catShowPlus}]]></printWhenExpression>
 				</reportElement>
 				<box leftPadding="3"/>
@@ -580,7 +595,7 @@
 				<textFieldExpression><![CDATA[$F{catPlusMinusTotale}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="1" y="59" width="109" height="24" uuid="cd09cef1-a4d9-455f-9daa-c24140928822">
+				<reportElement x="1" y="1" width="109" height="24" uuid="cd09cef1-a4d9-455f-9daa-c24140928822">
 					<printWhenExpression><![CDATA[$F{catShowPlus}]]></printWhenExpression>
 				</reportElement>
 				<box leftPadding="3"/>
@@ -589,6 +604,13 @@
 				</textElement>
 				<textFieldExpression><![CDATA["Plus/Minus:"]]></textFieldExpression>
 			</textField>
+		</band>
+		<band height="4">
+			<break>
+				<reportElement x="0" y="2" width="100" height="1" uuid="d2770945-9ba3-402e-a371-468212af5d7c">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+			</break>
 		</band>
 	</detail>
 </jasperReport>

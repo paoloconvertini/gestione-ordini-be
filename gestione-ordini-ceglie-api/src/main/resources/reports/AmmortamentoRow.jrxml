@@ -85,8 +85,9 @@
 				<textFieldExpression><![CDATA[$F{quota}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
-				<reportElement x="283" y="0" width="82" height="15" uuid="111c6f0f-091d-4204-8241-ff72f0447608">
+				<reportElement x="283" y="0" width="98" height="15" uuid="111c6f0f-091d-4204-8241-ff72f0447608">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
@@ -97,7 +98,7 @@
 				<textFieldExpression><![CDATA[$F{superQuota}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
-				<reportElement x="365" y="0" width="80" height="15" uuid="4a7db242-5c32-4069-a86c-733c580163e9">
+				<reportElement x="380" y="0" width="70" height="15" uuid="4a7db242-5c32-4069-a86c-733c580163e9">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
@@ -109,7 +110,7 @@
 				<textFieldExpression><![CDATA[$F{fondo}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
-				<reportElement x="445" y="0" width="75" height="15" uuid="0bcec6a4-42b8-43b9-9185-9c1d96192d07">
+				<reportElement x="450" y="0" width="70" height="15" uuid="0bcec6a4-42b8-43b9-9185-9c1d96192d07">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>

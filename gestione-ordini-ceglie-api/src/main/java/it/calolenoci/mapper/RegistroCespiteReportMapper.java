@@ -70,15 +70,15 @@ public class RegistroCespiteReportMapper {
         r.setTotFineEsercizioResiduo(f.getResiduo());
 
         if (s1 != null) {
-            r.setTotSuperAmm1Desc(s1.getDesc());
+            r.setTotSuperAmm1Desc(s1.getDesc()+ ":");
             r.setTotSuperAmm1Totale(s1.getTotale());
         }
         if (s2 != null) {
-            r.setTotSuperAmm2Desc(s2.getDesc());
+            r.setTotSuperAmm2Desc(s2.getDesc()+ ":");
             r.setTotSuperAmm2Totale(s2.getTotale());
         }
         if (s3 != null) {
-            r.setTotSuperAmm3Desc(s3.getDesc());
+            r.setTotSuperAmm3Desc(s3.getDesc()+ ":");
             r.setTotSuperAmm3Totale(s3.getTotale());
         }
         if(r.getTotSuperAmm1Totale() + r.getTotSuperAmm2Totale() + r.getTotSuperAmm3Totale() != 0){
@@ -164,18 +164,18 @@ public class RegistroCespiteReportMapper {
         r.setCatFineEsercizioResiduo(f.getResiduo());
 
         if (s1 != null) {
-            r.setCatSuperAmm1Desc(s1.getDesc());
+            r.setCatSuperAmm1Desc(s1.getDesc()+ ":");
             r.setCatSuperAmm1Totale(s1.getTotale());
         }
 
 
         if (s2 != null) {
-            r.setCatSuperAmm2Desc(s2.getDesc());
+            r.setCatSuperAmm2Desc(s2.getDesc()+ ":");
             r.setCatSuperAmm2Totale(s2.getTotale());
         }
 
         if (s3 != null) {
-            r.setCatSuperAmm3Desc(s3.getDesc());
+            r.setCatSuperAmm3Desc(s3.getDesc()+ ":");
             r.setCatSuperAmm3Totale(s3.getTotale());
         }
 
@@ -222,7 +222,11 @@ public class RegistroCespiteReportMapper {
         c.setImporto(d.getImporto());
         c.setAmmortamento(d.getAmmortamento());
         c.setAnno(d.getAnno());
-        c.setSuperAmmDesc(d.getSuperAmmDesc());
+        String desc = "Q.ta Super";
+        if(StringUtils.isNotBlank(d.getSuperAmmDesc())) {
+            desc += " " + d.getSuperAmmDesc();
+        }
+        c.setSuperAmmDesc(desc);
         c.setImportoVendita(d.getImportoVendita());
         if(d.getDataVend() != null){
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");

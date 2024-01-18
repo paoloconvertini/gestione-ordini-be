@@ -45,6 +45,7 @@
 		<fieldDescription><![CDATA[protocollo]]></fieldDescription>
 	</field>
 	<field name="ammortamentoCespiteList" class="java.util.List"/>
+	<field name="superAmmDesc" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -180,7 +181,7 @@
 				<textFieldExpression><![CDATA["% Amm."]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
-				<reportElement x="416" y="30" width="80" height="15" uuid="b5921e5b-5404-4527-a94e-82b8a917fab2">
+				<reportElement x="432" y="30" width="70" height="15" uuid="b5921e5b-5404-4527-a94e-82b8a917fab2">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
@@ -189,10 +190,10 @@
 				<textElement verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Fondo Ord."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["F.do Amm. Ord."]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
-				<reportElement x="496" y="30" width="75" height="15" uuid="60cdf88c-75cb-4f75-8b94-a207f29b3264">
+				<reportElement x="502" y="30" width="70" height="15" uuid="60cdf88c-75cb-4f75-8b94-a207f29b3264">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -206,16 +207,16 @@
 				<textFieldExpression><![CDATA["V.N.C."]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
-				<reportElement x="334" y="30" width="82" height="15" uuid="43861cd7-ca79-4146-b523-51459cf0ce28">
+				<reportElement x="334" y="30" width="98" height="15" uuid="43861cd7-ca79-4146-b523-51459cf0ce28">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box leftPadding="3">
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="SansSerif" size="8"/>
+					<font fontName="SansSerif" size="7"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Q.ta Super"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{superAmmDesc}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="256" y="30" width="78" height="15" uuid="8ec7d908-1fa2-43a5-ad7f-1a1a45c1e530">

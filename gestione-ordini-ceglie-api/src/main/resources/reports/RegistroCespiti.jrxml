@@ -654,7 +654,7 @@ Tel: 0831-377180 Fax: 0831-383047]]></text>
 				<textElement verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{totSuperAmm1Desc} +":"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{totSuperAmm1Desc}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement x="198" y="177" width="159" height="16" uuid="2f0af385-73df-4707-a4aa-cae15f936461">
@@ -664,7 +664,7 @@ Tel: 0831-377180 Fax: 0831-383047]]></text>
 				<textElement verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{totSuperAmm2Desc}+":"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{totSuperAmm2Desc}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement x="198" y="194" width="159" height="16" uuid="b996524f-c306-4e01-a5f5-ff37b4a5ddcc">
@@ -674,7 +674,7 @@ Tel: 0831-377180 Fax: 0831-383047]]></text>
 				<textElement verticalAlignment="Middle">
 					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{totSuperAmm3Desc}+":"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{totSuperAmm3Desc}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="358" y="160" width="130" height="16" uuid="60070f49-0084-44fd-8d1f-786b5b8d830e">
