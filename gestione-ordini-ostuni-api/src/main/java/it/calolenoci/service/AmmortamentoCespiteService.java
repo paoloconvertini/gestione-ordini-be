@@ -514,7 +514,9 @@ public class AmmortamentoCespiteService {
                 inizioEsercizio.setValoreAggiornato(cespiteDtoList.stream().filter(c -> (c.getDataVend() == null || c.getDataVend().getYear() == anno) && c.getAnno() < anno).mapToDouble(CespiteDto::getImporto).sum());
                 double sum1 = cespiteDtoList.stream().filter(c -> (c.getDataVend() == null || c.getDataVend().getYear() == anno) && c.getAnno() < anno).filter(c -> c.getImportoRivalutazione() != null).mapToDouble(CespiteDto::getImportoRivalutazione).sum();
                 inizioEsercizio.setValoreAggiornato(inizioEsercizio.getValoreAggiornato() + sum1);
-                cespiteDtoList.forEach(c -> {
+                cespiteDtoList.stream()
+                        .filter(c -> ((c.getDataVend() == null || (c.getDataVend().getYear() == anno)) && c.getAnno() < anno))
+                        .forEach(c -> {
                     AmmortamentoCespite a;
                     if (!c.getAmmortamentoCespiteList().isEmpty()) {
                         if (c.getAmmortamentoCespiteList().stream().anyMatch(m -> m.getAnno().equals(anno - 1))) {

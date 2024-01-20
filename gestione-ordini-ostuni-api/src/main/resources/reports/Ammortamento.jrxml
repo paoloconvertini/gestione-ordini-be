@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Ammortamento" pageWidth="573" pageHeight="842" whenNoDataType="BlankPage" columnWidth="571" leftMargin="1" rightMargin="1" topMargin="3" bottomMargin="3" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Ammortamento" pageWidth="573" pageHeight="842" whenNoDataType="BlankPage" columnWidth="571" leftMargin="1" rightMargin="1" topMargin="1" bottomMargin="1" whenResourceMissingType="Empty" uuid="eceac9f3-c1f5-457a-ab76-36296d3ed2eb">
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
 	<parameter name="ammortamentoRowReport" class="net.sf.jasperreports.engine.JRReport"/>
 	<queryString>
 		<![CDATA[]]>
@@ -33,28 +42,24 @@
 		<fieldDescription><![CDATA[importoRivalutazione]]></fieldDescription>
 	</field>
 	<field name="importoVendita" class="java.lang.Double">
-		<fieldDescription><![CDATA[importoRivalutazione]]></fieldDescription>
+		<fieldDescription><![CDATA[importoVendita]]></fieldDescription>
 	</field>
 	<field name="protocollo" class="java.lang.String">
 		<fieldDescription><![CDATA[protocollo]]></fieldDescription>
 	</field>
 	<field name="ammortamentoCespiteList" class="java.util.List"/>
+	<field name="superAmmDesc" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<detail>
-		<band height="110" splitType="Stretch">
-			<rectangle>
-				<reportElement stretchType="ContainerBottom" x="0" y="0" width="571" height="110" uuid="d9847700-e9a1-46e6-9163-9c5b355c0e9a"/>
-				<graphicElement>
-					<pen lineWidth="0.75"/>
-				</graphicElement>
-			</rectangle>
+		<band height="94" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<textField>
 				<reportElement x="0" y="0" width="50" height="30" uuid="244ccdb2-5ff7-45ad-ba6c-5cb17f8b5442"/>
 				<box topPadding="2" leftPadding="2"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{progressivo1} + "." + $F{progressivo2}]]></textFieldExpression>
 			</textField>
@@ -62,12 +67,14 @@
 				<reportElement stretchType="ContainerHeight" x="51" y="0" width="178" height="30" uuid="ebedb08a-36a6-40e9-bd38-3e44fc965683"/>
 				<box topPadding="2" leftPadding="2"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{cespite}]]></textFieldExpression>
 			</textField>
 			<subreport>
-				<reportElement x="50" y="60" width="521" height="50" uuid="f1fee9db-387d-4f0b-8e01-1d2366adf952"/>
+				<reportElement x="50" y="60" width="521" height="30" uuid="f1fee9db-387d-4f0b-8e01-1d2366adf952">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
 				<parametersMapExpression><![CDATA[$P{REPORT_PARAMETERS_MAP}]]></parametersMapExpression>
 				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{ammortamentoCespiteList})]]></dataSourceExpression>
 				<subreportExpression><![CDATA[$P{ammortamentoRowReport}]]></subreportExpression>
@@ -78,7 +85,7 @@
 				</reportElement>
 				<box topPadding="2" leftPadding="2"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Costo storico:]]></text>
 			</staticText>
@@ -89,23 +96,23 @@
 				</reportElement>
 				<box leftPadding="2"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Costo rivalutato:]]></text>
 			</staticText>
-			<textField pattern="¤###0.##;¤-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="298" y="0" width="80" height="15" uuid="b39c7a68-3c32-4955-94a5-c2a4e61deb3b"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{importo}]]></textFieldExpression>
 			</textField>
-			<textField pattern="¤###0.##;¤-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="298" y="15" width="80" height="15" uuid="ad0a8cc1-bfe9-43d6-b8e3-f25cb4a17726"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{importoRivalutazione}]]></textFieldExpression>
 			</textField>
@@ -113,7 +120,7 @@
 				<reportElement x="378" y="0" width="40" height="15" uuid="ff94e361-949b-451c-8801-3bd224844a4a"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Fornitore: "]]></textFieldExpression>
 			</textField>
@@ -121,7 +128,7 @@
 				<reportElement x="1" y="30" width="49" height="15" uuid="b0905efb-2807-40f0-9646-feb86e9a7edc"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{protocollo}]]></textFieldExpression>
 			</textField>
@@ -129,7 +136,7 @@
 				<reportElement x="418" y="0" width="150" height="15" uuid="f69357b0-0b03-4ea3-adc6-7a7bcdf73d4f"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{fornitore}]]></textFieldExpression>
 			</textField>
@@ -137,7 +144,7 @@
 				<reportElement x="418" y="15" width="60" height="15" uuid="3784749c-91ff-4fe0-923f-ec11fece1bcc"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{numDocAcq}]]></textFieldExpression>
 			</textField>
@@ -145,7 +152,7 @@
 				<reportElement x="378" y="15" width="40" height="15" uuid="3d702e7e-c356-45ce-a245-218bf58d99fd"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Fatt. n.: "]]></textFieldExpression>
 			</textField>
@@ -153,7 +160,7 @@
 				<reportElement x="478" y="15" width="20" height="15" uuid="3e7b15f3-da62-4ac1-87e8-e1e767b0a87c"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[" del "]]></textFieldExpression>
 			</textField>
@@ -161,7 +168,7 @@
 				<reportElement x="498" y="15" width="69" height="15" uuid="e206be5a-a495-498c-b093-5acd368f082b"/>
 				<box topPadding="2" leftPadding="1"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{dataAcq}]]></textFieldExpression>
 			</textField>
@@ -175,7 +182,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Descrizione"]]></textFieldExpression>
 			</textField>
@@ -187,7 +194,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Q.ta Amm Riv."]]></textFieldExpression>
 			</textField>
@@ -200,7 +207,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Data Amm."]]></textFieldExpression>
 			</textField>
@@ -212,12 +219,12 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["% Amm."]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="357" y="30" width="49" height="29" uuid="b5921e5b-5404-4527-a94e-82b8a917fab2">
+				<reportElement x="357" y="30" width="53" height="29" uuid="b5921e5b-5404-4527-a94e-82b8a917fab2">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
@@ -225,9 +232,9 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Fondo Ord."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["F.do Amm. Ord."]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="509" y="30" width="60" height="29" uuid="60cdf88c-75cb-4f75-8b94-a207f29b3264">
@@ -239,7 +246,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["V.N.C."]]></textFieldExpression>
 			</textField>
@@ -252,9 +259,9 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Q.ta Super"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{superAmmDesc}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
 				<reportElement x="225" y="30" width="40" height="29" uuid="8ec7d908-1fa2-43a5-ad7f-1a1a45c1e530">
@@ -265,7 +272,7 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Q.ta Amm Ord."]]></textFieldExpression>
 			</textField>
@@ -278,12 +285,12 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Fondo Tot."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["F.do Amm. Tot."]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
-				<reportElement x="409" y="30" width="48" height="29" uuid="2eae5527-5edb-4434-b5b8-42ce426e1fd8">
+				<reportElement x="411" y="30" width="48" height="29" uuid="2eae5527-5edb-4434-b5b8-42ce426e1fd8">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
@@ -291,10 +298,16 @@
 					<bottomPen lineWidth="0.25"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Fondo Riv."]]></textFieldExpression>
+				<textFieldExpression><![CDATA["F.do Amm. Riv."]]></textFieldExpression>
 			</textField>
+			<line>
+				<reportElement positionType="FixRelativeToBottom" x="0" y="93" width="569" height="1" uuid="087c9a2c-aabc-42ac-85bc-f19dc82bf5ad"/>
+				<graphicElement>
+					<pen lineStyle="Dashed"/>
+				</graphicElement>
+			</line>
 		</band>
 	</detail>
 </jasperReport>

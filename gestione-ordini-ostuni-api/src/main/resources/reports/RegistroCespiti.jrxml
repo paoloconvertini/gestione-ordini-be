@@ -132,42 +132,41 @@
 				<textElement textAlignment="Justified">
 					<font fontName="SansSerif" size="8" isBold="true"/>
 				</textElement>
-				<text><![CDATA[72013 CEGLIE MESSAPICA (BR)
-Via FOGGIA , 1
+				<text><![CDATA[72017 OSTUNI (BR)
+Via Dell’Industria, s.n. 
 P.I. / C.F. : 02582780744
-Rea: BR-156796
-E.-mail: calolenoci@libero.it
-PEC: calolenocifrancescotradingsrl@pec.it
-Sito: www.calolenocifrancesco.it
-Tel 0831-377180   Fax 0831-383047
-]]></text>
+Reg. Soc. 7163/a – Capitale Sociale E.101.490,00
+E.-mail: calole01@powercolle.191.it
+Sito: www.powercolle.it
+Tel: 0831.335651 -  0831.303979]]></text>
 			</staticText>
 			<image>
 				<reportElement x="0" y="0" width="252" height="89" uuid="c40e9abe-e08b-4d8e-a21a-9d8f2a934f10"/>
-				<imageExpression><![CDATA["logo.jpg"]]></imageExpression>
+				<box leftPadding="15"/>
+				<imageExpression><![CDATA["logo_pc.jpg"]]></imageExpression>
 			</image>
 		</band>
 	</title>
 	<columnHeader>
-		<band height="42">
+		<band height="25">
 			<textField>
-				<reportElement x="381" y="0" width="100" height="25" uuid="bd90bd44-45c9-49a0-a273-437000c4c9cc"/>
+				<reportElement x="0" y="0" width="450" height="24" uuid="9a4bc88d-41bd-4c05-b794-0a2bf83d49a4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["CESPITI AMMORTIZZABILI - Annotazioni ex art. 16 DPR 600/73 - Anno " + $P{anno}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="449" y="0" width="61" height="25" uuid="bd90bd44-45c9-49a0-a273-437000c4c9cc"/>
 				<textElement textAlignment="Right">
 					<font size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Pag. " + $V{PAGE_NUMBER}]]></textFieldExpression>
 			</textField>
 			<textField evaluationTime="Report">
-				<reportElement x="481" y="0" width="73" height="25" uuid="80a2d2cd-b11b-4af2-a6ea-f7f7671b1495"/>
+				<reportElement x="510" y="0" width="64" height="25" uuid="80a2d2cd-b11b-4af2-a6ea-f7f7671b1495"/>
 				<textElement textAlignment="Left">
 					<font size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[" di " + $V{PAGE_NUMBER}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="0" y="0" width="575" height="42" uuid="9a4bc88d-41bd-4c05-b794-0a2bf83d49a4"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA["Registro cespiti anno " + $P{anno}]]></textFieldExpression>
 			</textField>
 		</band>
 	</columnHeader>
@@ -193,7 +192,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Vendite]]></text>
 			</staticText>
@@ -206,7 +205,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Amm. ord.]]></text>
 			</staticText>
@@ -219,9 +218,9 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<text><![CDATA[Residuo]]></text>
+				<text><![CDATA[V.N.C.]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="0" y="3" width="80" height="30" uuid="4a6f9545-1bda-44f0-8a23-59f40e5a808b"/>
@@ -232,7 +231,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Fiscale]]></text>
 			</staticText>
@@ -245,7 +244,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Amm. ded.ile]]></text>
 			</staticText>
@@ -258,7 +257,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Fondo amm. ord.]]></text>
 			</staticText>
@@ -271,7 +270,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Inizio esercizio]]></text>
 			</staticText>
@@ -284,7 +283,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Fondo amm. riv.]]></text>
 			</staticText>
@@ -297,7 +296,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Tot. amm.to]]></text>
 			</staticText>
@@ -310,7 +309,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Amm. riv.to]]></text>
 			</staticText>
@@ -323,7 +322,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Acquisti]]></text>
 			</staticText>
@@ -336,7 +335,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Valore agg.to]]></text>
 			</staticText>
@@ -349,11 +348,11 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Fine esercizio]]></text>
 			</staticText>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="80" y="33" width="60" height="30" uuid="39101eb8-fd07-44b3-8a98-4ae6fda384b6"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -362,7 +361,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totInizioEsercizioValoreAggiornato}]]></textFieldExpression>
 			</textField>
@@ -411,74 +410,74 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<text><![CDATA[Tot. Fondo amm.]]></text>
 			</staticText>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="140" y="33" width="50" height="30" uuid="c8bdcee7-0207-4d0b-bec1-07b434fb7884"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totInizioEsercizioAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="190" y="33" width="60" height="30" uuid="d90c13e4-38a8-4276-9be1-66f3e4842945"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totInizioEsercizioAmmortamentoAnticipato}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="251" y="33" width="58" height="30" uuid="70b2e8ca-7054-40d8-a967-70d4ca15df00"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totInizioEsercizioTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="310" y="33" width="56" height="30" uuid="0b15c07b-1dc4-448f-a77e-7e5011bb5dd3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totInizioEsercizioFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="367" y="33" width="62" height="30" uuid="bd37430e-f18d-4087-93bf-616230316be3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totInizioEsercizioFondoAmmortamentiRiv}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="429" y="33" width="58" height="30" uuid="12616f6e-588a-4e8f-931c-b325745c10de"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totInizioEsercizioFondoAmmortamentiTot}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="488" y="33" width="86" height="30" uuid="62b0fded-d7c3-4c22-bd6b-27e267bdd561"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totInizioEsercizioResiduo}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="488" y="63" width="86" height="30" uuid="fb0fb01b-2204-45f3-aaa0-fcd7c614be0d"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAcquistiResiduo}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="190" y="63" width="60" height="30" uuid="85652281-9e9a-4e12-b2fa-ed95a3419566"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAcquistiAmmortamentoAnticipato}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="80" y="63" width="60" height="30" uuid="d3427c47-a78e-4a30-88fe-183519466f7a"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -487,60 +486,60 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAcquistiValoreAggiornato}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="140" y="63" width="50" height="30" uuid="0fe79d3e-7fc7-4048-b4cb-2c519c52cb6d"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAcquistiAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="251" y="63" width="58" height="30" uuid="0fd6cdc6-411a-4650-b565-df25b4520f16"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAcquistiTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="367" y="63" width="62" height="30" uuid="de1fb100-24bb-45ea-a480-19e5c4c80988"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAcquistiFondoAmmortamentiRiv}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="429" y="63" width="58" height="30" uuid="db5a815d-50fb-4ae9-8867-2a84ef164175"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAcquistiFondoAmmortamentiTot}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="310" y="63" width="56" height="30" uuid="d0d67be9-7c35-41c9-8923-8f58a1f452d3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAcquistiFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="488" y="94" width="86" height="30" uuid="fae922fc-f891-4a45-ad25-64c70dc423e0"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totVenditeResiduo}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="190" y="94" width="60" height="30" uuid="7a762c9a-bf0c-428f-8d26-9872aaf41a18"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totVenditeAmmortamentoAnticipato}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="80" y="94" width="60" height="30" uuid="771a29a0-2ea7-4370-a6e0-1d449b9729de"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -549,60 +548,60 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totVenditeValoreAggiornato}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="140" y="94" width="50" height="30" uuid="439cddc3-ae0d-4226-a105-ba31735f1079"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totVenditeAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="251" y="94" width="58" height="30" uuid="e5fd08a0-3dc3-48e3-9870-7eb9bf43b77d"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totVenditeTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="367" y="94" width="62" height="30" uuid="80a23ea9-d5d3-486a-b232-a24099280045"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totVenditeFondoAmmortamentiRiv}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="429" y="94" width="58" height="30" uuid="afe9e3b8-fad1-4d1c-aad6-c94871ded73c"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totVenditeFondoAmmortamentiTot}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="310" y="94" width="56" height="30" uuid="80cf47e4-9162-4e2a-a85e-56fff179d029"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totVenditeFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="488" y="124" width="86" height="30" uuid="f14a22bb-8c51-497b-a059-f7cb3c8b1cff"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAmmortamentiDeducibiliResiduo}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="190" y="124" width="60" height="30" uuid="3852a88f-b3ee-4331-b7ad-1e6aed890f4b"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAmmortamentiDeducibiliAmmortamentoAnticipato}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="80" y="124" width="60" height="30" uuid="87215dc6-2e1e-4a6c-9002-1e85be6eb1da"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -611,60 +610,60 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAmmortamentiDeducibiliValoreAggiornato}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="140" y="124" width="50" height="30" uuid="a268ce33-a4a3-4d4c-89b5-4321e704bbbc"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAmmortamentiDeducibiliAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="251" y="124" width="58" height="30" uuid="aae2a132-7dc6-41ed-beff-1230251a0559"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAmmortamentiDeducibiliTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="367" y="124" width="62" height="30" uuid="0f942fa8-a0fa-460d-a1e9-d98a31decb04"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAmmortamentiDeducibiliFondoAmmortamentiRiv}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="429" y="124" width="58" height="30" uuid="e955c71b-16e1-47a6-9ad3-92f51ec24e6f"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAmmortamentiDeducibiliFondoAmmortamentiTot}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="310" y="124" width="56" height="30" uuid="5876db8f-324c-4f4f-86dd-db3c42d8f6f6"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totAmmortamentiDeducibiliFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="488" y="155" width="86" height="30" uuid="e311d459-aaf9-4a9e-a027-77ba085b714b"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totFineEsercizioResiduo}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="190" y="155" width="60" height="30" uuid="27dbee60-cc88-4915-bde6-794a90e106fe"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totFineEsercizioAmmortamentoAnticipato}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="80" y="155" width="60" height="30" uuid="1fd8d614-69e7-4e0b-91b7-f465292ac3ab"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -673,42 +672,42 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totFineEsercizioValoreAggiornato}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="140" y="155" width="50" height="30" uuid="abf12475-3ba8-402a-8f61-e29dd04f979c"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totFineEsercizioAmmortamentoOrdinario}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="251" y="155" width="58" height="30" uuid="3a7bf338-4d23-48b2-9104-89deaaed0c7b"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totFineEsercizioTotaleAmmortamento}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="367" y="155" width="62" height="30" uuid="610c62e1-75e2-4add-a446-9c7d7f5dae72"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totFineEsercizioFondoAmmortamentiRiv}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="429" y="155" width="58" height="30" uuid="5e2b19a0-8b4e-4f27-b36f-5840d2a4b7e6"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totFineEsercizioFondoAmmortamentiTot}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="310" y="155" width="56" height="30" uuid="991a7b92-5199-47c6-b485-ab9f603e117b"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totFineEsercizioFondoAmmortamenti}]]></textFieldExpression>
 			</textField>
@@ -732,7 +731,7 @@ Tel 0831-377180   Fax 0831-383047
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Totale Maggiorazioni deducibili: "]]></textFieldExpression>
 			</textField>
@@ -742,9 +741,9 @@ Tel 0831-377180   Fax 0831-383047
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{totSuperAmm1Desc} +":"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{totSuperAmm1Desc}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement x="198" y="210" width="159" height="16" uuid="2f0af385-73df-4707-a4aa-cae15f936461">
@@ -752,9 +751,9 @@ Tel 0831-377180   Fax 0831-383047
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{totSuperAmm2Desc}+":"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{totSuperAmm2Desc}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement x="198" y="227" width="159" height="16" uuid="b996524f-c306-4e01-a5f5-ff37b4a5ddcc">
@@ -762,9 +761,9 @@ Tel 0831-377180   Fax 0831-383047
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{totSuperAmm3Desc}+":"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{totSuperAmm3Desc}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement x="198" y="244" width="159" height="16" uuid="78ae33fd-39f0-4b71-9fd2-21e6f84d67c4">
@@ -772,47 +771,47 @@ Tel 0831-377180   Fax 0831-383047
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{totSuperAmm4Desc}+":"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{totSuperAmm4Desc}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="358" y="193" width="130" height="16" uuid="60070f49-0084-44fd-8d1f-786b5b8d830e">
 					<printWhenExpression><![CDATA[$F{showTotali}]]></printWhenExpression>
 				</reportElement>
 				<box leftPadding="1"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totSuperAmm1Totale}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="358" y="210" width="130" height="16" uuid="3abb87ea-9260-47c0-ad69-35a4dd8a363a">
 					<printWhenExpression><![CDATA[$F{showTotali}]]></printWhenExpression>
 				</reportElement>
 				<box leftPadding="1"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totSuperAmm2Totale}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="358" y="227" width="130" height="16" uuid="a0828a99-3182-4aa4-8897-8c29e1a53e6f">
 					<printWhenExpression><![CDATA[$F{showTotali}]]></printWhenExpression>
 				</reportElement>
 				<box leftPadding="1"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totSuperAmm3Totale}]]></textFieldExpression>
 			</textField>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="358" y="244" width="130" height="16" uuid="d86bf9da-7541-431b-aecf-9c2ab465d504">
 					<printWhenExpression><![CDATA[$F{showTotali}]]></printWhenExpression>
 				</reportElement>
 				<box leftPadding="1"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totSuperAmm4Totale}]]></textFieldExpression>
 			</textField>
@@ -822,7 +821,7 @@ Tel 0831-377180   Fax 0831-383047
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totPlusMinusDesc}+":"]]></textFieldExpression>
 			</textField>
@@ -834,13 +833,13 @@ Tel 0831-377180   Fax 0831-383047
 					<pen lineWidth="1.0" lineStyle="Dotted"/>
 				</graphicElement>
 			</line>
-			<textField pattern="###0.##;-###0.##" isBlankWhenNull="true">
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
 				<reportElement x="110" y="266" width="160" height="24" uuid="335338b8-e08e-4dde-9bd8-4b4c34b2aee4">
 					<printWhenExpression><![CDATA[$F{showPlus}]]></printWhenExpression>
 				</reportElement>
 				<box leftPadding="3"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totPlusMinusTotale}]]></textFieldExpression>
 			</textField>
@@ -855,7 +854,7 @@ Tel 0831-377180   Fax 0831-383047
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement>
-					<font fontName="Arial Narrow" size="8"/>
+					<font fontName="SansSerif" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{totSuperAmmortamenti}]]></textFieldExpression>
 			</textField>

@@ -54,12 +54,6 @@ public class JasperService {
         return null;
     }
 
-    private static Map getCespiteParam(RegistroCespitiDto registroCespitiDto) {
-        Map<String, Object> cespiteParam = new HashMap<>();
-        cespiteParam.put("cespiteDataset", registroCespitiDto.getCespiteList());
-        return cespiteParam;
-    }
-
     private JasperReport compileReport(String reportName) {
         JasperReport jasperReport = null;
         try {
