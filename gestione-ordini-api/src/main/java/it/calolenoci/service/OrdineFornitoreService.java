@@ -1,9 +1,12 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.ArticoloDto;
+import it.calolenoci.dto.CollegaOAFDto;
 import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.*;
@@ -17,6 +20,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import javax.ws.rs.core.Response;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Year;
@@ -110,8 +114,8 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setProvenienza("C");
                         fornitoreDettaglio.setMagazzino("B");
                         settaCampi(user, fornitoreDettaglio);
-                        if(fornitoreDettaglio.getOQuantita() != null && fornitoreDettaglio.getOPrezzo() != null){
-                            fornitoreDettaglio.setValoreTotale(fornitoreDettaglio.getOQuantita()*fornitoreDettaglio.getOPrezzo());
+                        if (fornitoreDettaglio.getOQuantita() != null && fornitoreDettaglio.getOPrezzo() != null) {
+                            fornitoreDettaglio.setValoreTotale(fornitoreDettaglio.getOQuantita() * fornitoreDettaglio.getOPrezzo());
                         }
                         String campoUser5 = "VS.ART." + a.getDescrArtSuppl();
                         fornitoreDettaglio.setCampoUser5(StringUtils.truncate(campoUser5, 25));
@@ -269,12 +273,12 @@ public class OrdineFornitoreService {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
                 "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate, go.note";
         if (StringUtils.isBlank(status)) {
-            query +=  " , go.flInviato, go.dataInvio ";
+            query += " , go.flInviato, go.dataInvio ";
         }
-        query +=" FROM OrdineFornitore o " +
+        query += " FROM OrdineFornitore o " +
                 "JOIN PianoConti p ON o.gruppo = p.gruppoConto AND o.conto = p.sottoConto "
-            + " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = go.progressivo "
-            + " WHERE o.dataOrdine >= :dataConfig ";
+                + " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = go.progressivo "
+                + " WHERE o.dataOrdine >= :dataConfig ";
         Map<String, Object> params = new HashMap<>();
         params.put("dataConfig", sdf.parse(dataCongig));
         if (StringUtils.isNotBlank(status)) {
@@ -300,11 +304,12 @@ public class OrdineFornitoreService {
     public void richiediApprovazione(List<OrdineFornitoreDto> list) {
         list.forEach(o -> this.richiediApprovazione(o.getAnno(), o.getSerie(), o.getProgressivo()));
     }
+
     @Transactional
     public void changeStatus(Integer anno, String serie, Integer progressivo) {
         int update = OrdineFornitore.update("provvisorio = 'F' where anno = :anno and progressivo = :progressivo and serie = :serie",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo));
-        if(update > 0)
+        if (update > 0)
             GoOrdineFornitore.deleteById(new FornitoreId(anno, serie, progressivo));
     }
 
@@ -312,23 +317,23 @@ public class OrdineFornitoreService {
     public ResponseDto eliminaOrdine(Integer anno, String serie, Integer progressivo) {
         ResponseDto dto = new ResponseDto();
         try {
-        OrdineFornitore ordine = OrdineFornitore.findById(new FornitoreId(anno, serie, progressivo));
-        if(ordine == null){
-            Log.error("ordine fornitore non trovato");
-            dto.setError(Boolean.TRUE);
-            dto.setMsg("ordine fornitore non trovato");
-            return dto;
-        }
-        List<OrdineFornitoreDettaglio> list = OrdineFornitoreDettaglio.find("anno =:anno AND serie =:serie AND progressivo =:progressivo",
-                Parameters.with("anno", ordine.getAnno()).and("serie", ordine.getSerie()).and("progressivo", ordine.getProgressivo())).list();
+            OrdineFornitore ordine = OrdineFornitore.findById(new FornitoreId(anno, serie, progressivo));
+            if (ordine == null) {
+                Log.error("ordine fornitore non trovato");
+                dto.setError(Boolean.TRUE);
+                dto.setMsg("ordine fornitore non trovato");
+                return dto;
+            }
+            List<OrdineFornitoreDettaglio> list = OrdineFornitoreDettaglio.find("anno =:anno AND serie =:serie AND progressivo =:progressivo",
+                    Parameters.with("anno", ordine.getAnno()).and("serie", ordine.getSerie()).and("progressivo", ordine.getProgressivo())).list();
 
-        for (OrdineFornitoreDettaglio dettaglio : list) {
-            articoloService.eliminaArticolo(dettaglio.getAnno(), dettaglio.getSerie(), dettaglio.getProgressivo(), dettaglio.getRigo());
-        }
-        OrdineFornitore.deleteById(new FornitoreId(anno, serie, progressivo));
-        GoOrdineFornitore.deleteById(new FornitoreId(anno, serie, progressivo));
-        dto.setError(Boolean.FALSE);
-        dto.setMsg("Articolo eliminato");
+            for (OrdineFornitoreDettaglio dettaglio : list) {
+                articoloService.eliminaArticolo(dettaglio.getAnno(), dettaglio.getSerie(), dettaglio.getProgressivo(), dettaglio.getRigo());
+            }
+            OrdineFornitore.deleteById(new FornitoreId(anno, serie, progressivo));
+            GoOrdineFornitore.deleteById(new FornitoreId(anno, serie, progressivo));
+            dto.setError(Boolean.FALSE);
+            dto.setMsg("Articolo eliminato");
         } catch (Exception e) {
             Log.error("Errore elimina ordine fornitore ", e);
             dto.setError(Boolean.TRUE);
@@ -342,7 +347,7 @@ public class OrdineFornitoreService {
         for (OrdineFornitoreDto dto : list) {
             Optional<GoOrdineFornitore> opt = GoOrdineFornitore.findByIdOptional(new FornitoreId(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
             GoOrdineFornitore ordineFornitore;
-            if(opt.isEmpty()) {
+            if (opt.isEmpty()) {
                 ordineFornitore = goOrdineFornitoreMapper.creaEntity(dto.getAnno(), dto.getSerie(), dto.getProgressivo());
                 ordineFornitore.setFlInviato(dto.getFlInviato());
                 ordineFornitore.persist();
@@ -358,20 +363,20 @@ public class OrdineFornitoreService {
 
     public List<OrdineFornitoreDto> findForReport(Integer anno, String serie, Integer progressivo) {
         List<OrdineFornitoreDto> list = OrdineFornitore.find("select f.anno, f.serie, f.progressivo, f.dataOrdine, f.numConfOrdine, f.dataConfOrdine, f2.oArticolo, f2.oDescrArticolo, f2.campoUser5, f2.nota, " +
-                " f2.oPrezzo, f2.oUnitaMisura,f2.oQuantita, f2.fScontoArticolo, f2.scontoF1, f2.scontoF2, f2.fScontoP, f2.oCodiceIva, " +
-                " b.descrBanca, b.abiBanca, pa.codice, pa.descrizione, f.createUser as user, a.descrArtSuppl, " +
-                " p.intestazione, p.telefono, p.fax, p.indirizzo, p.localita, p.cap, p.provincia, f2.tipoRigo" +
-                " from OrdineFornitore f " +
-                " JOIN OrdineFornitoreDettaglio f2 ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
-                " JOIN PianoConti p ON f.gruppo = p.gruppoConto ANd f.conto = p.sottoConto " +
-                " JOIN InfoBanca b ON f.bancaPagamento = b.bancaPres " +
-                " JOIN ModalitaPagamento pa ON f.codicePagamento = pa.codice " +
-                " LEFT JOIN Articolo a ON a.articolo = f2.oArticolo " +
-                " WHERE f.anno =:anno AND f.serie =:serie AND f.progressivo =:progressivo",
+                        " f2.oPrezzo, f2.oUnitaMisura,f2.oQuantita, f2.fScontoArticolo, f2.scontoF1, f2.scontoF2, f2.fScontoP, f2.oCodiceIva, " +
+                        " b.descrBanca, b.abiBanca, pa.codice, pa.descrizione, f.createUser as user, a.descrArtSuppl, " +
+                        " p.intestazione, p.telefono, p.fax, p.indirizzo, p.localita, p.cap, p.provincia, f2.tipoRigo" +
+                        " from OrdineFornitore f " +
+                        " JOIN OrdineFornitoreDettaglio f2 ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
+                        " JOIN PianoConti p ON f.gruppo = p.gruppoConto ANd f.conto = p.sottoConto " +
+                        " JOIN InfoBanca b ON f.bancaPagamento = b.bancaPres " +
+                        " JOIN ModalitaPagamento pa ON f.codicePagamento = pa.codice " +
+                        " LEFT JOIN Articolo a ON a.articolo = f2.oArticolo " +
+                        " WHERE f.anno =:anno AND f.serie =:serie AND f.progressivo =:progressivo",
                 Parameters.with("anno", anno).and("serie", serie)
                         .and("progressivo", progressivo)).project(OrdineFornitoreDto.class).list();
-        list.forEach(e-> {
-            if(StringUtils.isBlank(e.getTipoRigo())) {
+        list.forEach(e -> {
+            if (StringUtils.isBlank(e.getTipoRigo())) {
                 e.setValoreTotale(calcolaValoreTotale(e));
             }
         });
@@ -399,15 +404,71 @@ public class OrdineFornitoreService {
     public void salvaNota(OrdineFornitoreDto dto) {
         Optional<GoOrdineFornitore> opt = GoOrdineFornitore.findByIdOptional(new FornitoreId(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
         GoOrdineFornitore ordineFornitore;
-        if(opt.isEmpty()) {
+        if (opt.isEmpty()) {
             ordineFornitore = goOrdineFornitoreMapper.creaEntity(dto.getAnno(), dto.getSerie(), dto.getProgressivo());
             ordineFornitore.setNote(dto.getNote());
             ordineFornitore.persist();
         } else {
             GoOrdineFornitore.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo",
-                Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
-                        .and("serie", dto.getSerie())
-                        .and("progressivo", dto.getProgressivo()));
+                    Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
+                            .and("serie", dto.getSerie())
+                            .and("progressivo", dto.getProgressivo()));
+        }
+    }
+
+    @Transactional
+    public ResponseDto verificaOAF(CollegaOAFDto dto) {
+        ResponseDto result = new ResponseDto();
+        try {
+            Optional<OrdineFornitoreDettaglio> oaf = OrdineFornitoreDettaglio.find("anno =:a and serie =:s AND progressivo = :pr AND oArticolo = :art",
+                    Parameters.with("a", dto.getAnnoOAF()).and("s", dto.getSerieOAF())
+                            .and("pr", dto.getProgressivoOAF()).and("art", dto.getCodice())).firstResultOptional();
+            if(oaf.isEmpty()) {
+                result.setError(Boolean.TRUE);
+                result.setMsg("Ordine a fornitore non trovato con questo identificativo: " +
+                        dto.getAnnoOAF() + "/" + dto.getSerieOAF() + "/" + dto.getProgressivoOAF());
+                result.setCode(Response.Status.NO_CONTENT);
+                return result;
+            }
+            if(!oaf.get().getOQuantita().equals(dto.getQta())) {
+                result.setError(Boolean.TRUE);
+                result.setMsg("ATTENZIONE: Le quantità tra articolo cliente e ordine a fornitore non corrispondono. ");
+                result.setCode(Response.Status.CONFLICT);
+                return result;
+            }
+            result.setError(Boolean.FALSE);
+            result.setMsg("Verifica Ok: procedi al collegamento con OAF");
+            return result;
+        } catch (Exception e) {
+            Log.error("Verifica OAF: ERROR! ", e);
+            result.setMsg("Verifica OAF: ERROR! " + e.getMessage());
+            result.setError(Boolean.TRUE);
+            return result;
+        }
+    }
+
+    @Transactional
+    public ResponseDto collegaOAF(CollegaOAFDto dto) {
+        ResponseDto result = new ResponseDto();
+        try {
+            String campoUser5 = "VS.ART." + dto.getDescrArtSuppl();
+            String nota = "Riferimento n. " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo() + "-" + dto.getRigo();
+            int update = OrdineFornitoreDettaglio.update("nota = :n, campoUser5 = :c, provenienza = :p, pid = :g " +
+                            "WHERE anno =:a and serie =:s AND progressivo = :pr AND oArticolo = :art",
+                    Parameters.with("n", nota).and("c", StringUtils.truncate(campoUser5, 25))
+                            .and("p", "C").and("a", dto.getAnnoOAF()).and("s", dto.getSerieOAF())
+                            .and("pr", dto.getProgressivoOAF()).and("g", dto.getProgrGenerale()).and("art", dto.getCodice()));
+            if (update != 0) {
+                Log.debug("Collega OAF: Aggiornati " + update + " record");
+            }
+            result.setError(Boolean.FALSE);
+            result.setMsg("Articolo cliente collegato all'ordine a fornitore " + dto.getAnnoOAF() + "/" + dto.getSerieOAF() + "/" + dto.getProgressivoOAF());
+            return result;
+        } catch (Exception e) {
+            Log.error("Collega OAF: ERROR! ", e);
+            result.setError(Boolean.FALSE);
+            result.setMsg("Collega OAF: ERROR! " + e.getMessage());
+            return result;
         }
     }
 }

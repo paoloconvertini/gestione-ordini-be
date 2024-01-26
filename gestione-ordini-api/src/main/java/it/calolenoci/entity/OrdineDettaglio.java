@@ -272,13 +272,14 @@ public class OrdineDettaglio extends PanacheEntityBase {
                 "god.flagRiservato, god.flagNonDisponibile, god.flagOrdinato, god.flagConsegnato,  o.tono, a.fornitoreArticoloId.articolo, " +
                 "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF,  " +
                 "god.qtaConsegnatoSenzaBolla, (CASE WHEN god.qtaDaConsegnare IS NULL THEN o.quantita ELSE god.qtaDaConsegnare END) as qtaDaConsegnare, god.flBolla, " +
-                "god.note, god.qtaRiservata, god.flProntoConsegna, god.qtaProntoConsegna, o.noteOrdCli, god.dataDoc, god.numDoc, god.dataCarico, god.annoMag, god.serieMag, god.progressivoMag  " +
+                "god.note, god.qtaRiservata, god.flProntoConsegna, god.qtaProntoConsegna, o.noteOrdCli, god.dataDoc, god.numDoc, god.dataCarico, god.annoMag, god.serieMag, god.progressivoMag, p.intestazione  " +
                 "FROM OrdineDettaglio o " +
                 "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
                 //"AND o.fArticolo = god.fArticolo " +
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
                 "LEFT JOIN FornitoreArticolo a ON a.fornitoreArticoloId.articolo = o.fArticolo " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
+                "LEFT JOIN PianoConti p ON f.gruppo = p.gruppoConto AND f.conto = p.sottoConto " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo";
         if (filtro.getFlNonDisponibile() != null && filtro.getFlNonDisponibile()) {
             query += " AND god.flagNonDisponibile = 'T' ";
