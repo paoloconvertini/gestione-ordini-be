@@ -181,8 +181,21 @@ public class OrdineFornitoreService {
                 count++;
             }
             if (update != 0) {
-                Log.info("Aggiornati " + update + "articoli");
-                ordiniDaUnire.forEach(o -> OrdineFornitore.deleteById(new FornitoreId(o.getAnno(), o.getSerie(), o.getProgressivo())));
+                Log.info("Aggiornati " + update + " articoli");
+                List<OrdineFornitoreDettaglio> listaDettaglioDaEliminare = new ArrayList<>();
+                ordiniDaUnire.forEach(o -> {
+                listaDettaglioDaEliminare.addAll(OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                            Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).list());
+                    OrdineFornitore.deleteById(new FornitoreId(o.getAnno(), o.getSerie(), o.getProgressivo()));
+                });
+                if(!listaDettaglioDaEliminare.isEmpty()) {
+                    Log.debug("Trovati " + listaDettaglioDaEliminare.size() + " articoli di OAF orfani! INIZIO CANCELLAZIONE DA DB...");
+                    listaDettaglioDaEliminare.forEach( d -> OrdineFornitoreDettaglio.delete("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
+                            Parameters.with("anno", d.getAnno()).and("serie", d.getSerie()).and("progressivo", d.getProgressivo())
+                                    .and("rigo", d.getRigo())));
+                    Log.debug("CANCELLAZIONE TERMINATA!!");
+                }
+
             }
 
         } catch (Exception e) {
