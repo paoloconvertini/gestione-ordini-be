@@ -203,6 +203,7 @@ public class FatturaService {
                     if (optional.isPresent()) {
                         SaldiMagazzino saldiMagazzino = optional.get();
                         Double qtaScarico = (saldiMagazzino.getQscarichi()==null?0: saldiMagazzino.getQscarichi()) + (o.getQuantita()==null?0:o.getQuantita());
+                        qtaScarico = Math.round(qtaScarico * 100.0) / 100.0;
                         Double qtaGiacenza = (saldiMagazzino.getQcarichi()==null?0: saldiMagazzino.getQcarichi()) - qtaScarico;
                         saldiMagazzino.setQscarichi(qtaScarico);
                         saldiMagazzino.setQgiacenza(qtaGiacenza);

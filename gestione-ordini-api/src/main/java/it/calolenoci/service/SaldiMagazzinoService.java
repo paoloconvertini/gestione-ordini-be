@@ -27,6 +27,7 @@ public class SaldiMagazzinoService {
                 FattureDettaglio bolla = s.getFattureDettaglio();
                 SaldiMagazzino saldiMagazzino = s.getSaldiMagazzino();
                 double qtaScarico = (saldiMagazzino.getQscarichi()==null?0: saldiMagazzino.getQscarichi()) + (bolla.getQuantita()==null?0:bolla.getQuantita());
+                qtaScarico = Math.round(qtaScarico * 100.0) / 100.0;
                 Double qtaGiacenza = (saldiMagazzino.getQcarichi()==null?0: saldiMagazzino.getQcarichi()) - qtaScarico;
                 saldiMagazzino.setQscarichi(qtaScarico);
                 saldiMagazzino.setQgiacenza(qtaGiacenza);
