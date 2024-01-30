@@ -148,8 +148,21 @@ public class MagazzinoMapper {
             m.setMquantita(fd.getQuantita());
             m.setMquantitav(o.getQuantitaV());
             m.setMquantita2(o.getQuantita2());
-            m.setValore(fd.getPrezzo()*o.getQuantitaV());
-            m.setValoreUnitario(fd.getPrezzo());
+            Double valoreUnitario = fd.getPrezzo();
+            if(o.getScontoArticolo() != null) {
+                valoreUnitario -= valoreUnitario*(o.getScontoArticolo()/100);
+            }
+            if(o.getScontoC1() != null) {
+                valoreUnitario -= valoreUnitario*(o.getScontoC1()/100);
+            }
+            if(o.getScontoC2() != null) {
+                valoreUnitario -= valoreUnitario*(o.getScontoC2()/100);
+            }
+            if(o.getScontoP() != null) {
+                valoreUnitario -= valoreUnitario*(o.getScontoP()/100);
+            }
+            m.setValore(valoreUnitario*fd.getQuantita());
+            m.setValoreUnitario(valoreUnitario);
             m.setPrezzo(fd.getPrezzo());
             m.setPrezzoextra(fd.getPrezzoextra());
             m.setMvaluta(" ");

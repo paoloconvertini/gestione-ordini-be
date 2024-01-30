@@ -177,7 +177,7 @@ public class FatturaService {
             List<SaldiMagazzino> saldiMagazzinoList = new ArrayList<>();
             List<GoTmpScarico> goTmpScaricoList = new ArrayList<>();
             FattureDettaglio fd;
-            Integer progressivo = Magazzino.find("select MAX(m.magazzinoId.progressivo)+1 from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
+            Integer progressivo = Magazzino.find("select ISNULL(MAX(m.magazzinoId.progressivo)+1, 1) from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
                     Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
             Log.debug("Magazzino progressivo: " + progressivo);
             Integer progressivoGen = Magazzino.find("select MAX(m.progrgenerale) from Magazzino m").project(Integer.class).firstResult();
