@@ -156,15 +156,23 @@ public class FatturaService {
             Integer progressivoFattDettaglio = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM FattureDettaglio o").project(Integer.class).firstResult();
             Ordine ordine = Ordine.findByOrdineId(list.get(0).getAnno(), list.get(0).getSerie(), list.get(0).getProgressivo());
             Fatture f = fattureMapper.buildFatture(progressivoFatt, ordine);
+            Log.debug("*** CREA BOLLA --- creata fattura n. " + f.getAnno() + "/" + f.getSerie() + "/" + f.getProgressivo());
             f.persist();
             Map<OrdineId, List<OrdineDettaglioDto>> map = list.stream().collect(Collectors.groupingBy(o ->
                     new OrdineId(o.getAnno(), o.getSerie(), o.getProgressivo())));
 
+            Log.debug("*** CREA BOLLA --- mappa lista ordine dettaglio: " + map.size());
             for (OrdineId id : map.keySet()) {
+                Log.debug("*** CREA BOLLA, ciclio sulla mappa --- ordine n. " + id.getAnno() + "/" + id.getSerie() + "/" + id.getProgressivo());
                 if (accontoDtos != null && !accontoDtos.isEmpty()) {
+                    Log.debug("*** CREA BOLLA, acconti selezionati: " + accontoDtos.size());
                     final List<OrdineDettaglioDto> dtos = map.get(id);
                     accontoDtos.stream().filter(a -> AccontoDto.checkOrdineEsiste(a, id)).toList()
-                            .forEach(a -> dtos.add(0, fattureMapper.fromAccontoToOrdineDettaglio(a, id)));
+                            .forEach(a -> {
+                                OrdineDettaglioDto dto = fattureMapper.fromAccontoToOrdineDettaglio(a, id);
+                                dtos.add(0, dto);
+                                Log.debug("*** CREA BOLLA, creata voce storno: " + dto.getFDescrArticolo());
+                            });
                 }
             }
 
@@ -179,21 +187,26 @@ public class FatturaService {
             FattureDettaglio fd;
             Integer progressivo = Magazzino.find("select ISNULL(MAX(m.magazzinoId.progressivo)+1, 1) from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
                     Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
-            Log.debug("Magazzino progressivo: " + progressivo);
+            Log.debug("*** CREA BOLLA, Magazzino progressivo: " + progressivo);
             Integer progressivoGen = Magazzino.find("select MAX(m.progrgenerale) from Magazzino m").project(Integer.class).firstResult();
-            Log.debug("Magazzino progressivo generale: " + progressivoGen);
+            Log.debug("*** CREA BOLLA, Magazzino progressivo generale: " + progressivoGen);
             for (int i = 0; i < listaDaTrasformare.size(); i++) {
+                Log.debug("*** CREA BOLLA, lista da trasformare: " + listaDaTrasformare.size());
                 OrdineDettaglioDto dto = listaDaTrasformare.get(i);
+                Log.debug("*** CREA BOLLA, dto della lista da trasformare : " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo()
+                + ", articolo: " + dto.getFArticolo());
                 Magazzino m;
                 if (StringUtils.containsIgnoreCase(dto.getFDescrArticolo(), "Storno")) {
-                    fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i, user);
+                    Log.debug("*** CREA BOLLA, lista da trasformare, riga storno : " + dto.getRigo());
+                            fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i, user);
                     MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i+1);
                     m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, fd, f, ordine);
                     Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
                     if (opt.isPresent()) {
-                        Log.error("Errore trovato record con progrGen: " + progressivoGen);
+                        Log.error("*** CREA BOLLA, Errore trovato record con progrGen: " + progressivoGen);
                     }
                 } else {
+                    Log.debug("*** CREA BOLLA, lista da trasformare, riga articolo : " + dto.getRigo());
                     OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
                     fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
                     o.setSaldoAcconto("S");
@@ -201,6 +214,7 @@ public class FatturaService {
                     Optional<SaldiMagazzino> optional = SaldiMagazzino.find("marticolo =:art and  mmagazzino = :mag",
                             Parameters.with("art", o.getFArticolo()).and("mag", o.getMagazz())).firstResultOptional();
                     if (optional.isPresent()) {
+                        Log.debug("*** CREA BOLLA, TmpScarico creato per articolo: " + o.getFArticolo() + ". Qta: " + o.getQuantita());
                         SaldiMagazzino saldiMagazzino = optional.get();
                         Double qtaScarico = (saldiMagazzino.getQscarichi()==null?0: saldiMagazzino.getQscarichi()) + (o.getQuantita()==null?0:o.getQuantita());
                         qtaScarico = Math.round(qtaScarico * 100.0) / 100.0;
@@ -215,6 +229,7 @@ public class FatturaService {
                             goTmpScarico.setIdBolla(fd.getProgrGenerale());
                             goTmpScarico.setAttivo(Boolean.TRUE);
                             goTmpScaricoList.add(goTmpScarico);
+                            Log.debug("*** CREA BOLLA, TmpScarico creato per articolo: " + o.getFArticolo() + ". Qta: " + o.getQuantita());
                         }
 
                     }
@@ -223,13 +238,14 @@ public class FatturaService {
                     m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, o, fd, f, ordine);
                     Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
                     if (opt.isPresent()) {
-                        Log.error("Errore trovato record con progrGen: " + progressivoGen);
+                        Log.error("*** CREA BOLLA, Errore trovato record con progrGen: " + progressivoGen);
                     }
 
                 }
                 magazzinoList.add(m);
                 fattureDaSalvare.add(fd);
             }
+            Log.debug("*** CREA BOLLA, fatture da salvare: " + fattureDaSalvare.size());
             FattureDettaglio.persist(fattureDaSalvare);
             OrdineDettaglio.persist(ordineDettaglioList);
             if (!magazzinoList.isEmpty()) {
