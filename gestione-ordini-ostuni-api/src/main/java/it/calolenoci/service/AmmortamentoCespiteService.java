@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
@@ -42,35 +43,27 @@ public class AmmortamentoCespiteService {
         try {
             long inizio = System.currentTimeMillis();
             Log.debug("### Inizio calcolo registro cespiti");
-            List<Cespite> cespitiAttivi = Cespite.find("attivo = 'T'").list();
-            if (storico) {
-                AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(Cespite::getId).collect(Collectors.toList())));
-                for (Cespite cespite : cespitiAttivi) {
-                    CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite=:t", Parameters.with("t", cespite.getTipoCespite())).firstResult();
-                    List<AmmortamentoCespite> ammortamentoCespites;
-                    if (cespite.getImportoRivalutazione() != null) {
-                        ammortamentoCespites = calcoloSingoloCespiteRivalutato(categoriaCespite.getPercAmmortamento(), cespite, dataCorrente);
-                    } else {
-                        ammortamentoCespites = calcoloSingoloCespite(categoriaCespite.getPercAmmortamento(), cespite, dataCorrente);
-                    }
-
-                    if (ammortamentoCespites.isEmpty()) {
-                        continue;
-                    }
-                    AmmortamentoCespite.persist(ammortamentoCespites);
-                }
-            } else {
-                Log.debug("--- flag storico disattivato");
-                AmmortamentoCespite.delete("idAmmortamento in (:list) and anno >=:a", Parameters.with("list", cespitiAttivi.stream().map(Cespite::getId).collect(Collectors.toList())).and("a", dataCorrente.getYear()));
-                for (Cespite cespite : cespitiAttivi) {
-                    CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite=:t", Parameters.with("t", cespite.getTipoCespite())).firstResult();
-                    List<AmmortamentoCespite> ammortamentoCespites = calcoloAnnoCorrente(categoriaCespite.getPercAmmortamento(), cespite, dataCorrente);
-                    if (ammortamentoCespites.isEmpty()) {
-                        continue;
-                    }
-                    AmmortamentoCespite.persist(ammortamentoCespites);
+            String query = "SELECT c.id, c.tipoCespite, c.progressivo1, c.progressivo2, c.cespite, c.dataAcq, c.numDocAcq, c.fornitore, " +
+                    "c.importo, c.importoRivalutazione, c.attivo, c.dataVendita, c.numDocVendita, c.intestatarioVendita, c.importoVendita," +
+                    " c.superAmm, c.protocollo, c.giornale, c.anno, c.dataInizioCalcoloAmm, c.flPrimoAnno, c.fondoRivalutazione, " +
+                    " t.id, t.descrizione, t.percAmmortamento, t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
+                    "t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto " +
+                    "FROM Cespite c " +
+                    "JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite " +
+                    "WHERE c.attivo = 'T' ";
+            List<RegistroCespiteDto> cespitiAttivi = Cespite.find(query).project(RegistroCespiteDto.class).list();
+            List<AmmortamentoCespite> ammortamentoCespites = new ArrayList<>();
+            AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(RegistroCespiteDto::getId).collect(Collectors.toList())));
+            Log.debug("Calcola inizio ciclo cespiti Attivi");
+            for (RegistroCespiteDto cespite : cespitiAttivi) {
+                if (cespite.getImportoRivalutazione() != null) {
+                    ammortamentoCespites.addAll(calcoloSingoloCespiteRivalutato(cespite, dataCorrente));
+                } else {
+                    ammortamentoCespites.addAll(calcoloSingoloCespite(cespite, dataCorrente));
                 }
             }
+            Log.debug("FINE --- Calcola inizio ciclo cespiti Attivi");
+            AmmortamentoCespite.persist(ammortamentoCespites);
             long fine = System.currentTimeMillis();
             Log.info("Metodo calcola ammortamenti: " + (fine - inizio) / 1000 + " sec");
         } catch (Exception e) {
@@ -78,128 +71,8 @@ public class AmmortamentoCespiteService {
         }
     }
 
-    private List<AmmortamentoCespite> calcoloAnnoCorrente(Double percAmm, Cespite cespite, LocalDate dataCorrente) {
-        List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
-        int anno = dataCorrente.getYear();
-        //Optional<AmmortamentoCespite> optAmmAnnoPrec = AmmortamentoCespite.find("idAmmortamento =:id and anno=:a", Parameters.with("id", cespite.getId()).and("a", anno - 1)).singleResultOptional();
-        List<AmmortamentoCespite> listAmmortamenti = AmmortamentoCespite.find("idAmmortamento =:id", Parameters.with("id", cespite.getId())).list();
-        Optional<AmmortamentoCespite> optAmmAnnoPrec = listAmmortamenti.stream().filter(a -> a.getAnno() == anno - 1).findFirst();
-        if (percAmm != null && percAmm != 0) {
-            if (listAmmortamenti.isEmpty()) {
-                // cespite nuovo
-                if (cespite.getImportoRivalutazione() != null) {
-                    ammortamentoCespiteList = calcoloSingoloCespiteRivalutato(percAmm, cespite, dataCorrente);
-                } else {
-                    ammortamentoCespiteList = calcoloSingoloCespite(percAmm, cespite, dataCorrente);
-                }
-            } else if (optAmmAnnoPrec.isPresent()) {
-                // cespite presente, calcolo anni a partire da data selezionata
-                AmmortamentoCespite ammPrecedente = optAmmAnnoPrec.get();
-                if (cespite.getImportoRivalutazione() != null) {
-                    calcoloAnnoCorrenteRivalutato(percAmm, ammortamentoCespiteList, ammPrecedente, cespite, dataCorrente);
-                } else if (ammPrecedente.getFondo() < cespite.getImporto()) {
-                    calcoloAnnoCorrenteAmmortamento(dataCorrente, cespite, ammortamentoCespiteList, ammPrecedente);
-                }
-            } else {
-                //cespite presente ma già consolidato
-                return ammortamentoCespiteList;
-            }
-        }
-        return ammortamentoCespiteList;
-    }
-
-    private void calcoloAnnoCorrenteAmmortamento(LocalDate dataCorrente, Cespite cespite, List<AmmortamentoCespite> ammortamentoCespiteList, AmmortamentoCespite ammPrecedente) {
-        double residuo = ammPrecedente.getResiduo();
-        int annoPrecedente = ammPrecedente.getAnno();
-        LocalDate dataAmmortamento = LocalDate.of(annoPrecedente + 1, Month.DECEMBER, 31);
-        while (residuo != 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()) {
-            if (dataAmmortamento.getYear() == dataCorrente.getYear()) {
-                dataAmmortamento = dataCorrente;
-            }
-            double quota = cespite.getImporto() * (ammPrecedente.getPercAmm() / 100);
-            Optional<QuadraturaCespite> optQuad = QuadraturaCespite.find("idCespite =:id AND anno=:a",
-                    Parameters.with("id", cespite.getId()).and("a", dataCorrente.getYear())).singleResultOptional();
-            if (optQuad.isPresent()) {
-                QuadraturaCespite q = optQuad.get();
-                quota = cespite.getImporto() * (q.getAmmortamento() / 100);
-            }
-            double quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
-            double fondo = ammPrecedente.getFondo() + quotaDaSalvare;
-
-            if (fondo >= cespite.getImporto()) {
-                quotaDaSalvare = residuo;
-                residuo = 0;
-                fondo = cespite.getImporto();
-            } else {
-                residuo = cespite.getImporto() - fondo;
-            }
-
-            double perc = quotaDaSalvare / cespite.getImporto() * 100;
-            AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, 0, fondo, 0, residuo, dataAmmortamento);
-            ammortamentoCespiteList.add(a);
-            dataAmmortamento = dataAmmortamento.plusYears(1);
-        }
-    }
-
-    private void calcoloAnnoCorrenteRivalutato(Double percAmm, List<AmmortamentoCespite> ammortamentoCespiteList, AmmortamentoCespite ammPrecedente, Cespite cespite, LocalDate dataCorrente) {
-        double residuo = ammPrecedente.getResiduo();
-        double fondo = ammPrecedente.getFondo();
-        boolean ammOrdConsolidato = (fondo == cespite.getImporto());
-        int annoPrecedente = ammPrecedente.getAnno();
-        if(residuo == 0 && annoPrecedente == 2020) {
-            residuo = cespite.getImportoRivalutazione();
-        }
-        LocalDate dataAmmortamento = LocalDate.of(annoPrecedente + 1, Month.DECEMBER, 31);
-        while (residuo != 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()) {
-            if (dataAmmortamento.getYear() == dataCorrente.getYear()) {
-                dataAmmortamento = dataCorrente;
-            }
-            double quota = cespite.getImporto() * (percAmm / 100);
-            double quotaRiv = cespite.getImportoRivalutazione() * (percAmm / 100);
-            double fondoRiv = ammPrecedente.getFondoRivalutazione();
-            double residuoDaSalvare;
-            double quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
-            double quotaRivDaSalvare = quotaRiv * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
-            double residuoNoRiv = cespite.getImporto();
-            Optional<QuadraturaCespite> optQuad = QuadraturaCespite.find("idCespite =:id AND anno=:a",
-                    Parameters.with("id", cespite.getId()).and("a", dataCorrente.getYear())).singleResultOptional();
-            if (optQuad.isPresent()) {
-                QuadraturaCespite q = optQuad.get();
-                quota = cespite.getImporto() * (q.getAmmortamento() / 100);
-                quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
-            }
-
-            fondoRiv += quotaRivDaSalvare;
-            if (fondoRiv >= (cespite.getImporto() + cespite.getImportoRivalutazione())) {
-                quotaRivDaSalvare = residuo;
-                residuo = 0;
-                fondoRiv = cespite.getImporto() + cespite.getImportoRivalutazione();
-            } else {
-                residuo = cespite.getImportoRivalutazione() - fondoRiv;
-            }
-
-            if (!ammOrdConsolidato) {
-                fondo += quotaDaSalvare;
-                if (fondo >= cespite.getImporto()) {
-                    quotaDaSalvare = residuoNoRiv;
-                    fondo = cespite.getImporto();
-                }
-            } else {
-                quotaDaSalvare = 0;
-            }
-            residuoDaSalvare = residuo;
-            double perc;
-            if (cespite.getImporto() == 0) {
-                perc = 0;
-            } else {
-                perc = quotaDaSalvare / cespite.getImporto() * 100;
-            }
-            ammortamentoCespiteList.add(mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, quotaRivDaSalvare, fondo, fondoRiv, residuoDaSalvare, dataAmmortamento));
-            dataAmmortamento = dataAmmortamento.plusYears(1);
-        }
-    }
-
-    public List<AmmortamentoCespite> calcoloSingoloCespite(Double percAmm, Cespite cespite, LocalDate dataCorrente) {
+    public List<AmmortamentoCespite> calcoloSingoloCespite(RegistroCespiteDto cespite, LocalDate dataCorrente) {
+        Double percAmm = cespite.getPercAmmortamento();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
         boolean eliminato = cespite.getDataVendita() != null && StringUtils.isBlank(cespite.getIntestatarioVendita());
         boolean venduto = cespite.getDataVendita() != null && StringUtils.isNotBlank(cespite.getIntestatarioVendita());
@@ -215,7 +88,7 @@ public class AmmortamentoCespiteService {
             double residuo = cespite.getImporto();
             double quotaPrimoAnno = cespite.getImporto() * (percAmmPrimoAnno / 100);
             double fondo = 0;
-            LocalDate dataInizio = cespite.getDataInizioCalcoloAmm();
+            LocalDate dataInizio = cespite.getDtInizioCalcoloAmm();
             int counter = 1;
             LocalDate dataAmmortamento = LocalDate.of(dataInizio.getYear(), Month.DECEMBER, 31);
             while (residuo > 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()) {
@@ -261,7 +134,8 @@ public class AmmortamentoCespiteService {
         return ammortamentoCespiteList;
     }
 
-    public List<AmmortamentoCespite> calcoloSingoloCespiteRivalutato(Double percAmm, Cespite cespite, LocalDate dataCorrente) {
+    public List<AmmortamentoCespite> calcoloSingoloCespiteRivalutato(RegistroCespiteDto cespite, LocalDate dataCorrente) {
+        Double percAmm = cespite.getPercAmmortamento();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
         boolean eliminato = cespite.getDataVendita() != null && StringUtils.isBlank(cespite.getIntestatarioVendita());
         boolean venduto = cespite.getDataVendita() != null && StringUtils.isNotBlank(cespite.getIntestatarioVendita());
@@ -291,7 +165,7 @@ public class AmmortamentoCespiteService {
             if (cespite.getImportoRivalutazione() != null) {
                 residuo += cespite.getImportoRivalutazione();
             }
-            LocalDate dataInizio = cespite.getDataInizioCalcoloAmm();
+            LocalDate dataInizio = cespite.getDtInizioCalcoloAmm();
 
             double residuoDaSalvare;
             int counter = 1;
@@ -374,7 +248,7 @@ public class AmmortamentoCespiteService {
         return ammortamentoCespiteList;
     }
 
-    private List<AmmortamentoCespite> buildEliminatoVenduto(Cespite cespite, List<AmmortamentoCespite> ammortamentoCespiteList, boolean eliminato, boolean venduto, double residuo) {
+    private List<AmmortamentoCespite> buildEliminatoVenduto(RegistroCespiteDto cespite, List<AmmortamentoCespite> ammortamentoCespiteList, boolean eliminato, boolean venduto, double residuo) {
         if (eliminato) {
             ammortamentoCespiteList.add(mapper.buildEliminato(cespite.getId(), cespite.getDataVendita()));
         }
@@ -388,7 +262,7 @@ public class AmmortamentoCespiteService {
         return ammortamentoCespiteList;
     }
 
-    private void calcolaSuperAmm(Cespite cespite, double perc, AmmortamentoCespite a) {
+    private void calcolaSuperAmm(RegistroCespiteDto cespite, double perc, AmmortamentoCespite a) {
         if (cespite.getSuperAmm() != null && cespite.getSuperAmm() != 0L) {
             TipoSuperAmm tipoSuperAmm = TipoSuperAmm.findById(cespite.getSuperAmm());
             double importSuperAmm = (tipoSuperAmm.getPerc() * cespite.getImporto()) / 100;
@@ -517,24 +391,24 @@ public class AmmortamentoCespiteService {
                 cespiteDtoList.stream()
                         .filter(c -> ((c.getDataVend() == null || (c.getDataVend().getYear() == anno)) && c.getAnno() < anno))
                         .forEach(c -> {
-                    AmmortamentoCespite a;
-                    if (!c.getAmmortamentoCespiteList().isEmpty()) {
-                        if (c.getAmmortamentoCespiteList().stream().anyMatch(m -> m.getAnno().equals(anno - 1))) {
-                            a = c.getAmmortamentoCespiteList().stream().filter(m -> m.getAnno().equals(anno - 1)).findFirst().get();
-                            ammortamentoCespiteList.add(a);
-                        } else if (c.getAmmortamentoCespiteList().stream()
-                                .filter(amm -> StringUtils.startsWith(amm.getDescrizione(), "Ammortamento"))
-                                .noneMatch(m -> m.getAnno().equals(anno))) {
-                            a = c.getAmmortamentoCespiteList()
-                                    .stream()
-                                    .filter(amm -> StringUtils.startsWith(amm.getDescrizione(), "Ammortamento"))
-                                    .max(Comparator.comparing(AmmortamentoCespite::getAnno))
-                                    .get();
-                            ammortamentoCespiteList.add(a);
-                        }
-                    }
+                            AmmortamentoCespite a;
+                            if (!c.getAmmortamentoCespiteList().isEmpty()) {
+                                if (c.getAmmortamentoCespiteList().stream().anyMatch(m -> m.getAnno().equals(anno - 1))) {
+                                    a = c.getAmmortamentoCespiteList().stream().filter(m -> m.getAnno().equals(anno - 1)).findFirst().get();
+                                    ammortamentoCespiteList.add(a);
+                                } else if (c.getAmmortamentoCespiteList().stream()
+                                        .filter(amm -> StringUtils.startsWith(amm.getDescrizione(), "Ammortamento"))
+                                        .noneMatch(m -> m.getAnno().equals(anno))) {
+                                    a = c.getAmmortamentoCespiteList()
+                                            .stream()
+                                            .filter(amm -> StringUtils.startsWith(amm.getDescrizione(), "Ammortamento"))
+                                            .max(Comparator.comparing(AmmortamentoCespite::getAnno))
+                                            .get();
+                                    ammortamentoCespiteList.add(a);
+                                }
+                            }
 
-                });
+                        });
 
                 inizioEsercizio.setFondoAmmortamenti(ammortamentoCespiteList
                         .stream()
@@ -722,18 +596,22 @@ public class AmmortamentoCespiteService {
 
     @Transactional
     public void updateCespiti(CespiteRequest c) {
-        String query = "SELECT c, cat " +
+        String query = "SELECT c.id, c.tipoCespite, c.progressivo1, c.progressivo2, c.cespite, c.dataAcq, c.numDocAcq, c.fornitore, " +
+                "c.importo, c.importoRivalutazione, c.attivo, c.dataVendita, c.numDocVendita, c.intestatarioVendita, c.importoVendita," +
+                " c.superAmm, c.protocollo, c.giornale, c.anno, c.dataInizioCalcoloAmm, c.flPrimoAnno, c.fondoRivalutazione, " +
+                " t.id, t.descrizione, t.percAmmortamento, t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
+                "t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto " +
                 "FROM Cespite c " +
-                "JOIN CategoriaCespite cat ON cat.tipoCespite = c.tipoCespite " +
+                "JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite " +
                 "WHERE c.id =:id ";
         Map<String, Object> params = new HashMap<>();
         params.put("id", c.getId());
-        Optional<CespiteDBDto> optionalCespite = Cespite.find(query, params).project(CespiteDBDto.class).singleResultOptional();
+        Optional<RegistroCespiteDto> optionalCespite = Cespite.find(query, params).project(RegistroCespiteDto.class).singleResultOptional();
 
         int update = 0;
         if (optionalCespite.isPresent()) {
-            CespiteDBDto cespiteDBDto = optionalCespite.get();
-            Cespite cespite = cespiteDBDto.getCespite();
+            RegistroCespiteDto cespiteDBDto = optionalCespite.get();
+            //Cespite cespite = Cespite.find("id =:id", Parameters.with("id", cespiteDBDto.getId())).firstResult();
             if (c.getPerc() != null) {
                 update = Cespite.update("ammortamento = :p WHERE id =:id", Parameters.with("p", c.getPerc()).and("id", c.getId()));
             }
@@ -748,8 +626,8 @@ public class AmmortamentoCespiteService {
                 if (update > 0) {
                     CategoriaCespite categoriaCespite = CategoriaCespite.find("tipoCespite = :t", Parameters.with("t", c.getTipoCespite())).firstResult();
                     Optional<Primanota> optional = Primanota.find("anno =:a AND giornale =:g AND protocollo =:p AND importo =:i",
-                            Parameters.with("a", cespite.getAnno()).and("g", cespite.getGiornale())
-                                    .and("p", cespite.getProtocollo()).and("i", cespite.getImporto())).firstResultOptional();
+                            Parameters.with("a", cespiteDBDto.getAnno()).and("g", cespiteDBDto.getGiornale())
+                                    .and("p", cespiteDBDto.getProtocollo()).and("i", cespiteDBDto.getImporto())).firstResultOptional();
                     if (optional.isPresent()) {
                         Primanota primanota = optional.get();
                         primanota.setGruppoconto(categoriaCespite.getCostoGruppo());
@@ -761,10 +639,10 @@ public class AmmortamentoCespiteService {
             if (update > 0) {
                 AmmortamentoCespite.deleteById(c.getId());
                 List<AmmortamentoCespite> ammortamentoCespites;
-                if (cespiteDBDto.getCespite().getImportoRivalutazione() != null) {
-                    ammortamentoCespites = calcoloSingoloCespiteRivalutato(cespiteDBDto.getCategoria().getPercAmmortamento(), cespite, LocalDate.now());
+                if (cespiteDBDto.getImportoRivalutazione() != null) {
+                    ammortamentoCespites = calcoloSingoloCespiteRivalutato(cespiteDBDto, LocalDate.now());
                 } else {
-                    ammortamentoCespites = calcoloSingoloCespite(cespiteDBDto.getCategoria().getPercAmmortamento(), cespite, LocalDate.now());
+                    ammortamentoCespites = calcoloSingoloCespite(cespiteDBDto, LocalDate.now());
                 }
                 if (!ammortamentoCespites.isEmpty()) {
                     AmmortamentoCespite.persist(ammortamentoCespites);

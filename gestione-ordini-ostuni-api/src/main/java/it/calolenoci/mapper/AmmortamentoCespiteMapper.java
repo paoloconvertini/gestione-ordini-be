@@ -36,7 +36,7 @@ public class AmmortamentoCespiteMapper {
         return ammEliminato;
     }
 
-    public List<AmmortamentoCespite> buildVenduto(Cespite cespite, Double residuo){
+    public List<AmmortamentoCespite> buildVenduto(RegistroCespiteDto cespite, Double residuo){
         int anno = cespite.getDataVendita().getYear();
         List<AmmortamentoCespite> list = new ArrayList<>();
         AmmortamentoCespite ammVenduto = new AmmortamentoCespite();
@@ -46,7 +46,7 @@ public class AmmortamentoCespiteMapper {
         ammVenduto.setAnno(anno);
         AmmortamentoCespite ammVenduto1 = new AmmortamentoCespite();
         ammVenduto1.setIdAmmortamento(cespite.getId());
-        ammVenduto1.setDescrizione("venduto a " + cespite.getIntestatarioVendita() + " n. fatt.: " + cespite.getNumDocVendita());
+        ammVenduto1.setDescrizione("venduto a " + cespite.getIntestatarioVendita() + " n. fatt.: " + cespite.getNumDocVend());
         ammVenduto1.setQuota(cespite.getImportoVendita());
         ammVenduto1.setAnno(anno);
         AmmortamentoCespite ammVenduto2 = new AmmortamentoCespite();

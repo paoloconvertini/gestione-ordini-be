@@ -1,11 +1,13 @@
 package it.calolenoci.dto;
 
+import it.calolenoci.entity.QuadraturaCespite;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -57,7 +59,6 @@ public class RegistroCespiteDto implements Serializable {
     private String plusConto;
     private Integer minusGruppo;
     private String minusConto;
-
 
     public RegistroCespiteDto(String id, String tipoCespite, Integer progressivo1, Integer progressivo2, String cespite,
                               LocalDate dataAcq, String numDocAcq, String fornitore, Double importo, Double importoRivalutazione,
