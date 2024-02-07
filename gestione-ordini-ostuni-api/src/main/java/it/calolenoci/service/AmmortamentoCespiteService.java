@@ -72,6 +72,8 @@ public class AmmortamentoCespiteService {
     }
 
     public List<AmmortamentoCespite> calcoloSingoloCespite(RegistroCespiteDto cespite, LocalDate dataCorrente) {
+        long inizio = System.currentTimeMillis();
+        Log.debug("Calcolo singolo: " + cespite.getCespite());
         Double percAmm = cespite.getPercAmmortamento();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
         boolean eliminato = cespite.getDataVendita() != null && StringUtils.isBlank(cespite.getIntestatarioVendita());
@@ -131,10 +133,14 @@ public class AmmortamentoCespiteService {
 
             return buildEliminatoVenduto(cespite, ammortamentoCespiteList, eliminato, venduto, residuo);
         }
+        long fine = System.currentTimeMillis();
+        Log.info("Cespite: " + cespite.getCespite() + ". Metodo calcola ammortamenti singolo : " + (fine - inizio) / 1000 + " sec");
         return ammortamentoCespiteList;
     }
 
     public List<AmmortamentoCespite> calcoloSingoloCespiteRivalutato(RegistroCespiteDto cespite, LocalDate dataCorrente) {
+        long inizio = System.currentTimeMillis();
+        Log.debug("Calcolo singolo rivalutato: " + cespite.getCespite());
         Double percAmm = cespite.getPercAmmortamento();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
         boolean eliminato = cespite.getDataVendita() != null && StringUtils.isBlank(cespite.getIntestatarioVendita());
@@ -245,6 +251,8 @@ public class AmmortamentoCespiteService {
 
             return buildEliminatoVenduto(cespite, ammortamentoCespiteList, eliminato, venduto, residuo);
         }
+        long fine = System.currentTimeMillis();
+        Log.info("Cespite: " + cespite.getCespite() + ". Metodo calcola ammortamenti singolo rivalutato: " + (fine - inizio) / 1000 + " sec");
         return ammortamentoCespiteList;
     }
 
@@ -665,25 +673,23 @@ public class AmmortamentoCespiteService {
                 CategoriaCespite categoriaCespite = CategoriaCespite.find("costoGruppo=:g AND costoConto=:c",
                         Parameters.with("g", dto.getGruppoconto()).and("c", dto.getSottoconto())).firstResult();
                 c.setTipoCespite(categoriaCespite.getTipoCespite());
-                Optional<Cespite> optionalCespite = Cespite.find("tipoCespite=:t", Sort.descending("progressivo1"),
-                        Parameters.with("t", categoriaCespite.getTipoCespite())).firstResultOptional();
+                Integer progr1 = Cespite.find("SELECT ISNULL(MAX(progressivo1) + 1, 1) FROM Cespite WHERE tipoCespite=:t",
+                        Parameters.with("t", categoriaCespite.getTipoCespite())).project(Integer.class).firstResult();
                 Primanota primanota = Primanota.find("anno = :a AND giornale=:g AND protocollo=:p AND progrprimanota=1",
                         Parameters.with("a", dto.getAnno()).and("g", dto.getGiornale())
                                 .and("p", dto.getProtocollo())).firstResult();
-                int progr1 = 1;
                 Integer progr2 = 1;
-                if (optionalCespite.isPresent()) {
-                    progr1 = optionalCespite.get().getProgressivo1() + 1;
-                    progr2 = optionalCespite.get().getProgressivo2();
-                }
                 FatturepaixIn fattura = FatturepaixIn.findById(primanota.getPid());
                 if (fattura != null) {
                     c.setFornitore(fattura.getFornitoreDenom() + StringUtils.SPACE + primanota.getGruppoconto() + " - " + primanota.getSottoconto());
                     //TODO salvare nomefile fattura
                 } else {
-                    PianoConti pianoConti = PianoConti.find("gruppoConto=:g AND sottoConto =:c", Parameters.with("g", primanota.getGruppoconto())
-                            .and("c", primanota.getSottoconto())).firstResult();
-                    c.setFornitore(pianoConti.getIntestazione() + StringUtils.SPACE + primanota.getGruppoconto() + " - " + primanota.getSottoconto());
+                    Optional<PianoConti> optional = PianoConti.find("gruppoConto=:g AND sottoConto =:c", Parameters.with("g", primanota.getGruppoconto())
+                            .and("c", primanota.getSottoconto())).firstResultOptional();
+                    if(optional.isPresent()){
+                        PianoConti pianoConti = optional.get();
+                        c.setFornitore(pianoConti.getIntestazione() + StringUtils.SPACE + primanota.getGruppoconto() + " - " + primanota.getSottoconto());
+                    }
                 }
                 c.setProgressivo1(progr1);
                 c.setProgressivo2(progr2);
