@@ -61,7 +61,10 @@ public class PrimanotaService {
                 );
                 boolean result = update > 0;
                 if (result && (dto.getGiornale().equals("A") || StringUtils.equals("*CE", dto.getCausale()))) {
+                    Log.debug("Primanota salva, creo un nuovo cespite...");
                     ammortamentoCespiteService.createCespite(dto);
+                } else {
+                    Log.debug("Primanota salva, Non è una creazione di un nuovo cespite!!");
                 }
             }
         } catch (Exception e) {
