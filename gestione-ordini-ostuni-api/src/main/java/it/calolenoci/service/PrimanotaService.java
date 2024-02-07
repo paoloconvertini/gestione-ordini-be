@@ -60,7 +60,7 @@ public class PrimanotaService {
                         .and("i", dto.getImporto())
                 );
                 boolean result = update > 0;
-                if (result && dto.getGiornale().equals("A")) {
+                if (result && (dto.getGiornale().equals("A") || StringUtils.equals("*CE", dto.getCausale()))) {
                     ammortamentoCespiteService.createCespite(dto);
                 }
             }
