@@ -1,6 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
@@ -9,8 +8,8 @@ import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.mapper.AmmortamentoCespiteMapper;
 import it.calolenoci.mapper.QuadCespiteMapper;
+import it.calolenoci.runner.CalcolaAmmortamentoRunner;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,6 +19,8 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -34,8 +35,6 @@ public class AmmortamentoCespiteService {
     @Inject
     QuadCespiteMapper quadCespiteMapper;
 
-    @ConfigProperty(name = "storico")
-    boolean storico;
 
     @Transactional
     @TransactionConfiguration(timeout = 5000000)
@@ -47,21 +46,25 @@ public class AmmortamentoCespiteService {
                     "c.importo, c.importoRivalutazione, c.attivo, c.dataVendita, c.numDocVendita, c.intestatarioVendita, c.importoVendita," +
                     " c.superAmm, c.protocollo, c.giornale, c.anno, c.dataInizioCalcoloAmm, c.flPrimoAnno, c.fondoRivalutazione, " +
                     " t.id, t.descrizione, t.percAmmortamento, t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
-                    "t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto " +
+                    "t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto, s.descrizione, s.perc " +
                     "FROM Cespite c " +
                     "JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite " +
+                    "LEFT JOIN TipoSuperAmm s ON s.id = c.superAmm " +
                     "WHERE c.attivo = 'T' ";
             List<RegistroCespiteDto> cespitiAttivi = Cespite.find(query).project(RegistroCespiteDto.class).list();
             List<AmmortamentoCespite> ammortamentoCespites = new ArrayList<>();
             AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(RegistroCespiteDto::getId).collect(Collectors.toList())));
+            List<QuadraturaCespite> quadraturaCespiteList = QuadraturaCespite.find("idCespite in (:list)", Parameters.with("list", cespitiAttivi.stream().map(RegistroCespiteDto::getId).collect(Collectors.toList()))).list();
             Log.debug("Calcola inizio ciclo cespiti Attivi");
+            ThreadPoolExecutor executor =
+                    (ThreadPoolExecutor) Executors.newFixedThreadPool(100);
             for (RegistroCespiteDto cespite : cespitiAttivi) {
-                if (cespite.getImportoRivalutazione() != null) {
-                    ammortamentoCespites.addAll(calcoloSingoloCespiteRivalutato(cespite, dataCorrente));
-                } else {
-                    ammortamentoCespites.addAll(calcoloSingoloCespite(cespite, dataCorrente));
-                }
+                cespite.setQuadraturaCespiteList(quadraturaCespiteList.stream().filter(q -> cespite.getId().equals(q.getIdCespite())).collect(Collectors.toList()));
+                CalcolaAmmortamentoRunner r = new CalcolaAmmortamentoRunner(ammortamentoCespites, cespite, dataCorrente);
+                executor.execute(r);
             }
+            executor.shutdown();
+            while (!executor.isTerminated()) {}
             Log.debug("FINE --- Calcola inizio ciclo cespiti Attivi");
             AmmortamentoCespite.persist(ammortamentoCespites);
             long fine = System.currentTimeMillis();
@@ -139,8 +142,6 @@ public class AmmortamentoCespiteService {
     }
 
     public List<AmmortamentoCespite> calcoloSingoloCespiteRivalutato(RegistroCespiteDto cespite, LocalDate dataCorrente) {
-        long inizio = System.currentTimeMillis();
-        Log.debug("Calcolo singolo rivalutato: " + cespite.getCespite());
         Double percAmm = cespite.getPercAmmortamento();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
         boolean eliminato = cespite.getDataVendita() != null && StringUtils.isBlank(cespite.getIntestatarioVendita());
@@ -251,8 +252,6 @@ public class AmmortamentoCespiteService {
 
             return buildEliminatoVenduto(cespite, ammortamentoCespiteList, eliminato, venduto, residuo);
         }
-        long fine = System.currentTimeMillis();
-        Log.info("Cespite: " + cespite.getCespite() + ". Metodo calcola ammortamenti singolo rivalutato: " + (fine - inizio) / 1000 + " sec");
         return ammortamentoCespiteList;
     }
 

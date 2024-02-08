@@ -60,6 +60,72 @@ public class RegistroCespiteDto implements Serializable {
     private Integer minusGruppo;
     private String minusConto;
 
+    private List<QuadraturaCespite> quadraturaCespiteList;
+
+    private String descrizioneSuperAmm;
+
+    private Integer percSuperAmm;
+
+    public RegistroCespiteDto(String id, String tipoCespite, Integer progressivo1, Integer progressivo2, String cespite,
+                              LocalDate dataAcq, String numDocAcq, String fornitore, Double importo, Double importoRivalutazione,
+                              Boolean attivo, LocalDate dataVendita, String numDocVend, String intestatarioVendita,
+                              Double importoVendita, Long superAmm, Integer protocollo, String giornale, Integer anno,
+                              LocalDate dtInizioCalcoloAmm, Boolean flPrimoAnno, Double fondoRivalutazione,
+                              LocalDate dataAmm, String descrAmm, Double percAmm, Double quota, Double fondo,
+                              Double residuo, Integer annoAmm, Double percSuper, Double quotaSuper, Double quotaRivalutazione,
+                              Double fondoRivAmm, String idTipoCesp, String descrTipoCesp, Double percAmmortamento,
+                              Integer costoGruppo, String costoConto, Integer ammGruppo, String ammConto,
+                              Integer fondoGruppo, String fondoConto, Integer plusGruppo, String plusConto,
+                              Integer minusGruppo, String minusConto) {
+        this.id = id;
+        this.tipoCespite = tipoCespite;
+        this.progressivo1 = progressivo1;
+        this.progressivo2 = progressivo2;
+        this.cespite = cespite;
+        this.dataAcq = dataAcq;
+        this.numDocAcq = numDocAcq;
+        this.fornitore = fornitore;
+        this.importo = importo;
+        this.importoRivalutazione = importoRivalutazione;
+        this.attivo = attivo;
+        this.dataVendita = dataVendita;
+        this.numDocVend = numDocVend;
+        this.intestatarioVendita = intestatarioVendita;
+        this.importoVendita = importoVendita;
+        this.superAmm = superAmm;
+        this.protocollo = protocollo;
+        this.giornale = giornale;
+        this.anno = anno;
+        this.dtInizioCalcoloAmm = dtInizioCalcoloAmm;
+        this.flPrimoAnno = flPrimoAnno;
+        this.fondoRivalutazione = fondoRivalutazione;
+        this.dataAmm = dataAmm;
+        this.descrAmm = descrAmm;
+        this.percAmm = percAmm;
+        this.quota = quota;
+        this.fondo = fondo;
+        this.residuo = residuo;
+        this.annoAmm = annoAmm;
+        this.percSuper = percSuper;
+        this.quotaSuper = quotaSuper;
+        this.quotaRivalutazione = quotaRivalutazione;
+        this.fondoRivAmm = fondoRivAmm;
+        this.idTipoCesp = idTipoCesp;
+        this.descrTipoCesp = descrTipoCesp;
+        this.percAmmortamento = percAmmortamento;
+        this.costoGruppo = costoGruppo;
+        this.costoConto = costoConto;
+        this.ammGruppo = ammGruppo;
+        this.ammConto = ammConto;
+        this.fondoGruppo = fondoGruppo;
+        this.fondoConto = fondoConto;
+        this.plusGruppo = plusGruppo;
+        this.plusConto = plusConto;
+        this.minusGruppo = minusGruppo;
+        this.minusConto = minusConto;
+
+    }
+
     public RegistroCespiteDto(String id, String tipoCespite, Integer progressivo1, Integer progressivo2, String cespite,
                               LocalDate dataAcq, String numDocAcq, String fornitore, Double importo, Double importoRivalutazione,
                               Boolean attivo, LocalDate dataVendita, String numDocVend, String intestatarioVendita, Double importoVendita,
@@ -102,6 +168,52 @@ public class RegistroCespiteDto implements Serializable {
         this.plusConto = plusConto;
         this.minusGruppo = minusGruppo;
         this.minusConto = minusConto;
+    }
+
+    public RegistroCespiteDto(String id, String tipoCespite, Integer progressivo1, Integer progressivo2, String cespite,
+                              LocalDate dataAcq, String numDocAcq, String fornitore, Double importo, Double importoRivalutazione,
+                              Boolean attivo, LocalDate dataVendita, String numDocVend, String intestatarioVendita, Double importoVendita,
+                              Long superAmm, Integer protocollo, String giornale, Integer anno, LocalDate dtInizioCalcoloAmm,
+                              Boolean flPrimoAnno, Double fondoRivalutazione, String idTipoCesp, String descrTipoCesp,
+                              Double percAmmortamento, Integer costoGruppo, String costoConto, Integer ammGruppo, String ammConto,
+                              Integer fondoGruppo, String fondoConto, Integer plusGruppo, String plusConto, Integer minusGruppo, String minusConto, String descrizione, Integer perc) {
+        this.id = id;
+        this.tipoCespite = tipoCespite;
+        this.progressivo1 = progressivo1;
+        this.progressivo2 = progressivo2;
+        this.cespite = cespite;
+        this.dataAcq = dataAcq;
+        this.numDocAcq = numDocAcq;
+        this.fornitore = fornitore;
+        this.importo = importo;
+        this.importoRivalutazione = importoRivalutazione;
+        this.attivo = attivo;
+        this.dataVendita = dataVendita;
+        this.numDocVend = numDocVend;
+        this.intestatarioVendita = intestatarioVendita;
+        this.importoVendita = importoVendita;
+        this.superAmm = superAmm;
+        this.protocollo = protocollo;
+        this.giornale = giornale;
+        this.anno = anno;
+        this.dtInizioCalcoloAmm = dtInizioCalcoloAmm;
+        this.flPrimoAnno = flPrimoAnno;
+        this.fondoRivalutazione = fondoRivalutazione;
+        this.idTipoCesp = idTipoCesp;
+        this.descrTipoCesp = descrTipoCesp;
+        this.percAmmortamento = percAmmortamento;
+        this.costoGruppo = costoGruppo;
+        this.costoConto = costoConto;
+        this.ammGruppo = ammGruppo;
+        this.ammConto = ammConto;
+        this.fondoGruppo = fondoGruppo;
+        this.fondoConto = fondoConto;
+        this.plusGruppo = plusGruppo;
+        this.plusConto = plusConto;
+        this.minusGruppo = minusGruppo;
+        this.minusConto = minusConto;
+        this.descrizioneSuperAmm = descrizione;
+        this.percSuperAmm = perc;
     }
 
     public RegistroCespiteDto(String tipoCespite, Integer progressivo1, Integer progressivo2, Double quota, Double quotaRivalutazione,
