@@ -38,7 +38,7 @@ public class CalcolaAmmortamentoRunner implements Runnable {
 
     @Override
     public void run() {
-        if(this.cespite.getImportoRivalutazione() != null) {
+        if(this.cespite.getImportoRivalutazione() != null && this.cespite.getImportoRivalutazione() != 0) {
             calcolaAmmortamentoSingoloRivalutato();
         } else {
             calcolaAmmortamentoSingolo();
