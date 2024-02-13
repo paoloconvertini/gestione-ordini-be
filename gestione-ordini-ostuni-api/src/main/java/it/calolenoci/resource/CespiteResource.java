@@ -68,14 +68,12 @@ public class CespiteResource {
 
     @RolesAllowed({ADMIN})
     @Operation(summary = "calcola ammortamenti")
-    @Path("/calcola/{date}")
-    @GET
+    @Path("/calcola")
+    @POST
     @Produces(APPLICATION_JSON)
-    public Response calcola(String date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-        LocalDate localDate = LocalDate.parse(date, formatter);
-        service.calcola(localDate);
-        return Response.ok(new ResponseDto("Ammortamento calcolato correttamente", false)).build();
+    public Response calcola(FiltroCespite filtroCespite) {
+        service.calcola(filtroCespite);
+        return getRegistroCespiti(filtroCespite);
     }
 
 

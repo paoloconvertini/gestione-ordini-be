@@ -50,6 +50,10 @@ public class CespiteDto implements Serializable {
 
     private Integer annoProtocollo;
 
+    private Long idSuperAmm;
+
+    private Integer percSuperAmm;
+
     private List<AmmortamentoCespite> ammortamentoCespiteList;
 
 }

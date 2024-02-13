@@ -9,6 +9,7 @@ import it.calolenoci.entity.*;
 import it.calolenoci.mapper.AmmortamentoCespiteMapper;
 import it.calolenoci.mapper.QuadCespiteMapper;
 import it.calolenoci.runner.CalcolaAmmortamentoRunner;
+import it.calolenoci.runner.RegistroCespiteRunner;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -38,9 +39,11 @@ public class AmmortamentoCespiteService {
 
     @Transactional
     @TransactionConfiguration(timeout = 5000000)
-    public void calcola(LocalDate dataCorrente) {
+    public void calcola(FiltroCespite filtroCespite) {
         try {
             long inizio = System.currentTimeMillis();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+            LocalDate dataCorrente = LocalDate.parse(filtroCespite.getData(), formatter);
             Log.debug("### Inizio calcolo registro cespiti");
             String query = "SELECT c.id, c.tipoCespite, c.progressivo1, c.progressivo2, c.cespite, c.dataAcq, c.numDocAcq, c.fornitore, " +
                     "c.importo, c.importoRivalutazione, c.attivo, c.dataVendita, c.numDocVendita, c.intestatarioVendita, c.importoVendita," +
@@ -51,20 +54,22 @@ public class AmmortamentoCespiteService {
                     "JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite " +
                     "LEFT JOIN TipoSuperAmm s ON s.id = c.superAmm " +
                     "WHERE c.attivo = 'T' ";
-            List<RegistroCespiteDto> cespitiAttivi = Cespite.find(query).project(RegistroCespiteDto.class).list();
+            Map<String, Object> params = new HashMap<>();
+            if (StringUtils.isNotBlank(filtroCespite.getTipoCespite())) {
+                query += " AND c.tipoCespite = :q";
+                params.put("q", filtroCespite.getTipoCespite());
+            }
+            List<RegistroCespiteDto> cespitiAttivi = Cespite.find(query, params).project(RegistroCespiteDto.class).list();
             List<AmmortamentoCespite> ammortamentoCespites = new ArrayList<>();
             AmmortamentoCespite.delete("idAmmortamento in (:list)", Parameters.with("list", cespitiAttivi.stream().map(RegistroCespiteDto::getId).collect(Collectors.toList())));
-            List<QuadraturaCespite> quadraturaCespiteList = QuadraturaCespite.find("idCespite in (:list)", Parameters.with("list", cespitiAttivi.stream().map(RegistroCespiteDto::getId).collect(Collectors.toList()))).list();
             Log.debug("Calcola inizio ciclo cespiti Attivi");
-            ThreadPoolExecutor executor =
-                    (ThreadPoolExecutor) Executors.newFixedThreadPool(100);
             for (RegistroCespiteDto cespite : cespitiAttivi) {
-                cespite.setQuadraturaCespiteList(quadraturaCespiteList.stream().filter(q -> cespite.getId().equals(q.getIdCespite())).collect(Collectors.toList()));
-                CalcolaAmmortamentoRunner r = new CalcolaAmmortamentoRunner(ammortamentoCespites, cespite, dataCorrente);
-                executor.execute(r);
+                if (cespite.getImportoRivalutazione() != null && cespite.getImportoRivalutazione() != 0) {
+                    ammortamentoCespites.addAll(calcoloSingoloCespiteRivalutato(cespite, dataCorrente));
+                } else {
+                    ammortamentoCespites.addAll(calcoloSingoloCespite(cespite, dataCorrente));
+                }
             }
-            executor.shutdown();
-            while (!executor.isTerminated()) {}
             Log.debug("FINE --- Calcola inizio ciclo cespiti Attivi");
             AmmortamentoCespite.persist(ammortamentoCespites);
             long fine = System.currentTimeMillis();
@@ -76,7 +81,6 @@ public class AmmortamentoCespiteService {
 
     public List<AmmortamentoCespite> calcoloSingoloCespite(RegistroCespiteDto cespite, LocalDate dataCorrente) {
         long inizio = System.currentTimeMillis();
-        Log.debug("Calcolo singolo: " + cespite.getCespite());
         Double percAmm = cespite.getPercAmmortamento();
         List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
         boolean eliminato = cespite.getDataVendita() != null && StringUtils.isBlank(cespite.getIntestatarioVendita());
@@ -262,7 +266,7 @@ public class AmmortamentoCespiteService {
         if (venduto) {
             ammortamentoCespiteList.addAll(mapper.buildVenduto(cespite, residuo));
         }
-        if (eliminato || venduto) {
+        if (eliminato || venduto || (cespite.getResiduo() != null && cespite.getResiduo() == 0) ) {
             cespite.setAttivo(Boolean.FALSE);
             Cespite.persist(cespite);
         }
