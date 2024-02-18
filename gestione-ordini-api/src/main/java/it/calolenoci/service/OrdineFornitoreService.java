@@ -12,6 +12,7 @@ import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.mapper.GoOrdineFornitoreMapper;
+import it.calolenoci.mapper.OafArticoloMapper;
 import it.calolenoci.mapper.OrdineFornitoreMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +33,9 @@ public class OrdineFornitoreService {
 
     @Inject
     OrdineFornitoreMapper ordineFornitoreMapper;
+
+    @Inject
+    OafArticoloMapper oafArticoloMapper;
     @Inject
     GoOrdineFornitoreMapper goOrdineFornitoreMapper;
     @Inject
@@ -163,6 +167,7 @@ public class OrdineFornitoreService {
         try {
             dtoList.sort(Comparator.comparing(OrdineFornitoreDto::getAnno).reversed());
             OrdineFornitoreDto ordineDaTenere = dtoList.get(0);
+            Log.debug("Ordine da tenere:" + ordineDaTenere.getProgressivo());
             Integer ultimoRigo = findRigo(ordineDaTenere.getAnno(), ordineDaTenere.getSerie(), ordineDaTenere.getProgressivo());
             List<OrdineFornitoreDto> ordiniDaUnire = dtoList.stream().skip(1).toList();
             int count = ultimoRigo + 1;
@@ -173,6 +178,7 @@ public class OrdineFornitoreService {
                                     Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo()))
                             .list()));
             for (OrdineFornitoreDettaglio o : list) {
+                Log.debug("Aggiorno progressivo: " + o.getProgressivo() + " con nuovo progressivo: " + ordineDaTenere.getProgressivo());
                 update += OrdineFornitoreDettaglio.update("anno=:a, rigo = :nuovoRigo, progressivo =: nuovoProgressivo " +
                                 "WHERE anno = :anno and serie =:serie and progressivo =:progressivo and rigo=:rigo",
                         Parameters.with("anno", o.getAnno()).and("a", ordineDaTenere.getAnno()).and("serie", o.getSerie())
@@ -186,13 +192,20 @@ public class OrdineFornitoreService {
                 ordiniDaUnire.forEach(o -> {
                 listaDettaglioDaEliminare.addAll(OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
                             Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).list());
+                     OrdineFornitore ordineFornitore = OrdineFornitore.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                            Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).firstResult();
+                     GoOrdineFornitoreBK.persist(ordineFornitoreMapper.copyOAF(ordineFornitore));
                     OrdineFornitore.deleteById(new FornitoreId(o.getAnno(), o.getSerie(), o.getProgressivo()));
                 });
                 if(!listaDettaglioDaEliminare.isEmpty()) {
                     Log.debug("Trovati " + listaDettaglioDaEliminare.size() + " articoli di OAF orfani! INIZIO CANCELLAZIONE DA DB...");
-                    listaDettaglioDaEliminare.forEach( d -> OrdineFornitoreDettaglio.delete("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
-                            Parameters.with("anno", d.getAnno()).and("serie", d.getSerie()).and("progressivo", d.getProgressivo())
-                                    .and("rigo", d.getRigo())));
+                    listaDettaglioDaEliminare.forEach( d -> {
+                        Log.debug("Elimino progressivo/anno: " + d.getProgressivo()+"/"+d.getAnno());
+                        GoOrdineFornitoreDettaglioBK.persist(oafArticoloMapper.copyOAFDettaglio(d));
+                        OrdineFornitoreDettaglio.delete("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
+                                Parameters.with("anno", d.getAnno()).and("serie", d.getSerie()).and("progressivo", d.getProgressivo())
+                                        .and("rigo", d.getRigo()));
+                    });
                     Log.debug("CANCELLAZIONE TERMINATA!!");
                 }
 

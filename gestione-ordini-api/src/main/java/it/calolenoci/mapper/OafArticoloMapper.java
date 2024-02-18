@@ -2,6 +2,7 @@ package it.calolenoci.mapper;
 
 import it.calolenoci.dto.ArticoloDto;
 import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
+import it.calolenoci.entity.GoOrdineFornitoreDettaglioBK;
 import it.calolenoci.entity.OrdineFornitoreDettaglio;
 import org.apache.commons.lang3.StringUtils;
 
@@ -93,6 +94,72 @@ public class OafArticoloMapper {
         entity.setSysUpdatedate(new Date());
         entity.setSysCreateuser(user);
         entity.setSysUpdateuser(user);
+        return entity;
+    }
+
+    public GoOrdineFornitoreDettaglioBK copyOAFDettaglio(OrdineFornitoreDettaglio dto) {
+        GoOrdineFornitoreDettaglioBK entity = new GoOrdineFornitoreDettaglioBK();
+        entity.setAnno(dto.getAnno());
+        entity.setSerie(dto.getSerie());
+        entity.setProgressivo(dto.getProgressivo());
+        entity.setRigo(dto.getRigo());
+        entity.setTipoRigo(dto.getTipoRigo());
+        entity.setOArticolo(dto.getOArticolo());
+        entity.setODescrArticolo(dto.getODescrArticolo());
+        entity.setMagazzino(dto.getMagazzino());
+        entity.setProvenienza(dto.getProvenienza());
+        entity.setNota(dto.getNota());
+        entity.setPid(dto.getPid());
+        entity.setOCodiceIva(dto.getOCodiceIva());
+        entity.setOQuantita(dto.getOQuantita());
+        entity.setSaldo(dto.getSaldo());
+        entity.setOColli(dto.getOColli());
+        entity.setCampoUser5(dto.getCampoUser5());
+        entity.setOvocespesa(dto.getOvocespesa());
+        entity.setOQuantitaV(dto.getOQuantitaV());
+        entity.setOUnitaMisura(dto.getOUnitaMisura());
+        entity.setOPrezzo(dto.getOPrezzo());
+        entity.setFScontoArticolo(dto.getFScontoArticolo());
+        entity.setScontoF1(dto.getScontoF1());
+        entity.setScontoF2(dto.getScontoF2());
+        entity.setFScontoP(dto.getFScontoP());
+        entity.setProgrGenerale(dto.getProgrGenerale());
+        entity.setValoreTotale(dto.getValoreTotale());
+        entity.setOquantita2(dto.getOquantita2());
+        entity.setSaldo(dto.getSaldo());
+        entity.setSinonimo1(dto.getSinonimo1());
+        entity.setVariante1(dto.getVariante1());
+        entity.setVariante2(dto.getVariante2());
+        entity.setVariante3(dto.getVariante3());
+        entity.setVariante4(dto.getVariante4());
+        entity.setVariante5(dto.getVariante5());
+        entity.setCodiceean(dto.getCodiceean());
+        entity.setOcoefficiente(dto.getOcoefficiente());
+        entity.setPrezzoextra(dto.getPrezzoextra());
+        entity.setDataconfconseg(dto.getDataconfconseg());
+        entity.setDatarichconseg(dto.getDatarichconseg());
+        entity.setOlottomagf(dto.getOlottomagf());
+        entity.setOpallet(dto.getOpallet());
+        entity.setOcommessa(dto.getOcommessa());
+        entity.setOcentrocostor(dto.getOcentrocostor());
+        entity.setImpprovvfisso(dto.getImpprovvfisso());
+        entity.setOprovvarticolo(dto.getOprovvarticolo());
+        entity.setOprovvfornitore(dto.getOprovvfornitore());
+        entity.setQtyuser1(dto.getQtyuser1());
+        entity.setQtyuser2(dto.getQtyuser2());
+        entity.setQtyuser3(dto.getQtyuser3());
+        entity.setQtyuser4(dto.getQtyuser4());
+        entity.setQtyuser5(dto.getQtyuser5());
+        entity.setCampouser1(dto.getCampouser1());
+        entity.setCampouser2(dto.getCampouser2());
+        entity.setCampouser3(dto.getCampouser3());
+        entity.setCampouser4(dto.getCampouser4());
+        entity.setPidPrimanota(dto.getPidPrimanota());
+        entity.setUsername(dto.getUsername());
+        entity.setSysCreatedate(dto.getSysCreatedate());
+        entity.setSysUpdatedate(dto.getSysUpdatedate());
+        entity.setSysCreateuser(dto.getSysCreateuser());
+        entity.setSysUpdateuser(dto.getSysUpdateuser());
         return entity;
     }
 }

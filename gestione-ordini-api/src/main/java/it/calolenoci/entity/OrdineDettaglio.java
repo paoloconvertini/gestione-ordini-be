@@ -297,7 +297,6 @@ public class OrdineDettaglio extends PanacheEntityBase {
         if (filtro.getFlDaRiservare() != null && filtro.getFlDaRiservare()) {
                 query += " AND (god.flagRiservato = 'F' OR god.flagRiservato IS NULL OR god.flagRiservato = '')";
         }
-        Log.info("Query articoli: " + query);
         return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie())
                 .and("progressivo", filtro.getProgressivo())).project(OrdineDettaglioDto.class).list();
 
