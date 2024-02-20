@@ -3,9 +3,11 @@ package it.calolenoci.resource;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
+import it.calolenoci.entity.AmmortamentoCespite;
 import it.calolenoci.entity.Cespite;
 import it.calolenoci.service.AmmortamentoCespiteService;
 import it.calolenoci.service.PrimanotaService;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -25,6 +27,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import static it.calolenoci.enums.Ruolo.ADMIN;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -122,12 +125,14 @@ public class CespiteResource {
     @POST
     @RolesAllowed({ADMIN})
     @Produces(APPLICATION_JSON)
-    @Path("/salvaQuadratura")
-    public Response salvaQuadratura(QuadraturaCespiteRequest cespite) {
-        if (cespite == null) {
+    @Path("/aggiornaAmmortamenti/{date}")
+    public Response aggiornaAmmortamenti(AmmortamentoCespite a, String date) {
+        if (a == null) {
             return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("no save", true)).build();
         }
-        service.saveQuadratura(cespite);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+        LocalDate localDate = LocalDate.parse(date, formatter);
+        service.aggiornaAmmortamenti(a, localDate);
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("Record salvati", false)).build();
     }
 

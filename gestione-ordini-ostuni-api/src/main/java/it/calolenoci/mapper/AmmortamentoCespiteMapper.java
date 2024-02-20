@@ -2,6 +2,7 @@ package it.calolenoci.mapper;
 
 import it.calolenoci.dto.RegistroCespiteDto;
 import it.calolenoci.entity.AmmortamentoCespite;
+import it.calolenoci.entity.CategoriaCespite;
 import it.calolenoci.entity.Cespite;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -16,12 +17,12 @@ public class AmmortamentoCespiteMapper {
         a.setIdAmmortamento(id);
         a.setDataAmm(dataCorrente);
         a.setDescrizione("Ammortamento ordinario deducibile");
-        a.setPercAmm(perc);
-        a.setFondo(fondo);
-        a.setFondoRivalutazione(fondoRivalutazione);
-        a.setQuota(quota);
-        a.setQuotaRivalutazione(quotaRivalutazione);
-        a.setResiduo(valoreResiduo);
+        a.setPercAmm(Math.round(perc * 100.0) / 100.0);
+        a.setFondo(Math.round(fondo * 100.0) / 100.0);
+        a.setFondoRivalutazione(Math.round(fondoRivalutazione * 100.0) / 100.0);
+        a.setQuota(Math.round(quota* 100.0) / 100.0);
+        a.setQuotaRivalutazione(Math.round(quotaRivalutazione * 100.0) / 100.0);
+        a.setResiduo(Math.round(valoreResiduo * 100.0) / 100.0);
         a.setAnno(dataCorrente.getYear());
         return a;
     }
@@ -47,12 +48,12 @@ public class AmmortamentoCespiteMapper {
         AmmortamentoCespite ammVenduto1 = new AmmortamentoCespite();
         ammVenduto1.setIdAmmortamento(cespite.getId());
         ammVenduto1.setDescrizione("venduto a " + cespite.getIntestatarioVendita() + " n. fatt.: " + cespite.getNumDocVend());
-        ammVenduto1.setQuota(cespite.getImportoVendita());
+        ammVenduto1.setQuota(Math.round(cespite.getImportoVendita() * 100.0) / 100.0);
         ammVenduto1.setAnno(anno);
         AmmortamentoCespite ammVenduto2 = new AmmortamentoCespite();
         ammVenduto2.setIdAmmortamento(cespite.getId());
         ammVenduto2.setDescrizione("Plus/Minus valenza");
-        ammVenduto2.setQuota(cespite.getImportoVendita() - residuo);
+        ammVenduto2.setQuota(Math.round((cespite.getImportoVendita() - residuo) * 100.0) / 100.0);
         ammVenduto2.setAnno(anno);
         list.add(ammVenduto);
         list.add(ammVenduto1);
@@ -62,19 +63,41 @@ public class AmmortamentoCespiteMapper {
 
     public AmmortamentoCespite buildAmmortamento(RegistroCespiteDto d) {
         AmmortamentoCespite a = new AmmortamentoCespite();
-        //a.setIdAmmortamento(id);
+        a.setIdAmmortamento(d.getIdAmmortamento());
         a.setDataAmm(d.getDataAmm());
         a.setDescrizione(d.getDescrAmm());
-        a.setPercAmm(d.getPercAmm());
-        a.setFondo(d.getFondo());
-        a.setFondoRivalutazione(d.getFondoRivAmm());
-        a.setQuota(d.getQuota());
-        a.setQuotaRivalutazione(d.getQuotaRivalutazione());
-        a.setResiduo(d.getResiduo());
+        a.setPercAmm(Math.round(d.getPercAmm() * 100.0) / 100.0);
+        a.setFondo(Math.round(d.getFondo() * 100.0) / 100.0);
+        a.setFondoRivalutazione(Math.round(d.getFondoRivAmm() * 100.0) / 100.0);
+        a.setQuota(Math.round(d.getQuota() * 100.0) / 100.0);
+        a.setQuotaRivalutazione(Math.round(d.getQuotaRivalutazione() * 100.0) / 100.0);
+        a.setResiduo(Math.round(d.getResiduo() * 100.0) / 100.0);
         a.setAnno(d.getAnnoAmm());
         a.setSuperQuota(d.getQuotaSuper());
         a.setSuperPercentuale(d.getPercSuper());
         return a;
+    }
+
+    public RegistroCespiteDto fromCespiteToRegistroCespiteDto(Cespite c, CategoriaCespite tipo) {
+        RegistroCespiteDto d = new RegistroCespiteDto();
+        d.setCespite(c.getCespite());
+        d.setId(c.getId());
+        d.setProgressivo1(c.getProgressivo1());
+        d.setProgressivo2(c.getProgressivo2());
+        d.setDataAcq(c.getDataAcq());
+        d.setProtocollo(c.getProtocollo());
+        d.setGiornale(c.getGiornale());
+        d.setAnno(c.getAnno());
+        d.setFlPrimoAnno(c.getFlPrimoAnno());
+        d.setTipoCespite(c.getTipoCespite());
+        d.setImporto(c.getImporto());
+        d.setDataAcq(c.getDataAcq());
+        d.setNumDocAcq(c.getNumDocAcq());
+        d.setPercAmmortamento(tipo.getPercAmmortamento());
+        d.setImporto(c.getImporto());
+        d.setImportoRivalutazione(c.getImportoRivalutazione());
+        d.setFondoRivalutazione(c.getFondoRivalutazione());
+        return d;
     }
 }
 

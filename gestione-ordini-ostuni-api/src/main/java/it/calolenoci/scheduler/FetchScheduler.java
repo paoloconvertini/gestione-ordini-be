@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.format.DateTimeFormatter;
 
 @ApplicationScoped
 public class FetchScheduler {
@@ -22,7 +23,10 @@ public class FetchScheduler {
     @TransactionConfiguration(timeout = 5000000)
     public void calcolaAmmortamentoCespiti() throws ParseException {
         FiltroCespite filtro = new FiltroCespite();
-        filtro.setData("31122023");
+        LocalDate now = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+        String date = formatter.format(now);
+        filtro.setData(date);
         ammortamentoCespiteService.calcola(filtro);
     }
 
