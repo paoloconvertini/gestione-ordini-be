@@ -66,12 +66,24 @@ public class AmmortamentoCespiteMapper {
         a.setIdAmmortamento(d.getIdAmmortamento());
         a.setDataAmm(d.getDataAmm());
         a.setDescrizione(d.getDescrAmm());
-        a.setPercAmm(Math.round(d.getPercAmm() * 100.0) / 100.0);
-        a.setFondo(Math.round(d.getFondo() * 100.0) / 100.0);
-        a.setFondoRivalutazione(Math.round(d.getFondoRivAmm() * 100.0) / 100.0);
-        a.setQuota(Math.round(d.getQuota() * 100.0) / 100.0);
-        a.setQuotaRivalutazione(Math.round(d.getQuotaRivalutazione() * 100.0) / 100.0);
-        a.setResiduo(Math.round(d.getResiduo() * 100.0) / 100.0);
+        if(d.getPercAmm() != null){
+            a.setPercAmm(Math.round(d.getPercAmm() * 100.0) / 100.0);
+        }
+        if(d.getFondo() != null) {
+            a.setFondo(Math.round(d.getFondo() * 100.0) / 100.0);
+        }
+        if(d.getFondoRivAmm() != null) {
+            a.setFondoRivalutazione(Math.round(d.getFondoRivAmm() * 100.0) / 100.0);
+        }
+        if (d.getQuota() != null) {
+            a.setQuota(Math.round(d.getQuota() * 100.0) / 100.0);
+        }
+        if (d.getQuotaRivalutazione() != null) {
+            a.setQuotaRivalutazione(Math.round(d.getQuotaRivalutazione() * 100.0) / 100.0);
+        }
+        if (d.getResiduo() != null) {
+            a.setResiduo(Math.round(d.getResiduo() * 100.0) / 100.0);
+        }
         a.setAnno(d.getAnnoAmm());
         a.setSuperQuota(d.getQuotaSuper());
         a.setSuperPercentuale(d.getPercSuper());
