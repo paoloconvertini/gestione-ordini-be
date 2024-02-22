@@ -124,7 +124,6 @@ public class OrdineService {
         return Ordine.find(query, map).project(PianoContiDto.class).list();
     }
 
-
     @Transactional
     public void checkStatusDettaglio(String status) {
         List<String> list = new ArrayList<>();
@@ -243,7 +242,6 @@ public class OrdineService {
                         .and("stato", status));
     }
 
-
     public List<FiltroStati> getStati() {
         return Arrays.stream(StatoOrdineEnum.values())
                 .map(s -> new FiltroStati(s.getDescrizione(), s.getDescrizione()))
@@ -348,11 +346,7 @@ public class OrdineService {
                 "INNER JOIN GoOrdineDettaglio d ON d.progrGenerale = o2.progrGenerale " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                 "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' " +
-                "AND d.flagConsegnato <> 'T' AND go.status <> 'ARCHIVIATO' AND ( " +
-                "        (d.flagRiservato = 'T' )" +
-                "            OR" +
-                "        (go.status <> 'DA_PROCESSARE' AND d.flagRiservato = 'F' AND d.flagNonDisponibile = 'F' AND d.flagOrdinato = 'F')" +
-                "    ) ";
+                "AND d.flagConsegnato <> 'T' AND go.status <> 'ARCHIVIATO' AND d.flagRiservato = 'T' ";
 
         Map<String, Object> map = new HashMap<>();
 
@@ -400,5 +394,25 @@ public class OrdineService {
             Log.error("Error saving veicoli", e);
             return false;
         }
+    }
+
+    public OrdineclienteMonitorDto getOrdiniClienteNonOrdinati() throws ParseException {
+        OrdineclienteMonitorDto o = new OrdineclienteMonitorDto();
+        List<GoOrdine> listaOrdini = Ordine.find("SELECT go " +
+                "FROM Ordine o " +
+                "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
+                "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' AND go.status IN ('DA_PROCESSARE', 'DA_ORDINARE')",
+                Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
+        int totDaOrd = listaOrdini.stream().filter(or -> StringUtils.equals(StatoOrdineEnum.DA_ORDINARE.getDescrizione(), or.getStatus())).toList().size();
+        int totDaProc = listaOrdini.stream().filter(or -> StringUtils.equals(StatoOrdineEnum.DA_PROCESSARE.getDescrizione(), or.getStatus()))
+                .filter(ord ->
+                OrdineDettaglio.find("SELECT o.progrGenerale " +
+                        "FROM OrdineDettaglio o " +
+                        "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
+                        "WHERE o.anno = god.anno AND o.serie = god.serie AND o.progressivo = god.progressivo AND " +
+                        "god.flagRiservato = 'F' AND god.flagNonDisponibile = 'F' AND god.flagOrdinato = 'F'").list().size() > 1).toList().size();
+        o.setTotOrdNonDisp((long) totDaOrd);
+        o.setTotOrdNonProcessati((long) totDaProc);
+        return o;
     }
 }

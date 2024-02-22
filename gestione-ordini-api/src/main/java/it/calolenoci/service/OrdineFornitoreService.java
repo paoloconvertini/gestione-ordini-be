@@ -5,10 +5,7 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
-import it.calolenoci.dto.ArticoloDto;
-import it.calolenoci.dto.CollegaOAFDto;
-import it.calolenoci.dto.OrdineFornitoreDto;
-import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.AzioneEnum;
 import it.calolenoci.mapper.GoOrdineFornitoreMapper;
@@ -24,6 +21,8 @@ import javax.transaction.Transactional;
 import javax.ws.rs.core.Response;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Month;
 import java.time.Year;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -496,5 +495,11 @@ public class OrdineFornitoreService {
             result.setMsg("Collega OAF: ERROR! " + e.getMessage());
             return result;
         }
+    }
+    public List<OAFMonitorDto> getOrdiniByOperatore() throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date d = sdf.parse("2024-02-21");
+        return OrdineFornitore.find("SELECT createUser, COUNT(*) FROM OrdineFornitore WHERE createDate>=:d GROUP BY createUser",
+                Parameters.with("d", d)).project(OAFMonitorDto.class).list();
     }
 }

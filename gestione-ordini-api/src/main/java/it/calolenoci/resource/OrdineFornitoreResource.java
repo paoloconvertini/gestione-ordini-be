@@ -141,6 +141,16 @@ public class OrdineFornitoreResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @GET
+    @Path("/byOperatore")
+    @RolesAllowed({Ruolo.ADMIN})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
+    public Response getOrdiniByOperatore() throws ParseException {
+        return Response.ok(service.getOrdiniByOperatore()).build();
+    }
+
+    @Operation(summary = "Returns all the ordini from the database")
+    @GET
     @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
