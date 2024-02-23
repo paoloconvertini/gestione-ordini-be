@@ -109,6 +109,8 @@ public class AmmortamentoCespiteMapper {
         d.setImporto(c.getImporto());
         d.setImportoRivalutazione(c.getImportoRivalutazione());
         d.setFondoRivalutazione(c.getFondoRivalutazione());
+        d.setSuperAmm(c.getSuperAmm());
+
         return d;
     }
 }
