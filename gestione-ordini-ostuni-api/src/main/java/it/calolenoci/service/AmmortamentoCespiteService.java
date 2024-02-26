@@ -860,6 +860,9 @@ public class AmmortamentoCespiteService {
             fondoRiv = optAmmPrec.get().getFondoRivalutazione();
             residuoNoRiv = cespite.getImporto() - fondo;
         }
+        if (cespite.getFondoRivalutazione() != null) {
+            fondoRiv += cespite.getFondoRivalutazione();
+        }
         boolean eliminato = cespite.getDataVendita() != null && StringUtils.isBlank(cespite.getIntestatarioVendita());
         boolean venduto = cespite.getDataVendita() != null && StringUtils.isNotBlank(cespite.getIntestatarioVendita());
         if (eliminato || venduto) {
@@ -912,10 +915,8 @@ public class AmmortamentoCespiteService {
                     if(counter!=1){
                         quotaRivDaSalvare = 0;
                     }
+                    fondoRiv = 0;
                 } else {
-                    if (cespite.getFondoRivalutazione() != null) {
-                        fondoRiv = cespite.getFondoRivalutazione();
-                    }
                     fondoRiv += quotaRivDaSalvare;
                     if (fondoRiv >= cespite.getImporto() + cespite.getImportoRivalutazione()) {
                         if(counter!=1){
