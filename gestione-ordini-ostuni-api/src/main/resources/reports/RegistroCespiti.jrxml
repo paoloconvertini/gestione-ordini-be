@@ -132,13 +132,14 @@
 				<textElement textAlignment="Justified">
 					<font fontName="SansSerif" size="8" isBold="true"/>
 				</textElement>
-				<text><![CDATA[72017 OSTUNI (BR)
-Via Dell’Industria, s.n. 
-P.I. / C.F. : 02582780744
+				<text><![CDATA[Calò Lenoci s.r.l.
+– Via Dell’Industria, s.n. –
+72017 OSTUNI (BR) –
+Tel. 0831.335651 - 0831.303979
+E.mail: calole01@powercolle.191.it
+P.IVA 01520740745 – C.C.I.A.A. 69992 –
 Reg. Soc. 7163/a – Capitale Sociale E.101.490,00
-E.-mail: calole01@powercolle.191.it
-Sito: www.powercolle.it
-Tel: 0831.335651 -  0831.303979]]></text>
+SDI: KRRH6B9]]></text>
 			</staticText>
 			<image>
 				<reportElement x="0" y="0" width="252" height="89" uuid="c40e9abe-e08b-4d8e-a21a-9d8f2a934f10"/>
