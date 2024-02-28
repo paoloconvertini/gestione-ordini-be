@@ -388,7 +388,7 @@ public class ArticoloService {
                 errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore non codificato correttamente");
                 continue;
             }
-            Optional<ArticoloClasseFornitore> fornitore = ArticoloClasseFornitore.find("descrizione like '%:nome%' OR descrUser = :nome", Parameters.with("nome", nomeFornitore)).firstResultOptional();
+            Optional<ArticoloClasseFornitore> fornitore = ArticoloClasseFornitore.find("descrUser = :nome", Parameters.with("nome", nomeFornitore)).firstResultOptional();
             if (fornitore.isEmpty()) {
                 Log.error("Articolo " + dto.getFDescrArticolo() + ": Fornitore non trovato in TCA1");
                 errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore non trovato in TCA1");
@@ -401,7 +401,13 @@ public class ArticoloService {
                 continue;
             }
 
-            String classeFornitore = fornitore.get().getCodice();
+            String classeFornitore;
+            if (StringUtils.isBlank(fornitore.get().getDescrUser3())) {
+                classeFornitore = fornitore.get().getDescrUser3();
+            } else {
+                classeFornitore = fornitore.get().getCodice();
+            }
+
             String codArtFornitore = StringUtils.deleteWhitespace(dto.getCodArtFornitore());
             String codiceArticolo = this.creaId(codArtFornitore, classeFornitore);
             int length = StringUtils.length(codArtFornitore);
