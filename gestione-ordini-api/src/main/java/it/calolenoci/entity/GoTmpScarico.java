@@ -20,9 +20,6 @@ public class GoTmpScarico extends PanacheEntityBase {
     @EmbeddedId
     private GoTmpScaricoPK id;
 
-    @Column(name = "ID_BOLLA", nullable = false)
-    private int idBolla;
-
     @Type(type = "org.hibernate.type.TrueFalseType")
     @Column(name = "ATTIVO", columnDefinition = "CHAR(1)", length = 1)
     private Boolean attivo;

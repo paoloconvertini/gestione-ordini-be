@@ -20,5 +20,8 @@ public class GoTmpScaricoPK implements Serializable {
     @Column(name = "MMAGAZZINO", nullable = false, length = 3)
     private String mmagazzino;
 
+    @Column(name = "ID_BOLLA", nullable = false)
+    private int idBolla;
+
 
 }

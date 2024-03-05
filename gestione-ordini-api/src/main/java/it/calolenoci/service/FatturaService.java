@@ -225,8 +225,7 @@ public class FatturaService {
                     } else {
                         if(StringUtils.equals(o.getTipoRigo(), "" ) || StringUtils.equals(o.getTipoRigo(), " ")) {
                             GoTmpScarico goTmpScarico = new GoTmpScarico();
-                            goTmpScarico.setId(new GoTmpScaricoPK(o.getFArticolo(), o.getMagazz()));
-                            goTmpScarico.setIdBolla(fd.getProgrGenerale());
+                            goTmpScarico.setId(new GoTmpScaricoPK(o.getFArticolo(), o.getMagazz(), fd.getProgrGenerale()));
                             goTmpScarico.setAttivo(Boolean.TRUE);
                             goTmpScaricoList.add(goTmpScarico);
                             Log.debug("*** CREA BOLLA, TmpScarico creato per articolo: " + o.getFArticolo() + ". Qta: " + o.getQuantita());
