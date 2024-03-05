@@ -59,9 +59,9 @@ public class ArticoloResource {
     public Response codificaArticoli(List<OrdineDettaglioDto> list) {
         try {
             if(!list.isEmpty()) {
-                List<String> errors = articoloService.codificaArticoli(list, user);
-                if(!errors.isEmpty()) {
-                    return Response.status(Response.Status.CREATED).entity(errors).build();
+                CodificaArticoliDto codificaArticoliDto = articoloService.codificaArticoli(list, user);
+                if(!codificaArticoliDto.getErrors().isEmpty()) {
+                    return Response.status(Response.Status.CREATED).entity(codificaArticoliDto).build();
                 } else {
                     return Response.status(Response.Status.CREATED).entity(new ResponseDto("Articoli codificati ", false)).build();
                 }

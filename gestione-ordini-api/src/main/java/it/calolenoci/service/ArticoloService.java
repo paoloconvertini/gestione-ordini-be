@@ -194,7 +194,11 @@ public class ArticoloService {
                     goOrdineDettaglio.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
                 }
                 if (!Objects.equals(ordineDettaglio.getFDescrArticolo(), dto.getFDescrArticolo())) {
-                    ordineDettaglio.setFDescrArticolo(dto.getFDescrArticolo());
+                    String descrizione = dto.getFDescrArticolo();
+                    if(dto.getFDescrArticolo().length() > 50) {
+                        descrizione = StringUtils.truncate(dto.getFDescrArticolo(), 50);
+                    }
+                    ordineDettaglio.setFDescrArticolo(descrizione);
                 }
                 if (!Objects.equals(ordineDettaglio.getCodArtFornitore(), dto.getCodArtFornitore())) {
                     ordineDettaglio.setCodArtFornitore(dto.getCodArtFornitore());
@@ -374,9 +378,31 @@ public class ArticoloService {
     }
 
     @Transactional
-    public List<String> codificaArticoli(List<OrdineDettaglioDto> list, String user) {
+    public CodificaArticoliDto codificaArticoli(List<OrdineDettaglioDto> list, String user) {
+        CodificaArticoliDto codificaArticoliDto = new CodificaArticoliDto();
+        codificaArticoliDto.setShowTCA(Boolean.FALSE);
         List<String> errors = new ArrayList<>();
         for (OrdineDettaglioDto dto : list) {
+            if(StringUtils.isBlank(dto.getCodArtFornitore())) {
+                Log.error("Articolo " + dto.getFDescrArticolo() + "  senza codice fornitore");
+                errors.add("Articolo " + dto.getFDescrArticolo() + " senza codice fornitore");
+                continue;
+            }
+
+            Optional<Articolo> optArticolo = Articolo.find("descrArtSuppl = :codArt OR descrArticolo like '%:codArt%'",
+                    Parameters.with("codArt", dto.getCodArtFornitore())).firstResultOptional();
+            if(optArticolo.isPresent()){
+                Log.error("Articolo " + dto.getFDescrArticolo() + ":  già codificato come: " + optArticolo.get().getArticolo());
+                errors.add("Articolo " + dto.getFDescrArticolo() + ":  già codificato come: " + optArticolo.get().getArticolo());
+                Articolo articolo = optArticolo.get();
+                if (articolo.getFlTrattato() == null || "N".equals(articolo.getFlTrattato())) {
+                    articolo.setFlTrattato("S");
+                    articolo.persist();
+                }
+                aggiornoOrdineCliente(dto, articolo);
+                continue;
+            }
+
             if (StringUtils.isBlank(dto.getFDescrArticolo()) || !dto.getFDescrArticolo().contains("*")) {
                 Log.error("Articolo " + dto.getFDescrArticolo() + ": Fornitore senza *");
                 errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore senza *");
@@ -392,6 +418,7 @@ public class ArticoloService {
             if (fornitore.isEmpty()) {
                 Log.error("Articolo " + dto.getFDescrArticolo() + ": Fornitore non trovato in TCA1");
                 errors.add("Articolo " + dto.getFDescrArticolo() + ": Fornitore non trovato in TCA1");
+                codificaArticoliDto.setShowTCA(Boolean.TRUE);
                 continue;
             }
 
@@ -402,7 +429,7 @@ public class ArticoloService {
             }
 
             String classeFornitore;
-            if (StringUtils.isBlank(fornitore.get().getDescrUser3())) {
+            if (StringUtils.isNotBlank(fornitore.get().getDescrUser3())) {
                 classeFornitore = fornitore.get().getDescrUser3();
             } else {
                 classeFornitore = fornitore.get().getCodice();
@@ -413,47 +440,40 @@ public class ArticoloService {
             int length = StringUtils.length(codArtFornitore);
             Articolo articolo = new Articolo();
             if (length >= 13) {
-                Log.info("Codice articolo forn: " + codArtFornitore);
-                Log.info("Codice articolo interno: " + codiceArticolo);
-                Optional<Articolo> optArticolo = Articolo.find("articolo = :codArt",
-                        Parameters.with("codArt", codiceArticolo)).firstResultOptional();
-                if (optArticolo.isPresent()) {
-                    Log.info("Trovato un articolo con codice: " + codiceArticolo + ". Codifico eliminando le prime 3 lettere");
-                    codiceArticolo = this.creaId(StringUtils.truncate(codArtFornitore, 3, 13), classeFornitore);
-                }
-                //Crea articolo
-                createArticolo(articolo, codiceArticolo, user, dto, codArtFornitore, classeFornitore);
-                salvaArticolo(user, errors, fornitore, articolo);
-            } else {
-                Optional<Articolo> optArticolo = Articolo.find("descrArtSuppl = :codArt OR descrArticolo LIKE '%:codArt%'",
-                        Parameters.with("codArt", codArtFornitore)).firstResultOptional();
-                if (optArticolo.isPresent()) {
-                    Log.info("Articolo: " + dto.getFDescrArticolo() + " già presente");
-                    articolo = optArticolo.get();
-                    if (articolo.getFlTrattato() == null || "N".equals(articolo.getFlTrattato())) {
-                        articolo.setFlTrattato("S");
-                        articolo.persist();
-                    }
-                } else {
-                    //Crea articolo
-                    createArticolo(articolo, codiceArticolo, user, dto, codArtFornitore, classeFornitore);
-                    salvaArticolo(user, errors, fornitore, articolo);
-                }
-            }
-            //Aggiorno ordine cliente
-            OrdineDettaglio.update("fArticolo =:fArticolo, codArtFornitore =:codArtFornitore, fDescrArticolo =:fDescrArticolo " +
-                            "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo AND rigo =:rigo",
-                    Parameters.with("fArticolo", articolo.getArticolo()).and("codArtFornitore", articolo.getDescrArtSuppl())
-                            .and("fDescrArticolo", articolo.getDescrArticolo()).and("anno", dto.getAnno())
-                            .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo())
-                            .and("rigo", dto.getRigo()));
-          /*  if (dto.getProgrGenerale() != null) {
-                GoOrdineDettaglio.update("fArticolo =:fArticolo WHERE progrGenerale = :progrGenerale",
-                        Parameters.with("fArticolo", articolo.getArticolo()).and("progrGenerale", dto.getProgrGenerale()));
-            }*/
-        }
-        return errors;
+                Log.info("Codice fornitore maggiore di 13. Cerco max progressivo per la classe fornitore: " + classeFornitore);
+                codiceArticolo = Articolo.find("SELECT ISNULL(MAX(articolo), '1') " +
+                                "FROM Articolo " +
+                                "WHERE ISNUMERIC(articolo) = 1" +
+                                " AND articolo LIKE :codForn",
+                        Parameters.with("codForn", classeFornitore+"%")).project(String.class).firstResult();
 
+                if(StringUtils.equals("1", codiceArticolo)) {
+                    this.creaId(codiceArticolo, classeFornitore);
+                } else {
+                    codiceArticolo = String.valueOf(Long.parseLong(codiceArticolo)+1);
+                }
+
+            }
+            Log.info("Codice articolo forn: " + codArtFornitore);
+            Log.info("Codice articolo interno: " + codiceArticolo);
+            //Crea articolo
+            createArticolo(articolo, codiceArticolo, user, dto, codArtFornitore, classeFornitore);
+            salvaArticolo(user, errors, fornitore, articolo);
+            //Aggiorno ordine cliente
+            aggiornoOrdineCliente(dto, articolo);
+        }
+        codificaArticoliDto.setErrors(errors);
+        return codificaArticoliDto;
+
+    }
+
+    private void aggiornoOrdineCliente(OrdineDettaglioDto dto, Articolo articolo) {
+        OrdineDettaglio.update("fArticolo =:fArticolo, codArtFornitore =:codArtFornitore, fDescrArticolo =:fDescrArticolo " +
+                        "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo AND rigo =:rigo",
+                Parameters.with("fArticolo", articolo.getArticolo()).and("codArtFornitore", articolo.getDescrArtSuppl())
+                        .and("fDescrArticolo", articolo.getDescrArticolo()).and("anno", dto.getAnno())
+                        .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo())
+                        .and("rigo", dto.getRigo()));
     }
 
     private void salvaArticolo(String user, List<String> errors, Optional<ArticoloClasseFornitore> fornitore, Articolo articolo) {
@@ -461,9 +481,12 @@ public class ArticoloService {
         if (optARticolo.isEmpty()) {
             articolo.persist();
             //Crea fornitore alternativo
-            FornitoreArticolo fornitoreArticolo = createFornArticolo(user, articolo, fornitore.get());
-            fornitoreArticolo.persist();
-            Log.info(FornitoreArticolo.findById(fornitoreArticolo.getFornitoreArticoloId()).toString());
+            FornitoreArticoloId fornitoreArticoloId = new FornitoreArticoloId(articolo.getArticolo(), 2351, fornitore.get().getDescrUser2());
+            FornitoreArticolo fa = FornitoreArticolo.findById(fornitoreArticoloId);
+            if(fa == null){
+                FornitoreArticolo fornitoreArticolo = createFornArticolo(user, articolo, fornitore.get());
+                fornitoreArticolo.persist();
+            }
         } else {
             Log.info("Impossibile salvare. Articolo già presente" + optARticolo.get().getArticolo());
             errors.add("Impossibile salvare. Articolo già presente " + optARticolo.get().getArticolo());
