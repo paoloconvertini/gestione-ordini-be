@@ -68,6 +68,21 @@ public class FattureMapper {
         f.setLocdiverse("");
         f.setCapdiverse("");
         f.setProvdiverse("");
+        if(StringUtils.isNotBlank(ordine.getIntestdiverse())){
+            f.setIntestdiverse(ordine.getIntestdiverse());
+        }
+        if(StringUtils.isNotBlank(ordine.getIndirdiverse())){
+            f.setIndirdiverse(ordine.getIndirdiverse());
+        }
+        if(StringUtils.isNotBlank(ordine.getLocdiverse())){
+            f.setLocdiverse(ordine.getLocdiverse());
+        }
+        if(StringUtils.isNotBlank(ordine.getCapdiverse())){
+            f.setCapdiverse(ordine.getCapdiverse());
+        }
+        if(StringUtils.isNotBlank(ordine.getProvdiverse())){
+            f.setProvdiverse(ordine.getProvdiverse());
+        }
         f.setFlagfattura("");
         f.setFlagbolla("");
         f.setBollasola("N");

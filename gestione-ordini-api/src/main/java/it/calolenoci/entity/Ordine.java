@@ -101,6 +101,21 @@ public class Ordine extends PanacheEntityBase {
     @Column(name = "FCODICEPAGAMENT", length = 3)
     private String codicePagamento;
 
+    @Column(name = "INTESTDIVERSE")
+    private String intestdiverse;
+
+    @Column(name = "INDIRDIVERSE")
+    private String indirdiverse;
+
+    @Column(name = "LOCDIVERSE")
+    private String locdiverse;
+
+    @Column(name = "CAPDIVERSE")
+    private String capdiverse;
+
+    @Column(name = "PROVDIVERSE")
+    private String provdiverse;
+
     public static Ordine findByOrdineId(Integer anno, String serie,  Integer progressivo) {
         return find("anno = :anno and progressivo = :progressivo and serie = :serie",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).firstResult();
