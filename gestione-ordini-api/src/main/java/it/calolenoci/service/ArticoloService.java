@@ -310,44 +310,33 @@ public class ArticoloService {
         GoOrdine ordine = GoOrdine.findByOrdineId(anno, serie, progressivo);
 
         final String result = ordine.getStatus();
+        List<GoOrdineDettaglio> goOrdineDettaglios = GoOrdineDettaglio.find("SELECT go FROM GoOrdineDettaglio go " +
+                " WHERE anno = :anno and serie =:serie" +
+                " and progressivo =:progressivo" +
+                " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
+                .and("serie", serie)
+                .and("progressivo", progressivo)).list();
+
         if (StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(result)) {
-            if (!GoOrdineDettaglio.find(" SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
-                    " and progressivo =:progressivo" +
-                    " and flagNonDisponibile = 'T'" +
-                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
-                    .and("serie", serie)
-                    .and("progressivo", progressivo)).list().isEmpty()) {
+            if(goOrdineDettaglios.stream().anyMatch(GoOrdineDettaglio::getFlagNonDisponibile)) {
                 ordine.setStatus(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
-            } else if (!GoOrdineDettaglio.find(" SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
-                    " and progressivo =:progressivo" +
-                    " and flagOrdinato = 'T' and flagRiservato IN (null, 'F')" +
-                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
-                    .and("serie", serie)
-                    .and("progressivo", progressivo)).list().isEmpty()) {
+            } else if (goOrdineDettaglios.stream().anyMatch(o -> o.getFlagOrdinato()
+                            && (o.getFlagRiservato() == null || !o.getFlagRiservato()))) {
                 ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
-            } else {
+            } else if (goOrdineDettaglios.stream().anyMatch(GoOrdineDettaglio::getFlagRiservato)) {
                 ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
             }
         }
 
         if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(result)) {
-            if (GoOrdineDettaglio.find("SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
-                    " and progressivo =:progressivo" +
-                    " and flagNonDisponibile = 'T' " +
-                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
-                    .and("serie", serie)
-                    .and("progressivo", progressivo)).list().isEmpty()) {
+            if (goOrdineDettaglios.stream().noneMatch(GoOrdineDettaglio::getFlagNonDisponibile)) {
                 ordine.setStatus(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             }
         }
 
         if (StatoOrdineEnum.INCOMPLETO.getDescrizione().equals(result)) {
-            if (GoOrdineDettaglio.find("SELECT go FROM GoOrdineDettaglio go WHERE anno = :anno and serie =:serie" +
-                    " and progressivo =:progressivo" +
-                    " and (flagOrdinato = 'T' AND (flagRiservato = 'F' OR flagRiservato is null) ) " +
-                    " AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = go.progrGenerale)", Parameters.with("anno", anno)
-                    .and("serie", serie)
-                    .and("progressivo", progressivo)).list().isEmpty()) {
+            if (goOrdineDettaglios.stream().noneMatch(o -> o.getFlagOrdinato()
+                    && (o.getFlagRiservato() == null || !o.getFlagRiservato()))) {
                 ordine.setStatus(StatoOrdineEnum.COMPLETO.getDescrizione());
             }
 
@@ -468,9 +457,13 @@ public class ArticoloService {
     }
 
     private void aggiornoOrdineCliente(OrdineDettaglioDto dto, Articolo articolo) {
+        String descrSuppl = articolo.getDescrArtSuppl();
+        if(articolo.getDescrArtSuppl().length() > 25){
+            descrSuppl = StringUtils.truncate(articolo.getDescrArtSuppl(), 25);
+        }
         OrdineDettaglio.update("fArticolo =:fArticolo, codArtFornitore =:codArtFornitore, fDescrArticolo =:fDescrArticolo " +
                         "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo AND rigo =:rigo",
-                Parameters.with("fArticolo", articolo.getArticolo()).and("codArtFornitore", articolo.getDescrArtSuppl())
+                Parameters.with("fArticolo", articolo.getArticolo()).and("codArtFornitore", descrSuppl)
                         .and("fDescrArticolo", articolo.getDescrArticolo()).and("anno", dto.getAnno())
                         .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo())
                         .and("rigo", dto.getRigo()));
