@@ -303,9 +303,10 @@ public class OrdineService {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine, " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
-                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, v.idVeicolo, v.dataConsegna " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
+                "LEFT JOIN GoOrdVeicolo v ON v.id.anno = go.anno AND v.id.serie = go.serie AND v.id.progressivo = go.progressivo " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'" ;
 
         Map<String, Object> map = new HashMap<>();
@@ -319,16 +320,20 @@ public class OrdineService {
             map.put("status", filtro.getStatus());
         }
         map.put("dataConfig", sdf.parse(dataCongig));
+
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());
         }
-        List<OrdineDTO> dtoList = Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
-        dtoList.forEach( o-> o.setVeicoloList(Veicolo.find("SELECT v.id.idVeicolo FROM GoOrdVeicolo v " +
-                        "WHERE v.id.anno = :anno AND v.id.serie = :serie AND v.id.progressivo =:progressivo"
-                , Parameters.with("anno", o.getAnno()).and("serie", o.getSerie())
-                        .and("progressivo", o.getProgressivo())).project(Integer.class).list()));
-        return dtoList;
+        if (filtro.getVeicolo() != null) {
+            query += " and v.idVeicolo = :v";
+            map.put("v", filtro.getVeicolo());
+        }
+        if (filtro.getDataConsegna() != null) {
+            query += " and v.dataConsegna = :d";
+            map.put("d", filtro.getDataConsegna());
+        }
+        return Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
     }
 
     public List<OrdineDTO> findAllRiservati(FiltroOrdini filtro) throws ParseException {
@@ -374,19 +379,19 @@ public class OrdineService {
     @Transactional
     public boolean updateVeicolo(OrdineDTO dto) {
         try {
-            List<GoOrdVeicolo> list = new ArrayList<>();
-            if (!dto.getVeicoloList().isEmpty()) {
-                dto.getVeicoloList().forEach(v -> list.add(new GoOrdVeicolo(
-                        new GoOrdVeicoloPK(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), v))));
+            GoOrdVeicolo goOrdVeicolo = null;
+            if (dto.getVeicolo() != null) {
+                goOrdVeicolo = new GoOrdVeicolo(
+                        new GoOrdVeicoloPK(dto.getAnno(), dto.getSerie(), dto.getProgressivo()), dto.getVeicolo(), dto.getDataConsegna());
             }
-            long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
+             long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
                     , Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
                             .and("progressivo", dto.getProgressivo()));
-            if(list.isEmpty() && delete > 0) {
+            if(goOrdVeicolo == null && delete > 0) {
                 return true;
             }
-            if (!list.isEmpty()) {
-                GoOrdVeicolo.persist(list);
+            if (goOrdVeicolo != null) {
+                goOrdVeicolo.persist();
                 return true;
             }
             return false;

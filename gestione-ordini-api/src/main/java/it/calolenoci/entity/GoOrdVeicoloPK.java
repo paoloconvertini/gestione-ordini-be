@@ -20,7 +20,5 @@ public class GoOrdVeicoloPK implements Serializable {
     private String serie;
     @Column(name = "progressivo", nullable = false)
     private int progressivo;
-    @Column(name = "idVeicolo", nullable = false)
-    private int idVeicolo;
 
 }

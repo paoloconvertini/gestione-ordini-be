@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -64,9 +65,11 @@ public class OrdineDTO implements Serializable {
 
     private Boolean hasCarico = Boolean.FALSE;
 
-    private List<Integer> veicoloList;
+    private Integer veicolo;
 
     private Double importoRiservati = 0D;
+
+    private LocalDate dataConsegna;
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,
@@ -176,6 +179,43 @@ public class OrdineDTO implements Serializable {
         this.noteLogistica = noteLogistica;
     }
 
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+                     String intestazione, String sottoConto, String riferimento, String indirizzo,
+                     String localita, String cap, String provincia, Double latitudine, Double longitudine, String statoResidenza, String statoEstero,
+                     String telefono, String cellulare, String email, String pec, String status,
+                     Boolean locked, String userLock, Boolean warnNoBolla, Boolean hasFirma,
+                     Boolean hasProntoConsegna, String note, String noteLogistica, Integer veicolo, LocalDate dataConsegna) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.sottoConto = sottoConto;
+        this.riferimento = riferimento;
+        this.indirizzo = indirizzo;
+        this.localita = localita;
+        this.cap = cap;
+        this.provincia = provincia;
+        this.latitudine = latitudine;
+        this.longitudine = longitudine;
+        this.statoResidenza = statoResidenza;
+        this.statoEstero = statoEstero;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.email = email;
+        this.pec = pec;
+        this.status = status;
+        this.locked = locked;
+        this.userLock = userLock;
+        this.warnNoBolla = warnNoBolla;
+        this.hasFirma = hasFirma;
+        this.hasProntoConsegna = hasProntoConsegna;
+        this.note = note;
+        this.noteLogistica = noteLogistica;
+        this.veicolo = veicolo;
+        this.dataConsegna = dataConsegna;
+    }
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
