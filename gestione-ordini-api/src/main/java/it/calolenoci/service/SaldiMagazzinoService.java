@@ -18,7 +18,7 @@ public class SaldiMagazzinoService {
         List<SaldiMagazzinoDTO> list = GoTmpScarico.find("SELECT t, s, f " +
                 "FROM  GoTmpScarico t " +
                 "JOIN SaldiMagazzino s ON t.id.mmagazzino = s.mmagazzino AND t.id.marticolo = s.marticolo " +
-                "JOIN FattureDettaglio f ON t.idBolla = f.progrGenerale " +
+                "JOIN FattureDettaglio f ON t.id.idBolla = f.progrGenerale " +
                 "WHERE t.attivo = 'T' ").project(SaldiMagazzinoDTO.class).list();
         if(!list.isEmpty()){
             List<SaldiMagazzino> saldiMagazzinoList = new ArrayList<>();
