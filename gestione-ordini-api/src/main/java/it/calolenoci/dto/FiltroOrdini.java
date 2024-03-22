@@ -25,6 +25,8 @@ public class FiltroOrdini implements Serializable {
 
     private Integer veicolo;
 
-    private LocalDate dataConsegna;
+    private LocalDate dataConsegnaStart;
+
+    private LocalDate dataConsegnaEnd;
 
 }

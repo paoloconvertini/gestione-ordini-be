@@ -346,11 +346,17 @@ public class OrdineService {
             map.put("v", filtro.getVeicolo());
             mapPregressi.put("v", filtro.getVeicolo());
         }
-        if (filtro.getDataConsegna() != null) {
-            query += " and v.dataConsegna = :d";
-            queryPregressi += " and v.dataConsegna = :d";
-            map.put("d", filtro.getDataConsegna());
-            mapPregressi.put("d", filtro.getDataConsegna());
+        if (filtro.getDataConsegnaStart() != null) {
+            query += " and v.dataConsegna >= :d";
+            queryPregressi += " and v.dataConsegna >= :d";
+            map.put("d", filtro.getDataConsegnaStart());
+            mapPregressi.put("d", filtro.getDataConsegnaStart());
+        }
+        if (filtro.getDataConsegnaEnd() != null) {
+            query += " and v.dataConsegna <= :de";
+            queryPregressi += " and v.dataConsegna <= :de";
+            map.put("de", filtro.getDataConsegnaEnd());
+            mapPregressi.put("de", filtro.getDataConsegnaEnd());
         }
         List<OrdineDTO> result = Ordine.find(query, map).project(OrdineDTO.class).list();
         result.addAll(Ordine.find(queryPregressi, mapPregressi).project(OrdineDTO.class).list());
