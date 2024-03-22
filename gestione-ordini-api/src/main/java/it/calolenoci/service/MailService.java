@@ -140,7 +140,8 @@ public class MailService {
                 StringBuilder body;
                 FiltroOrdini filtro = new FiltroOrdini();
                 filtro.setCodVenditore(v.getCodVenditore());
-                filtro.setDataConsegna(LocalDate.now().plusDays(1));
+                filtro.setDataConsegnaStart(LocalDate.now().plusDays(1));
+                filtro.setDataConsegnaEnd(LocalDate.now().plusDays(1));
                 List<String> stati = new ArrayList<>();
                 stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
                 stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
