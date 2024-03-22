@@ -4,7 +4,9 @@ import io.quarkus.logging.Log;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.MailTemplate;
 import io.quarkus.mailer.Mailer;
+import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
+import it.calolenoci.entity.Veicolo;
 import it.calolenoci.enums.StatoOrdineEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -15,6 +17,9 @@ import javax.transaction.Transactional;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,6 +122,61 @@ public class MailService {
                     body.append("<td>").append(sdf.format(dto.getDataConferma())).append("</td>");
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getLocalita()) ? dto.getLocalita() : "").append(StringUtils.isNotBlank(dto.getProvincia()) ? " (" + dto.getProvincia() + ")" : "").append("</td>");
                     body.append("<td>").append(dto.getStatus()).append("</td>").append("</tr>");
+                }
+
+                body.append("</tbody></table>");
+                mailer.send(Mail.withHtml(v.getEmail(), "Lista Ordini completi!", body.toString()));
+            }
+
+        } catch (Exception e) {
+            Log.error("Errore invio mail", e);
+        }
+
+    }
+    public void invioMailOrdiniDaConsegnare() {
+        try {
+            final List<UserResponseDTO> venditori = userService.getVenditori();
+            for (UserResponseDTO v : venditori) {
+                StringBuilder body;
+                FiltroOrdini filtro = new FiltroOrdini();
+                filtro.setCodVenditore(v.getCodVenditore());
+                filtro.setDataConsegna(LocalDate.now().plusDays(1));
+                List<String> stati = new ArrayList<>();
+                stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+                stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+                stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+                filtro.setStati(stati);
+                List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
+                if (ordini.isEmpty()) {
+                    continue;
+                }
+                body = new StringBuilder("<table style=\"font-family:Arial,sans-serif\"> " +
+                        "        <thead>" +
+                        "         <tr>" +
+                        "          <th>Ordine n.</th>" +
+                        "          <th>Cliente</th>" +
+                        "          <th>Data</th>" +
+                        "          <th>Luogo</th>" +
+                        "          <th>Stato Ord.</th>" +
+                        "          <th>Veicolo</th>" +
+                        "          <th>Data consegna</th>" +
+                        "         </tr>" +
+                        "        </thead>" +
+                        "        <tbody>");
+                for (OrdineDTO dto : ordini) {
+                    String descVeicolo = "";
+                    if(dto.getVeicolo() != null) {
+                        Veicolo veicolo = Veicolo.find("id =:id", Parameters.with("id", dto.getVeicolo())).firstResult();
+                        descVeicolo = veicolo.getDescrizione();
+                    }
+                    body.append("<tr>").append("<td>").append(dto.getAnno()).append("/").append(dto.getSerie()).append("/").append(dto.getProgressivo()).append("</td>");
+                    body.append("<td>").append(StringUtils.isNotBlank(dto.getIntestazione()) ? dto.getIntestazione() : "").append("</td>");
+                    body.append("<td>").append(sdf.format(dto.getDataConferma())).append("</td>");
+                    body.append("<td>").append(StringUtils.isNotBlank(dto.getLocalita()) ? dto.getLocalita() : "").append(StringUtils.isNotBlank(dto.getProvincia()) ? " (" + dto.getProvincia() + ")" : "").append("</td>");
+                    body.append("<td>").append(dto.getStatus()).append("</td>")
+                            .append("<td>").append(descVeicolo).append("</td>")
+                            .append("<td>").append(dto.getDataConsegna() != null ? sdf.format(dto.getDataConsegna()) : "").append("</td>")
+                            .append("</tr>");
                 }
 
                 body.append("</tbody></table>");

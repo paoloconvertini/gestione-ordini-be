@@ -118,7 +118,7 @@ public class ArticoloResource {
     @Transactional
     @Path("/getArticoli/{bolla}/{anno}/{serie}/{progressivo}")
     public Response getArticoli(String bolla, Integer anno, String serie, Integer progressivo) {
-        return Response.ok(articoloService.getArticoli(StringUtils.equals("Y",bolla), anno, serie, progressivo)).build();
+        return Response.ok(articoloService.getArticoli(bolla, anno, serie, progressivo)).build();
     }
 
     @Operation(summary = "Returns all the articoli riservati from the database")

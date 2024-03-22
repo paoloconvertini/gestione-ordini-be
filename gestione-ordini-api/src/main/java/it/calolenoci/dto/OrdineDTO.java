@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -70,6 +71,14 @@ public class OrdineDTO implements Serializable {
     private Double importoRiservati = 0D;
 
     private LocalDate dataConsegna;
+
+    private LocalDateTime dataNote;
+
+    private LocalDateTime dataNoteLogistica;
+
+    private String userNote;
+
+    private String userNoteLogistica;
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,
@@ -216,6 +225,50 @@ public class OrdineDTO implements Serializable {
         this.veicolo = veicolo;
         this.dataConsegna = dataConsegna;
     }
+
+    //OrdineService findAllByStati
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+                     String intestazione, String sottoConto, String riferimento, String indirizzo,
+                     String localita, String cap, String provincia, Double latitudine, Double longitudine, String statoResidenza, String statoEstero,
+                     String telefono, String cellulare, String email, String pec, String status,
+                     Boolean locked, String userLock, Boolean warnNoBolla, Boolean hasFirma,
+                     Boolean hasProntoConsegna, String note, String noteLogistica, Integer veicolo, LocalDate dataConsegna
+            , LocalDateTime dataNote, String userNote, LocalDateTime dataNoteLogistica, String userNoteLogistica) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.sottoConto = sottoConto;
+        this.riferimento = riferimento;
+        this.indirizzo = indirizzo;
+        this.localita = localita;
+        this.cap = cap;
+        this.provincia = provincia;
+        this.latitudine = latitudine;
+        this.longitudine = longitudine;
+        this.statoResidenza = statoResidenza;
+        this.statoEstero = statoEstero;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.email = email;
+        this.pec = pec;
+        this.status = status;
+        this.locked = locked;
+        this.userLock = userLock;
+        this.warnNoBolla = warnNoBolla;
+        this.hasFirma = hasFirma;
+        this.hasProntoConsegna = hasProntoConsegna;
+        this.note = note;
+        this.noteLogistica = noteLogistica;
+        this.veicolo = veicolo;
+        this.dataConsegna = dataConsegna;
+        this.dataNote = dataNote;
+        this.userNote = userNote;
+        this.dataNoteLogistica = dataNoteLogistica;
+        this.userNoteLogistica = userNoteLogistica;
+    }
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
@@ -241,6 +294,38 @@ public class OrdineDTO implements Serializable {
         this.note = note;
         this.noteLogistica = noteLogistica;
         this.importoRiservati = importoRiservati;
+    }
+
+    //OrdineService findAllRiservati
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+                     String intestazione, String sottoConto, String riferimento, String indirizzo,
+                     String localita, String cap, String provincia, String statoResidenza, String statoEstero,
+                     String telefono, String cellulare, String status,
+                     String note, String noteLogistica, Double importoRiservati, LocalDateTime dataNote, String userNote, LocalDateTime dataNoteLogistica, String userNoteLogistica) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.sottoConto = sottoConto;
+        this.riferimento = riferimento;
+        this.indirizzo = indirizzo;
+        this.localita = localita;
+        this.cap = cap;
+        this.provincia = provincia;
+        this.statoResidenza = statoResidenza;
+        this.statoEstero = statoEstero;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.status = status;
+        this.note = note;
+        this.noteLogistica = noteLogistica;
+        this.importoRiservati = importoRiservati;
+        this.dataNote = dataNote;
+        this.userNote = userNote;
+        this.dataNoteLogistica = dataNoteLogistica;
+        this.userNoteLogistica = userNoteLogistica;
     }
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
@@ -279,6 +364,47 @@ public class OrdineDTO implements Serializable {
         this.hasCarico = hasCarico;
     }
 
+    //Ordine service findAllByStatus
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+                     String intestazione, String sottoConto, String riferimento, String indirizzo,
+                     String localita, String cap, String provincia, String statoResidenza, String statoEstero,
+                     String telefono, String cellulare, String email, String pec, String status,
+                     Boolean locked, String userLock, Boolean warnNoBolla, Boolean hasFirma,
+                     Boolean hasProntoConsegna, String note, String noteLogistica
+            , Boolean hasCarico, LocalDateTime dataNote, String userNote, LocalDateTime dataNoteLogistica, String userNoteLogistica) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.sottoConto = sottoConto;
+        this.riferimento = riferimento;
+        this.indirizzo = indirizzo;
+        this.localita = localita;
+        this.cap = cap;
+        this.provincia = provincia;
+        this.statoResidenza = statoResidenza;
+        this.statoEstero = statoEstero;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.email = email;
+        this.pec = pec;
+        this.status = status;
+        this.locked = locked;
+        this.userLock = userLock;
+        this.warnNoBolla = warnNoBolla;
+        this.hasFirma = hasFirma;
+        this.hasProntoConsegna = hasProntoConsegna;
+        this.note = note;
+        this.noteLogistica = noteLogistica;
+        this.hasCarico = hasCarico;
+        this.dataNote = dataNote;
+        this.userNote = userNote;
+        this.dataNoteLogistica = dataNoteLogistica;
+        this.userNoteLogistica = userNoteLogistica;
+    }
+
     public OrdineDTO(String intestazione, String localita, String provincia, String telefono, String email) {
         this.intestazione = intestazione;
         this.localita = localita;
@@ -302,6 +428,44 @@ public class OrdineDTO implements Serializable {
         this.progressivo = progressivo;
     }
 
+    //getAllPregressi
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+                     String intestazione, String sottoConto, String riferimento, String localita, String provincia,
+                    String telefono, String cellulare) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.sottoConto = sottoConto;
+        this.riferimento = riferimento;
+        this.localita = localita;
+        this.provincia = provincia;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+    }
+
+    //findAllByStati
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+                     String intestazione, String sottoConto, String riferimento, String localita, String provincia,
+                     String telefono, String cellulare, Integer veicolo, LocalDate dataConsegna) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.intestazione = intestazione;
+        this.sottoConto = sottoConto;
+        this.riferimento = riferimento;
+        this.localita = localita;
+        this.provincia = provincia;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.veicolo = veicolo;
+        this.dataConsegna = dataConsegna;
+    }
+
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
                       String status, Boolean hasProntoConsegna, String note, String noteLogistica,
                      String intestazione, String riferimento,
@@ -320,5 +484,31 @@ public class OrdineDTO implements Serializable {
         this.riferimento = riferimento;
         this.localita = localita;
         this.provincia = provincia;
+    }
+
+
+    //OrdineService findAltriOrdiniCliente
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+                     String status, Boolean hasProntoConsegna, String note, String noteLogistica,
+                     String intestazione, String riferimento,
+                     String localita, String provincia, LocalDateTime dataNote, String userNote, LocalDateTime dataNoteLogistica, String userNoteLogistica
+    ) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.status = status;
+        this.hasProntoConsegna = hasProntoConsegna;
+        this.note = note;
+        this.noteLogistica = noteLogistica;
+        this.intestazione = intestazione;
+        this.riferimento = riferimento;
+        this.localita = localita;
+        this.provincia = provincia;
+        this.dataNote = dataNote;
+        this.userNote = userNote;
+        this.dataNoteLogistica = dataNoteLogistica;
+        this.userNoteLogistica = userNoteLogistica;
     }
 }

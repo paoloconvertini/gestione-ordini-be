@@ -8,6 +8,8 @@ import lombok.Setter;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -62,6 +64,18 @@ public class GoOrdine extends PanacheEntityBase {
     @Type(type = "org.hibernate.type.TrueFalseType")
     @Column(length = 1, name = "HAS_CARICO", columnDefinition = "CHAR(1)")
     private Boolean hasCarico;
+
+    @Column(name = "DATA_NOTE")
+    private LocalDateTime dataNote;
+
+    @Column(name = "USER_NOTE")
+    private String userNote;
+
+    @Column(name = "DATA_NOTE_LOGISTICA")
+    private LocalDateTime dataNoteLogistica;
+
+    @Column(name = "USER_NOTE_LOGISTICA")
+    private String userNoteLogistica;
 
     public static List<GoOrdine> findOrdiniByStatus(List<String> param) {
         return list("status in (:param)", Parameters.with("param", param));

@@ -537,7 +537,7 @@ public class ArticoloService {
         return result;
     }
 
-    public List<OrdineDettaglioDto> getArticoli(boolean bolla, Integer anno, String serie, Integer progressivo) {
+    public List<OrdineDettaglioDto> getArticoli(String bolla, Integer anno, String serie, Integer progressivo) {
         String query = "SELECT o.anno,  o.progressivo,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  " +
                 "  o.fUnitaMisura,  god.flagNonDisponibile, god.flagOrdinato, god.flagRiservato, " +
@@ -546,14 +546,15 @@ public class ArticoloService {
                 "f.anno as annoOAF, f.serie as serieOAF, f.progressivo as progressivoOAF, f.dataOrdine as dataOrdineOAF, god.progrGenerale " +
                 "FROM OrdineDettaglio o " +
                 "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
-                //"AND god.fArticolo = o.fArticolo" +
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo ";
-        if (bolla) {
+        if ("Y".equals(bolla)) {
             query += " AND god.flProntoConsegna = 'T'";
-        } else {
+        } else if ("N".equals(bolla)) {
             query += " AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
+        } else {
+            query += " AND saldoAcconto NOT IN ('A', 'S') ";
         }
         return OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
                 .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();

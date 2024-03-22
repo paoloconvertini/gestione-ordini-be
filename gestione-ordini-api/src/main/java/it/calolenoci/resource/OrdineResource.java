@@ -36,6 +36,8 @@ import javax.ws.rs.core.Response;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static it.calolenoci.enums.Ruolo.*;
@@ -76,6 +78,10 @@ public class OrdineResource {
     @Inject
     @Claim(standard = Claims.nickname)
     String codVenditore;
+
+    @Inject
+    @Claim(standard = Claims.upn)
+    String user;
 
     @ConfigProperty(name = "ordini.path")
     String pathReport;
@@ -156,10 +162,22 @@ public class OrdineResource {
             List<String> stati = new ArrayList<>();
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+            stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             filtro.setStati(stati);
             filtro.setStatus(null);
         }
         return Response.ok(ordineService.findAllByStati(filtro)).build();
+    }
+
+    @Operation(summary = "Returns all the ordini from the database")
+    @POST
+    @RolesAllowed({ADMIN, LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
+    @Consumes(APPLICATION_JSON)
+    @Path("/pregressi")
+    public Response getAllPregressi(FiltroOrdini filtro) throws ParseException {
+        return Response.ok(ordineService.getAllPregressi(filtro)).build();
     }
 
     @Operation(summary = "Returns all the ordini from the database")
@@ -252,16 +270,22 @@ public class OrdineResource {
     @Consumes(APPLICATION_JSON)
     public Response addNotes(OrdineDTO dto, Integer from) {
         String query;
+        Map<String, Object> param = new HashMap<>();
         if(from == 0) {
-          query = "note ";
+          query = "dataNote =:d, userNote =:u,  note ";
+          param.put("d", LocalDateTime.now());
+          param.put("u", user);
         } else {
-            query = "noteLogistica ";
+            query = "dataNoteLogistica =:d, userNoteLogistica =:u, noteLogistica ";
+            param.put("d", LocalDateTime.now());
+            param.put("u", user);
         }
+        param.put("note", dto.getNote());
+        param.put("anno", dto.getAnno());
+        param.put("serie", dto.getSerie());
+        param.put("progressivo", dto.getProgressivo());
         query += "= :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo";
-        GoOrdine.update(query, Parameters.with("note", dto.getNote())
-                .and("anno", dto.getAnno())
-                        .and("serie", dto.getSerie())
-                        .and("progressivo", dto.getProgressivo()));
+        GoOrdine.update(query, param);
         return Response.ok(new ResponseDto("Nota aggiunta", false)).build();
     }
 
@@ -318,6 +342,18 @@ public class OrdineResource {
     @Consumes(APPLICATION_JSON)
     public Response update(OrdineDTO dto) {
         if(ordineService.updateVeicolo(dto)){
+            return Response.ok(new ResponseDto("Veicoli aggiornati con successo", false)).build();
+        } else {
+            return Response.notModified().build();
+        }
+    }
+
+    @RolesAllowed({ADMIN, LOGISTICA})
+    @POST
+    @Path("/salvaPregressi")
+    @Consumes(APPLICATION_JSON)
+    public Response salvaPregressi(List<OrdineDTO> dto) {
+        if(ordineService.salvaPregressi(dto)){
             return Response.ok(new ResponseDto("Veicoli aggiornati con successo", false)).build();
         } else {
             return Response.notModified().build();

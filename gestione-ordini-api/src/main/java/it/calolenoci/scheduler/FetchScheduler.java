@@ -97,6 +97,12 @@ public class FetchScheduler {
         mailService.invioMailOrdini();
     }
 
+    @Scheduled(cron = "${cron.expr.invio.mail.da.consegnare}")
+    @Transactional
+    public void invioMailDaConsegnare() {
+        mailService.invioMailOrdiniDaConsegnare();
+    }
+
 
     @Scheduled(cron = "${cron.expr.geolocation}")
     @TransactionConfiguration(timeout = 50000)
