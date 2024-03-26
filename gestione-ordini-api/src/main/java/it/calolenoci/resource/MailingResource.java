@@ -1,11 +1,16 @@
 package it.calolenoci.resource;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.mailer.MailTemplate;
+import io.quarkus.panache.common.Parameters;
 import io.quarkus.qute.CheckedTemplate;
 import it.calolenoci.dto.EmailDto;
 import it.calolenoci.dto.InlineAttachment;
 import it.calolenoci.dto.MailAttachment;
+import it.calolenoci.dto.PianoContiDto;
+import it.calolenoci.entity.PianoConti;
 import it.calolenoci.enums.Ruolo;
+import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.AmmortamentoCespiteService;
 import it.calolenoci.service.MailService;
 import it.calolenoci.service.PianoContiService;
@@ -22,6 +27,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -47,21 +53,22 @@ public class MailingResource {
     PianoContiService pianoContiService;
 
     @Inject
-    AmmortamentoCespiteService ammortamentoCespiteService;
+    FetchScheduler scheduler;
 
     @CheckedTemplate
     static class Templates {
         public static native MailTemplate.MailTemplateInstance ordine(String venditore, Integer anno, String serie, Integer progressivo);
     }
 
-    @GET
+    @POST
     @Produces(APPLICATION_JSON)
     @PermitAll
     @Path("/test/{d}")
     public Response test(String d) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-        LocalDate localDate = LocalDate.parse(d, formatter);
-        ammortamentoCespiteService.calcola(localDate);
+        Optional<PianoContiDto> optional = PianoConti.find("SELECT gruppoConto, sottoConto, indirizzo, localita, cap  " +
+                "FROM PianoConti " +
+                "WHERE gruppoConto = 1231 AND sottoConto =:sottoConto", Parameters.with("sottoConto", d)).project(PianoContiDto.class).firstResultOptional();
+        optional.ifPresent(pianoContiDto -> scheduler.updateLatLon(pianoContiDto));
         return Response.ok().build();
     }
 

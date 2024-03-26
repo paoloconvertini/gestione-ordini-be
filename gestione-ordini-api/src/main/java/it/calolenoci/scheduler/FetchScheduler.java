@@ -30,6 +30,9 @@ public class FetchScheduler {
     @ConfigProperty(name = "bing.map.apiKey")
     String apiKey;
 
+    @ConfigProperty(name = "admin.email")
+    String adminEmail;
+
     @Inject
     FatturaService fatturaService;
 
@@ -100,7 +103,7 @@ public class FetchScheduler {
     @Scheduled(cron = "${cron.expr.invio.mail.da.consegnare}")
     @Transactional
     public void invioMailDaConsegnare() {
-        mailService.invioMailOrdiniDaConsegnare();
+        mailService.invioMailOrdiniDaConsegnare(this.adminEmail);
     }
 
 

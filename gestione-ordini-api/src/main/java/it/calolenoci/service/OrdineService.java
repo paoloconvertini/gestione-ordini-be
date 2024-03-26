@@ -313,12 +313,14 @@ public class OrdineService {
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'" ;
 
         String queryPregressi = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
-                "p.intestazione, p.sottoConto,  o.riferimento, p.localita, p.provincia, " +
+                "p.intestazione, p.sottoConto,  o.riferimento, p.localita, p.provincia, p.latitudine, p.longitudine," +
                 "p.telefono,  p.cellulare, v.idVeicolo, v.dataConsegna  " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                 "JOIN GoOrdVeicolo v ON v.id.anno = o.anno AND v.id.serie = o.serie AND v.id.progressivo = o.progressivo " +
-                "WHERE o.dataConferma <:dataConfig AND o.provvisorio <> 'S' " ;
+                "WHERE o.dataConferma <:dataConfig AND o.provvisorio <> 'S' AND " +
+                "EXISTS (SELECT 1 FROM OrdineDettaglio od WHERE od.anno = o.anno AND od.serie = o.serie AND od.progressivo = o.progressivo and " +
+                "od.saldoAcconto IN ('A', '', ' ') AND od.tipoRigo <> 'C')" ;
 
         Map<String, Object> map = new HashMap<>();
         Map<String, Object> mapPregressi = new HashMap<>();

@@ -133,24 +133,28 @@ public class MailService {
         }
 
     }
-    public void invioMailOrdiniDaConsegnare() {
+
+    public void invioMailOrdiniDaConsegnare(String adminEmail) {
         try {
             final List<UserResponseDTO> venditori = userService.getVenditori();
+            List<String> to = new ArrayList<>();
+            if (StringUtils.isNotEmpty(adminEmail)) {
+                to.add(adminEmail);
+            }
             for (UserResponseDTO v : venditori) {
-                StringBuilder body;
-                FiltroOrdini filtro = new FiltroOrdini();
-                filtro.setCodVenditore(v.getCodVenditore());
-                filtro.setDataConsegnaStart(LocalDate.now().plusDays(1));
-                filtro.setDataConsegnaEnd(LocalDate.now().plusDays(1));
-                List<String> stati = new ArrayList<>();
-                stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-                stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
-                stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
-                filtro.setStati(stati);
-                List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
-                if (ordini.isEmpty()) {
-                    continue;
-                }
+                to.add(v.getEmail());
+            }
+            StringBuilder body;
+            FiltroOrdini filtro = new FiltroOrdini();
+            filtro.setDataConsegnaStart(LocalDate.now().plusDays(1));
+            filtro.setDataConsegnaEnd(LocalDate.now().plusDays(1));
+            List<String> stati = new ArrayList<>();
+            stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+            stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+            stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+            filtro.setStati(stati);
+            List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
+            if (!ordini.isEmpty()) {
                 body = new StringBuilder("<table style=\"font-family:Arial,sans-serif\"> " +
                         "        <thead>" +
                         "         <tr>" +
@@ -166,7 +170,7 @@ public class MailService {
                         "        <tbody>");
                 for (OrdineDTO dto : ordini) {
                     String descVeicolo = "";
-                    if(dto.getVeicolo() != null) {
+                    if (dto.getVeicolo() != null) {
                         Veicolo veicolo = Veicolo.find("id =:id", Parameters.with("id", dto.getVeicolo())).firstResult();
                         descVeicolo = veicolo.getDescrizione();
                     }
@@ -179,11 +183,13 @@ public class MailService {
                             .append("<td>").append(dto.getDataConsegna() != null ? sdf.format(dto.getDataConsegna()) : "").append("</td>")
                             .append("</tr>");
                 }
-
                 body.append("</tbody></table>");
-                mailer.send(Mail.withHtml(v.getEmail(), "Lista Ordini completi!", body.toString()));
+                Mail m = new Mail();
+                m.setTo(to);
+                m.setHtml(body.toString());
+                m.setSubject("Lista Ordini da consegnare!");
+                mailer.send(m);
             }
-
         } catch (Exception e) {
             Log.error("Errore invio mail", e);
         }

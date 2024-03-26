@@ -445,9 +445,9 @@ public class OrdineDTO implements Serializable {
         this.cellulare = cellulare;
     }
 
-    //findAllByStati
+    //findAllByStati pregressi
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
-                     String intestazione, String sottoConto, String riferimento, String localita, String provincia,
+                     String intestazione, String sottoConto, String riferimento, String localita, String provincia, Double latitudine, Double longitudine,
                      String telefono, String cellulare, Integer veicolo, LocalDate dataConsegna) {
         this.anno = anno;
         this.serie = serie;
@@ -459,6 +459,8 @@ public class OrdineDTO implements Serializable {
         this.riferimento = riferimento;
         this.localita = localita;
         this.provincia = provincia;
+        this.latitudine = latitudine;
+        this.longitudine = longitudine;
         this.telefono = telefono;
         this.cellulare = cellulare;
         this.veicolo = veicolo;

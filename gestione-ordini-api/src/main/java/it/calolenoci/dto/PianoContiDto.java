@@ -25,6 +25,13 @@ public class PianoContiDto implements Serializable {
     private Double latitudine;
     private Double longitudine;
 
+    public PianoContiDto(Integer gruppoConto, String sottoConto, String indirizzo, String localita, String cap) {
+        this.gruppoConto = gruppoConto;
+        this.sottoConto = sottoConto;
+        this.indirizzo = indirizzo;
+        this.localita = localita;
+        this.cap = cap;
+    }
 
     public PianoContiDto(Integer gruppoConto, String sottoConto, String intestazione) {
         this.gruppoConto = gruppoConto;
