@@ -209,7 +209,13 @@ public class FatturaService {
                     Log.debug("*** CREA BOLLA, lista da trasformare, riga articolo : " + dto.getRigo());
                     OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
                     fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
-                    o.setSaldoAcconto("S");
+                    if(dto.getQtaDaConsegnare() != null) {
+                        if (dto.getQtaDaConsegnare() == 0) {
+                            o.setSaldoAcconto("S");
+                        } else {
+                            o.setSaldoAcconto("A");
+                        }
+                    }
                     ordineDettaglioList.add(o);
                     Optional<SaldiMagazzino> optional = SaldiMagazzino.find("marticolo =:art and  mmagazzino = :mag",
                             Parameters.with("art", o.getFArticolo()).and("mag", o.getMagazz())).firstResultOptional();

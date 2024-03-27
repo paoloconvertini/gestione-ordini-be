@@ -220,6 +220,9 @@ public class ArticoloService {
                     } else {
                         dto.setQtaDaConsegnare(dto.getQuantita());
                     }
+                    if(dto.getQtaDaConsegnare() != null && dto.getQtaDaConsegnare() < 0) {
+                        dto.setQtaDaConsegnare(0D);
+                    }
                 }
                 if (!Objects.equals(ordineDettaglio.getTono(), dto.getTono())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
