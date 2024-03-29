@@ -557,10 +557,26 @@ public class ArticoloService {
         } else if ("N".equals(bolla)) {
             query += " AND (god.flagConsegnato = 'F' OR god.flagConsegnato IS NULL OR god.flagConsegnato = '')";
         } else {
-            query += " AND saldoAcconto NOT IN ('A', 'S') ";
+            query += " AND saldoAcconto <> 'S'";
         }
-        return OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
+        List<OrdineDettaglioDto> list = OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
                 .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
+        if(!"Y".equals(bolla) && !"N".equals(bolla)) {
+            list.forEach(ordineDettaglio -> {
+                List<FattureDettaglio> fatture = FattureDettaglio.find("Select f " +
+                                "FROM FattureDettaglio f " +
+                                "WHERE f.progrOrdCli = :id ",
+                        Parameters.with("id", ordineDettaglio.getProgrGenerale())).list();
+                if(!fatture.isEmpty()){
+                    double sum = fatture.stream().mapToDouble(FattureDettaglio::getQuantita).sum();
+                    ordineDettaglio.setQtaDaConsegnare(ordineDettaglio.getQuantita() - sum);
+                } else {
+                    ordineDettaglio.setQtaDaConsegnare(ordineDettaglio.getQuantita());
+                }
+            });
+
+        }
+        return list;
     }
 
     public List<OrdineDettaglioDto> getArticoliRiservati(Integer anno, String serie, Integer progressivo) {
