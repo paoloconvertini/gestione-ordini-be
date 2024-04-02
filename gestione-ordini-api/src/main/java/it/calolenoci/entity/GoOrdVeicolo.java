@@ -21,7 +21,7 @@ public class GoOrdVeicolo extends PanacheEntityBase {
     @EmbeddedId
     private GoOrdVeicoloPK id;
 
-    @Column(name = "idVeicolo", nullable = false)
+    @Column(name = "idVeicolo")
     private int idVeicolo;
 
     @Column(name = "DATA_CONSEGNA")

@@ -98,7 +98,7 @@ public class UserResource {
 
     @Operation(summary = "Returns all the roles from the database")
     @POST
-    @RolesAllowed({ADMIN, USER})
+    @PermitAll
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Users")
     @Path("/byRole")

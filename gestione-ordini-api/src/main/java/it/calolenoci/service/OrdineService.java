@@ -159,6 +159,7 @@ public class OrdineService {
         }
         long i = System.currentTimeMillis();
         List<GoOrdineDto> ordineList = GoOrdine.findOrdiniConsegnatiByStatus(list);
+        Log.debug("Trovati " + ordineList.size() + " ordini consegnati da controllare");
         long f = System.currentTimeMillis();
         Log.info("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
         long inizio = System.currentTimeMillis();
@@ -410,12 +411,15 @@ public class OrdineService {
     @Transactional
     public boolean updateVeicolo(OrdineDTO dto) {
         try {
-            GoOrdVeicolo goOrdVeicolo = null;
-            if (dto.getVeicolo() != null) {
-                goOrdVeicolo = new GoOrdVeicolo(
-                        new GoOrdVeicoloPK(dto.getAnno(), dto.getSerie(), dto.getProgressivo()), dto.getVeicolo(), dto.getDataConsegna());
+            GoOrdVeicolo goOrdVeicolo = new GoOrdVeicolo();
+            goOrdVeicolo.setId(new GoOrdVeicoloPK(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
+            if(dto.getVeicolo() != null) {
+                goOrdVeicolo.setIdVeicolo(dto.getVeicolo());
             }
-             long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
+            if(dto.getDataConsegna() != null) {
+                goOrdVeicolo.setDataConsegna(dto.getDataConsegna());
+            }
+            long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
                     , Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
                             .and("progressivo", dto.getProgressivo()));
             if(goOrdVeicolo == null && delete > 0) {
