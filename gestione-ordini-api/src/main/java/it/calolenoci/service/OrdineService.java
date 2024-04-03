@@ -362,6 +362,9 @@ public class OrdineService {
         }
         List<OrdineDTO> result = Ordine.find(query, map).project(OrdineDTO.class).list();
         result.addAll(Ordine.find(queryPregressi, mapPregressi).project(OrdineDTO.class).list());
+        if(filtro.getDataConsegnaEnd() != null){
+            result.sort(Comparator.comparing(OrdineDTO::getDataConsegna).thenComparing(OrdineDTO::getVeicolo));
+        }
         return result;
     }
 
