@@ -159,7 +159,6 @@ public class OrdineService {
         }
         long i = System.currentTimeMillis();
         List<GoOrdineDto> ordineList = GoOrdine.findOrdiniConsegnatiByStatus(list);
-        Log.debug("Trovati " + ordineList.size() + " ordini consegnati da controllare");
         long f = System.currentTimeMillis();
         Log.info("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
         long inizio = System.currentTimeMillis();
@@ -363,7 +362,6 @@ public class OrdineService {
         }
         List<OrdineDTO> result = Ordine.find(query, map).project(OrdineDTO.class).list();
         result.addAll(Ordine.find(queryPregressi, mapPregressi).project(OrdineDTO.class).list());
-        result.sort(Comparator.comparing(OrdineDTO::getDataConsegna).thenComparing(OrdineDTO::getVeicolo));
         return result;
     }
 
