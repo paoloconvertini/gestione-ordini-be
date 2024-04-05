@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -78,6 +79,15 @@ public class OrdineDTO implements Serializable {
     private String userNote;
 
     private String userNoteLogistica;
+    private String indirdiverse;
+
+    private String locdiverse;
+
+    private String capdiverse;
+
+    private String provdiverse;
+
+    private Boolean flVenditore;
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,
@@ -226,18 +236,22 @@ public class OrdineDTO implements Serializable {
     }
 
     //OrdineService findAllByStati
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String indirdiverse,
+                     String locdiverse, String provdiverse,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, Double latitudine, Double longitudine, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
                      Boolean locked, String userLock, Boolean warnNoBolla, Boolean hasFirma,
-                     Boolean hasProntoConsegna, String note, String noteLogistica, Integer veicolo, LocalDate dataConsegna
+                     Boolean hasProntoConsegna, String note, String noteLogistica, Integer veicolo, LocalDate dataConsegna, Boolean flVenditore
             , LocalDateTime dataNote, String userNote, LocalDateTime dataNoteLogistica, String userNoteLogistica) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
         this.dataConferma = dataConferma;
         this.numeroConferma = numeroConferma;
+        this.indirdiverse = indirdiverse;
+        this.locdiverse = locdiverse;
+        this.provdiverse = provdiverse;
         this.intestazione = intestazione;
         this.sottoConto = sottoConto;
         this.riferimento = riferimento;
@@ -263,6 +277,7 @@ public class OrdineDTO implements Serializable {
         this.noteLogistica = noteLogistica;
         this.veicolo = veicolo;
         this.dataConsegna = dataConsegna;
+        this.flVenditore = flVenditore;
         this.dataNote = dataNote;
         this.userNote = userNote;
         this.dataNoteLogistica = dataNoteLogistica;
@@ -446,14 +461,18 @@ public class OrdineDTO implements Serializable {
     }
 
     //findAllByStati pregressi
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String indirdiverse,
+                     String locdiverse, String provdiverse,
                      String intestazione, String sottoConto, String riferimento, String localita, String provincia, Double latitudine, Double longitudine,
-                     String telefono, String cellulare, Integer veicolo, LocalDate dataConsegna) {
+                     String telefono, String cellulare, Integer veicolo, LocalDate dataConsegna, Boolean flVenditore) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
         this.dataConferma = dataConferma;
         this.numeroConferma = numeroConferma;
+        this.indirdiverse = indirdiverse;
+        this.locdiverse = locdiverse;
+        this.provdiverse = provdiverse;
         this.intestazione = intestazione;
         this.sottoConto = sottoConto;
         this.riferimento = riferimento;
@@ -465,6 +484,7 @@ public class OrdineDTO implements Serializable {
         this.cellulare = cellulare;
         this.veicolo = veicolo;
         this.dataConsegna = dataConsegna;
+        this.flVenditore = flVenditore;
     }
 
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,

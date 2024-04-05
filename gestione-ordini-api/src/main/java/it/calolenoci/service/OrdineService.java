@@ -302,19 +302,19 @@ public class OrdineService {
         checkConsegnati(filtro.getStatus());
         checkNoProntaConegna(filtro.getStatus());
 
-        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
-                "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine, " +
+        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, o.indirdiverse, o.locdiverse, o.provdiverse, " +
+                "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
-                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, v.idVeicolo, v.dataConsegna " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, v.idVeicolo, v.dataConsegna, v.venditore " +
                 ", go.dataNote, go.userNote, go.dataNoteLogistica, go.userNoteLogistica " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                 "LEFT JOIN GoOrdVeicolo v ON v.id.anno = go.anno AND v.id.serie = go.serie AND v.id.progressivo = go.progressivo " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'" ;
 
-        String queryPregressi = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
-                "p.intestazione, p.sottoConto,  o.riferimento, p.localita, p.provincia, p.latitudine, p.longitudine," +
-                "p.telefono,  p.cellulare, v.idVeicolo, v.dataConsegna  " +
+        String queryPregressi = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, o.indirdiverse, o.locdiverse, o.provdiverse,  " +
+                "p.intestazione, p.sottoConto,  o.riferimento, p.localita, p.provincia, p.latitudine, p.longitudine, " +
+                "p.telefono,  p.cellulare, v.idVeicolo, v.dataConsegna, v.venditore  " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                 "JOIN GoOrdVeicolo v ON v.id.anno = o.anno AND v.id.serie = o.serie AND v.id.progressivo = o.progressivo " +
@@ -410,7 +410,7 @@ public class OrdineService {
     }
 
     @Transactional
-    public boolean updateVeicolo(OrdineDTO dto) {
+    public boolean updateVeicolo(OrdineDTO dto, String codVenditore) {
         try {
             GoOrdVeicolo goOrdVeicolo = new GoOrdVeicolo();
             goOrdVeicolo.setId(new GoOrdVeicoloPK(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
@@ -419,6 +419,9 @@ public class OrdineService {
             }
             if(dto.getDataConsegna() != null) {
                 goOrdVeicolo.setDataConsegna(dto.getDataConsegna());
+            }
+            if(StringUtils.isNotBlank(codVenditore)) {
+                goOrdVeicolo.setVenditore(Boolean.TRUE);
             }
             long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
                     , Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())

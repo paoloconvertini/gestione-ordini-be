@@ -163,6 +163,7 @@ public class OrdineResource {
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+            stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             filtro.setStati(stati);
             filtro.setStatus(null);
         }
@@ -336,12 +337,12 @@ public class OrdineResource {
         return Response.ok(ordineService.findAltriOrdiniCliente(anno, serie, progressivo, sottoConto)).build();
     }
 
-    @RolesAllowed({ADMIN, LOGISTICA})
+    @RolesAllowed({ADMIN, LOGISTICA, VENDITORE})
     @PUT
     @Path("/updateVeicolo")
     @Consumes(APPLICATION_JSON)
     public Response update(OrdineDTO dto) {
-        if(ordineService.updateVeicolo(dto)){
+        if(ordineService.updateVeicolo(dto, codVenditore)){
             return Response.ok(new ResponseDto("Veicoli aggiornati con successo", false)).build();
         } else {
             return Response.notModified().build();

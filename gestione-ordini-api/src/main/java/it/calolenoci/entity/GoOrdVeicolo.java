@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -26,4 +27,8 @@ public class GoOrdVeicolo extends PanacheEntityBase {
 
     @Column(name = "DATA_CONSEGNA")
     private LocalDate dataConsegna;
+
+    @Column(name = "FL_VENDITORE", nullable = false, columnDefinition = "CHAR(1)")
+    @Type(type = "org.hibernate.type.TrueFalseType")
+    private Boolean venditore;
 }
