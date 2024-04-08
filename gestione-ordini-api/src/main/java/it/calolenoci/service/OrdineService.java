@@ -21,6 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static it.calolenoci.enums.StatoOrdineEnum.ARCHIVIATO;
+
 @ApplicationScoped
 public class OrdineService {
 
@@ -50,11 +52,11 @@ public class OrdineService {
 
     public List<OrdineDTO> findAllByStatus(FiltroOrdini filtro) throws ParseException {
         if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
-                !StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus()) &&
+                !ARCHIVIATO.getDescrizione().equals(filtro.getStatus()) &&
         !StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
             checkStatusDettaglio(filtro.getStatus());
         }
-        if (!StatoOrdineEnum.ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
+        if (!ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
             checkConsegnati(filtro.getStatus());
             checkNoProntaConegna(filtro.getStatus());
         }
@@ -170,7 +172,7 @@ public class OrdineService {
             boolean anyMatch = ordines.stream().allMatch(or -> StringUtils.equals("S", or.getSaldoAcconto()));
                 if (anyMatch && !ordine.getWarnNoBolla()) {
                     Log.debug("Ordine n." + ordine.getAnno() + " " + ordine.getSerie() + " " + ordine.getProgressivo() +", status: " + ordine.getStatus());
-                    ordine.setStatus(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
+                    ordine.setStatus(ARCHIVIATO.getDescrizione());
                     if (ordine.getHasProntoConsegna() != null && ordine.getHasProntoConsegna()) {
                         ordine.setHasProntoConsegna(Boolean.FALSE);
                     }
@@ -327,6 +329,9 @@ public class OrdineService {
 
         if(filtro.getStati() != null && !filtro.getStati().isEmpty()){
             query += "AND go.status IN (:list)";
+            if(filtro.getDataConsegnaEnd() != null){
+                filtro.getStati().add(ARCHIVIATO.getDescrizione());
+            }
             map.put("list", filtro.getStati());
         }
         if(StringUtils.isNotBlank(filtro.getStatus())) {
@@ -420,9 +425,7 @@ public class OrdineService {
             if(dto.getDataConsegna() != null) {
                 goOrdVeicolo.setDataConsegna(dto.getDataConsegna());
             }
-            if(StringUtils.isNotBlank(codVenditore)) {
-                goOrdVeicolo.setVenditore(Boolean.TRUE);
-            }
+            goOrdVeicolo.setVenditore(StringUtils.isNotBlank(codVenditore));
             long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
                     , Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
                             .and("progressivo", dto.getProgressivo()));

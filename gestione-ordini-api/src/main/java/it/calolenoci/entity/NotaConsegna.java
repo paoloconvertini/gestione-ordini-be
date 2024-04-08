@@ -1,0 +1,35 @@
+package it.calolenoci.entity;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
+
+import javax.persistence.*;
+import java.time.LocalDate;
+import java.util.Objects;
+
+@Entity
+@Table(name = "GO_NOTA_CONSEGNA")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class NotaConsegna extends PanacheEntityBase {
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator"
+    )
+    @Id
+    @Column(name = "id", nullable = false)
+    private String id;
+    @Column(name = "dataNota", nullable = false)
+    private LocalDate dataNota;
+    @Column(name = "nota", length = 2000)
+    private String nota;
+
+
+}

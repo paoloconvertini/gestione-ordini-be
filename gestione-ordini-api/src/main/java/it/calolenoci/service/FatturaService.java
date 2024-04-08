@@ -210,7 +210,10 @@ public class FatturaService {
                     OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
                     fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
                     if(dto.getQtaDaConsegnare() != null) {
-                        if (dto.getQtaDaConsegnare() == 0) {
+                        Log.debug("*** CREA BOLLA, qta prontoConsegna = " + dto.getQtaProntoConsegna());
+                        Log.debug("*** CREA BOLLA, qta ordinata = " + dto.getQuantita());
+                        Log.debug("*** CREA BOLLA, qta da consegnare = " + dto.getQtaDaConsegnare());
+                        if (dto.getQuantita() - dto.getQtaProntoConsegna() == 0) {
                             o.setSaldoAcconto("S");
                         } else {
                             o.setSaldoAcconto("A");
