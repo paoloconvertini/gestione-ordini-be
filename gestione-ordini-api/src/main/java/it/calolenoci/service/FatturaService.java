@@ -213,7 +213,8 @@ public class FatturaService {
                         Log.debug("*** CREA BOLLA, qta prontoConsegna = " + dto.getQtaProntoConsegna());
                         Log.debug("*** CREA BOLLA, qta ordinata = " + dto.getQuantita());
                         Log.debug("*** CREA BOLLA, qta da consegnare = " + dto.getQtaDaConsegnare());
-                        if (dto.getQuantita() - dto.getQtaProntoConsegna() == 0) {
+                        Double qta = (dto.getQtaDaConsegnare() == null || dto.getQtaDaConsegnare() == 0) ? dto.getQuantita() : dto.getQtaDaConsegnare();
+                        if (qta - dto.getQtaProntoConsegna() == 0) {
                             o.setSaldoAcconto("S");
                         } else {
                             o.setSaldoAcconto("A");
