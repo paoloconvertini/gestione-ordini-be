@@ -146,12 +146,15 @@ public class MailService {
             }
             StringBuilder body;
             FiltroOrdini filtro = new FiltroOrdini();
-            filtro.setDataConsegnaStart(LocalDate.now().plusDays(1));
-            filtro.setDataConsegnaEnd(LocalDate.now().plusDays(1));
+            LocalDate dataConsegna = LocalDate.now().plusDays(1);
+            filtro.setDataConsegnaStart(dataConsegna);
+            filtro.setDataConsegnaEnd(dataConsegna);
             List<String> stati = new ArrayList<>();
             stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+            stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+            stati.add(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
             filtro.setStati(stati);
             List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
             if (!ordini.isEmpty()) {
@@ -180,7 +183,7 @@ public class MailService {
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getLocalita()) ? dto.getLocalita() : "").append(StringUtils.isNotBlank(dto.getProvincia()) ? " (" + dto.getProvincia() + ")" : "").append("</td>");
                     body.append("<td>").append(dto.getStatus()).append("</td>")
                             .append("<td>").append(descVeicolo).append("</td>")
-                            .append("<td>").append(dto.getDataConsegna() != null ? sdf.format(dto.getDataConsegna()) : "").append("</td>")
+                            .append("<td>").append(sdf.format(dataConsegna)).append("</td>")
                             .append("</tr>");
                 }
                 body.append("</tbody></table>");
