@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -157,6 +158,8 @@ public class MailService {
             stati.add(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
             filtro.setStati(stati);
             List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
+            DateTimeFormatter pattern = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String formattedDate = dataConsegna.format(pattern);
             if (!ordini.isEmpty()) {
                 body = new StringBuilder("<table style=\"font-family:Arial,sans-serif\"> " +
                         "        <thead>" +
@@ -183,7 +186,7 @@ public class MailService {
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getLocalita()) ? dto.getLocalita() : "").append(StringUtils.isNotBlank(dto.getProvincia()) ? " (" + dto.getProvincia() + ")" : "").append("</td>");
                     body.append("<td>").append(dto.getStatus()).append("</td>")
                             .append("<td>").append(descVeicolo).append("</td>")
-                            .append("<td>").append(sdf.format(dataConsegna)).append("</td>")
+                            .append("<td>").append(formattedDate).append("</td>")
                             .append("</tr>");
                 }
                 body.append("</tbody></table>");

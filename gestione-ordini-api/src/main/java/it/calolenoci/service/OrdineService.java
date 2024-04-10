@@ -485,13 +485,14 @@ public class OrdineService {
     }
 
     @Transactional
-    public boolean salvaPregressi(List<OrdineDTO> list) {
+    public boolean salvaPregressi(List<OrdineDTO> list, String codVenditore) {
         try {
             List<GoOrdVeicolo> listToSave = new ArrayList<>();
             list.forEach(dto -> {
                 GoOrdVeicolo goOrdVeicolo = new GoOrdVeicolo();
                 GoOrdVeicoloPK pk = new GoOrdVeicoloPK(dto.getAnno(), dto.getSerie(), dto.getProgressivo());
                 goOrdVeicolo.setId(pk);
+                goOrdVeicolo.setVenditore(StringUtils.isNotBlank(codVenditore));
                 listToSave.add(goOrdVeicolo);
             });
 

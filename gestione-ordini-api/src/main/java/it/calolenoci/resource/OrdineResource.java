@@ -354,7 +354,7 @@ public class OrdineResource {
     @Path("/salvaPregressi")
     @Consumes(APPLICATION_JSON)
     public Response salvaPregressi(List<OrdineDTO> dto) {
-        if(ordineService.salvaPregressi(dto)){
+        if(ordineService.salvaPregressi(dto, codVenditore)){
             return Response.ok(new ResponseDto("Veicoli aggiornati con successo", false)).build();
         } else {
             return Response.notModified().build();
