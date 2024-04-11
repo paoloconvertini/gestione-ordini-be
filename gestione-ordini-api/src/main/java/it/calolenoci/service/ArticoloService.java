@@ -591,15 +591,9 @@ public class ArticoloService {
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
-                "AND god.flagConsegnato <> 'T' AND (" +
-                "   (god.flagRiservato = 'T' ) " +
-                "       OR" +
-                "   (god.flagRiservato = 'F' AND god.flagNonDisponibile = 'F' AND god.flagOrdinato = 'F') " +
-                " ) "
-                ;
-        List<OrdineDettaglioDto> list = OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
+                "AND god.flagConsegnato <> 'T' AND  god.flagRiservato = 'T' ";
+        return OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
                 .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
-        return list;
     }
 
     private void checkCodArtFornitore(List<OrdineDettaglio> ordineDettaglioDtos) {

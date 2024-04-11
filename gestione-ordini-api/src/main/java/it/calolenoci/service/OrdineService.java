@@ -411,7 +411,9 @@ public class OrdineService {
                 "   p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, " +
                 " p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare, go.status,  " +
                 "  go.note, go.noteLogistica, go.dataNote, go.userNote, go.dataNoteLogistica, go.userNoteLogistica ";
-        return Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
+        List<OrdineDTO> list = Ordine.find(query, map).project(OrdineDTO.class).list();
+        return list.stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getImportoRiservati,
+                Comparator.nullsLast(Comparator.naturalOrder())).reversed()).toList();
     }
 
     @Transactional

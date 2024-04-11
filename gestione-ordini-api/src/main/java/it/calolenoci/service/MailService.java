@@ -22,6 +22,7 @@ import java.time.Month;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static javax.transaction.Transactional.TxType.SUPPORTS;
@@ -147,9 +148,8 @@ public class MailService {
             }
             StringBuilder body;
             FiltroOrdini filtro = new FiltroOrdini();
-            LocalDate dataConsegna = LocalDate.now().plusDays(1);
-            filtro.setDataConsegnaStart(dataConsegna);
-            filtro.setDataConsegnaEnd(dataConsegna);
+            filtro.setDataConsegnaStart(LocalDate.now().plusDays(1));
+            filtro.setDataConsegnaEnd(LocalDate.now().plusDays(8));
             List<String> stati = new ArrayList<>();
             stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
@@ -159,7 +159,6 @@ public class MailService {
             filtro.setStati(stati);
             List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
             DateTimeFormatter pattern = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            String formattedDate = dataConsegna.format(pattern);
             if (!ordini.isEmpty()) {
                 body = new StringBuilder("<table style=\"font-family:Arial,sans-serif\"> " +
                         "        <thead>" +
@@ -186,7 +185,7 @@ public class MailService {
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getLocalita()) ? dto.getLocalita() : "").append(StringUtils.isNotBlank(dto.getProvincia()) ? " (" + dto.getProvincia() + ")" : "").append("</td>");
                     body.append("<td>").append(dto.getStatus()).append("</td>")
                             .append("<td>").append(descVeicolo).append("</td>")
-                            .append("<td>").append(formattedDate).append("</td>")
+                            .append("<td>").append(dto.getDataConsegna().format(pattern)).append("</td>")
                             .append("</tr>");
                 }
                 body.append("</tbody></table>");
