@@ -355,4 +355,39 @@ public class FatturaService {
             rifCliList.add(rigaFattura.getOperazione());
         }
     }
+
+    public Double getSaldoContabile(String sottoConto) {
+        return Primanota.find("SELECT ISNULL(SUM(importo), 0) " +
+                "FROM Primanota " +
+                "WHERE gruppoconto = 1231 AND sottoconto = :s " +
+                "GROUP BY gruppoconto, sottoconto", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
+    }
+
+    public Double getOrdiniAperti(String sottoConto) {
+        return Ordine.find("SELECT ISNULL(SUM( o2.prezzo *(1-o2.scontoArticolo/100)*(1-o2.scontoC1/100)*(1-o2.scontoC2/100)*(1-o2.scontoP/100) " +
+                "* god.qtaDaConsegnare * o2.fCodiceIva/100 + " +
+                "(o2.prezzo *(1-o2.scontoArticolo/100)*(1-o2.scontoC1/100)*(1-o2.scontoC2/100)*(1-o2.scontoP/100) " +
+                "* god.qtaDaConsegnare )), 0) " +
+                "FROM Ordine o " +
+                "Join OrdineDettaglio o2 ON o.anno = o2.anno and o.serie = o2.serie and o.progressivo = o2.progressivo " +
+                "join GoOrdineDettaglio god ON o2.progrGenerale = god.progrGenerale " +
+                "WHERE o2.saldoAcconto <> 'S' AND o.gruppoCliente = 1231 AND o.contoCliente = :s " +
+                "GROUP BY o.gruppoCliente, o.contoCliente", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
+    }
+
+    public Double getAccontiFatturati(String sottoConto) {
+        return Primanota.find("SELECT ISNULL(SUM(importo), 0) " +
+                "FROM Primanota " +
+                "WHERE gruppoconto = 1231 AND sottoconto = :s and importo > 0" +
+                "GROUP BY gruppoconto, sottoconto", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
+    }
+    public Double getBolleNonFatturate(String sottoConto) {
+        return Fatture.find("SELECT ISNULL(SUM(f2.prezzo *(1-f2.scontoarticolo/100)*(1-f2.scontoc1/100)*(1-f2.scontoc2/100)*(1-f2.scontop/100) " +
+                "* f2.quantita * f2.iva/100 + " +
+                "(f2.prezzo *(1-f2.scontoarticolo/100)*(1-f2.scontoc1/100)*(1-f2.scontoc2/100)*(1-f2.scontop/100) " +
+                "* f2.quantita )), 0) " +
+                "FROM Fatture f " +
+                "join FattureDettaglio  f2 on f.anno = f2.anno and f.serie = f2.serie and f.progressivo = f2.progressivo " +
+                "WHERE f.gruppoCliente = 1231 AND f.contoCliente = :s and f.flagfattura <> 'S' ", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
+    }
 }

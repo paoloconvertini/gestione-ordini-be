@@ -166,6 +166,46 @@ public class ArticoloResource {
     @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Articoli")
+    @Path("/saldoContabile/{sottoConto}")
+    public Response getSaldoContabile(String sottoConto) {
+        return Response.ok(fatturaService.getSaldoContabile(sottoConto)).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @GET
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Path("/ordiniAperti/{sottoConto}")
+    public Response getOrdiniAperti(String sottoConto) {
+        return Response.ok(fatturaService.getOrdiniAperti(sottoConto)).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @GET
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Path("/accontiFatturati/{sottoConto}")
+    public Response getAccontiFatturati(String sottoConto) {
+        return Response.ok(fatturaService.getAccontiFatturati(sottoConto)).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @GET
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
+    @Path("/bolleNonFatturate/{sottoConto}")
+    public Response getBolleNonFatturate(String sottoConto) {
+        return Response.ok(fatturaService.getBolleNonFatturate(sottoConto)).build();
+    }
+
+    @Operation(summary = "Returns all the articoli from the database")
+    @GET
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/getAcconti/{sottoConto}")
     public Response getAcconti(String sottoConto) {
         return Response.ok(fatturaService.getAcconti(sottoConto)).build();
