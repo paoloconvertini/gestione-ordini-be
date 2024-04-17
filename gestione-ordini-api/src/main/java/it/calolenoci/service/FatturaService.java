@@ -376,10 +376,11 @@ public class FatturaService {
     }
 
     public Double getAccontiFatturati(String sottoConto) {
-        return Primanota.find("SELECT ISNULL(SUM(importo), 0) " +
-                "FROM Primanota " +
-                "WHERE gruppoconto = 1231 AND sottoconto = :s and importo > 0" +
-                "GROUP BY gruppoconto, sottoconto", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
+        return Fatture.find("SELECT ISNULL(SUM((f2.prezzo * f2.iva/100) + f2.prezzo), 0) " +
+                "FROM Fatture f " +
+                "JOIN FattureDettaglio  f2 ON f.anno = f2.anno and f.serie = f2.serie and f.progressivo = f2.progressivo " +
+                "WHERE f.gruppoCliente = 1231 AND f.contoCliente = :s and f2.fArticolo =  '*ACC'"
+                , Parameters.with("s", sottoConto)).project(Double.class).firstResult();
     }
     public Double getBolleNonFatturate(String sottoConto) {
         return Fatture.find("SELECT ISNULL(SUM(f2.prezzo *(1-f2.scontoarticolo/100)*(1-f2.scontoc1/100)*(1-f2.scontoc2/100)*(1-f2.scontop/100) " +
