@@ -354,7 +354,7 @@ public class AmmortamentoCespiteService {
             AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, quotaRivDaSalvare, fondo, fondoRiv, residuoDaSalvare, dataCorrente);
             calcolaSuperAmm(cespite, perc, a);
             ammortamentoCespiteList.add(a);
-
+            Log.debug("Costruisco righe venduto!");
             return buildEliminatoVenduto(cespite, ammortamentoCespiteList, eliminato, venduto, residuo);
         }
         return ammortamentoCespiteList;
