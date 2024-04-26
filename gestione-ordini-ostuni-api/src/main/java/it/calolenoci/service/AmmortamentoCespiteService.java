@@ -29,10 +29,6 @@ public class AmmortamentoCespiteService {
     @Inject
     JasperService jasperService;
 
-    @Inject
-    QuadCespiteMapper quadCespiteMapper;
-
-
     @Transactional
     @TransactionConfiguration(timeout = 5000000)
     public void calcola(FiltroCespite filtroCespite) {
@@ -791,6 +787,7 @@ public class AmmortamentoCespiteService {
                 c.setGiornale(dto.getGiornale());
                 c.setAnno(dto.getAnno());
                 c.setFlPrimoAnno(Boolean.TRUE);
+                Log.debug("Data acquisto: " + c.getDataAcq()==null?"non ho data acq": "OK!!!");
                 c.setDataInizioCalcoloAmm(c.getDataAcq());
                 c.persist();
                 RegistroCespiteDto d = mapper.fromCespiteToRegistroCespiteDto(c, categoriaCespite);

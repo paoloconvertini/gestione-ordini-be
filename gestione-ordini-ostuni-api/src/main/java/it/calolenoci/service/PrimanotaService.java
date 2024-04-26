@@ -207,14 +207,11 @@ public class PrimanotaService {
                             gruppoPlusMinus = cespiteDto.getPlusGruppo();
                             contoPlusMinus = cespiteDto.getMinusConto();
                         }
-                        listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++, "STORNO COSTO CESPITE", cespiteDto.getCostoGruppo(), cespiteDto.getCostoConto(), costoCespite - cespite.getImportoVendita() ));
-                        listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++, "STORNO FONDO AMM.", cespiteDto.getFondoGruppo(), cespiteDto.getFondoConto(), (a.getFondo() + a.getFondoRivalutazione() - quotaTot)));
+                        listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++, "STORNO COSTO CESPITE", cespiteDto.getCostoGruppo(), cespiteDto.getCostoConto(), -(costoCespite - cespite.getImportoVendita()) ));
+                        listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++, "STORNO FONDO AMM.", cespiteDto.getFondoGruppo(), cespiteDto.getFondoConto(), (a.getFondo() + a.getFondoRivalutazione())));
                         listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++,
                                 "RIL. PLUS/MINUSVALENZA", gruppoPlusMinus, contoPlusMinus,
                                 -plusMinus));
-                        listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo, progrGenerale,
-                                "RIL. PLUS/MINUSVALENZA", cespiteDto.getCostoGruppo(), cespiteDto.getCostoConto(),
-                                plusMinus));
                         Primanota.persist(listToSave);
                     }
                 }
