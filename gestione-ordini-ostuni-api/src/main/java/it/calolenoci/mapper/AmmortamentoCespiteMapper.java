@@ -103,7 +103,7 @@ public class AmmortamentoCespiteMapper {
         d.setFlPrimoAnno(c.getFlPrimoAnno());
         d.setTipoCespite(c.getTipoCespite());
         d.setImporto(c.getImporto());
-        d.setDataAcq(c.getDataAcq());
+        d.setDtInizioCalcoloAmm(c.getDataAcq());
         d.setNumDocAcq(c.getNumDocAcq());
         d.setPercAmmortamento(tipo.getPercAmmortamento());
         d.setImporto(c.getImporto());
