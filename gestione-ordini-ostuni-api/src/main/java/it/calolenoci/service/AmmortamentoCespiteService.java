@@ -7,7 +7,6 @@ import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.mapper.AmmortamentoCespiteMapper;
-import it.calolenoci.mapper.QuadCespiteMapper;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -103,15 +102,9 @@ public class AmmortamentoCespiteService {
                     dataAmmortamento = dataCorrente;
                 }
                 if (counter == 1 && cespite.getFlPrimoAnno()) {
+                    Log.debug("Calcolo quota dimezzata!!!");
                     quotaDaSalvare = quotaPrimoAnno * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
                 } else {
-                    quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
-                }
-                Optional<QuadraturaCespite> optQuad = QuadraturaCespite.find("idCespite =:id AND anno=:a",
-                        Parameters.with("id", cespite.getId()).and("a", dataAmmortamento.getYear())).singleResultOptional();
-                if (optQuad.isPresent()) {
-                    QuadraturaCespite q = optQuad.get();
-                    quota = cespite.getImporto() * (q.getAmmortamento() / 100);
                     quotaDaSalvare = quota * dataAmmortamento.getDayOfYear() / (dataAmmortamento.isLeapYear() ? 366 : 365);
                 }
 
@@ -153,6 +146,7 @@ public class AmmortamentoCespiteService {
             dataCorrente = cespite.getDataVendita();
         }
         if (percAmm != null && percAmm != 0) {
+            double percAmmPrimoAnno = percAmm / 2;
             double residuo;
             if (optionalAmmortamentoCespite.isPresent()) {
                 AmmortamentoCespite ammortamentoCespite = optionalAmmortamentoCespite.get();
@@ -175,8 +169,16 @@ public class AmmortamentoCespiteService {
                 AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, 0, fondo, 0, residuo, dataCorrente);
                 ammortamentoCespiteList.add(a);
             } else {
+                double quotaDaSalvare;
                 double quota = cespite.getImporto() * (percAmm / 100);
-                double quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
+                double quotaPrimoAnno = cespite.getImporto() * (percAmmPrimoAnno / 100);
+                if (cespite.getFlPrimoAnno()) {
+                    Log.debug("Calcolo quota dimezzata!!!");
+                    quotaDaSalvare = quotaPrimoAnno * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
+                    percAmm = percAmm/2;
+                } else {
+                    quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
+                }
                 residuo = cespite.getImporto() - quotaDaSalvare;
                 AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), percAmm, quotaDaSalvare, 0, quotaDaSalvare, 0, residuo, dataCorrente);
                 calcolaSuperAmm(percAmm, a, cespite.getSuperAmm(), cespite.getImporto());

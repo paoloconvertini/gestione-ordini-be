@@ -33,7 +33,7 @@ public class PrimanotaService {
     public List<PrimanotaDto> getById(FiltroPrimanota f) {
         return Primanota.find("select p.datamovimento, p.numerodocumento, p.causale, p.gruppoconto, p.sottoconto, p.descrsuppl, p.importo, p.progrgenerale, p.protocollo, p.anno, p.giornale, p.progrprimanota from Primanota p" +
                                 " where p.giornale =:giornale AND p.anno =:anno AND p.protocollo =:protocollo",
-                Parameters.with("giornale", f.getGiornale()).and("anno", f.getAnno()).and("protocollo", f.getProtocollo()))
+                        Parameters.with("giornale", f.getGiornale()).and("anno", f.getAnno()).and("protocollo", f.getProtocollo()))
                 .project(PrimanotaDto.class).list();
     }
 
@@ -91,7 +91,7 @@ public class PrimanotaService {
                     "FROM Primanota p " +
                     "where anno =:a AND giornale ='' ", Parameters.with("a", date.getYear())).list();
             int protocollo;
-            if(primanotaList.isEmpty()){
+            if (primanotaList.isEmpty()) {
                 protocollo = 1;
             } else {
                 protocollo = Primanota.find("SELECT MAX(protocollo) + 1 " +
@@ -106,8 +106,8 @@ public class PrimanotaService {
                 int rigo = 1;
                 for (RegistroCespiteDto dto : cespiteDBDtos) {
                     listToSave.add(mapper.buildPrimanotaContabile("GVM", date, dto.getTipoCespite(), dto.getProgressivo1(), dto.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. Q.TA AMMORT. ORD.", dto.getAmmGruppo(), dto.getAmmConto(), dto.getQuota()));
-                    listToSave.add(mapper.buildPrimanotaContabile("GVM", date, dto.getTipoCespite(),  dto.getProgressivo1(), dto.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. FONDO AMMORT. ORD.", dto.getFondoGruppo(), dto.getFondoConto(), -dto.getQuota()));
-                    if(dto.getQuotaRivalutazione() != null){
+                    listToSave.add(mapper.buildPrimanotaContabile("GVM", date, dto.getTipoCespite(), dto.getProgressivo1(), dto.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. FONDO AMMORT. ORD.", dto.getFondoGruppo(), dto.getFondoConto(), -dto.getQuota()));
+                    if (dto.getQuotaRivalutazione() != null) {
                         listToSave.add(mapper.buildPrimanotaContabile("GVM", date, dto.getTipoCespite(), dto.getProgressivo1(), dto.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. Q.TA AMMORT. RIV.", dto.getAmmGruppo(), dto.getAmmConto(), dto.getQuotaRivalutazione()));
                         listToSave.add(mapper.buildPrimanotaContabile("GVM", date, dto.getTipoCespite(), dto.getProgressivo1(), dto.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. FONDO AMMORT. RIV.", dto.getFondoGruppo(), dto.getFondoConto(), -dto.getQuotaRivalutazione()));
                     }
@@ -122,7 +122,7 @@ public class PrimanotaService {
     }
 
     @Transactional
-    public void registraVendita(VenditaCespiteDto venditaCespiteDto) throws Exception{
+    public void registraVendita(VenditaCespiteDto venditaCespiteDto) throws Exception {
         try {
             List<Primanota> primanotaList = Primanota.find("anno = :a AND giornale=:g AND protocollo=:p",
                     Parameters.with("a", venditaCespiteDto.getAnno()).and("g", venditaCespiteDto.getGiornale())
@@ -131,7 +131,7 @@ public class PrimanotaService {
                     CategoriaCespite.find(" costoGruppo= :g AND costoConto =:c",
                             Parameters.with("g", p.getGruppoconto()).and("c", p.getSottoconto())).firstResultOptional().isPresent()
             ).findFirst();
-            if(optionalPrimanota.isEmpty()){
+            if (optionalPrimanota.isEmpty()) {
                 Log.error("Nessuna riga di prima nota trovata con conto cespite");
                 throw new Exception("Nessuna riga di prima nota trovata con conto cespite");
             } else {
@@ -147,7 +147,7 @@ public class PrimanotaService {
                 Map<String, Object> params = new HashMap<>();
                 params.put("id", venditaCespiteDto.getIdCespite());
                 Optional<RegistroCespiteDto> optionalCespite = Cespite.find(query, params).project(RegistroCespiteDto.class).singleResultOptional();
-                if(optionalCespite.isEmpty()){
+                if (optionalCespite.isEmpty()) {
                     Log.error("Error registra vendita: Cespite non trovato");
                     throw new RuntimeException("Error registra vendita: Cespite non trovato");
                 }
@@ -157,7 +157,7 @@ public class PrimanotaService {
                         "FROM Primanota p " +
                         "where anno =:a AND giornale ='' ", Parameters.with("a", dto.getDatamovimento().getYear())).list();
                 int protocollo;
-                if(primanotas.isEmpty()){
+                if (primanotas.isEmpty()) {
                     protocollo = 1;
                 } else {
                     protocollo = Primanota.find("SELECT MAX(protocollo) + 1 " +
@@ -172,25 +172,29 @@ public class PrimanotaService {
                 cespite.setIntestatarioVendita(dto.getDescrsuppl());
                 cespite.setImportoVendita(-dto.getImporto());
                 cespite.persist();
-                AmmortamentoCespite.delete("idAmmortamento =:id", Parameters.with("id", cespite.getId()));
-                List<AmmortamentoCespite> ammortamentoCespiteList;
-                if (cespite.getImportoRivalutazione() != null) {
-                    ammortamentoCespiteList = ammortamentoCespiteService.ricalcoloRivalutato(cespiteDto, cespite.getDataVendita());
+                AmmortamentoCespite.delete("idAmmortamento =:id and anno >=:a", Parameters.with("id", cespite.getId()).and("a", cespite.getDataVendita().getYear()));
+                List<AmmortamentoCespite> ammortamentoCespiteList = new ArrayList<>();
+                Optional<AmmortamentoCespite> optAmm = AmmortamentoCespite.find("idAmmortamento =:id AND anno = :a",
+                        Parameters.with("a", cespite.getDataVendita().getYear() - 1).and("id", cespite.getId())).firstResultOptional();
+                cespiteDto.setDataVendita(dto.getDatamovimento());
+                cespiteDto.setNumDocVend(dto.getNumerodocumento());
+                cespiteDto.setIntestatarioVendita(dto.getDescrsuppl());
+                cespiteDto.setImportoVendita(-dto.getImporto());
+                if (cespite.getImportoRivalutazione() != null && cespite.getImportoRivalutazione() != 0) {
+                    ammortamentoCespiteList.addAll(ammortamentoCespiteService.calcoloSingoloCespiteRivalutato(cespiteDto, cespite.getDataVendita(), optAmm));
                 } else {
-                    ammortamentoCespiteList = ammortamentoCespiteService.ricalcoloCespite(cespiteDto, cespite.getDataVendita());
+                    ammortamentoCespiteList.addAll(ammortamentoCespiteService.calcoloSingoloCespite(cespiteDto, cespite.getDataVendita(), optAmm));
                 }
-                if(ammortamentoCespiteList.isEmpty()){
-                    //TODO che si fa??
-                } else {
+                if (!ammortamentoCespiteList.isEmpty()) {
                     AmmortamentoCespite.persist(ammortamentoCespiteList);
                     Optional<AmmortamentoCespite> optionalAmmortamentoCespite = ammortamentoCespiteList.stream().filter(a -> a.getAnno().equals(cespite.getDataVendita().getYear())
                             && StringUtils.startsWith(a.getDescrizione(), "Ammortamento")).findFirst();
-                    if(optionalAmmortamentoCespite.isEmpty()){
+                    if (optionalAmmortamentoCespite.isEmpty()) {
                         optionalAmmortamentoCespite = ammortamentoCespiteList.stream()
                                 .filter(a -> StringUtils.startsWith(a.getDescrizione(), "Ammortamento"))
                                 .max(Comparator.comparing(AmmortamentoCespite::getAnno));
                     }
-                    if(optionalAmmortamentoCespite.isPresent()){
+                    if (optionalAmmortamentoCespite.isPresent()) {
                         AmmortamentoCespite a = optionalAmmortamentoCespite.get();
                         double quotaTot = a.getQuota() + (a.getQuotaRivalutazione() != null ? a.getQuotaRivalutazione() : 0);
                         listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. QUOTA AMMORTAMENTO", cespiteDto.getAmmGruppo(), cespiteDto.getAmmConto(), quotaTot));
@@ -199,7 +203,7 @@ public class PrimanotaService {
                         double plusMinus = cespite.getImportoVendita() - a.getResiduo();
                         Integer gruppoPlusMinus;
                         String contoPlusMinus;
-                        if(plusMinus < 0){
+                        if (plusMinus < 0) {
                             //ho una minus
                             gruppoPlusMinus = cespiteDto.getMinusGruppo();
                             contoPlusMinus = cespiteDto.getMinusConto();
@@ -207,7 +211,7 @@ public class PrimanotaService {
                             gruppoPlusMinus = cespiteDto.getPlusGruppo();
                             contoPlusMinus = cespiteDto.getMinusConto();
                         }
-                        listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++, "STORNO COSTO CESPITE", cespiteDto.getCostoGruppo(), cespiteDto.getCostoConto(), -(costoCespite - cespite.getImportoVendita()) ));
+                        listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++, "STORNO COSTO CESPITE", cespiteDto.getCostoGruppo(), cespiteDto.getCostoConto(), -(costoCespite - cespite.getImportoVendita())));
                         listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++, "STORNO FONDO AMM.", cespiteDto.getFondoGruppo(), cespiteDto.getFondoConto(), (a.getFondo() + a.getFondoRivalutazione())));
                         listToSave.add(mapper.buildPrimanotaContabile("GVV", cespite.getDataVendita(), cespite.getTipoCespite(), cespite.getProgressivo1(), cespite.getProgressivo2(), protocollo, rigo++, progrGenerale++,
                                 "RIL. PLUS/MINUSVALENZA", gruppoPlusMinus, contoPlusMinus,
