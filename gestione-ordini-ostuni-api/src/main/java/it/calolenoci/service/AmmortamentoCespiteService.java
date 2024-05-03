@@ -151,6 +151,9 @@ public class AmmortamentoCespiteService {
             if (optionalAmmortamentoCespite.isPresent()) {
                 AmmortamentoCespite ammortamentoCespite = optionalAmmortamentoCespite.get();
                 double quota = cespite.getImporto() * (percAmm / 100);
+                if(Objects.equals(cespite.getImporto(), ammortamentoCespite.getFondo())) {
+                    quota = 0;
+                }
                 double quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
                 double fondo = ammortamentoCespite.getFondo() + quotaDaSalvare;
                 double perc;
@@ -318,6 +321,9 @@ public class AmmortamentoCespiteService {
             double fondoRiv;
             if (optionalAmmortamentoCespite.isPresent()) {
                 AmmortamentoCespite ammortamentoCespite = optionalAmmortamentoCespite.get();
+                if(Objects.equals(cespite.getImporto(), ammortamentoCespite.getFondo())) {
+                    quota = 0;
+                }
                 quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
                 quotaRivDaSalvare = quotaRiv * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
                 fondo = ammortamentoCespite.getFondo() + quota;
