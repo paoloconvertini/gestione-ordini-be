@@ -59,7 +59,7 @@ public class AmmortamentoCespiteService {
                         Parameters.with("a", dataCorrente.getYear()).and("id", cespite.getId())).list();
                 Optional<AmmortamentoCespite> a = ammortamenti.stream().filter(am -> am.getAnno() == dataCorrente.getYear() - 1).findFirst();
                 if((a.isEmpty() && ammortamenti.isEmpty())  ||
-                        (a.isPresent() && (cespite.getImporto() + cespite.getImportoRivalutazione()) != (a.get().getFondo() + a.get().getFondoRivalutazione()))) {
+                        (a.isPresent() && (cespite.getImporto() + (cespite.getImportoRivalutazione() != null ? cespite.getImportoRivalutazione() : 0)) != (a.get().getFondo() + a.get().getFondoRivalutazione()))) {
                     if (cespite.getImportoRivalutazione() != null && cespite.getImportoRivalutazione() != 0) {
                         ammortamentoCespites.addAll(calcoloSingoloCespiteRivalutato(cespite, dataCorrente, a));
                     } else {
