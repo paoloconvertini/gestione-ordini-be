@@ -326,8 +326,8 @@ public class AmmortamentoCespiteService {
                 }
                 quotaDaSalvare = quota * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
                 quotaRivDaSalvare = quotaRiv * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
-                fondo = ammortamentoCespite.getFondo() + quota;
-                fondoRiv = ammortamentoCespite.getFondoRivalutazione() + quotaRiv;
+                fondo = ammortamentoCespite.getFondo() + quotaDaSalvare;
+                fondoRiv = ammortamentoCespite.getFondoRivalutazione() + quotaRivDaSalvare;
                 if (fondoRiv >= cespite.getImporto() + cespite.getImportoRivalutazione()) {
                     quotaRivDaSalvare = ammortamentoCespite.getResiduo();
                     residuo = 0;
@@ -562,7 +562,7 @@ public class AmmortamentoCespiteService {
                         .filter(c -> c.getAnno() == anno).mapToDouble(CespiteDto::getImporto).sum());
                 vendite.setValoreAggiornato(-(cespiteDtoList.stream()
                         .filter(c -> c.getImportoVendita() != null && c.getDataVend().getYear() == anno)
-                        .mapToDouble(CespiteDto::getImporto)
+                        .mapToDouble(ce -> ce.getImporto() + (ce.getImportoRivalutazione() != null ? ce.getImportoRivalutazione() : 0))
                         .sum()));
 
 
