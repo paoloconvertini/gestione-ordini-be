@@ -756,6 +756,7 @@ public class AmmortamentoCespiteService {
         }
     }
 
+    @Transactional
     public void createCespite(PrimanotaDto dto) {
         try {
             Optional<CategoriaCespite> categoriaCespiteOptional = CategoriaCespite.find("costoGruppo=:g AND costoConto=:c",
@@ -795,6 +796,40 @@ public class AmmortamentoCespiteService {
                 c.setAnno(dto.getAnno());
                 c.setFlPrimoAnno(Boolean.TRUE);
                 Log.debug("Data acquisto: " + c.getDataAcq() == null ? "non ho data acq" : "OK!!!");
+                c.setDataInizioCalcoloAmm(c.getDataAcq());
+                c.persist();
+                RegistroCespiteDto d = mapper.fromCespiteToRegistroCespiteDto(c, categoriaCespite);
+                ricalcoloCespite(d, c.getDataAcq());
+            } else {
+                Log.debug("Cespite non creato");
+            }
+        } catch (Exception e) {
+            Log.error("Error creating new cespite", e);
+            throw e;
+        }
+    }
+
+    @Transactional
+    public void createCespite(CespiteRequest dto) {
+        try {
+            Optional<CategoriaCespite> categoriaCespiteOptional = CategoriaCespite.find("tipoCespite=:g",
+                    Parameters.with("g", dto.getTipoCespite())).firstResultOptional();
+            if (categoriaCespiteOptional.isPresent()) {
+                CategoriaCespite categoriaCespite = categoriaCespiteOptional.get();
+                Cespite c = new Cespite();
+                c.setCespite(dto.getCespite());
+                c.setAttivo(Boolean.TRUE);
+                c.setImporto(dto.getImporto());
+                c.setDataAcq(dto.getDataAcq());
+                c.setNumDocAcq(dto.getNumDocAcq());
+
+                c.setTipoCespite(categoriaCespite.getTipoCespite());
+                Integer progr1 = Cespite.find("SELECT ISNULL(MAX(progressivo1) + 1, 1) FROM Cespite WHERE tipoCespite=:t",
+                        Parameters.with("t", categoriaCespite.getTipoCespite())).project(Integer.class).firstResult();
+                Integer progr2 = 1;
+                c.setProgressivo1(progr1);
+                c.setProgressivo2(progr2);
+                c.setFlPrimoAnno(dto.getFlPrimoAnno());
                 c.setDataInizioCalcoloAmm(c.getDataAcq());
                 c.persist();
                 RegistroCespiteDto d = mapper.fromCespiteToRegistroCespiteDto(c, categoriaCespite);

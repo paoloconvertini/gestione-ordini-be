@@ -92,6 +92,19 @@ public class CespiteResource {
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("Record salvati", false)).build();
     }
 
+    @Operation(summary = "salva cespite")
+    @POST
+    @PermitAll
+    @Produces(APPLICATION_JSON)
+    @Path("/creaCespite")
+    public Response creaCespite(CespiteRequest cespite) {
+        if (cespite == null) {
+            return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("no save", true)).build();
+        }
+        service.createCespite(cespite);
+        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Record salvati", false)).build();
+    }
+
     @DELETE
     @Transactional
     @Path("/{id}")
