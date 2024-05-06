@@ -721,11 +721,8 @@ public class AmmortamentoCespiteService {
                 update = Cespite.update("ammortamento = :p WHERE id =:id", Parameters.with("p", c.getPerc()).and("id", c.getId()));
             }
             if (StringUtils.isNotBlank(c.getTipoCespite())) {
-                Optional<Cespite> optCat = Cespite.find("tipoCespite = :t", Sort.descending("progressivo1"), Parameters.with("t", c.getTipoCespite())).firstResultOptional();
-                int progr1 = 1;
-                if (optCat.isPresent()) {
-                    progr1 = optCat.get().getProgressivo1() + 1;
-                }
+                Integer progr1 = Cespite.find("SELECT ISNULL(MAX(progressivo1) + 1, 1) FROM Cespite WHERE tipoCespite=:t",
+                        Parameters.with("t", c.getTipoCespite())).project(Integer.class).firstResult();
                 update = Cespite.update("tipoCespite = :t, progressivo1 =:p, progressivo2 = 1 WHERE id =:id",
                         Parameters.with("t", c.getTipoCespite()).and("p", progr1).and("id", c.getId()));
                 if (update > 0) {
