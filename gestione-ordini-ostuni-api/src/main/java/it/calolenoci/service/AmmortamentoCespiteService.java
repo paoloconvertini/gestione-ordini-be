@@ -577,8 +577,8 @@ public class AmmortamentoCespiteService {
                                 .get()));
 
                 vendite.setTotaleAmmortamento(-(ammortamentoCespitesVend.stream().mapToDouble(a -> a.getFondo() + a.getFondoRivalutazione()).sum()));
-                vendite.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() + vendite.getAmmortamentoOrdinario());
-                vendite.setFondoAmmortamentiRiv(inizioEsercizio.getFondoAmmortamentiRiv() + vendite.getAmmortamentoAnticipato());
+                vendite.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() - (ammortamentoCespitesVend.stream().mapToDouble(AmmortamentoCespite::getFondo).sum()));
+                vendite.setFondoAmmortamentiRiv(inizioEsercizio.getFondoAmmortamentiRiv() - (ammortamentoCespitesVend.stream().mapToDouble(AmmortamentoCespite::getFondoRivalutazione).sum()));
                 vendite.setFondoAmmortamentiTot(inizioEsercizio.getFondoAmmortamentiTot() + vendite.getTotaleAmmortamento());
                 FiscaleRiepilogoDto ammortamentiDeducibili = new FiscaleRiepilogoDto();
                 ammortamentiDeducibili.setAmmortamentoOrdinario(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == anno && a.getQuota() != null && StringUtils.startsWith(a.getDescrizione(), "Ammortamento")).mapToDouble(AmmortamentoCespite::getQuota).sum());
