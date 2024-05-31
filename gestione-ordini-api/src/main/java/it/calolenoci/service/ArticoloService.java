@@ -173,7 +173,7 @@ public class ArticoloService {
         AtomicBoolean hasProntoConsegna = new AtomicBoolean(false);
         AtomicBoolean hasCarico = new AtomicBoolean(false);
         list.forEach(dto -> {
-            if (!"C".equals(dto.getTipoRigo()) && !"AC".equals(dto.getTipoRigo())) {
+            if (!"AC".equals(dto.getTipoRigo())) {
                 if (!hasProntoConsegna.get() && dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna()) {
                     hasProntoConsegna.getAndSet(Boolean.TRUE);
                 }
