@@ -193,14 +193,23 @@ public class OrdineFornitoreService {
                             Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).list());
                      OrdineFornitore ordineFornitore = OrdineFornitore.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
                             Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).firstResult();
-                     GoOrdineFornitoreBK.persist(ordineFornitoreMapper.copyOAF(ordineFornitore));
+                    GoOrdineFornitoreBK bk = GoOrdineFornitoreBK.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                            Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).firstResult();
+                    if(bk == null) {
+                        GoOrdineFornitoreBK.persist(ordineFornitoreMapper.copyOAF(ordineFornitore));
+                    }
                     OrdineFornitore.deleteById(new FornitoreId(o.getAnno(), o.getSerie(), o.getProgressivo()));
                 });
                 if(!listaDettaglioDaEliminare.isEmpty()) {
                     Log.debug("Trovati " + listaDettaglioDaEliminare.size() + " articoli di OAF orfani! INIZIO CANCELLAZIONE DA DB...");
                     listaDettaglioDaEliminare.forEach( d -> {
                         Log.debug("Elimino progressivo/anno: " + d.getProgressivo()+"/"+d.getAnno());
-                        GoOrdineFornitoreDettaglioBK.persist(oafArticoloMapper.copyOAFDettaglio(d));
+                        GoOrdineFornitoreDettaglioBK bk =  GoOrdineFornitoreDettaglioBK.find("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
+                                Parameters.with("anno", d.getAnno()).and("serie", d.getSerie()).and("progressivo", d.getProgressivo())
+                                        .and("rigo", d.getRigo())).firstResult();
+                        if(bk == null) {
+                            GoOrdineFornitoreDettaglioBK.persist(oafArticoloMapper.copyOAFDettaglio(d));
+                        }
                         OrdineFornitoreDettaglio.delete("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
                                 Parameters.with("anno", d.getAnno()).and("serie", d.getSerie()).and("progressivo", d.getProgressivo())
                                         .and("rigo", d.getRigo()));
