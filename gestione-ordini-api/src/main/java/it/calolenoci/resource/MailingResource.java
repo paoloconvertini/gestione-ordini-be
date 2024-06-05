@@ -54,21 +54,20 @@ public class MailingResource {
 
     @Inject
     FetchScheduler scheduler;
+    @ConfigProperty(name = "admin.email")
+    String adminEmail;
 
     @CheckedTemplate
     static class Templates {
         public static native MailTemplate.MailTemplateInstance ordine(String venditore, Integer anno, String serie, Integer progressivo);
     }
 
-    @POST
+    @GET
     @Produces(APPLICATION_JSON)
     @PermitAll
-    @Path("/test/{d}")
-    public Response test(String d) {
-        Optional<PianoContiDto> optional = PianoConti.find("SELECT gruppoConto, sottoConto, indirizzo, localita, cap  " +
-                "FROM PianoConti " +
-                "WHERE gruppoConto = 1231 AND sottoConto =:sottoConto", Parameters.with("sottoConto", d)).project(PianoContiDto.class).firstResultOptional();
-        optional.ifPresent(pianoContiDto -> scheduler.updateLatLon(pianoContiDto));
+    @Path("/test")
+    public Response test() {
+        service.invioMailOrdiniDaConsegnare(this.adminEmail);
         return Response.ok().build();
     }
 

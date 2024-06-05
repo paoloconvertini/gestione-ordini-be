@@ -128,11 +128,12 @@ public class OrdineFornitoreService {
                         Log.debug("Chiave per articolo " + fornitoreDettaglio.getOArticolo() + ": " + fornitoreDettaglio.getAnno() + fornitoreDettaglio.getSerie()
                                 + fornitoreDettaglio.getProgressivo() + fornitoreDettaglio.getRigo());
                         ordineFornitoreDettaglios.add(fornitoreDettaglio);
-                        GoOrdineDettaglio.update("flagNonDisponibile = 'F', flagOrdinato = 'T' where anno = :anno " +
+                        int update = GoOrdineDettaglio.update("flagNonDisponibile = 'F', flagOrdinato = 'T' where anno = :anno " +
                                 "and serie = :serie and progressivo = :progressivo and rigo = :rigo", Parameters.with("anno", anno)
                                 .and("serie", serie).and("progressivo", progressivo).and("rigo", a.getRigo()));
-                        registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(anno, serie,
-                                progressivo, user, AzioneEnum.ORDINATO.getDesczrizione()
+                        Log.debug("Cambio flag ordinato per articolo: " + anno + "/" + serie + "/" + progressivo +  "-" + a.getRigo() +
+                                ". Aggiornati " + update + " articoli");
+                        registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(anno, serie, progressivo, user, AzioneEnum.ORDINATO.getDesczrizione()
                                 , a.getRigo(), null, null, null, null));
                     }
                     OrdineFornitoreDettaglio rigoRiferimento = createRigoRiferimento(serieOAF, prog, articoloDto.getIntestazioneCliente(),

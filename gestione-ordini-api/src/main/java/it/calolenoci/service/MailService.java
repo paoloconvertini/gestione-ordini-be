@@ -9,6 +9,7 @@ import it.calolenoci.dto.*;
 import it.calolenoci.entity.Veicolo;
 import it.calolenoci.enums.StatoOrdineEnum;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -93,7 +94,7 @@ public class MailService {
     }
 
 
-    public void invioMailOrdini() {
+    public void invioMailOrdini(String adminEmail) {
         try {
             final List<UserResponseDTO> venditori = userService.getVenditori();
             for (UserResponseDTO v : venditori) {
@@ -123,11 +124,13 @@ public class MailService {
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getIntestazione()) ? dto.getIntestazione() : "").append("</td>");
                     body.append("<td>").append(sdf.format(dto.getDataConferma())).append("</td>");
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getLocalita()) ? dto.getLocalita() : "").append(StringUtils.isNotBlank(dto.getProvincia()) ? " (" + dto.getProvincia() + ")" : "").append("</td>");
-                    body.append("<td>").append(dto.getStatus()).append("</td>").append("</tr>");
+                    body.append("<td>").append(StringUtils.isNotBlank(dto.getStatus()) ? dto.getStatus() : "").append("</td>").append("</tr>");
                 }
 
                 body.append("</tbody></table>");
-                mailer.send(Mail.withHtml(v.getEmail(), "Lista Ordini completi!", body.toString()));
+                Mail mail = Mail.withHtml(v.getEmail(), "Lista Ordini completi!", body.toString());
+                mail.addTo(adminEmail);
+                mailer.send(mail);
             }
 
         } catch (Exception e) {
@@ -144,7 +147,7 @@ public class MailService {
                 to.add(adminEmail);
             }
             for (UserResponseDTO v : venditori) {
-                to.add(v.getEmail());
+               to.add(v.getEmail());
             }
             StringBuilder body;
             FiltroOrdini filtro = new FiltroOrdini();
@@ -181,11 +184,11 @@ public class MailService {
                     }
                     body.append("<tr>").append("<td>").append(dto.getAnno()).append("/").append(dto.getSerie()).append("/").append(dto.getProgressivo()).append("</td>");
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getIntestazione()) ? dto.getIntestazione() : "").append("</td>");
-                    body.append("<td>").append(sdf.format(dto.getDataConferma())).append("</td>");
+                    body.append("<td>").append(dto.getDataConferma() != null ? sdf.format(dto.getDataConferma()) : "").append("</td>");
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getLocalita()) ? dto.getLocalita() : "").append(StringUtils.isNotBlank(dto.getProvincia()) ? " (" + dto.getProvincia() + ")" : "").append("</td>");
-                    body.append("<td>").append(dto.getStatus()).append("</td>")
+                    body.append("<td>").append(StringUtils.isNotBlank(dto.getStatus()) ? dto.getStatus() : "").append("</td>")
                             .append("<td>").append(descVeicolo).append("</td>")
-                            .append("<td>").append(dto.getDataConsegna().format(pattern)).append("</td>")
+                            .append("<td>").append(dto.getDataConsegna() != null ? dto.getDataConsegna().format(pattern) : "").append("</td>")
                             .append("</tr>");
                 }
                 body.append("</tbody></table>");

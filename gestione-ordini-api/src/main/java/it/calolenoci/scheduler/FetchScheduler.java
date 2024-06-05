@@ -97,7 +97,7 @@ public class FetchScheduler {
     @Scheduled(cron = "${cron.expr.invio.mail}")
     @Transactional
     public void invioMail() {
-        mailService.invioMailOrdini();
+        mailService.invioMailOrdini(this.adminEmail);
     }
 
     @Scheduled(cron = "${cron.expr.invio.mail.da.consegnare}")
