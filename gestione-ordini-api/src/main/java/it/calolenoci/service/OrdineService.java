@@ -65,7 +65,7 @@ public class OrdineService {
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
                 "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, go.hasCarico " +
-                ", go.dataNote, go.userNote, go.dataNoteLogistica, go.userNoteLogistica " +
+                ", go.dataNote, go.userNote, go.dataNoteLogistica, go.userNoteLogistica, o.createDate, o.updateDate " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' ";
@@ -86,7 +86,13 @@ public class OrdineService {
             map.put("venditore", filtro.getCodVenditore());
         }
         long inizioQuery = System.currentTimeMillis();
-        List<OrdineDTO> list = Ordine.find(query, Sort.descending("go.hasCarico", "dataConferma"), map).project(OrdineDTO.class).list();
+
+        Sort sorting = Sort.descending("go.hasCarico", "dataConferma");
+        if(StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())){
+           sorting = Sort.descending("o.updateDate", "go.hasCarico");
+        }
+        List<OrdineDTO> list = Ordine.find(query, sorting, map).project(OrdineDTO.class).list();
+
         long fineQuery = System.currentTimeMillis();
         Log.info("Query all ordini: " + (fineQuery - inizioQuery)/1000 + " sec");
         long fine = System.currentTimeMillis();

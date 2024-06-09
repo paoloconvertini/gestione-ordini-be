@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -115,6 +117,12 @@ public class Ordine extends PanacheEntityBase {
 
     @Column(name = "PROVDIVERSE")
     private String provdiverse;
+
+    @Column(name = "SYS_CREATEDATE")
+    private LocalDateTime createDate;
+
+    @Column(name = "SYS_UPDATEDATE")
+    private LocalDateTime updateDate;
 
     public static Ordine findByOrdineId(Integer anno, String serie,  Integer progressivo) {
         return find("anno = :anno and progressivo = :progressivo and serie = :serie",

@@ -98,6 +98,7 @@ public class MailService {
         try {
             final List<UserResponseDTO> venditori = userService.getVenditori();
             for (UserResponseDTO v : venditori) {
+                Log.debug("Invio mail a venditore: " + v.getEmail());
                 StringBuilder body;
                 FiltroOrdini filtro = new FiltroOrdini();
                 filtro.setCodVenditore(v.getCodVenditore());
@@ -129,7 +130,7 @@ public class MailService {
 
                 body.append("</tbody></table>");
                 Mail mail = Mail.withHtml(v.getEmail(), "Lista Ordini completi!", body.toString());
-                mail.addTo(adminEmail);
+                mail.addCc(adminEmail);
                 mailer.send(mail);
             }
 
@@ -142,13 +143,6 @@ public class MailService {
     public void invioMailOrdiniDaConsegnare(String adminEmail) {
         try {
             final List<UserResponseDTO> venditori = userService.getVenditori();
-            List<String> to = new ArrayList<>();
-            if (StringUtils.isNotEmpty(adminEmail)) {
-                to.add(adminEmail);
-            }
-            for (UserResponseDTO v : venditori) {
-               to.add(v.getEmail());
-            }
             StringBuilder body;
             FiltroOrdini filtro = new FiltroOrdini();
             filtro.setDataConsegnaStart(LocalDate.now().plusDays(1));
@@ -160,9 +154,13 @@ public class MailService {
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
             filtro.setStati(stati);
-            List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
             DateTimeFormatter pattern = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            if (!ordini.isEmpty()) {
+            for (UserResponseDTO v : venditori) {
+                filtro.setCodVenditore(v.getCodVenditore());
+                List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
+                if (ordini.isEmpty()) {
+                    continue;
+                }
                 body = new StringBuilder("<table style=\"font-family:Arial,sans-serif\"> " +
                         "        <thead>" +
                         "         <tr>" +
@@ -192,10 +190,11 @@ public class MailService {
                             .append("</tr>");
                 }
                 body.append("</tbody></table>");
-                Mail m = new Mail();
-                m.setTo(to);
-                m.setHtml(body.toString());
-                m.setSubject("Lista Ordini da consegnare!");
+                Mail m = Mail.withHtml(v.getEmail(), "Lista Ordini  da consegnare!", body.toString());
+                if (StringUtils.isNotEmpty(adminEmail)) {
+                    m.addCc(adminEmail);
+                }
+                Log.debug("Invio mail da consegnare!");
                 mailer.send(m);
             }
         } catch (Exception e) {
