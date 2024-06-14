@@ -210,12 +210,22 @@ public class FatturaService {
                     OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
                     fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
                     if(dto.getQtaDaConsegnare() != null) {
+                        List<FattureDettaglio> fatture = FattureDettaglio.find("Select f " +
+                                        "FROM FattureDettaglio f " +
+                                        "WHERE f.progrOrdCli = :id ",
+                                Parameters.with("id", dto.getProgrGenerale())).list();
+                        if(!fatture.isEmpty()){
+                            double sum = fatture.stream().mapToDouble(FattureDettaglio::getQuantita).sum();
+                            dto.setQtaDaConsegnare(dto.getQuantita() - sum);
+                        } else {
+                            dto.setQtaDaConsegnare(dto.getQuantita());
+                        }
                         Log.debug("*** CREA BOLLA, qta prontoConsegna = " + dto.getQtaProntoConsegna());
                         Log.debug("*** CREA BOLLA, qta ordinata = " + dto.getQuantita());
                         Log.debug("*** CREA BOLLA, qta da consegnare = " + dto.getQtaDaConsegnare());
                         Double qtaDaCons = ((dto.getQtaDaConsegnare() == null || (dto.getQtaDaConsegnare() != null && dto.getQtaDaConsegnare() < 0 )) ? 0 : dto.getQtaDaConsegnare());
                         Double qta = (qtaDaCons == 0) ? dto.getQuantita() : dto.getQtaDaConsegnare();
-                        if (qta - qtaDaCons == 0) {
+                        if (qta - dto.getQtaProntoConsegna() == 0) {
                             o.setSaldoAcconto("S");
                         } else {
                             o.setSaldoAcconto("A");
