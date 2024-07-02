@@ -195,6 +195,7 @@ public class FatturaService {
                 OrdineDettaglioDto dto = listaDaTrasformare.get(i);
                 Log.debug("*** CREA BOLLA, dto della lista da trasformare : " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo()
                 + ", articolo: " + dto.getFArticolo());
+                dto.setQtaProntoConsegna(dto.getQtaProntoConsegna() == null ? 0 : dto.getQtaProntoConsegna());
                 Magazzino m;
                 if (StringUtils.containsIgnoreCase(dto.getFDescrArticolo(), "Storno")) {
                     Log.debug("*** CREA BOLLA, lista da trasformare, riga storno : " + dto.getRigo());
