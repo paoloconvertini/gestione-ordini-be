@@ -11,6 +11,7 @@ import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.GoOrdineDettaglioMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -442,7 +443,16 @@ public class ArticoloService {
                 if(StringUtils.equals("1", codiceArticolo)) {
                     this.creaId(codiceArticolo, classeFornitore);
                 } else {
-                    codiceArticolo = String.valueOf(Long.parseLong(codiceArticolo)+1);
+                    try {
+                        boolean creatable = NumberUtils.isCreatable(codiceArticolo);
+
+                        codiceArticolo = String.valueOf(Long.parseLong(codiceArticolo)+1);
+                    } catch (Exception e) {
+                        Log.error("Errore nel parse del massimo progressivo articolo: " + codiceArticolo);
+                        errors.add("Articolo " + dto.getFDescrArticolo() + ". Errore nel parse del massimo progressivo articolo: " + codiceArticolo);
+                        continue;
+                    }
+
                 }
 
             }
