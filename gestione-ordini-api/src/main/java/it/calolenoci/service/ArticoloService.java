@@ -449,7 +449,7 @@ public class ArticoloService {
                         codiceArticolo = String.valueOf(Long.parseLong(codiceArticolo)+1);
                     } catch (Exception e) {
                         Log.error("Errore nel parse del massimo progressivo articolo: " + codiceArticolo);
-                        errors.add("Articolo " + dto.getFDescrArticolo() + ". Errore nel parse del massimo progressivo articolo: " + codiceArticolo);
+                        errors.add("Errore Articolo " + dto.getFDescrArticolo() + ". Modificare codice articolo fornitore: " + codiceArticolo);
                         continue;
                     }
 
@@ -511,7 +511,7 @@ public class ArticoloService {
         articolo.setClasseA1(classeFornitore);
         articolo.setCodiceIva("22");
         articolo.setFlTrattato("S");
-        articolo.setFlagLotto("S");
+        articolo.setFlagLotto("N");
         articolo.setFlagSconti("S");
     }
 
