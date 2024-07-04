@@ -446,8 +446,6 @@ public class ArticoloService {
                     this.creaId(codiceArticolo, classeFornitore);
                 } else {
                     try {
-                        boolean creatable = NumberUtils.isCreatable(codiceArticolo);
-
                         codiceArticolo = String.valueOf(Long.parseLong(codiceArticolo)+1);
                     } catch (Exception e) {
                         Log.error("Errore nel parse del massimo progressivo articolo: " + codiceArticolo);
