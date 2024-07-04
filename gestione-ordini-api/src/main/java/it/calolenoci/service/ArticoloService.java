@@ -1,6 +1,7 @@
 package it.calolenoci.service;
 
 import io.quarkus.logging.Log;
+import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
@@ -371,6 +372,7 @@ public class ArticoloService {
     }
 
     @Transactional
+    @TransactionConfiguration(timeout = 5000000)
     public CodificaArticoliDto codificaArticoli(List<OrdineDettaglioDto> list, String user) {
         CodificaArticoliDto codificaArticoliDto = new CodificaArticoliDto();
         codificaArticoliDto.setShowTCA(Boolean.FALSE);
