@@ -9,7 +9,7 @@ import java.util.Date;
 
 
 @Entity
-@Table(name = "ORDFOR2")
+@Table(name = "GO_ORDFOR2")
 @Getter
 @Setter
 @IdClass(FornitoreDettaglioId.class)

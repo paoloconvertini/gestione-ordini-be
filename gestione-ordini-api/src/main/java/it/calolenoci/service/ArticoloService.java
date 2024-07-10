@@ -19,6 +19,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -284,6 +285,12 @@ public class ArticoloService {
                         .and("warn", warnNoBolla.get())
                         .and("pc", hasProntoConsegna.get())
                         .and("hasCarico", hasCarico.get()));
+        Ordine.update("updateDate = :d " +
+                "where anno =:anno and serie =:serie and progressivo = :progressivo",
+                Parameters.with("anno", dto.getAnno())
+                        .and("serie", dto.getSerie())
+                        .and("progressivo", dto.getProgressivo())
+                        .and("d", LocalDateTime.now()));
         if (!ordineDettaglioList.isEmpty()) {
             OrdineDettaglio.persist(ordineDettaglioList);
         }

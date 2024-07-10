@@ -170,10 +170,19 @@ public class OrdineFornitoreService {
             Log.debug("Ordine da tenere:" + ordineDaTenere.getProgressivo());
             Integer ultimoRigo = findRigo(ordineDaTenere.getAnno(), ordineDaTenere.getSerie(), ordineDaTenere.getProgressivo());
             List<OrdineFornitoreDto> ordiniDaUnire = dtoList.stream().skip(1).toList();
+            List<OrdineFornitoreDto> ordiniDaUnireFiltrati = ordiniDaUnire.stream().filter(o -> {
+                if (Objects.equals(o.getAnno(), ordineDaTenere.getAnno()) && Objects.equals(o.getProgressivo(), ordineDaTenere.getProgressivo()) &&
+                        Objects.equals(o.getSerie(), ordineDaTenere.getSerie())) {
+                    Log.error("UnisciOrdini: Trovato duplicato nella lista da unire con progressivo: " + o.getProgressivo() + " e serie: "
+                            + o.getSerie() + " e anno: " + o.getAnno());
+                    return false;
+                }
+                return true;
+            }).toList();
             int count = ultimoRigo + 1;
             int update = 0;
             List<OrdineFornitoreDettaglio> list = new ArrayList<>();
-            ordiniDaUnire.forEach(dto ->
+            ordiniDaUnireFiltrati.forEach(dto ->
                     list.addAll(OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
                                     Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo()))
                             .list()));
@@ -189,7 +198,7 @@ public class OrdineFornitoreService {
             if (update != 0) {
                 Log.info("Aggiornati " + update + " articoli");
                 List<OrdineFornitoreDettaglio> listaDettaglioDaEliminare = new ArrayList<>();
-                ordiniDaUnire.forEach(o -> {
+                ordiniDaUnireFiltrati.forEach(o -> {
                 listaDettaglioDaEliminare.addAll(OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
                             Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).list());
                      OrdineFornitore ordineFornitore = OrdineFornitore.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
