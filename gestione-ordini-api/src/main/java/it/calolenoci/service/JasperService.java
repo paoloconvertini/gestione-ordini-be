@@ -27,6 +27,9 @@ public class JasperService {
     @ConfigProperty(name = "ordini.path")
     String pathReport;
 
+    @ConfigProperty(name = "lista.carico.path")
+    String pathListaCarico;
+
     @Inject
     OrdineClienteReportMapper mapper;
 
@@ -139,6 +142,41 @@ public class JasperService {
             }
         }
         return null;
+    }
+
+    public void createReport(List<ListaCarichiDto> list, String destFileName) throws JRException, IOException {
+
+
+        // 1. compile template ".jrxml" file
+        JasperReport jasperReport = compileReport("ListaCarico.jrxml");
+
+        // 2. parameters "empty"
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("totPeso", list.stream().mapToDouble(ListaCarichiDto::getPeso).sum());
+        parameters.put("numConv", StringUtils.removeEnd(destFileName, ".pdf"));
+
+        // 3. datasource "java object"
+        JRDataSource dataSource = getDataSource(list);
+
+        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+        File folderDest = new File(pathListaCarico);
+        if (!folderDest.exists()) {
+            if (!folderDest.mkdirs()) {
+                Log.error("Errore creazione sotto cartelle report");
+            }
+        }
+        File f = new File(destFileName);
+        if (!f.exists()) {
+            try {
+                if (!f.createNewFile()) {
+                    Log.info("File " + f.getName() + " already exists");
+                }
+            } catch (IOException ex) {
+                Log.error("Errore creazione file e cartelle report", ex);
+            }
+        }
+        JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
+        Files.move(f.getAbsoluteFile().toPath(), Path.of(folderDest + "/" + destFileName), StandardCopyOption.REPLACE_EXISTING);
     }
 
     private JasperReport compileReport(String reportName) {

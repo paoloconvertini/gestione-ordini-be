@@ -1,0 +1,12 @@
+INSERT INTO GO_DEPOSITO (ID, NOME)
+VALUES (N'1', N'Fratelli Fascati');
+
+INSERT INTO GO_DEPOSITO (ID, NOME)
+VALUES (N'2', N'Franco Fabbrica');
+
+INSERT INTO GO_DEPOSITO (ID, NOME)
+VALUES (N'3', N'Via Aldo Moro');
+
+INSERT INTO GO_DEPOSITO (ID, NOME)
+VALUES (N'4', N'Via Regina Pacis');
+
