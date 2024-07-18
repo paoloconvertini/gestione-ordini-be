@@ -14,10 +14,10 @@ import javax.persistence.*;
 @Setter
 public class Deposito extends PanacheEntityBase {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id", nullable = false)
     private Long id;
+
     @Column(name = "NOME", nullable = false, length = 500)
     private String nome;
 

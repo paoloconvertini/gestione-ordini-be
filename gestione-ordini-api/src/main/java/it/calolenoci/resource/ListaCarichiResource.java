@@ -1,5 +1,6 @@
 package it.calolenoci.resource;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
@@ -73,8 +74,11 @@ public class ListaCarichiResource {
     @RolesAllowed({ADMIN, VENDITORE, AMMINISTRATIVO})
     @Path("/salva")
     public Response salva(ListaCarichiDto dto) {
-        service.salvaCarico(dto);
-        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Record salvati", false)).build();
+        if(service.salvaCarico(dto)) {
+            return Response.status(Response.Status.CREATED).entity(new ResponseDto("Record salvati", false)).build();
+        } else {
+            return  Response.noContent().entity(new ResponseDto("Numero ordine, " + dto.getNumeroOrdine() + ", già presente", true)).build();
+        }
     }
 
     @POST
@@ -125,6 +129,45 @@ public class ListaCarichiResource {
                         Parameters.with("s", "%"+search+"%")).project(DizionarioDto.class).list()).build();
     }
 
+    @Operation(summary = "Returns all depositi")
+    @GET
+    @Path("/depositi")
+    @RolesAllowed({ADMIN, VENDITORE, AMMINISTRATIVO})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Deposito.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Deposito")
+    @Consumes(APPLICATION_JSON)
+    public Response depositi() {
+        return Response.ok(Deposito.find("select id, nome FROM Deposito order by nome")
+                .project(DizionarioDto.class).list()).build();
+    }
+
+    @POST
+    @Transactional
+    @Path("/depositi")
+    @APIResponse(responseCode = "200", description = "Role salvato con successo")
+    public Response saveDeposito(DizionarioDto dto) {
+        Deposito d = Deposito.findById(dto.getId());
+        if(d != null) {
+            d.setNome(dto.getNome());
+            d.persist();
+        } else {
+            Deposito entity = new Deposito();
+            Long id = Deposito.find("select ISNULL(MAX(id)+1, 1) from Deposito").project(Long.class).firstResult();
+            entity.setId(id);
+            entity.setNome(dto.getNome());
+            entity.persist();
+        }
+        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Deposito salvato", false)).build();
+    }
+
+    @DELETE
+    @Transactional
+    @Path("/{id}")
+    public Response delete(Long id) {
+        this.findById(id).delete();
+        return Response.ok().entity(new ResponseDto("Deposito eliminato", false)).build();
+    }
+
     @Operation(summary = "Returns all trasportatori")
     @GET
     @Path("/cercaTrasportatore/{search}")
@@ -137,4 +180,11 @@ public class ListaCarichiResource {
                         Parameters.with("s", "%"+search+"%")).project(DizionarioDto.class).list()).build();
     }
 
+    private Deposito findById(Long id) {
+        Deposito entity = Deposito.findById(id);
+        if(entity == null) {
+            throw new NotFoundException();
+        }
+        return entity;
+    }
 }

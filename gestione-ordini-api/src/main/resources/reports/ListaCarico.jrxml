@@ -111,7 +111,7 @@ AND c.contocliente = pc.sottoconto]]>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI"/>
 	</field>
 	<title>
-		<band height="130" splitType="Stretch">
+		<band height="138" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<rectangle>
 				<reportElement x="342" y="0" width="209" height="89" uuid="3e59e8bb-3d48-47fa-8a3b-493919d4b5b0"/>
@@ -168,6 +168,13 @@ Tel 0831-377180   Fax 0831-383047
 				</textElement>
 				<textFieldExpression><![CDATA["Pag. " + $V{PAGE_NUMBER}]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement x="200" y="100" width="182" height="30" uuid="2f44c440-4ae6-4de6-b3c3-725a0dfed5ac"/>
+				<textElement textAlignment="Center">
+					<font size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LISTA DI CARICO]]></text>
+			</staticText>
 		</band>
 	</title>
 	<columnHeader>

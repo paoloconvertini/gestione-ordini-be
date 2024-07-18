@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
@@ -50,7 +51,12 @@ public class ListaCarichiService {
     }
 
     @Transactional
-    public void salvaCarico(ListaCarichiDto dto) {
+    public boolean salvaCarico(ListaCarichiDto dto) {
+        Optional<ListaCarichi> carico = ListaCarichi.find("numeroOrdine = :n",
+                Parameters.with("n", dto.getNumeroOrdine())).firstResultOptional();
+        if(carico.isPresent()){
+            return false;
+        }
         if (dto.getId() != null) {
             ListaCarichi.update("azienda =:a, numeroOrdine = :n, deposito =:d, " +
                             "dataDisponibile =:dt, peso =:p, trasportatore = :t " +
@@ -63,6 +69,7 @@ public class ListaCarichiService {
         } else {
             ListaCarichi.persist(mapper.fromDtoToEntity(dto));
         }
+        return true;
     }
 
     public ListaCarichiDto getCarico(Long id) {
