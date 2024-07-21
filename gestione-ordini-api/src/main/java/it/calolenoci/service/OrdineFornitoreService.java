@@ -313,10 +313,10 @@ public class OrdineFornitoreService {
         ordineFornitoreDettaglio.setFScontoP(0D);
     }
 
-    public List<OrdineFornitoreDto> findAllByStatus(String status) throws ParseException {
+    public List<OrdineFornitoreDto> findAllByStatus(FiltroOrdini filtro) throws ParseException {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
                 "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate, go.note";
-        if (StringUtils.isBlank(status)) {
+        if (filtro != null && StringUtils.isBlank(filtro.getStatus())) {
             query += " , go.flInviato, go.dataInvio ";
         }
         query += " FROM OrdineFornitore o " +
@@ -325,9 +325,12 @@ public class OrdineFornitoreService {
                 + " WHERE o.dataOrdine >= :dataConfig ";
         Map<String, Object> params = new HashMap<>();
         params.put("dataConfig", sdf.parse(dataCongig));
-        if (StringUtils.isNotBlank(status)) {
+        if(filtro != null && filtro.getFlInviato()){
+            query += " AND go.flInviato IS null OR go.flInviato = false " ;
+        }
+        if (filtro != null && StringUtils.isNotBlank(filtro.getStatus())) {
             query += " AND  o.provvisorio =:stato";
-            params.put("stato", status);
+            params.put("stato", filtro.getStatus());
             return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine")
                             , params)
                     .project(OrdineFornitoreDto.class).list();
@@ -336,6 +339,8 @@ public class OrdineFornitoreService {
             return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"), params)
                     .project(OrdineFornitoreDto.class).list();
         }
+
+
     }
 
     @Transactional

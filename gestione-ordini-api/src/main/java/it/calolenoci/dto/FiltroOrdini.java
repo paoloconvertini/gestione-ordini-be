@@ -29,4 +29,6 @@ public class FiltroOrdini implements Serializable {
 
     private LocalDate dataConsegnaEnd;
 
+    private Boolean flInviato;
+
 }

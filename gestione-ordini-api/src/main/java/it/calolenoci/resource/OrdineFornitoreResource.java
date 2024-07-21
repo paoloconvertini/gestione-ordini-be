@@ -2,6 +2,7 @@ package it.calolenoci.resource;
 
 import io.quarkus.logging.Log;
 import it.calolenoci.dto.CollegaOAFDto;
+import it.calolenoci.dto.FiltroOrdini;
 import it.calolenoci.dto.OrdineFornitoreDto;
 import it.calolenoci.dto.ResponseDto;
 import it.calolenoci.entity.Ordine;
@@ -130,13 +131,13 @@ public class OrdineFornitoreResource {
     }
 
     @Operation(summary = "Returns all the ordini from the database")
-    @GET
-    @Path("/{status}")
+    @POST
+    @Path("/getAll")
     @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
-    public Response getAllOrdini(String status) throws ParseException {
-        return Response.ok(service.findAllByStatus(status)).build();
+    public Response getAllOrdini(FiltroOrdini filtro) throws ParseException {
+        return Response.ok(service.findAllByStatus(filtro)).build();
     }
 
     @Operation(summary = "Returns all the ordini from the database")

@@ -87,7 +87,7 @@ public class ListaCarichiService {
     public String creaReport(List<ListaCarichiDto> list) {
         long inizio = System.currentTimeMillis();
 
-        Optional<Long> optional = ListaCarichi.find("select ISNULL(numeroConvalida, 0) from ListaCarichi where dataConvalida  = :d", Parameters.with("d", LocalDate.now()))
+        Optional<Long> optional = ListaCarichi.find("select ISNULL(MAX(numeroConvalida), 0) from ListaCarichi where dataConvalida  = :d", Parameters.with("d", LocalDate.now()))
                 .project(Long.class).firstResultOptional();
         Long progressivoGiorno;
         if(optional.isEmpty()){
