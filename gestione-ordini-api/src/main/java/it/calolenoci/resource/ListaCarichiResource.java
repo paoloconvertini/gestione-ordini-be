@@ -77,7 +77,7 @@ public class ListaCarichiResource {
         if(service.salvaCarico(dto)) {
             return Response.status(Response.Status.CREATED).entity(new ResponseDto("Record salvati", false)).build();
         } else {
-            return  Response.noContent().entity(new ResponseDto("Numero ordine, " + dto.getNumeroOrdine() + ", già presente", true)).build();
+            return  Response.ok().entity(new ResponseDto("Numero ordine, " + dto.getNumeroOrdine() + ", già presente", true)).build();
         }
     }
 
