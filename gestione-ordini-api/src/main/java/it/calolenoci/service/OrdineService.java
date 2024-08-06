@@ -369,11 +369,13 @@ public class OrdineService {
         }
         List<OrdineDTO> result = Ordine.find(query, map).project(OrdineDTO.class).list();
         result.addAll(Ordine.find(queryPregressi, mapPregressi).project(OrdineDTO.class).list());
-        if(filtro.getDataConsegnaEnd() != null){
-            result.sort(Comparator.comparing(OrdineDTO::getDataConsegna).thenComparing(OrdineDTO::getVeicolo)
-                    .thenComparing(OrdineDTO::getOraConsegna).thenComparing(OrdineDTO::getOrdine));
-        }
-        return result;
+        return result.stream()
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(OrdineDTO::getDataConsegna, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(OrdineDTO::getVeicolo, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(OrdineDTO::getOraConsegna, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(OrdineDTO::getOrdine, Comparator.nullsLast(Comparator.naturalOrder()))
+                ).toList();
     }
 
     public List<OrdineDTO> findAllRiservati(FiltroOrdini filtro) throws ParseException {
