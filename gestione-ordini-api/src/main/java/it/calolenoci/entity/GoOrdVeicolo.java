@@ -31,4 +31,10 @@ public class GoOrdVeicolo extends PanacheEntityBase {
     @Column(name = "FL_VENDITORE", nullable = false, columnDefinition = "CHAR(1)")
     @Type(type = "org.hibernate.type.TrueFalseType")
     private Boolean venditore;
+
+    @Column(name = "ora_consegna")
+    private Character oraConsegna;
+
+    @Column(name = "ordine")
+    private Long ordine;
 }

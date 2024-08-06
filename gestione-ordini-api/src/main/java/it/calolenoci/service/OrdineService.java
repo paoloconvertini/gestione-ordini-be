@@ -309,7 +309,7 @@ public class OrdineService {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, o.indirdiverse, o.locdiverse, o.provdiverse, " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine,  " +
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
-                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, v.idVeicolo, v.dataConsegna, v.venditore " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, v.idVeicolo, v.dataConsegna, v.venditore, v.oraConsegna, v.ordine " +
                 ", go.dataNote, go.userNote, go.dataNoteLogistica, go.userNoteLogistica " +
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
@@ -318,7 +318,7 @@ public class OrdineService {
 
         String queryPregressi = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, o.indirdiverse, o.locdiverse, o.provdiverse,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento, p.localita, p.provincia, p.latitudine, p.longitudine, " +
-                "p.telefono,  p.cellulare, v.idVeicolo, v.dataConsegna, v.venditore  " +
+                "p.telefono,  p.cellulare, v.idVeicolo, v.dataConsegna, v.venditore, v.oraConsegna, v.ordine  " +
                 "FROM Ordine o " +
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                 "JOIN GoOrdVeicolo v ON v.id.anno = o.anno AND v.id.serie = o.serie AND v.id.progressivo = o.progressivo " +
@@ -370,7 +370,8 @@ public class OrdineService {
         List<OrdineDTO> result = Ordine.find(query, map).project(OrdineDTO.class).list();
         result.addAll(Ordine.find(queryPregressi, mapPregressi).project(OrdineDTO.class).list());
         if(filtro.getDataConsegnaEnd() != null){
-            result.sort(Comparator.comparing(OrdineDTO::getDataConsegna).thenComparing(OrdineDTO::getVeicolo));
+            result.sort(Comparator.comparing(OrdineDTO::getDataConsegna).thenComparing(OrdineDTO::getVeicolo)
+                    .thenComparing(OrdineDTO::getOraConsegna).thenComparing(OrdineDTO::getOrdine));
         }
         return result;
     }
@@ -429,6 +430,8 @@ public class OrdineService {
             if(dto.getDataConsegna() != null) {
                 goOrdVeicolo.setDataConsegna(dto.getDataConsegna());
             }
+            goOrdVeicolo.setOraConsegna(dto.getOraConsegna());
+            goOrdVeicolo.setOrdine(dto.getOrdine());
             goOrdVeicolo.setVenditore(StringUtils.isNotBlank(codVenditore));
             long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
                     , Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
