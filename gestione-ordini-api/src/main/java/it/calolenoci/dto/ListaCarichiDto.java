@@ -47,4 +47,11 @@ public class ListaCarichiDto implements Serializable {
         this.dataConvalida = dataConvalida;
         this.numeroConvalida = numeroConvalida;
     }
+
+
+    // findConvalide
+    public ListaCarichiDto(LocalDate dataConvalida, Long numeroConvalida) {
+        this.dataConvalida = dataConvalida;
+        this.numeroConvalida = numeroConvalida;
+    }
 }

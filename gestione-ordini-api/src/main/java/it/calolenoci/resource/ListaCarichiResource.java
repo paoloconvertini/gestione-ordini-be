@@ -56,6 +56,28 @@ public class ListaCarichiResource {
         return Response.ok(service.findCarichi(filtroCarichi)).build();
     }
 
+    @Operation(summary = "Returns all the carichi from the database")
+    @POST
+    @RolesAllowed({ADMIN, VENDITORE, AMMINISTRATIVO})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = ListaCarichi.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Carichi")
+    @Consumes(APPLICATION_JSON)
+    @Path("/inviati")
+    public Response carichiInviati(FiltroCarichi filtroCarichi) {
+        return Response.ok(service.findCarichiInviati(filtroCarichi)).build();
+    }
+
+    @Operation(summary = "Returns all the carichi from the database")
+    @POST
+    @RolesAllowed({ADMIN, VENDITORE, AMMINISTRATIVO})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = ListaCarichi.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Carichi")
+    @Consumes(APPLICATION_JSON)
+    @Path("/convalide")
+    public Response convalide(FiltroCarichi filtroCarichi) {
+        return Response.ok(service.findConvalide(filtroCarichi)).build();
+    }
+
     @Operation(summary = "Returns the carico by id")
     @GET
     @RolesAllowed({ADMIN, VENDITORE, AMMINISTRATIVO})

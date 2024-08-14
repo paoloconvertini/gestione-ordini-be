@@ -18,6 +18,10 @@ public class FiltroCarichi implements Serializable {
 
     private LocalDate dataDisponibile;
 
+    private LocalDate dataConvalida;
+
+    private Long numeroConvalida;
+
 
 
 
