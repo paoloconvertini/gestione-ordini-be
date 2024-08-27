@@ -22,6 +22,10 @@ public class FiltroCarichi implements Serializable {
 
     private Long numeroConvalida;
 
+    private String numeroOrdine;
+
+    private String fornitore;
+
 
 
 

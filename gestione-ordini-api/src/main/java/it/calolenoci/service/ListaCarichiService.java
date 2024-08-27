@@ -142,7 +142,15 @@ public class ListaCarichiService {
             params.put("dt", filtroCarichi.getDataConvalida());
             query += "AND l.dataConvalida = :dt ";
         }
-        query += "ORDER BY l.dataConvalida desc";
+        if(StringUtils.isNotEmpty(filtroCarichi.getFornitore())){
+            params.put("f", "%" + filtroCarichi.getFornitore() + "%");
+            query += "AND l.azienda LIKE :f ";
+        }
+        if(StringUtils.isNotEmpty(filtroCarichi.getNumeroOrdine())){
+            params.put("n", "%" + filtroCarichi.getNumeroOrdine() + "%");
+            query += "AND l.numeroOrdine LIKE :n ";
+        }
+        query += " ORDER BY l.dataConvalida desc";
         return ListaCarichi.find(query, params).project(ListaCarichiDto.class).list();
     }
 }
