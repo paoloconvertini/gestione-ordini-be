@@ -98,6 +98,10 @@ public class OrdineDettaglioDto implements Serializable {
 
     private Integer progressivoMag;
 
+    private Double qtyuser1;
+
+    private Date datauser1;
+
     //private String goFArticolo;
 
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo, String serie, String fArticolo,
@@ -207,7 +211,6 @@ public class OrdineDettaglioDto implements Serializable {
                               String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
                               Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
-                              //String goFArticolo,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
                               Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
                               String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna, String noteOrdCli,
@@ -252,11 +255,62 @@ public class OrdineDettaglioDto implements Serializable {
         this.progressivoMag = progressivoMag;
         this.intestazione = intestazione;
     }
+
+    //findArticoliById
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
                               String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
                               Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
-                              //String goFArticolo,
+                              String tono, Double qtyuser1, Date datauser1, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
+                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
+                              String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna, String noteOrdCli,
+                              Date dataDoc, String numDoc, Date dataCarico, Integer annoMag, String serieMag, Integer progressivoMag,
+                              String intestazione) {
+        this.anno = anno;
+        this.progressivo = progressivo;
+        this.progrGenerale = progrGenerale;
+        this.tipoRigo = tipoRigo;
+        this.rigo = rigo;
+        this.serie = serie;
+        this.fArticolo = fArticolo;
+        this.codArtFornitore = codArtFornitore;
+        this.fDescrArticolo = fDescrArticolo;
+        this.quantita = quantita;
+        this.prezzo = prezzo;
+        this.prezzoScontato = prezzoScontato;
+        this.fUnitaMisura = fUnitaMisura;
+        this.flagRiservato = flagRiservato;
+        this.flagNonDisponibile = flagNonDisponibile;
+        this.flagOrdinato = flagOrdinato;
+        this.flagConsegnato = flagConsegnato;
+        this.tono = tono;
+        this.qtyuser1 = qtyuser1;
+        this.datauser1 = datauser1;
+        this.articolo = articolo;
+        this.annoOAF = annoOAF;
+        this.serieOAF = serieOAF;
+        this.progressivoOAF = progressivoOAF;
+        this.dataOrdineOAF = dataOrdineOAF;
+        this.qtaConsegnatoSenzaBolla = qtaConsegnatoSenzaBolla;
+        this.qtaDaConsegnare = qtaDaConsegnare;
+        this.flBolla = flBolla;
+        this.note = note;
+        this.qtaRiservata = qtaRiservata;
+        this.flProntoConsegna = flProntoConsegna;
+        this.qtaProntoConsegna = qtaProntoConsegna;
+        this.noteOrdCli = noteOrdCli;
+        this.dataDoc = dataDoc;
+        this.numDoc = numDoc;
+        this.dataCarico = dataCarico;
+        this.annoMag = annoMag;
+        this.serieMag = serieMag;
+        this.progressivoMag = progressivoMag;
+        this.intestazione = intestazione;
+    }
+    public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
+                              String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
+                              Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,
+                              Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
                               Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
                               String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna, String noteOrdCli,

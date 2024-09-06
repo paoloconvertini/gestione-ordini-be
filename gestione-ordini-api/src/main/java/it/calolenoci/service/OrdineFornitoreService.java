@@ -131,7 +131,7 @@ public class OrdineFornitoreService {
                         int update = GoOrdineDettaglio.update("flagNonDisponibile = 'F', flagOrdinato = 'T' where anno = :anno " +
                                 "and serie = :serie and progressivo = :progressivo and rigo = :rigo", Parameters.with("anno", anno)
                                 .and("serie", serie).and("progressivo", progressivo).and("rigo", a.getRigo()));
-                        Log.debug("Cambio flag ordinato per articolo: " + anno + "/" + serie + "/" + progressivo +  "-" + a.getRigo() +
+                        Log.debug("Cambio flag ordinato per articolo: " + anno + "/" + serie + "/" + progressivo + "-" + a.getRigo() +
                                 ". Aggiornati " + update + " articoli");
                         registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(anno, serie, progressivo, user, AzioneEnum.ORDINATO.getDesczrizione()
                                 , a.getRigo(), null, null, null, null));
@@ -199,25 +199,25 @@ public class OrdineFornitoreService {
                 Log.info("Aggiornati " + update + " articoli");
                 List<OrdineFornitoreDettaglio> listaDettaglioDaEliminare = new ArrayList<>();
                 ordiniDaUnireFiltrati.forEach(o -> {
-                listaDettaglioDaEliminare.addAll(OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                    listaDettaglioDaEliminare.addAll(OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
                             Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).list());
-                     OrdineFornitore ordineFornitore = OrdineFornitore.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                    OrdineFornitore ordineFornitore = OrdineFornitore.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
                             Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).firstResult();
                     GoOrdineFornitoreBK bk = GoOrdineFornitoreBK.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
                             Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).firstResult();
-                    if(bk == null) {
+                    if (bk == null) {
                         GoOrdineFornitoreBK.persist(ordineFornitoreMapper.copyOAF(ordineFornitore));
                     }
                     OrdineFornitore.deleteById(new FornitoreId(o.getAnno(), o.getSerie(), o.getProgressivo()));
                 });
-                if(!listaDettaglioDaEliminare.isEmpty()) {
+                if (!listaDettaglioDaEliminare.isEmpty()) {
                     Log.debug("Trovati " + listaDettaglioDaEliminare.size() + " articoli di OAF orfani! INIZIO CANCELLAZIONE DA DB...");
-                    listaDettaglioDaEliminare.forEach( d -> {
-                        Log.debug("Elimino progressivo/anno: " + d.getProgressivo()+"/"+d.getAnno());
-                        GoOrdineFornitoreDettaglioBK bk =  GoOrdineFornitoreDettaglioBK.find("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
+                    listaDettaglioDaEliminare.forEach(d -> {
+                        Log.debug("Elimino progressivo/anno: " + d.getProgressivo() + "/" + d.getAnno());
+                        GoOrdineFornitoreDettaglioBK bk = GoOrdineFornitoreDettaglioBK.find("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
                                 Parameters.with("anno", d.getAnno()).and("serie", d.getSerie()).and("progressivo", d.getProgressivo())
                                         .and("rigo", d.getRigo())).firstResult();
-                        if(bk == null) {
+                        if (bk == null) {
                             GoOrdineFornitoreDettaglioBK.persist(oafArticoloMapper.copyOAFDettaglio(d));
                         }
                         OrdineFornitoreDettaglio.delete("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
@@ -325,8 +325,8 @@ public class OrdineFornitoreService {
                 + " WHERE o.dataOrdine >= :dataConfig ";
         Map<String, Object> params = new HashMap<>();
         params.put("dataConfig", sdf.parse(dataCongig));
-        if(filtro != null && filtro.getFlInviato()){
-            query += " AND go.flInviato IS null OR go.flInviato = false " ;
+        if (filtro != null && filtro.getFlInviato()) {
+            query += " AND go.flInviato IS null OR go.flInviato = false ";
         }
         if (filtro != null && StringUtils.isNotBlank(filtro.getStatus())) {
             query += " AND  o.provvisorio =:stato";
@@ -472,14 +472,14 @@ public class OrdineFornitoreService {
             Optional<OrdineFornitoreDettaglio> oaf = OrdineFornitoreDettaglio.find("anno =:a and serie =:s AND progressivo = :pr AND oArticolo = :art",
                     Parameters.with("a", dto.getAnnoOAF()).and("s", dto.getSerieOAF())
                             .and("pr", dto.getProgressivoOAF()).and("art", dto.getCodice())).firstResultOptional();
-            if(oaf.isEmpty()) {
+            if (oaf.isEmpty()) {
                 result.setError(Boolean.TRUE);
                 result.setMsg("Ordine a fornitore non trovato con questo identificativo: " +
                         dto.getAnnoOAF() + "/" + dto.getSerieOAF() + "/" + dto.getProgressivoOAF());
                 result.setCode(Response.Status.NO_CONTENT);
                 return result;
             }
-            if(!oaf.get().getOQuantita().equals(dto.getQta())) {
+            if (!oaf.get().getOQuantita().equals(dto.getQta())) {
                 result.setError(Boolean.TRUE);
                 result.setMsg("ATTENZIONE: Le quantità tra articolo cliente e ordine a fornitore non corrispondono. ");
                 result.setCode(Response.Status.CONFLICT);
@@ -520,10 +520,77 @@ public class OrdineFornitoreService {
             return result;
         }
     }
+
     public List<OAFMonitorDto> getOrdiniByOperatore() throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date d = sdf.parse("2024-02-21");
         return OrdineFornitore.find("SELECT createUser, COUNT(*) FROM OrdineFornitore WHERE createDate>=:d GROUP BY createUser",
                 Parameters.with("d", d)).project(OAFMonitorDto.class).list();
+    }
+
+    @Transactional
+    public ResponseDto inserisciDataConsegna(AggiornaDataDto dto) {
+        ResponseDto result = new ResponseDto();
+        try {
+            Optional<OrdineDettaglio> opt = OrdineDettaglio.find("progrGenerale = :pid",
+                    Parameters.with("pid", dto.getPid())).firstResultOptional();
+            if (opt.isPresent()) {
+                OrdineDettaglio ordineDettaglio = opt.get();
+                boolean dtInserita = false;
+                if (dto.getDataConsegna() != null) {
+                    dtInserita = true;
+                }
+                if (dto.getSettimana() != null) {
+                    dtInserita = true;
+                }
+                ordineDettaglio.setDatauser1(dto.getDataConsegna());
+                ordineDettaglio.setQtyuser1(dto.getSettimana());
+                ordineDettaglio.persist();
+                result.setError(Boolean.FALSE);
+                result.setMsg("Articolo cliente aggiornato");
+                Optional<OrdineFornitoreDettaglio> optOAF = OrdineFornitoreDettaglio.find("pid = :pid",
+                        Parameters.with("pid", dto.getPid())).firstResultOptional();
+                if (optOAF.isPresent()) {
+                    OrdineFornitoreDettaglio ordineFornitoreDettaglio = optOAF.get();
+                    if(dtInserita) {
+                        ordineFornitoreDettaglio.setCampouser1("S");
+                        ordineFornitoreDettaglio.persist();
+                    } else {
+                        ordineFornitoreDettaglio.setCampouser1(" ");
+                        ordineFornitoreDettaglio.persist();
+                    }
+                }
+                return result;
+            }
+            result.setError(Boolean.FALSE);
+            result.setMsg("Articolo non trovato!");
+            return result;
+        } catch (Exception e) {
+            Log.error("Aggiorna data consegna: ERROR! ", e);
+            result.setError(Boolean.TRUE);
+            result.setMsg("Aggiorna data consegna: ERROR! " + e.getMessage());
+            return result;
+        }
+    }
+
+    public AggiornaDataDto getDataOrdineCliente(Integer pid) {
+        AggiornaDataDto dto = new AggiornaDataDto();
+        try {
+            Optional<OrdineDettaglio> opt = OrdineDettaglio.find("progrGenerale = :pid",
+                    Parameters.with("pid", pid)).firstResultOptional();
+            if (opt.isPresent()) {
+                OrdineDettaglio ordineDettaglio = opt.get();
+                dto.setPid(pid);
+                if (ordineDettaglio != null && ordineDettaglio.getDatauser1() != null) {
+                    dto.setDataConsegna(ordineDettaglio.getDatauser1());
+                }
+                if (ordineDettaglio != null && ordineDettaglio.getQtyuser1() != null) {
+                    dto.setSettimana(ordineDettaglio.getQtyuser1());
+                }
+            }
+        } catch (Exception e) {
+            Log.error("Aggiorna data consegna: ERROR! ", e);
+        }
+        return dto;
     }
 }

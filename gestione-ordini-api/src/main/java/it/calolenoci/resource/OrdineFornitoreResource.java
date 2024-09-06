@@ -1,10 +1,7 @@
 package it.calolenoci.resource;
 
 import io.quarkus.logging.Log;
-import it.calolenoci.dto.CollegaOAFDto;
-import it.calolenoci.dto.FiltroOrdini;
-import it.calolenoci.dto.OrdineFornitoreDto;
-import it.calolenoci.dto.ResponseDto;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.enums.Ruolo;
@@ -209,9 +206,35 @@ public class OrdineFornitoreResource {
     public Response collegaOAF(CollegaOAFDto dto) {
         try {
             if (dto == null) {
-                return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Nessun collegamento creativo", false)).build();
+                return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Nessun collegamento creato", false)).build();
             }
             return Response.status(Response.Status.OK).entity(service.collegaOAF(dto)).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
+        }
+    }
+    @Operation(summary = "aggiorna ordine cliente")
+    @POST
+    @Path("/aggiorna-ordcli")
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
+    public Response aggiornaOrdineCliente(AggiornaDataDto dto) {
+        try {
+            if (dto == null) {
+                return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Nessun aggiornamento creato", false)).build();
+            }
+            return Response.status(Response.Status.OK).entity(service.inserisciDataConsegna(dto)).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
+        }
+    }
+
+    @Operation(summary = "aggiorna ordine cliente")
+    @GET
+    @Path("/data-consegna/{pid}")
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
+    public Response getDataOrdineCliente(Integer pid) {
+        try {
+            return Response.status(Response.Status.OK).entity(service.getDataOrdineCliente(pid)).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
         }
