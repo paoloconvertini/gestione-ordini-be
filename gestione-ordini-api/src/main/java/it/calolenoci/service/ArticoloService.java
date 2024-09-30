@@ -56,6 +56,9 @@ public class ArticoloService {
                         , Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie()).and("progressivo", filtro.getProgressivo()))
                 .project(Double.class).firstResultOptional();
         aDouble.ifPresent(response::setTotale);
+        response.setAnno(ordineDTO.getAnno());
+        response.setSerie(ordineDTO.getSerie());
+        response.setProgressivo(ordineDTO.getProgressivo());
         response.setIntestazione(ordineDTO.getIntestazione());
         response.setRiferimento(ordineDTO.getRiferimento());
         response.setSottoConto(ordineDTO.getSottoConto());
@@ -65,6 +68,9 @@ public class ArticoloService {
         response.setCellulare(ordineDTO.getCellulare());
         response.setDataOrdine(ordineDTO.getDataOrdine());
         response.setModalitaPagamento(ordineDTO.getModalitaPagamento());
+        response.setNoteLogistica(ordineDTO.getNoteLogistica());
+        response.setUserNoteLogistica(ordineDTO.getUserNoteLogistica());
+        response.setDataNoteLogistica(ordineDTO.getDataNoteLogistica());
         response.setArticoli(list);
         long fine = System.currentTimeMillis();
         Log.info("Get articoli ordine cliente: " + (fine - inizio) / 1000 + " sec");

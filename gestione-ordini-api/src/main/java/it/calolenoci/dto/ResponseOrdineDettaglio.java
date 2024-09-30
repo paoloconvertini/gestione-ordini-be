@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -13,6 +14,9 @@ import java.util.List;
 @AllArgsConstructor
 @RegisterForReflection
 public class ResponseOrdineDettaglio {
+    private  Integer anno;
+    private  String serie;
+    private  Integer progressivo;
     private String intestazione;
     private String riferimento;
     private String sottoConto;
@@ -23,6 +27,9 @@ public class ResponseOrdineDettaglio {
     private Double totale;
     private Date dataOrdine;
     private String modalitaPagamento;
+    private String noteLogistica;
+    private String userNoteLogistica;
+    private LocalDateTime dataNoteLogistica;
     private List<OrdineDettaglioDto> articoli;
 
 }

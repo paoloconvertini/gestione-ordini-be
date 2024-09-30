@@ -8,6 +8,7 @@ import lombok.ToString;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -73,6 +74,12 @@ public class GoOrdineDettaglio extends PanacheEntityBase {
 
     @Column(length = 2000, name = "NOTE")
     private String note;
+
+    @Column(name = "DATA_NOTE")
+    private LocalDateTime dataNote;
+
+    @Column(name = "USER_NOTE")
+    private String userNote;
 
     @Column(name = "QTA_RISERVATA")
     private Double qtaRiservata;

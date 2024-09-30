@@ -220,7 +220,8 @@ public class OrdineService {
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
         return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, pa.descrizione, " +
                                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
-                                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, go.locked, go.userLock, go.warnNoBolla " +
+                                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  " +
+                                "p.pec,  go.status, go.locked, go.userLock, go.warnNoBolla, go.noteLogistica, go.userNoteLogistica, go.dataNoteLogistica " +
                                 "FROM Ordine o " +
                                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                                 "LEFT JOIN ModalitaPagamento pa ON o.codicePagamento = pa.codice " +

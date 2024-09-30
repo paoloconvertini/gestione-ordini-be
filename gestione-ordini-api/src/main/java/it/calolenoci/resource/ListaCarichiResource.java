@@ -27,6 +27,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static it.calolenoci.enums.Ruolo.*;
@@ -65,6 +67,21 @@ public class ListaCarichiResource {
     @Path("/inviati")
     public Response carichiInviati(FiltroCarichi filtroCarichi) {
         return Response.ok(service.findCarichiInviati(filtroCarichi)).build();
+    }
+
+    @GET
+    @Path("/download/{id}")
+    @Produces(MediaType.TEXT_PLAIN)
+    @PermitAll
+    public Uni<Response> streamDataFromFile(String id) {
+        final OpenOptions openOptions = (new OpenOptions()).setCreate(false).setWrite(false);
+        Uni<AsyncFile> uni1 = vertx.fileSystem()
+                .open(pathReport + "/" + id + ".pdf", openOptions);
+
+        return uni1.onItem()
+                .transform(asyncFile -> Response.ok(asyncFile)
+                        .header("Content-Disposition", "attachment;filename=" + id)
+                        .build());
     }
 
     @Operation(summary = "Returns all the carichi from the database")

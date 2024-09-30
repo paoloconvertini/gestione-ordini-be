@@ -59,7 +59,10 @@ public class MailingResource {
 
     @CheckedTemplate
     static class Templates {
+
         public static native MailTemplate.MailTemplateInstance ordine(String venditore, Integer anno, String serie, Integer progressivo);
+        public static native MailTemplate.MailTemplateInstance listaCarico(String id);
+
     }
 
     @GET
@@ -87,5 +90,19 @@ public class MailingResource {
         }
         return service.send(ordine, attachment, subject, inlineAttach, dto.getTo());
     }
+    @POST
+    @Produces(APPLICATION_JSON)
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE})
+    @Path("/lista-carico")
+    public Response sendListaCarico(EmailDto dto) {
+        File f = new File(pathReport + "/" + dto.getId() + ".pdf");
+        MailAttachment attachment = new MailAttachment(f.getName(), f, "application/pdf");
+        String subject = "Lista carico " + dto.getId();
+        InlineAttachment inlineAttach = new InlineAttachment("logo.jpg", new File(logoPath + "/logo.jpg"),
+                "image/jpg", "<logo@calolenoci>");
+        MailTemplate.MailTemplateInstance instance = Templates.listaCarico(dto.getId());
+        return service.send(instance, attachment, subject, inlineAttach, dto.getTo());
+    }
+
 
 }

@@ -28,6 +28,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -251,11 +252,13 @@ public class ArticoloResource {
     @Transactional
     @Consumes(APPLICATION_JSON)
     public Response addNotes(OrdineDettaglioDto dto){
-        GoOrdineDettaglio.update("note = :note WHERE anno =:anno and serie =:serie and progressivo = :progressivo and rigo = :rigo",
+        GoOrdineDettaglio.update("note = :note, dataNote =:d, userNote =:u WHERE anno =:anno and serie =:serie and progressivo = :progressivo and rigo = :rigo",
                 Parameters.with("note", dto.getNote()).and("anno", dto.getAnno())
                         .and("serie", dto.getSerie())
                         .and("progressivo", dto.getProgressivo())
-                        .and("rigo", dto.getRigo()));
+                        .and("rigo", dto.getRigo())
+                        .and("d", LocalDateTime.now())
+                        .and("u", user));
         return Response.ok(new ResponseDto("Nota aggiunta", false)).build();
     }
 

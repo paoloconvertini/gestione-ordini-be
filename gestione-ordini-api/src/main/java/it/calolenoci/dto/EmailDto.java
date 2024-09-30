@@ -20,4 +20,6 @@ public class EmailDto {
 
     private boolean update = false;
 
+    private String id;
+
 }
