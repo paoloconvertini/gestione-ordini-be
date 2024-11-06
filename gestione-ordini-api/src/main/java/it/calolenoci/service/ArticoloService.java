@@ -39,10 +39,15 @@ public class ArticoloService {
     @ConfigProperty(name = "data.inizio")
     String dataCongig;
 
+    @ConfigProperty(name = "admin.email")
+    String adminEmail;
     @Inject
     GoOrdineDettaglioMapper goOrdineDettaglioMapper;
 
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+    @Inject
+    MailService mailService;
 
     public ResponseOrdineDettaglio findById(FiltroArticoli filtro) {
         long inizio = System.currentTimeMillis();
@@ -217,6 +222,8 @@ public class ArticoloService {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
                             dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDesczrizione(),
                             dto.getRigo(), null, dto.getQuantita(), null, null));
+                    mailService.inviaMailQuantita(adminEmail, dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), user, ordineDettaglio.getFDescrArticolo(), ordineDettaglio.getQuantita(), dto.getQuantita());
                     ordineDettaglio.setQuantita(dto.getQuantita());
                     ordineDettaglio.setQuantitaV(dto.getQuantita());
                     List<FattureDettaglio> fatture = FattureDettaglio.find("Select f " +

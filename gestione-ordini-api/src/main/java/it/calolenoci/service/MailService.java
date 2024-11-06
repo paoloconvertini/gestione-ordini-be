@@ -202,4 +202,21 @@ public class MailService {
         }
 
     }
+
+    public void inviaMailQuantita(String adminEmail, Integer anno, String serie, Integer progressivo,
+                                  String user, String fDescrArticolo, Double oldQta, Double qta) {
+        try {
+            String body = "<div style=\"font-family:Roboto,sans-serif\">" +
+                    " <b>Ordine n. " + anno + "/" + serie + "/" + progressivo + "</b><br> " +
+                    " <span>L' utente " + user + " ha modificato la quantità del seguente articolo " + fDescrArticolo + ": " +
+                    " La quantità precedente era: " + oldQta + ". " +
+                    " La quantità attuale è: " + qta + ".</span> " +
+                    "</div>";
+                Mail m = Mail.withHtml(adminEmail, "Ordine cliente " + anno + "/" + serie + "/" + progressivo + " modificato!!", body);
+                Log.debug("Invio mail da consegnare!");
+                mailer.send(m);
+        } catch (Exception e) {
+            Log.error("Errore invio mail", e);
+        }
+    }
 }
