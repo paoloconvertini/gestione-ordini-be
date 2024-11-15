@@ -402,6 +402,15 @@ public class ArticoloService {
                 Log.error("Articolo " + dto.getFDescrArticolo() + "  senza codice fornitore");
                 errors.add("Articolo " + dto.getFDescrArticolo() + " senza codice fornitore");
                 continue;
+            } else {
+                if("MEPO".equals(dto.getCodArtFornitore())){
+                    OrdineDettaglio.update("fArticolo =:fArticolo " +
+                                    "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo AND rigo =:rigo",
+                            Parameters.with("fArticolo", "1000000000001").and("anno", dto.getAnno())
+                                    .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo())
+                                    .and("rigo", dto.getRigo()));
+                    continue;
+                }
             }
 
             Optional<Articolo> optArticolo = Articolo.find("descrArtSuppl = :codArt OR descrArticolo like '%:codArt%'",
@@ -443,27 +452,27 @@ public class ArticoloService {
                 continue;
             }
 
-            String classeFornitore;
+            String codiceFornitore;
             if (StringUtils.isNotBlank(fornitore.get().getDescrUser3())) {
-                classeFornitore = fornitore.get().getDescrUser3();
+                codiceFornitore = fornitore.get().getDescrUser3();
             } else {
-                classeFornitore = fornitore.get().getCodice();
+                codiceFornitore = fornitore.get().getCodice();
             }
-
+            String classeFornitore = fornitore.get().getCodice();
             String codArtFornitore = StringUtils.deleteWhitespace(dto.getCodArtFornitore());
-            String codiceArticolo = this.creaId(codArtFornitore, classeFornitore);
+            String codiceArticolo = this.creaId(codArtFornitore, codiceFornitore);
             int length = StringUtils.length(codArtFornitore);
             Articolo articolo = new Articolo();
             if (length >= 13) {
-                Log.info("Codice fornitore maggiore di 13. Cerco max progressivo per la classe fornitore: " + classeFornitore);
+                Log.info("Codice fornitore maggiore di 13. Cerco max progressivo per la classe fornitore: " + codiceFornitore);
                 codiceArticolo = Articolo.find("SELECT ISNULL(MAX(articolo), '1') " +
                                 "FROM Articolo " +
                                 "WHERE ISNUMERIC(articolo) = 1" +
                                 " AND articolo LIKE :codForn",
-                        Parameters.with("codForn", classeFornitore+"%")).project(String.class).firstResult();
+                        Parameters.with("codForn", codiceFornitore+"%")).project(String.class).firstResult();
 
                 if(StringUtils.equals("1", codiceArticolo)) {
-                    this.creaId(codiceArticolo, classeFornitore);
+                    this.creaId(codiceArticolo, codiceFornitore);
                 } else {
                     try {
                         codiceArticolo = String.valueOf(Long.parseLong(codiceArticolo)+1);
@@ -519,20 +528,148 @@ public class ArticoloService {
         }
     }
 
-    private void createArticolo(Articolo articolo, String codiceArticolo, String user, OrdineDettaglioDto dto, String codArtFornitore, String classeFornitore) {
+    private void createArticolo(Articolo articolo, String codiceArticolo, String user, OrdineDettaglioDto dto, String codArtFornitore, String codiceFornitore) {
         articolo.setArticolo(codiceArticolo);
+        articolo.setDescrArticolo(this.pulisciDescrizione(dto.getFDescrArticolo()));
+        articolo.setDescrArtSuppl(codArtFornitore);
+        articolo.setDescrEstesa("");
+        articolo.setOrdinamento("");
+        articolo.setUnitaMisura(dto.getFUnitaMisura());
+        articolo.setUnitaMisuraSec("");
+        articolo.setUnitaMisura2("");
+        articolo.setCoefficiente(0D);
+        articolo.setCoefficientePro(0D);
+        articolo.setCostoBase(0F);
+        articolo.setCostoLavoro(0D);
+        articolo.setPrezzoBase(0D);
+        articolo.setPrezzoUmSec("");
+        articolo.setPrezzoExtra(0D);
+        articolo.setScontoBase(0D);
+        articolo.setCodiceIva("22");
+        articolo.setCodDecimaliPrezzo("");
+        articolo.setProvvAgente(0D);
+        articolo.setCalcolaProvv("");
+        articolo.setGruppoVendite(0);
+        articolo.setContoVendite("");
+        articolo.setClasseA1(codiceFornitore);
+        articolo.setClassea2("");
+        articolo.setClassea3("");
+        articolo.setClassea4("");
+        articolo.setClassea5("");
+        articolo.setClassea6("");
+        articolo.setClassea7("");
+        articolo.setClassea8("");
+        articolo.setClassea9("");
+        articolo.setClassea10("");
+        articolo.setFlagListino("");
+        articolo.setGruppoAcquisti(0);
+        articolo.setContoAquisti("");
+        articolo.setQuantitaUser01(0D);
+        articolo.setQuantitaUser02(0D);
+        articolo.setQuantitaUser03(0D);
+        articolo.setQuantitaUser04(0D);
+        articolo.setQuantitaUser05(0D);
+        articolo.setCampoUser1("");
+        articolo.setCampoUser2("");
+        articolo.setCampoUser3("");
+        articolo.setCampoUser4("");
+        articolo.setCampoUser5("");
+        articolo.setArticoloRaggr("");
+        articolo.setRifOriginale("");
+        articolo.setNoteArticolo("");
+        articolo.setNomenclatura("");
+        articolo.setIvaAgevolata("");
+        articolo.setTipoDocumentoFe("");
+        articolo.setPeso(0D);
+        articolo.setPesoNetto(0D);
+        articolo.setQtaPerConf(0D);
+        articolo.setDimPerConf("");
+        articolo.setPesoPerConf(0D);
+        articolo.setQtaBusta(0D);
+        articolo.setPesoBusta(0D);
+        articolo.setPallet("");
+        articolo.setQtaPallet(0D);
+        articolo.setGestioneScorta("");
+        articolo.setUbicazione("");
+        articolo.setDepositoReparto("");
+        articolo.setQtaReparto(0D);
+        articolo.setLottoMinimo(0D);
+        articolo.setQtaLotto(0D);
+        articolo.setPuntoRiordino(0D);
+        articolo.setScortaMinima(0D);
+        articolo.setGgaPProvvig(0);
+        articolo.setScortaMinima(0D);
+        articolo.setQtaMinimaFatt(0D);
+        articolo.setLottoMinimoFatt(0);
+        articolo.setQualita("");
+        articolo.setModuloetk("");
+        articolo.setTempoProd(0D);
+        articolo.setArtDistintaBase("");
+        articolo.setArticoLoc("");
+        articolo.setVariante1("");
+        articolo.setVariante2("");
+        articolo.setVariante3("");
+        articolo.setVariante4("");
+        articolo.setVariante5("");
+        articolo.setAggrv1("");
+        articolo.setAggrv2("");
+        articolo.setAggrv3("");
+        articolo.setAggrv4("");
+        articolo.setAggrv5("");
+        articolo.setArticoloVuoto("");
+        articolo.setQtyVuoti(0D);
+        articolo.setTipoRigoGruppi("");
+        articolo.setCespite("");
+        articolo.setBloccato("");
+        articolo.setProgr1(0);
+        articolo.setProgr2(0);
+        articolo.setQtaRif(0D);
+        articolo.setTipoArticolo("");
+        articolo.setCausaleInevaso("");
+        articolo.setServizio(0D);
+        articolo.setFlGiorniMesiScad("");
+        articolo.setPeriodoScadenza(0);
+        articolo.setFlNumeroSerie("");
+        articolo.setFlAssortimento("");
+        articolo.setFlCodiceEan("");
+        articolo.setFlagLotto("N");
+        articolo.setFlTrattato("S");
+        articolo.setFlagSconti("S");
+        articolo.setFlPallet("");
+        articolo.setFlagTrasferito("");
+        articolo.setFlFabbricazione("");
+        articolo.setImmagine("");
+        articolo.setLink1("");
+        articolo.setLink2("");
+        articolo.setLink3("");
+        articolo.setLinkScheda("");
+        articolo.setPubblicazione(0);
+        articolo.setFlB2B("S");
+        articolo.setFlB2C("S");
+        articolo.setNoteCatalogo("");
+        articolo.setAppoggio("");
+        articolo.setOmaggiabile("");
+        articolo.setRendibile("");
+        articolo.setGruppoFornitore(0);
+        articolo.setContoFornitore("");
+        articolo.setDocumento("");
         articolo.setCreateDate(new Date());
         articolo.setUpdateDate(new Date());
         articolo.setCreateUser(user);
         articolo.setUpdateUser(user);
-        articolo.setDescrArticolo(this.pulisciDescrizione(dto.getFDescrArticolo()));
-        articolo.setDescrArtSuppl(codArtFornitore);
-        articolo.setUnitaMisura(dto.getFUnitaMisura());
-        articolo.setClasseA1(classeFornitore);
-        articolo.setCodiceIva("22");
-        articolo.setFlTrattato("S");
-        articolo.setFlagLotto("N");
-        articolo.setFlagSconti("S");
+        articolo.setUnitaMisuraPro("");
+        articolo.setScortaReparto(0D);
+        articolo.setFlCoeffTeorico("N");
+        articolo.setFlUm2Produzione("");
+        articolo.setFlUm2Vendita("");
+        articolo.setFlUmSecAcquisti("");
+        articolo.setFlUmSecVendita("");
+        articolo.setProvvCapoArea(0F);
+        articolo.setDataModifica(LocalDateTime.now());
+        articolo.setUsername(user);
+        articolo.setFlConf("");
+        articolo.setDescrBreve("");
+        articolo.setColliStrato(0);
     }
 
     private FornitoreArticolo createFornArticolo(String user, Articolo articolo, ArticoloClasseFornitore fornitore) {

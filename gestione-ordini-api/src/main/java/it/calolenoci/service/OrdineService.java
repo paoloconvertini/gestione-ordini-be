@@ -150,7 +150,7 @@ public class OrdineService {
             o.persist();
         });
         long fine = System.currentTimeMillis();
-        Log.info("check nuovi articoli: " + (fine - inizio) + " msec");
+        Log.error("check nuovi articoli: " + (fine - inizio) + " msec");
     }
 
     @Transactional
@@ -166,7 +166,7 @@ public class OrdineService {
         long i = System.currentTimeMillis();
         List<GoOrdineDto> ordineList = GoOrdine.findOrdiniConsegnatiByStatus(list);
         long f = System.currentTimeMillis();
-        Log.info("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
+        Log.error("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
         long inizio = System.currentTimeMillis();
         Map<String, List<GoOrdineDto>> map = ordineList.stream().collect(Collectors.groupingBy(GoOrdineDto::creaId));
         for (String s : map.keySet()) {
@@ -183,7 +183,7 @@ public class OrdineService {
                 }
         }
         long fine = System.currentTimeMillis();
-        Log.info("FindNoConsegnati: " + (fine - inizio) + " msec");
+        Log.error("FindNoConsegnati: " + (fine - inizio) + " msec");
     }
 
     @Transactional
@@ -200,7 +200,7 @@ public class OrdineService {
         long i = System.currentTimeMillis();
         List<GoOrdineDto> ordineList = GoOrdine.findOrdiniNoProntaConsegnaByStatus(list);
         long f = System.currentTimeMillis();
-        Log.info("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
+        Log.error("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
         long inizio = System.currentTimeMillis();
         Map<String, List<GoOrdineDto>> map = ordineList.stream().collect(Collectors.groupingBy(GoOrdineDto::creaId));
         for (String s : map.keySet()) {
@@ -214,7 +214,7 @@ public class OrdineService {
             }
         }
         long fine = System.currentTimeMillis();
-        Log.info("Fine checkNoProntaConegna: " + (fine - inizio) + " msec");
+        Log.error("Fine checkNoProntaConegna: " + (fine - inizio) + " msec");
     }
 
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
