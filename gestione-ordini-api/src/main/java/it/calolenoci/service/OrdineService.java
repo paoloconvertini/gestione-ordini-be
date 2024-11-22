@@ -1,6 +1,7 @@
 package it.calolenoci.service;
 
 import io.quarkus.logging.Log;
+import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
@@ -135,6 +136,7 @@ public class OrdineService {
     }
 
     @Transactional
+    @TransactionConfiguration(timeout = 180)
     public void checkStatusDettaglio(String status) {
         List<String> list = new ArrayList<>();
         if(StringUtils.isBlank(status)) {
@@ -154,6 +156,7 @@ public class OrdineService {
     }
 
     @Transactional
+    @TransactionConfiguration(timeout = 180)
     public void checkConsegnati(String status) {
         List<String> list = new ArrayList<>();
         if(StringUtils.isBlank(status)) {
@@ -187,6 +190,7 @@ public class OrdineService {
     }
 
     @Transactional
+    @TransactionConfiguration(timeout = 180)
     public void checkNoProntaConegna(String status) {
         List<String> list = new ArrayList<>();
         if(StringUtils.isBlank(status)){
