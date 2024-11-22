@@ -51,6 +51,8 @@ public class OrdineService {
     String pathFirmaVendtore;
 
 
+    @Transactional
+    @TransactionConfiguration(timeout = 120)
     public List<OrdineDTO> findAllByStatus(FiltroOrdini filtro) throws ParseException {
         if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
                 !ARCHIVIATO.getDescrizione().equals(filtro.getStatus()) &&
@@ -136,7 +138,6 @@ public class OrdineService {
     }
 
     @Transactional
-    @TransactionConfiguration(timeout = 180)
     public void checkStatusDettaglio(String status) {
         List<String> list = new ArrayList<>();
         if(StringUtils.isBlank(status)) {
@@ -156,7 +157,6 @@ public class OrdineService {
     }
 
     @Transactional
-    @TransactionConfiguration(timeout = 180)
     public void checkConsegnati(String status) {
         List<String> list = new ArrayList<>();
         if(StringUtils.isBlank(status)) {
@@ -190,7 +190,6 @@ public class OrdineService {
     }
 
     @Transactional
-    @TransactionConfiguration(timeout = 180)
     public void checkNoProntaConegna(String status) {
         List<String> list = new ArrayList<>();
         if(StringUtils.isBlank(status)){
