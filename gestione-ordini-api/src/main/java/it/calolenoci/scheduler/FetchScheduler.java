@@ -5,6 +5,7 @@ import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.scheduler.Scheduled;
 import it.calolenoci.dto.Coordinate;
+import it.calolenoci.dto.FiltroOrdini;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.PianoContiDto;
 import it.calolenoci.entity.PianoConti;
@@ -66,11 +67,11 @@ public class FetchScheduler {
             update = articoloService.updateArticoliBolle(list);
             Log.info("Aggiornati " + update + " articoli");
             if (update != null && update != 0) {
-                ordineService.checkConsegnati(null);
+                ordineService.checkConsegnati(new FiltroOrdini());
             }
         }
         articoloService.checkNoBolle();
-        ordineService.checkNoProntaConegna(null);
+        ordineService.checkNoProntaConegna(new FiltroOrdini());
         long fine = System.currentTimeMillis();
         Log.info("FINE UPDATE CHECK BOLLE: " + (fine - inizio) / 1000 + " sec");
     }

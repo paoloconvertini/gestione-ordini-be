@@ -144,7 +144,7 @@ public class OrdineResource {
         if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
             filtro.setStatus(null);
         }
-        List<OrdineDTO> allByStatus = ordineService.findAllByStatus(filtro);
+        PageOrdineDto allByStatus = ordineService.findAllByStatus(filtro);
         long fine = System.currentTimeMillis();
         io.quarkus.logging.Log.info("get all ordini: " + (fine - i) + " msec");
         return Response.ok(allByStatus).build();

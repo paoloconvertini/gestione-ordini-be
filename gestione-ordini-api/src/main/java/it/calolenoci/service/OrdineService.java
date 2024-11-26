@@ -1,7 +1,10 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
+import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
@@ -19,6 +22,7 @@ import javax.transaction.Transactional;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,16 +56,17 @@ public class OrdineService {
 
 
     @Transactional
-    @TransactionConfiguration(timeout = 120)
-    public List<OrdineDTO> findAllByStatus(FiltroOrdini filtro) throws ParseException {
+    @TransactionConfiguration(timeout = 15)
+    public PageOrdineDto findAllByStatus(FiltroOrdini filtro) throws ParseException {
+        PageOrdineDto pageOrdineDto = new PageOrdineDto();
         if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
                 !ARCHIVIATO.getDescrizione().equals(filtro.getStatus()) &&
-        !StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
-            checkStatusDettaglio(filtro.getStatus());
+                !StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
+            checkStatusDettaglio(filtro);
         }
         if (!ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
-            checkConsegnati(filtro.getStatus());
-            checkNoProntaConegna(filtro.getStatus());
+            checkConsegnati(filtro);
+            checkNoProntaConegna(filtro);
         }
         long inizio = System.currentTimeMillis();
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
@@ -75,32 +80,87 @@ public class OrdineService {
 
         Map<String, Object> map = new HashMap<>();
         map.put("dataConfig", sdf.parse(dataCongig));
+        if (filtro.getProntoConsegna()) {
+            query += " AND go.hasProntoConsegna = true ";
+        }
+        query = applyFilters(filtro, query, map);
+        long inizioQuery = System.currentTimeMillis();
+
+        Sort sorting = Sort.descending("go.hasCarico", "dataConferma");
+        if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
+            sorting = Sort.descending("o.updateDate", "go.hasCarico");
+        }
+        PanacheQuery<Ordine> panacheQuery = Ordine.find(query, sorting, map);
+        long count = panacheQuery.count();
+        List<OrdineDTO> list = panacheQuery
+                .page(Page.of(filtro.getPage(), filtro.getSize()))
+                .project(OrdineDTO.class)
+                .list();
+        pageOrdineDto.setCount(count);
+        pageOrdineDto.setList(list);
+        long fineQuery = System.currentTimeMillis();
+        Log.info("Query all ordini: " + (fineQuery - inizioQuery) / 1000 + " sec");
+        long fine = System.currentTimeMillis();
+        Log.info("Metodo all ordini: " + (fine - inizio) / 1000 + " sec");
+        return pageOrdineDto;
+    }
+
+    private String applyFilters(FiltroOrdini filtro, String query, Map<String, Object> map) throws ParseException {
+        if (filtro.getAnno() != null) {
+            query += " and o.anno = :a";
+            map.put("a", filtro.getAnno());
+        }
+        if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
+            query += " and o.serie = :venditore";
+            map.put("venditore", filtro.getCodVenditore());
+        }
+        if (filtro.getProgressivo() != null) {
+            query += " and o.progressivo = :p";
+            map.put("p", filtro.getProgressivo());
+        }
         if (StringUtils.isNotBlank(filtro.getStatus())) {
             query += " AND go.status = :status ";
             map.put("status", filtro.getStatus());
         } else {
             query += " AND go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '' ";
         }
-        if (filtro.getProntoConsegna()) {
-            query += " AND go.hasProntoConsegna = true ";
+        if (StringUtils.isNotBlank(filtro.getCliente())) {
+            query += " and p.intestazione LIKE :c";
+            map.put("c", "%" + filtro.getCliente() + "%");
+        }
+        if (StringUtils.isNotBlank(filtro.getLuogo())) {
+            query += " and p.localita LIKE :l";
+            map.put("l", "%" + filtro.getLuogo() + "%");
+        }
+        if (filtro.getDataOrdine() != null) {
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String format = filtro.getDataOrdine().format(dateTimeFormatter);
+            query += " and o.dataConferma = :d";
+            map.put("d", sdf.parse(format));
+        }
+        return query;
+    }
+
+    private String applyFiltersConsegna(FiltroOrdini filtro, String query, Map<String, Object> map) {
+        if (filtro.getAnno() != null) {
+            query += " and go.anno = :a";
+            map.put("a", filtro.getAnno());
         }
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
-            query += " and o.serie = :venditore";
+            query += " and go.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());
         }
-        long inizioQuery = System.currentTimeMillis();
-
-        Sort sorting = Sort.descending("go.hasCarico", "dataConferma");
-        if(StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())){
-           sorting = Sort.descending("o.updateDate", "go.hasCarico");
+        if (filtro.getProgressivo() != null) {
+            query += " and go.progressivo = :p";
+            map.put("p", filtro.getProgressivo());
         }
-        List<OrdineDTO> list = Ordine.find(query, sorting, map).project(OrdineDTO.class).list();
-
-        long fineQuery = System.currentTimeMillis();
-        Log.info("Query all ordini: " + (fineQuery - inizioQuery)/1000 + " sec");
-        long fine = System.currentTimeMillis();
-        Log.info("Metodo all ordini: " + (fine - inizio)/1000 + " sec");
-        return list;
+        if (StringUtils.isNotBlank(filtro.getStatus())) {
+            query += " AND go.status = :status ";
+            map.put("status", filtro.getStatus());
+        } else {
+            query += " AND go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '' ";
+        }
+        return query;
     }
 
     public List<OrdineDTO> findAltriOrdiniCliente(Integer anno, String serie, Integer progressivo, String sottoConto) throws ParseException {
@@ -138,16 +198,21 @@ public class OrdineService {
     }
 
     @Transactional
-    public void checkStatusDettaglio(String status) {
+    public void checkStatusDettaglio(FiltroOrdini filtroOrdini) {
         List<String> list = new ArrayList<>();
-        if(StringUtils.isBlank(status)) {
+        if (StringUtils.isBlank(filtroOrdini.getStatus())) {
             list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
         } else {
-            list.add(status);
+            list.add(filtroOrdini.getStatus());
         }
         long inizio = System.currentTimeMillis();
-        List<GoOrdine> ordineList = GoOrdine.findOrdiniWithNewItems(list);
+        List<GoOrdine> ordineList = GoOrdine.find("SELECT distinct o FROM GoOrdine o " +
+                        "JOIN OrdineDettaglio o2 ON o2.anno = o.anno " +
+                        "and o2.serie = o.serie AND o2.progressivo = o.progressivo " +
+                        "WHERE NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o2.progrGenerale = god.progrGenerale) " +
+                        "and o.status in (:param) and o2.tipoRigo = ' '", Parameters.with("param", list))
+                .page(filtroOrdini.getPage(), filtroOrdini.getSize()).list();
         ordineList.forEach(o -> {
             o.setStatus(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             o.persist();
@@ -157,63 +222,92 @@ public class OrdineService {
     }
 
     @Transactional
-    public void checkConsegnati(String status) {
+    public void checkConsegnati(FiltroOrdini filtro) {
         List<String> list = new ArrayList<>();
-        if(StringUtils.isBlank(status)) {
+        if (StringUtils.isBlank(filtro.getStatus())) {
             list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             list.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
         } else {
-            list.add(status);
+            list.add(filtro.getStatus());
         }
         long i = System.currentTimeMillis();
-        List<GoOrdineDto> ordineList = GoOrdine.findOrdiniConsegnatiByStatus(list);
+        String query = "select go.anno, go.serie, go.progressivo, go.status " +
+                "from GoOrdine go " +
+                "WHERE NOT EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE go.anno = o.anno AND  go.progressivo = o.progressivo AND go.serie = o.serie " +
+                "and o.tipoRigo = ' ' and o.saldoAcconto <> 'S') " +
+                "AND go.status IN (:param)"  +
+                "and go.warnNoBolla = :w";
+        Map<String, Object> filterMap = new HashMap<>();
+        filterMap.put("param", list);
+        filterMap.put("w", Boolean.FALSE);
+        query = applyFiltersConsegna(filtro, query, filterMap);
+        PanacheQuery<GoOrdine> panacheQuery = GoOrdine.find(query, filterMap);
+        List<GoOrdineDto> ordineList;
+        if (filtro.getSize() > 0) {
+            ordineList = panacheQuery.page(filtro.getPage(), filtro.getSize())
+                    .project(GoOrdineDto.class)
+                    .list();
+        } else {
+            ordineList = panacheQuery
+                    .project(GoOrdineDto.class)
+                    .list();
+        }
         long f = System.currentTimeMillis();
-        Log.error("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
+        Log.error("GoOrdine.findOrdiniConsegnatiByStatus: " + (f - i) + " msec");
         long inizio = System.currentTimeMillis();
-        Map<String, List<GoOrdineDto>> map = ordineList.stream().collect(Collectors.groupingBy(GoOrdineDto::creaId));
-        for (String s : map.keySet()) {
-            List<GoOrdineDto> ordines = map.get(s);
-            GoOrdineDto o = ordines.get(0);
-            GoOrdine ordine = o.getGo();
-            boolean anyMatch = ordines.stream().allMatch(or -> StringUtils.equals("S", or.getSaldoAcconto()));
-                if (anyMatch && !ordine.getWarnNoBolla()) {
-                    ordine.setStatus(ARCHIVIATO.getDescrizione());
-                    if (ordine.getHasProntoConsegna() != null && ordine.getHasProntoConsegna()) {
-                        ordine.setHasProntoConsegna(Boolean.FALSE);
-                    }
-                    ordine.persist();
-                }
+        if (!ordineList.isEmpty()) {
+            for (GoOrdineDto o : ordineList) {
+                GoOrdine.update("status =:status, hasProntoConsegna =:f " +
+                                "WHERE anno =:a AND serie=:s AND progressivo=:p",
+                        Parameters.with("status", ARCHIVIATO.getDescrizione())
+                                .and("f",  Boolean.FALSE)
+                                .and("a", o.getAnno())
+                                .and("s", o.getSerie()).and("p", o.getProgressivo()));
+            }
         }
         long fine = System.currentTimeMillis();
         Log.error("FindNoConsegnati: " + (fine - inizio) + " msec");
     }
 
     @Transactional
-    public void checkNoProntaConegna(String status) {
+    public void checkNoProntaConegna(FiltroOrdini filtro) {
         List<String> list = new ArrayList<>();
-        if(StringUtils.isBlank(status)){
+        if (StringUtils.isBlank(filtro.getStatus())) {
             list.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             list.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             list.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             list.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
         } else {
-            list.add(status);
+            list.add(filtro.getStatus());
         }
         long i = System.currentTimeMillis();
-        List<GoOrdineDto> ordineList = GoOrdine.findOrdiniNoProntaConsegnaByStatus(list);
+        String query = "select go.anno, go.serie, go.progressivo, go.status " +
+                "from GoOrdine go " +
+                "WHERE exists (SELECT 1 FROM GoOrdineDettaglio god WHERE go.anno = god.anno AND  go.progressivo = god.progressivo AND go.serie = god.serie AND god.flProntoConsegna =:f) " +
+                "AND exists (SELECT 1 FROM OrdineDettaglio o " +
+                "WHERE go.anno = o.anno AND  go.progressivo = o.progressivo AND go.serie = o.serie and o.tipoRigo = ' ') AND go.status IN (:param) and go.hasProntoConsegna = true";
+        Map<String, Object> filterMap = new HashMap<>();
+        filterMap.put("param", list);
+        filterMap.put("f", Boolean.FALSE);
+        query = applyFiltersConsegna(filtro, query, filterMap);
+        PanacheQuery<GoOrdine> panacheQuery = GoOrdine.find( query, filterMap);
+        List<GoOrdineDto> ordineList;
+        if (filtro.getSize() > 0) {
+            ordineList = panacheQuery.page(filtro.getPage(), filtro.getSize())
+                    .project(GoOrdineDto.class)
+                    .list();
+        } else {
+            ordineList = panacheQuery.project(GoOrdineDto.class).list();
+        }
         long f = System.currentTimeMillis();
-        Log.error("GoOrdine.findOrdiniByStatus: " + (f - i) + " msec");
+        Log.error("GoOrdine.findOrdiniNoProntaConsegnaByStatus: " + (f - i) + " msec");
         long inizio = System.currentTimeMillis();
-        Map<String, List<GoOrdineDto>> map = ordineList.stream().collect(Collectors.groupingBy(GoOrdineDto::creaId));
-        for (String s : map.keySet()) {
-            List<GoOrdineDto> ordines = map.get(s);
-            GoOrdineDto o = ordines.get(0);
-            GoOrdine ordine = o.getGo();
-            boolean noneMatch = ordines.stream().noneMatch(dto-> dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna());
-            if (noneMatch) {
-                ordine.setHasProntoConsegna(Boolean.FALSE);
-                GoOrdine.persist(ordine);
+        if(!ordineList.isEmpty()){
+            for (GoOrdineDto o : ordineList) {
+                GoOrdine.update("hasProntoConsegna =:f WHERE anno =:a AND serie=:s AND progressivo=:p",
+                        Parameters.with("f", Boolean.FALSE).and("a", o.getAnno())
+                                .and("s", o.getSerie()).and("p", o.getProgressivo()));
             }
         }
         long fine = System.currentTimeMillis();
@@ -306,9 +400,9 @@ public class OrdineService {
     }
 
     public List<OrdineDTO> findAllByStati(FiltroOrdini filtro) throws ParseException {
-        checkStatusDettaglio(filtro.getStatus());
-        checkConsegnati(filtro.getStatus());
-        checkNoProntaConegna(filtro.getStatus());
+        checkStatusDettaglio(filtro);
+        checkConsegnati(filtro);
+        checkNoProntaConegna(filtro);
 
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, o.indirdiverse, o.locdiverse, o.provdiverse, " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine,  " +
@@ -318,7 +412,7 @@ public class OrdineService {
                 "FROM Ordine o " +
                 "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                 "LEFT JOIN GoOrdVeicolo v ON v.id.anno = go.anno AND v.id.serie = go.serie AND v.id.progressivo = go.progressivo " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'" ;
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'";
 
         String queryPregressi = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, o.indirdiverse, o.locdiverse, o.provdiverse,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento, p.localita, p.provincia, p.latitudine, p.longitudine, " +
@@ -328,19 +422,19 @@ public class OrdineService {
                 "JOIN GoOrdVeicolo v ON v.id.anno = o.anno AND v.id.serie = o.serie AND v.id.progressivo = o.progressivo " +
                 "WHERE o.dataConferma <:dataConfig AND o.provvisorio <> 'S' AND " +
                 "EXISTS (SELECT 1 FROM OrdineDettaglio od WHERE od.anno = o.anno AND od.serie = o.serie AND od.progressivo = o.progressivo and " +
-                "od.saldoAcconto IN ('A', '', ' ') AND od.tipoRigo <> 'C')" ;
+                "od.saldoAcconto IN ('A', '', ' ') AND od.tipoRigo <> 'C')";
 
         Map<String, Object> map = new HashMap<>();
         Map<String, Object> mapPregressi = new HashMap<>();
 
-        if(filtro.getStati() != null && !filtro.getStati().isEmpty()){
+        if (filtro.getStati() != null && !filtro.getStati().isEmpty()) {
             query += "AND go.status IN (:list)";
-            if(filtro.getDataConsegnaEnd() != null){
+            if (filtro.getDataConsegnaEnd() != null) {
                 filtro.getStati().add(ARCHIVIATO.getDescrizione());
             }
             map.put("list", filtro.getStati());
         }
-        if(StringUtils.isNotBlank(filtro.getStatus())) {
+        if (StringUtils.isNotBlank(filtro.getStatus())) {
             query += " AND go.status = :status";
             map.put("status", filtro.getStatus());
         }
@@ -376,16 +470,16 @@ public class OrdineService {
         return result.stream()
                 .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(OrdineDTO::getDataConsegna, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(OrdineDTO::getVeicolo, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(OrdineDTO::getOraConsegna, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(OrdineDTO::getOrdine, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(OrdineDTO::getVeicolo, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(OrdineDTO::getOraConsegna, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(OrdineDTO::getOrdine, Comparator.nullsLast(Comparator.naturalOrder()))
                 ).toList();
     }
 
     public List<OrdineDTO> findAllRiservati(FiltroOrdini filtro) throws ParseException {
-        checkStatusDettaglio(filtro.getStatus());
-        checkConsegnati(filtro.getStatus());
-        checkNoProntaConegna(filtro.getStatus());
+        checkStatusDettaglio(filtro);
+        checkConsegnati(filtro);
+        checkNoProntaConegna(filtro);
 
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, " +
@@ -402,11 +496,11 @@ public class OrdineService {
 
         Map<String, Object> map = new HashMap<>();
 
-        if(filtro.getStati() != null && !filtro.getStati().isEmpty()){
+        if (filtro.getStati() != null && !filtro.getStati().isEmpty()) {
             query += "AND go.status IN (:list)";
             map.put("list", filtro.getStati());
         }
-        if(StringUtils.isNotBlank(filtro.getStatus())) {
+        if (StringUtils.isNotBlank(filtro.getStatus())) {
             query += " AND go.status = :status";
             map.put("status", filtro.getStatus());
         }
@@ -430,10 +524,10 @@ public class OrdineService {
         try {
             GoOrdVeicolo goOrdVeicolo = new GoOrdVeicolo();
             goOrdVeicolo.setId(new GoOrdVeicoloPK(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
-            if(dto.getVeicolo() != null) {
+            if (dto.getVeicolo() != null) {
                 goOrdVeicolo.setIdVeicolo(dto.getVeicolo());
             }
-            if(dto.getDataConsegna() != null) {
+            if (dto.getDataConsegna() != null) {
                 goOrdVeicolo.setDataConsegna(dto.getDataConsegna());
             }
             goOrdVeicolo.setOraConsegna(dto.getOraConsegna());
@@ -442,7 +536,7 @@ public class OrdineService {
             long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
                     , Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
                             .and("progressivo", dto.getProgressivo()));
-            if(goOrdVeicolo == null && delete > 0) {
+            if (goOrdVeicolo == null && delete > 0) {
                 return true;
             }
             if (goOrdVeicolo != null) {
@@ -459,18 +553,18 @@ public class OrdineService {
     public OrdineclienteMonitorDto getOrdiniClienteNonOrdinati() throws ParseException {
         OrdineclienteMonitorDto o = new OrdineclienteMonitorDto();
         List<GoOrdine> listaOrdini = Ordine.find("SELECT go " +
-                "FROM Ordine o " +
-                "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
-                "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' AND go.status IN ('DA_PROCESSARE', 'DA_ORDINARE')",
+                        "FROM Ordine o " +
+                        "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
+                        "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' AND go.status IN ('DA_PROCESSARE', 'DA_ORDINARE')",
                 Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
         int totDaOrd = listaOrdini.stream().filter(or -> StringUtils.equals(StatoOrdineEnum.DA_ORDINARE.getDescrizione(), or.getStatus())).toList().size();
         int totDaProc = listaOrdini.stream().filter(or -> StringUtils.equals(StatoOrdineEnum.DA_PROCESSARE.getDescrizione(), or.getStatus()))
                 .filter(ord ->
-                OrdineDettaglio.find("SELECT o.progrGenerale " +
-                        "FROM OrdineDettaglio o " +
-                        "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
-                        "WHERE o.anno = god.anno AND o.serie = god.serie AND o.progressivo = god.progressivo AND " +
-                        "god.flagRiservato = 'F' AND god.flagNonDisponibile = 'F' AND god.flagOrdinato = 'F'").list().size() > 1).toList().size();
+                        OrdineDettaglio.find("SELECT o.progrGenerale " +
+                                "FROM OrdineDettaglio o " +
+                                "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
+                                "WHERE o.anno = god.anno AND o.serie = god.serie AND o.progressivo = god.progressivo AND " +
+                                "god.flagRiservato = 'F' AND god.flagNonDisponibile = 'F' AND god.flagOrdinato = 'F'").list().size() > 1).toList().size();
         o.setTotOrdNonDisp((long) totDaOrd);
         o.setTotOrdNonProcessati((long) totDaProc);
         return o;
@@ -484,7 +578,7 @@ public class OrdineService {
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
                 "WHERE o.dataConferma <:dataConfig AND o.provvisorio <> 'S' " +
                 "AND NOT EXISTS (SELECT 1 FROM GoOrdVeicolo v " +
-                "WHERE v.id.anno = o.anno AND v.id.serie = o.serie AND v.id.progressivo = o.progressivo)" ;
+                "WHERE v.id.anno = o.anno AND v.id.serie = o.serie AND v.id.progressivo = o.progressivo)";
 
         Map<String, Object> map = new HashMap<>();
         map.put("dataConfig", sdf.parse(dataCongig));
@@ -509,9 +603,9 @@ public class OrdineService {
                 listToSave.add(goOrdVeicolo);
             });
 
-            if(!listToSave.isEmpty()) {
-               GoOrdVeicolo.persist(listToSave);
-               return true;
+            if (!listToSave.isEmpty()) {
+                GoOrdVeicolo.persist(listToSave);
+                return true;
             }
             return false;
         } catch (Exception e) {

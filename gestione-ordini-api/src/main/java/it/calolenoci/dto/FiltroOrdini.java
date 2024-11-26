@@ -15,6 +15,16 @@ import java.util.List;
 @NoArgsConstructor
 public class FiltroOrdini implements Serializable {
 
+    private Integer anno;
+
+    private Integer progressivo;
+
+    private String cliente;
+
+    private String luogo;
+
+    private LocalDate dataOrdine;
+
     private String codVenditore;
 
     private String status;
@@ -30,5 +40,9 @@ public class FiltroOrdini implements Serializable {
     private LocalDate dataConsegnaEnd;
 
     private Boolean flInviato;
+
+    private int page;
+
+    private int size;
 
 }

@@ -77,20 +77,10 @@ public class GoOrdine extends PanacheEntityBase {
     @Column(name = "USER_NOTE_LOGISTICA")
     private String userNoteLogistica;
 
-    public static List<GoOrdine> findOrdiniByStatus(List<String> param) {
-        return list("status in (:param)", Parameters.with("param", param));
-    }
-
-    public static List<GoOrdine> findOrdiniWithNewItems(List<String> param) {
-        return list("SELECT distinct o FROM GoOrdine o " +
-                "JOIN OrdineDettaglio o2 ON o2.anno = o.anno " +
-                "and o2.serie = o.serie AND o2.progressivo = o.progressivo " +
-                "WHERE NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o2.progrGenerale = god.progrGenerale) " +
-                "and o.status in (:param) and o2.tipoRigo = ' '", Parameters.with("param", param));
-    }
-
     public static List<GoOrdineDto> findOrdiniNoProntaConsegnaByStatus(List<String> param) {
-        return find("select go, god.flProntoConsegna " +
+        return find("select go.anno, go.serie, go.progressivo, go.status, go.warnNoBolla, go.locked, " +
+                "go.userLock, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, go.hasCarico, go.dataNote, " +
+                "go.userNote, go.dataNoteLogistica, go.userNoteLogistica, god.flProntoConsegna " +
                 "from GoOrdine go " +
                 "join GoOrdineDettaglio god on go.anno = god.anno AND  go.progressivo = god.progressivo AND go.serie = god.serie " +
                 "where exists (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = god.progrGenerale and o.tipoRigo = ' ') AND go.status IN (:param) " +
@@ -98,7 +88,9 @@ public class GoOrdine extends PanacheEntityBase {
     }
 
     public static List<GoOrdineDto> findOrdiniConsegnatiByStatus(List<String> param) {
-        return find("select go, o.saldoAcconto " +
+        return find("select go.anno, go.serie, go.progressivo, go.status, go.warnNoBolla, go.locked, " +
+                "go.userLock, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, go.hasCarico, go.dataNote, " +
+                "go.userNote, go.dataNoteLogistica, go.userNoteLogistica, o.saldoAcconto " +
                 "from GoOrdine go " +
                 "join OrdineDettaglio o on go.anno = o.anno AND  go.progressivo = o.progressivo AND go.serie = o.serie " +
                 "where go.status IN (:param)" +
