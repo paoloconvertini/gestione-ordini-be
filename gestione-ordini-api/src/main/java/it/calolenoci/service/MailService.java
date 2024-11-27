@@ -105,8 +105,10 @@ public class MailService {
                 List<String> stati = new ArrayList<>();
                 stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
                 filtro.setStati(stati);
-                List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
-                if (ordini.isEmpty()) {
+                filtro.setSize(0);
+                filtro.setPage(0);
+                PageOrdineDto pageOrdineDto = ordineService.findAllByStati(filtro);
+                if (pageOrdineDto.getList().isEmpty()) {
                     continue;
                 }
                 body = new StringBuilder("<table style=\"font-family:Arial,sans-serif\"> " +
@@ -120,7 +122,7 @@ public class MailService {
                         "         </tr>" +
                         "        </thead>" +
                         "        <tbody>");
-                for (OrdineDTO dto : ordini) {
+                for (OrdineDTO dto : pageOrdineDto.getList()) {
                     body.append("<tr>").append("<td>").append(dto.getAnno()).append("/").append(dto.getSerie()).append("/").append(dto.getProgressivo()).append("</td>");
                     body.append("<td>").append(StringUtils.isNotBlank(dto.getIntestazione()) ? dto.getIntestazione() : "").append("</td>");
                     body.append("<td>").append(sdf.format(dto.getDataConferma())).append("</td>");
@@ -154,11 +156,13 @@ public class MailService {
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
             filtro.setStati(stati);
+            filtro.setSize(0);
+            filtro.setPage(0);
             DateTimeFormatter pattern = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             for (UserResponseDTO v : venditori) {
                 filtro.setCodVenditore(v.getCodVenditore());
-                List<OrdineDTO> ordini = ordineService.findAllByStati(filtro);
-                if (ordini.isEmpty()) {
+                PageOrdineDto pageOrdineDto = ordineService.findAllByStati(filtro);
+                if (pageOrdineDto.getList().isEmpty()) {
                     continue;
                 }
                 body = new StringBuilder("<table style=\"font-family:Arial,sans-serif\"> " +
@@ -174,7 +178,7 @@ public class MailService {
                         "         </tr>" +
                         "        </thead>" +
                         "        <tbody>");
-                for (OrdineDTO dto : ordini) {
+                for (OrdineDTO dto : pageOrdineDto.getList()) {
                     String descVeicolo = "";
                     if (dto.getVeicolo() != null) {
                         Veicolo veicolo = Veicolo.find("id =:id", Parameters.with("id", dto.getVeicolo())).firstResult();

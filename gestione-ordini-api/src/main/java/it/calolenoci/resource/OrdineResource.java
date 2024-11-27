@@ -198,15 +198,14 @@ public class OrdineResource {
             filtro.setStati(stati);
             filtro.setStatus(null);
         }
-        List<OrdineDTO> allRiservati = ordineService.findAllRiservati(filtro);
-
+        PageOrdineDto pageOrdineDto = ordineService.findAllRiservati(filtro);
+        List<OrdineDTO> allRiservati = pageOrdineDto.getList();
         allRiservati.forEach(ordineDTO -> {
             if(ordineDTO.getImportoRiservati() == null) {
                 ordineDTO.setImportoRiservati(0D);
             }
         });
         OrdineResponseDto dto = new OrdineResponseDto();
-        dto.setOrdineDTOList(allRiservati);
         Map<String, Double> map = new HashMap<>();
         Map<String, List<OrdineDTO>> listMap = allRiservati.stream().collect(groupingBy(OrdineDTO::getSerie));
         for (String venditore : listMap.keySet()) {
@@ -253,7 +252,10 @@ public class OrdineResource {
     @Path("/aggiornaBolle")
     public Response aggiornaBolle() throws ParseException {
         scheduler.update();
-        return Response.ok(ordineService.findAllByStatus(new FiltroOrdini())).build();
+        FiltroOrdini f = new FiltroOrdini();
+        f.setSize(10);
+        f.setPage(0);
+        return Response.ok(ordineService.findAllByStatus(f)).build();
     }
 
     @GET

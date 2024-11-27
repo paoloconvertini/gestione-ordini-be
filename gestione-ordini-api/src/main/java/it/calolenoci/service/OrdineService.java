@@ -122,15 +122,15 @@ public class OrdineService {
             query += " AND go.status = :status ";
             map.put("status", filtro.getStatus());
         } else {
-            query += " AND go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '' ";
+            query += " AND (go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '') ";
         }
         if (StringUtils.isNotBlank(filtro.getCliente())) {
-            query += " and p.intestazione LIKE :c";
-            map.put("c", "%" + filtro.getCliente() + "%");
+            query += " and UPPER(p.intestazione) LIKE :c";
+            map.put("c", "%" + StringUtils.upperCase(filtro.getCliente()) + "%");
         }
         if (StringUtils.isNotBlank(filtro.getLuogo())) {
-            query += " and p.localita LIKE :l";
-            map.put("l", "%" + filtro.getLuogo() + "%");
+            query += " and UPPER(p.localita) LIKE :l";
+            map.put("l", "%" + StringUtils.upperCase(filtro.getLuogo()) + "%");
         }
         if (filtro.getDataOrdine() != null) {
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -399,7 +399,8 @@ public class OrdineService {
         Log.info("Fine creaReport: " + (fine - inizio) / 1000 + " sec");
     }
 
-    public List<OrdineDTO> findAllByStati(FiltroOrdini filtro) throws ParseException {
+    public PageOrdineDto findAllByStati(FiltroOrdini filtro) throws ParseException {
+        PageOrdineDto result = new PageOrdineDto();
         checkStatusDettaglio(filtro);
         checkConsegnati(filtro);
         checkNoProntaConegna(filtro);
@@ -465,18 +466,40 @@ public class OrdineService {
             map.put("de", filtro.getDataConsegnaEnd());
             mapPregressi.put("de", filtro.getDataConsegnaEnd());
         }
-        List<OrdineDTO> result = Ordine.find(query, map).project(OrdineDTO.class).list();
-        result.addAll(Ordine.find(queryPregressi, mapPregressi).project(OrdineDTO.class).list());
-        return result.stream()
-                .filter(Objects::nonNull)
-                .sorted(Comparator.comparing(OrdineDTO::getDataConsegna, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(OrdineDTO::getVeicolo, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(OrdineDTO::getOraConsegna, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(OrdineDTO::getOrdine, Comparator.nullsLast(Comparator.naturalOrder()))
-                ).toList();
+        query = applyFiltersRiservato(filtro, query, map);
+        queryPregressi = applyFiltersRiservato(filtro, queryPregressi, mapPregressi);
+        PanacheQuery<Ordine> panacheQuery = Ordine.find(query, map);
+        PanacheQuery<Ordine> dtoPanacheQuery = Ordine.find(queryPregressi, mapPregressi);
+        long count = panacheQuery.count();
+        count += dtoPanacheQuery.count();
+        List<OrdineDTO> ordineList;
+        if (filtro.getSize() > 0) {
+            ordineList = panacheQuery.page(filtro.getPage(), filtro.getSize())
+                    .project(OrdineDTO.class)
+                    .list();
+        } else {
+            ordineList = panacheQuery
+                    .project(OrdineDTO.class)
+                    .list();
+        }
+        List<OrdineDTO> ordinePregressiList;
+        if (filtro.getSize() > 0) {
+            ordinePregressiList = dtoPanacheQuery.page(filtro.getPage(), filtro.getSize())
+                    .project(OrdineDTO.class)
+                    .list();
+        } else {
+            ordinePregressiList = dtoPanacheQuery
+                    .project(OrdineDTO.class)
+                    .list();
+        }
+        result.setCount(count);
+        result.setList(ordineList);
+        result.getList().addAll(ordinePregressiList);
+        return result;
     }
 
-    public List<OrdineDTO> findAllRiservati(FiltroOrdini filtro) throws ParseException {
+    public PageOrdineDto findAllRiservati(FiltroOrdini filtro) throws ParseException {
+        PageOrdineDto result = new PageOrdineDto();
         checkStatusDettaglio(filtro);
         checkConsegnati(filtro);
         checkNoProntaConegna(filtro);
@@ -514,9 +537,39 @@ public class OrdineService {
                 "   p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, " +
                 " p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare, go.status,  " +
                 "  go.note, go.noteLogistica, go.dataNote, go.userNote, go.dataNoteLogistica, go.userNoteLogistica ";
-        List<OrdineDTO> list = Ordine.find(query, map).project(OrdineDTO.class).list();
-        return list.stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getImportoRiservati,
+        query = applyFiltersRiservato(filtro, query, map);
+        PanacheQuery<Ordine> panacheQuery = Ordine.find(query, map);
+        List<OrdineDTO> ordineDTOList = panacheQuery.project(OrdineDTO.class).list();
+        ordineDTOList = ordineDTOList.stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getImportoRiservati,
                 Comparator.nullsLast(Comparator.naturalOrder())).reversed()).toList();
+        result.setList(ordineDTOList);
+        return result;
+    }
+
+    private String applyFiltersRiservato(FiltroOrdini filtro, String query, Map<String, Object> map) throws ParseException {
+        if (filtro.getAnno() != null) {
+            query += " and o.anno = :a";
+            map.put("a", filtro.getAnno());
+        }
+        if (filtro.getProgressivo() != null) {
+            query += " and o.progressivo = :pr";
+            map.put("pr", filtro.getProgressivo());
+        }
+        if (StringUtils.isNotBlank(filtro.getCliente())) {
+            query += " and p.intestazione LIKE :c";
+            map.put("c", "%" + filtro.getCliente() + "%");
+        }
+        if (StringUtils.isNotBlank(filtro.getLuogo())) {
+            query += " and p.localita LIKE :l";
+            map.put("l", "%" + filtro.getLuogo() + "%");
+        }
+        if (filtro.getDataOrdine() != null) {
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String format = filtro.getDataOrdine().format(dateTimeFormatter);
+            query += " and o.dataConferma = :d";
+            map.put("d", sdf.parse(format));
+        }
+        return query;
     }
 
     @Transactional
@@ -613,4 +666,5 @@ public class OrdineService {
             return false;
         }
     }
+
 }

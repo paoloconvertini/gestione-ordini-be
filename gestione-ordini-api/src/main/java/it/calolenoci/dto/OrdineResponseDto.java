@@ -19,5 +19,5 @@ public class OrdineResponseDto implements Serializable {
 
     private Map<String, Double> importoRiservatiMap = new HashMap<>();
 
-    private List<OrdineDTO> ordineDTOList;
+    private PageOrdineDto pageOrdineDto;
 }
