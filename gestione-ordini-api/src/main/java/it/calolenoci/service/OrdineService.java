@@ -490,9 +490,9 @@ public class OrdineService {
 
     public PageOrdineDto findAllRiservati(FiltroOrdini filtro) throws ParseException {
         PageOrdineDto result = new PageOrdineDto();
-        checkStatusDettaglio(filtro);
-        checkConsegnati(filtro);
-        checkNoProntaConegna(filtro);
+        //checkStatusDettaglio(filtro);
+        //checkConsegnati(filtro);
+        //checkNoProntaConegna(filtro);
 
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, " +

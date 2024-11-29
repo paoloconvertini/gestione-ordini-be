@@ -403,7 +403,7 @@ public class ArticoloService {
                 errors.add("Articolo " + dto.getFDescrArticolo() + " senza codice fornitore");
                 continue;
             } else {
-                if("MEPO".equals(dto.getCodArtFornitore())){
+                if("MEPO".equals(StringUtils.trim(dto.getCodArtFornitore()))){
                     OrdineDettaglio.update("fArticolo =:fArticolo " +
                                     "WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo AND rigo =:rigo",
                             Parameters.with("fArticolo", "1000000000001").and("anno", dto.getAnno())
@@ -413,7 +413,7 @@ public class ArticoloService {
                 }
             }
 
-            Optional<Articolo> optArticolo = Articolo.find("descrArtSuppl = :codArt OR descrArticolo like '%:codArt%'",
+            Optional<Articolo> optArticolo = Articolo.find("(descrArtSuppl = :codArt OR descrArticolo like '%:codArt%') AND articolo NOT IN ('*PZ', '*ML','*KG')",
                     Parameters.with("codArt", dto.getCodArtFornitore())).firstResultOptional();
             if(optArticolo.isPresent()){
                 Log.error("Articolo " + dto.getFDescrArticolo() + ":  già codificato come: " + optArticolo.get().getArticolo());
@@ -491,7 +491,9 @@ public class ArticoloService {
             createArticolo(articolo, codiceArticolo, user, dto, codArtFornitore, classeFornitore);
             salvaArticolo(user, errors, fornitore, articolo);
             //Aggiorno ordine cliente
-            aggiornoOrdineCliente(dto, articolo);
+            if(!StringUtils.equals(articolo.getArticolo(),"*PZ")){
+                aggiornoOrdineCliente(dto, articolo);
+            }
         }
         codificaArticoliDto.setErrors(errors);
         return codificaArticoliDto;

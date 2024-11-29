@@ -79,6 +79,7 @@ public class FetchScheduler {
     @Scheduled(every = "${cron.expr.nuovi.ordini:10m}")
     @Transactional
     public void findNuoviOrdini() throws ParseException {
+        ordineService.checkStatusDettaglio(new FiltroOrdini());
         ordineService.addNuoviOrdini();
     }
 
