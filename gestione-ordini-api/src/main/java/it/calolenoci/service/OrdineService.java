@@ -59,7 +59,7 @@ public class OrdineService {
     @TransactionConfiguration(timeout = 15)
     public PageOrdineDto findAllByStatus(FiltroOrdini filtro) throws ParseException {
         PageOrdineDto pageOrdineDto = new PageOrdineDto();
-        if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
+       /* if (!StatoOrdineEnum.DA_PROCESSARE.getDescrizione().equals(filtro.getStatus()) &&
                 !ARCHIVIATO.getDescrizione().equals(filtro.getStatus()) &&
                 !StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
             checkStatusDettaglio(filtro);
@@ -67,7 +67,7 @@ public class OrdineService {
         if (!ARCHIVIATO.getDescrizione().equals(filtro.getStatus())) {
             checkConsegnati(filtro);
             checkNoProntaConegna(filtro);
-        }
+        }*/
         long inizio = System.currentTimeMillis();
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma,  " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia,  " +
@@ -391,9 +391,9 @@ public class OrdineService {
 
     public PageOrdineDto findAllByStati(FiltroOrdini filtro) throws ParseException {
         PageOrdineDto result = new PageOrdineDto();
-        checkStatusDettaglio(filtro);
-        checkConsegnati(filtro);
-        checkNoProntaConegna(filtro);
+       // checkStatusDettaglio(filtro);
+        //checkConsegnati(filtro);
+        //checkNoProntaConegna(filtro);
 
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, o.indirdiverse, o.locdiverse, o.provdiverse, " +
                 "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine,  " +
