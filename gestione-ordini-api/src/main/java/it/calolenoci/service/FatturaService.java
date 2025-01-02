@@ -287,6 +287,7 @@ public class FatturaService {
 
     private List<AccontoDto> settaRifOrdCliente(List<AccontoDto> listaAcconto, List<OrdineDettaglioDto> lista) {
         boolean check = lista != null;
+        //FIXME considerare anche il caso in cui su stessa fattura ho due aliquote di IVA diversa
         Map<String, List<AccontoDto>> mapByNumFatt = listaAcconto.stream().collect(Collectors.groupingBy(AccontoDto::getNumeroFattura));
         Log.debug("Lista acconti size: " + mapByNumFatt.size());
         for (String numFatt : mapByNumFatt.keySet()) {

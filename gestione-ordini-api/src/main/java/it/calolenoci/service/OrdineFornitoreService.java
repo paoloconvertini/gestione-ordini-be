@@ -79,8 +79,8 @@ public class OrdineFornitoreService {
             }
             fornitori.addAll(mapArticoli.keySet());
             int index = 1;
-            Integer progressivoForn = OrdineFornitore.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM OrdineFornitore o").project(Integer.class).firstResult();
-            Integer progressivoFornDettaglio = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM OrdineFornitoreDettaglio o").project(Integer.class).firstResult();
+            Integer progressivoForn = OrdineFornitore.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM OrdineFornitore o WHERE o.anno = :a", Parameters.with("a", LocalDate.now().getYear())).project(Integer.class).firstResult();
+            Integer progressivoFornDettaglio = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM OrdineFornitoreDettaglio o WHERE o.anno = :a", Parameters.with("a", LocalDate.now().getYear())).project(Integer.class).firstResult();
             List<RegistroAzioni> registroAzioniList = new ArrayList<>();
             for (String sottoConto : mapArticoli.keySet()) {
                 List<ArticoloDto> articoloDtoList = mapArticoli.get(sottoConto);
