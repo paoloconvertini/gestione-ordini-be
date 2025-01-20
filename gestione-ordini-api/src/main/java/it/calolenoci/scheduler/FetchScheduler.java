@@ -55,7 +55,7 @@ public class FetchScheduler {
     @Inject
     AmmortamentoCespiteService ammortamentoCespiteService;
 
-    @Scheduled(every = "${cron.expr:1m}")
+    @Scheduled(cron = "${cron.expr}")
     @Transactional
     @TransactionConfiguration(timeout = 500)
     public void update() throws ParseException {
@@ -73,7 +73,7 @@ public class FetchScheduler {
         articoloService.checkNoBolle();
         ordineService.checkNoProntaConegna(new FiltroOrdini());
         long fine = System.currentTimeMillis();
-        Log.info("FINE UPDATE CHECK BOLLE: " + (fine - inizio) / 1000 + " sec");
+        Log.error("FINE UPDATE CHECK BOLLE: " + (fine - inizio) / 1000 + " sec");
     }
 
     @Scheduled(every = "${cron.expr.nuovi.ordini:10m}")

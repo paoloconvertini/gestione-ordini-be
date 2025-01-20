@@ -362,7 +362,7 @@ public class OrdineService {
             GoOrdine.persist(listToSave);
             GoOrdineDettaglio.persist(listDettaglioToSave);
             long fine = System.currentTimeMillis();
-            Log.info("addNuoviOrdini: " + (fine - inizio) / 1000 + " sec");
+            Log.error("addNuoviOrdini: " + (fine - inizio) / 1000 + " sec");
             creaReport(list);
         }
     }
