@@ -22,11 +22,15 @@ import javax.transaction.Transactional;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static it.calolenoci.enums.StatoOrdineEnum.ARCHIVIATO;
+import static it.calolenoci.enums.StatoOrdineEnum.COMPLETO;
 
 @ApplicationScoped
 public class OrdineService {
@@ -202,13 +206,13 @@ public class OrdineService {
         }
         long inizio = System.currentTimeMillis();
         List<GoOrdineDto> ordineList = GoOrdine.find("SELECT distinct o.anno, o.serie, o.progressivo, o.status " +
-                        " FROM GoOrdine o " +
-                        "JOIN OrdineDettaglio o2 ON o2.anno = o.anno AND o2.serie = o.serie AND o2.progressivo = o.progressivo " +
-                        "WHERE NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o2.progrGenerale = god.progrGenerale) " +
-                        "and o.status in (:param) and o2.tipoRigo = ' '", Parameters.with("param", list)).project(GoOrdineDto.class).list();
+                " FROM GoOrdine o " +
+                "JOIN OrdineDettaglio o2 ON o2.anno = o.anno AND o2.serie = o.serie AND o2.progressivo = o.progressivo " +
+                "WHERE NOT EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o2.progrGenerale = god.progrGenerale) " +
+                "and o.status in (:param) and o2.tipoRigo = ' '", Parameters.with("param", list)).project(GoOrdineDto.class).list();
         if (!ordineList.isEmpty()) {
             for (GoOrdineDto o : ordineList) {
-                Log.error("Ordineid checkStatusDettaglio= " + o.getAnno() +"/"+o.getSerie()+"/"+o.getProgressivo() +
+                Log.error("Ordineid checkStatusDettaglio= " + o.getAnno() + "/" + o.getSerie() + "/" + o.getProgressivo() +
                         ", old status " + o.getStatus());
                 GoOrdine.update("status =:status " +
                                 "WHERE anno =:a AND serie=:s AND progressivo=:p",
@@ -236,7 +240,7 @@ public class OrdineService {
                 "from GoOrdine go " +
                 "WHERE NOT EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE go.anno = o.anno AND  go.progressivo = o.progressivo AND go.serie = o.serie " +
                 "and o.tipoRigo = ' ' and o.saldoAcconto <> 'S') " +
-                "AND go.status IN (:param)"  +
+                "AND go.status IN (:param)" +
                 "and go.warnNoBolla = :w";
         Map<String, Object> filterMap = new HashMap<>();
         filterMap.put("param", list);
@@ -244,19 +248,19 @@ public class OrdineService {
         query = applyFiltersConsegna(filtro, query, filterMap);
         PanacheQuery<GoOrdine> panacheQuery = GoOrdine.find(query, filterMap);
         List<GoOrdineDto> ordineList = panacheQuery
-                    .project(GoOrdineDto.class)
-                    .list();
+                .project(GoOrdineDto.class)
+                .list();
         long f = System.currentTimeMillis();
         Log.error("GoOrdine.findOrdiniConsegnatiByStatus: " + (f - i) + " msec");
         long inizio = System.currentTimeMillis();
         if (!ordineList.isEmpty()) {
             for (GoOrdineDto o : ordineList) {
-                Log.error("Ordineid checkconsegnati= " + o.getAnno() +"/"+o.getSerie()+"/"+o.getProgressivo() +
+                Log.error("Ordineid checkconsegnati= " + o.getAnno() + "/" + o.getSerie() + "/" + o.getProgressivo() +
                         ", old status " + o.getStatus() + "  old hasProntoConsegna=" + o.getHasProntoConsegna());
                 GoOrdine.update("status =:status, hasProntoConsegna =:f " +
                                 "WHERE anno =:a AND serie=:s AND progressivo=:p",
                         Parameters.with("status", ARCHIVIATO.getDescrizione())
-                                .and("f",  Boolean.FALSE)
+                                .and("f", Boolean.FALSE)
                                 .and("a", o.getAnno())
                                 .and("s", o.getSerie()).and("p", o.getProgressivo()));
             }
@@ -286,15 +290,15 @@ public class OrdineService {
         filterMap.put("param", list);
         filterMap.put("f", Boolean.FALSE);
         query = applyFiltersConsegna(filtro, query, filterMap);
-        PanacheQuery<GoOrdine> panacheQuery = GoOrdine.find( query, filterMap);
+        PanacheQuery<GoOrdine> panacheQuery = GoOrdine.find(query, filterMap);
         List<GoOrdineDto> ordineList = panacheQuery.project(GoOrdineDto.class).list();
         long f = System.currentTimeMillis();
         Log.error("GoOrdine.findOrdiniNoProntaConsegnaByStatus: " + (f - i) + " msec");
         long inizio = System.currentTimeMillis();
-        if(!ordineList.isEmpty()){
+        if (!ordineList.isEmpty()) {
             for (GoOrdineDto o : ordineList) {
-                Log.error("Ordineid checkNoProntaConegna= " + o.getAnno() +"/"+o.getSerie()+"/"+o.getProgressivo()
-                + ", old hasProntoConsegna=" + o.getHasProntoConsegna());
+                Log.error("Ordineid checkNoProntaConegna= " + o.getAnno() + "/" + o.getSerie() + "/" + o.getProgressivo()
+                        + ", old hasProntoConsegna=" + o.getHasProntoConsegna());
                 GoOrdine.update("hasProntoConsegna =:f WHERE anno =:a AND serie=:s AND progressivo=:p",
                         Parameters.with("f", Boolean.FALSE).and("a", o.getAnno())
                                 .and("s", o.getSerie()).and("p", o.getProgressivo()));
@@ -391,7 +395,7 @@ public class OrdineService {
 
     public PageOrdineDto findAllByStati(FiltroOrdini filtro) throws ParseException {
         PageOrdineDto result = new PageOrdineDto();
-       // checkStatusDettaglio(filtro);
+        // checkStatusDettaglio(filtro);
         //checkConsegnati(filtro);
         //checkNoProntaConegna(filtro);
 
@@ -485,6 +489,116 @@ public class OrdineService {
         result.setCount(count);
         result.setList(ordineList);
         result.getList().addAll(ordinePregressiList);
+        return result;
+    }
+
+    public ConsegneSettimanaliDto consegneSettimanali(FiltroOrdini filtro) throws ParseException {
+        ConsegneSettimanaliDto result = new ConsegneSettimanaliDto();
+
+        String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, o.indirdiverse, o.locdiverse, o.provdiverse, " +
+                "p.intestazione, p.sottoConto,  o.riferimento,  p.indirizzo,  p.localita, p.cap,  p.provincia, p.latitudine, p.longitudine,  " +
+                "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
+                "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, v.idVeicolo, ve.descrizione, v.dataConsegna, v.venditore, v.oraConsegna, v.ordine " +
+                ", go.dataNote, go.userNote, go.dataNoteLogistica, go.userNoteLogistica " +
+                "FROM Ordine o " +
+                "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
+                "LEFT JOIN GoOrdVeicolo v ON v.id.anno = go.anno AND v.id.serie = go.serie AND v.id.progressivo = go.progressivo " +
+                "JOIN Veicolo ve ON v.idVeicolo = ve.id " +
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S'";
+
+        String queryPregressi = " SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, o.indirdiverse, o.locdiverse, o.provdiverse,  " +
+                "p.intestazione, p.sottoConto,  o.riferimento, p.localita, p.provincia, p.latitudine, p.longitudine, " +
+                "p.telefono,  p.cellulare, v.idVeicolo, ve.descrizione, v.dataConsegna, v.venditore, v.oraConsegna, v.ordine  " +
+                "FROM Ordine o " +
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
+                "JOIN GoOrdVeicolo v ON v.id.anno = o.anno AND v.id.serie = o.serie AND v.id.progressivo = o.progressivo " +
+                "JOIN Veicolo ve ON v.idVeicolo = ve.id " +
+                "WHERE o.dataConferma <:dataConfig AND o.provvisorio <> 'S' AND " +
+                "EXISTS (SELECT 1 FROM OrdineDettaglio od WHERE od.anno = o.anno AND od.serie = o.serie AND od.progressivo = o.progressivo and " +
+                "od.saldoAcconto IN ('A', '', ' ') AND od.tipoRigo <> 'C')";
+
+        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> mapPregressi = new HashMap<>();
+
+        query += "AND go.status NOT IN (:list)";
+        map.put("list", ARCHIVIATO.getDescrizione());
+
+        map.put("dataConfig", sdf.parse(dataCongig));
+        mapPregressi.put("dataConfig", sdf.parse(dataCongig));
+
+        if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
+            query += " and o.serie = :venditore";
+            queryPregressi += " and o.serie = :venditore";
+            map.put("venditore", filtro.getCodVenditore());
+            mapPregressi.put("venditore", filtro.getCodVenditore());
+        }
+        if (filtro.getVeicolo() != null) {
+            query += " and v.idVeicolo = :v";
+            queryPregressi += " and v.idVeicolo = :v";
+            map.put("v", filtro.getVeicolo());
+            mapPregressi.put("v", filtro.getVeicolo());
+        }
+        LocalDate today = LocalDate.now();
+        // Trova il lunedì della settimana corrente
+        LocalDate monday = today.with(DayOfWeek.MONDAY);
+
+        // Trova il sabato della settimana corrente
+        LocalDate saturday = today.with(DayOfWeek.SATURDAY);
+        query += " and v.dataConsegna >= :d";
+        queryPregressi += " and v.dataConsegna >= :d";
+        map.put("d", monday);
+        mapPregressi.put("d", monday);
+        query += " and v.dataConsegna <= :de";
+        queryPregressi += " and v.dataConsegna <= :de";
+        map.put("de", saturday);
+        mapPregressi.put("de", saturday);
+        PanacheQuery<Ordine> panacheQuery = Ordine.find(query, map);
+        PanacheQuery<Ordine> dtoPanacheQuery = Ordine.find(queryPregressi, mapPregressi);
+        List<OrdineDTO> ordineList;
+        ordineList = panacheQuery.project(OrdineDTO.class).list();
+        ordineList.addAll(dtoPanacheQuery.project(OrdineDTO.class).list());
+
+        ConsegnaGiornalieraDto lunedi = new ConsegnaGiornalieraDto();
+        ConsegnaGiornalieraDto martedi = new ConsegnaGiornalieraDto();
+        ConsegnaGiornalieraDto mercoledi = new ConsegnaGiornalieraDto();
+        ConsegnaGiornalieraDto giovedi = new ConsegnaGiornalieraDto();
+        ConsegnaGiornalieraDto venerdi = new ConsegnaGiornalieraDto();
+        ConsegnaGiornalieraDto sabato = new ConsegnaGiornalieraDto();
+        Map<LocalDate, List<OrdineDTO>> localDateListMap = ordineList.stream().collect(Collectors.groupingBy(OrdineDTO::getDataConsegna));
+        for (Map.Entry<LocalDate, List<OrdineDTO>> localDateListEntry : localDateListMap.entrySet()) {
+            LocalDate dataConsegna = localDateListEntry.getKey();
+            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.MONDAY)){
+                lunedi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
+                                Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+            }
+            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.TUESDAY)){
+                martedi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
+                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+            }
+            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.WEDNESDAY)){
+                mercoledi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
+                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+            }
+            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.THURSDAY)){
+                giovedi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
+                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+            }
+            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.FRIDAY)){
+                venerdi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
+                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+            }
+            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.SATURDAY)){
+                sabato.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
+                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+            }
+        }
+
+        result.setLunedi(lunedi);
+        result.setMartedi(martedi);
+        result.setMercoledi(mercoledi);
+        result.setGiovedi(giovedi);
+        result.setVenerdi(venerdi);
+        result.setSabato(sabato);
         return result;
     }
 

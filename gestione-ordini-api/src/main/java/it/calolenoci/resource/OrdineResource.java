@@ -172,6 +172,17 @@ public class OrdineResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @POST
+    @PermitAll
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
+    @Consumes(APPLICATION_JSON)
+    @Path("/consegne-settimanali")
+    public Response getConsegneSettimanali(FiltroOrdini filtro) throws ParseException {
+        return Response.ok(ordineService.consegneSettimanali(filtro)).build();
+    }
+
+    @Operation(summary = "Returns all the ordini from the database")
+    @POST
     @RolesAllowed({ADMIN, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")

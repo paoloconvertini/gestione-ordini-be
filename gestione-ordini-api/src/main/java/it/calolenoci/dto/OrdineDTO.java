@@ -96,6 +96,8 @@ public class OrdineDTO implements Serializable {
     private Character oraConsegna;
     private Long ordine;
 
+    private String descVeicolo;
+
     public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,
                      String statoResidenza, String statoEstero, String telefono, String cellulare, String email, String pec) {
@@ -577,5 +579,88 @@ public class OrdineDTO implements Serializable {
         this.userNote = userNote;
         this.dataNoteLogistica = dataNoteLogistica;
         this.userNoteLogistica = userNoteLogistica;
+    }
+
+    /**
+     * {it.calolenoci.service.OrdineService#consegneSettimanali}
+     */
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String indirdiverse,
+                     String locdiverse, String provdiverse,
+                     String intestazione, String sottoConto, String riferimento, String indirizzo,
+                     String localita, String cap, String provincia, Double latitudine, Double longitudine, String statoResidenza, String statoEstero,
+                     String telefono, String cellulare, String email, String pec, String status,
+                     Boolean locked, String userLock, Boolean warnNoBolla, Boolean hasFirma,
+                     Boolean hasProntoConsegna, String note, String noteLogistica, Integer veicolo, String descVeicolo, LocalDate dataConsegna, Boolean flVenditore, Character oraConsegna,
+                     Long ordine, LocalDateTime dataNote, String userNote, LocalDateTime dataNoteLogistica, String userNoteLogistica) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.indirdiverse = indirdiverse;
+        this.locdiverse = locdiverse;
+        this.provdiverse = provdiverse;
+        this.intestazione = intestazione;
+        this.sottoConto = sottoConto;
+        this.riferimento = riferimento;
+        this.indirizzo = indirizzo;
+        this.localita = localita;
+        this.cap = cap;
+        this.provincia = provincia;
+        this.latitudine = latitudine;
+        this.longitudine = longitudine;
+        this.statoResidenza = statoResidenza;
+        this.statoEstero = statoEstero;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.email = email;
+        this.pec = pec;
+        this.status = status;
+        this.locked = locked;
+        this.userLock = userLock;
+        this.warnNoBolla = warnNoBolla;
+        this.hasFirma = hasFirma;
+        this.hasProntoConsegna = hasProntoConsegna;
+        this.note = note;
+        this.noteLogistica = noteLogistica;
+        this.veicolo = veicolo;
+        this.descVeicolo = descVeicolo;
+        this.dataConsegna = dataConsegna;
+        this.flVenditore = flVenditore;
+        this.oraConsegna = oraConsegna;
+        this.ordine = ordine;
+        this.dataNote = dataNote;
+        this.userNote = userNote;
+        this.dataNoteLogistica = dataNoteLogistica;
+        this.userNoteLogistica = userNoteLogistica;
+    }
+
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String indirdiverse,
+                     String locdiverse, String provdiverse,
+                     String intestazione, String sottoConto, String riferimento, String localita, String provincia, Double latitudine, Double longitudine,
+                     String telefono, String cellulare, Integer veicolo, String descVeicolo, LocalDate dataConsegna, Boolean flVenditore, Character oraConsegna, Long ordine) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataConferma = dataConferma;
+        this.numeroConferma = numeroConferma;
+        this.indirdiverse = indirdiverse;
+        this.locdiverse = locdiverse;
+        this.provdiverse = provdiverse;
+        this.intestazione = intestazione;
+        this.sottoConto = sottoConto;
+        this.riferimento = riferimento;
+        this.localita = localita;
+        this.provincia = provincia;
+        this.latitudine = latitudine;
+        this.longitudine = longitudine;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.veicolo = veicolo;
+        this.descVeicolo = descVeicolo;
+        this.dataConsegna = dataConsegna;
+        this.flVenditore = flVenditore;
+        this.oraConsegna = oraConsegna;
+        this.ordine = ordine;
     }
 }
