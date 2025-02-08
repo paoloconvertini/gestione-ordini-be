@@ -5,13 +5,15 @@ import it.calolenoci.entity.*;
 import javax.enterprise.context.ApplicationScoped;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 
 
 @ApplicationScoped
 public class MagazzinoMapper {
 
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     public Magazzino buildMagazzino(MagazzinoId id, Integer progrGen, FattureDettaglio fd, Fatture f, Ordine ordine){
         Magazzino m = new Magazzino();
@@ -229,5 +231,109 @@ public class MagazzinoMapper {
         }catch (ParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Magazzino buildMagazzino(MagazzinoId id, Integer progrGen, OrdineDettaglio o,
+                                    Integer gruppoConto, String sottoConto, String numDoc,
+                                    String causale, String vettore, LocalDate dataOperazione, String user){
+        Magazzino m = new Magazzino();
+        Date dOp = Date.from(dataOperazione.atStartOfDay()
+                .atZone(ZoneId.systemDefault())
+                .toInstant());
+            m.setMagazzinoId(id);
+            m.setProgrgenerale(progrGen);
+            m.setDataMagazzino(dOp);
+            m.setNumdocmagazzino(numDoc);
+            m.setDatadocmag(new Date());
+            m.setNumfatturamag(" ");
+            m.setDatafatturamag(new Date());
+            m.setMcausale(causale);
+            m.setMmagazzino("B");
+            m.setGruppomag(gruppoConto);
+            m.setContomag(sottoConto);
+            m.setGruppoprop(0);
+            m.setContoprop(" ");
+            m.setGruppofattura(0);
+            m.setContofattura("");
+            m.setContromag(" ");
+            m.setTiporigomag(" ");
+            m.setMArticolo(o.getFArticolo());
+            m.setCodiceean(" ");
+            m.setVariante1(" ");
+            m.setVariante2(" ");
+            m.setVariante3(" ");
+            m.setVariante4(" ");
+            m.setVariante5(" ");
+            m.setMdescrarticolo(o.getFDescrArticolo());
+            m.setMunita(o.getFUnitaMisura());
+            m.setMcoefficiente(0D);
+            m.setMquantita(o.getQuantita() == null ? 0D : o.getQuantita());
+            m.setMquantitav(o.getQuantitaV() == null ? 0D : o.getQuantitaV());
+            m.setMquantita2(o.getQuantita2() == null ? 0D : o.getQuantita2());
+            m.setValore(0D);
+            m.setValoreUnitario(0D);
+            m.setPrezzo(0D);
+            m.setPrezzoextra(0D);
+            m.setMvaluta(" ");
+            m.setMcambio(0D);
+            m.setScontoarticolo(o.getScontoArticolo() == null ? 0D : o.getScontoArticolo());
+            m.setScontoc1(o.getScontoC1() == null ? 0D : o.getScontoC1());
+            m.setScontoc2(o.getScontoC2() == null ? 0D : o.getScontoC2());
+            m.setScontop(o.getScontoP() == null ? 0D : o.getScontoP());
+            m.setMprovvarticolo(0D);
+            m.setMprovvcliente(0D);
+            m.setLottomag("");
+            m.setCondpagmag("");
+            m.setIvamag("");
+            m.setMagente("");
+            m.setDataprimamag(null);
+            m.setMcentrocosto("");
+            m.setMvocespesa("");
+            m.setMcommessa("");
+            m.setMcig(" ");
+            m.setMcup(" ");
+            m.setMcolli(o.getFColli() == null ? 0 : o.getFColli());
+            m.setMpallet(0D);
+            m.setMmodoconsegna("");
+            m.setMvettore(vettore);
+            m.setValoreuser(0D);
+            m.setDescruser1(" ");
+            m.setDescruser2(" ");
+            m.setDescruser3(" ");
+            m.setDescruser4(" ");
+            m.setDescruser5(" ");
+            m.setQuantitauser01(0D);
+            m.setQuantitauser02(0D);
+            m.setQuantitauser03(0D);
+            m.setQuantitauser04(0D);
+            m.setQuantitauser05(0D);
+            m.setDatauser1(null);
+            m.setDatauser2(null);
+            m.setDatauser3(null);
+            m.setDatauser4(null);
+            m.setDatauser5(null);
+            m.setFlagtrasferito("");
+            m.setNotemag(" ");
+            m.setProvenienza("");
+            m.setPid(0);
+            m.setRifRigaCommessa(0);
+            m.setPartitacdeposito(0);
+            m.setControllobf(" ");
+            m.setBfrigo(0);
+            m.setBfverifica(" ");
+            m.setSettore(" ");
+            m.setOggetto(" ");
+            m.setRigogiornale(0);
+            m.setDatainserimento(new Date());
+            m.setUsername(" ");
+            m.setDatamodifica(null);
+            m.setCostomedio(0D);
+            m.setSysCreatedate(new Date());
+            m.setSysCreateuser(user);
+            m.setSysUpdatedate(new Date());
+            m.setSysUpdateuser(user);
+            m.setDatascontrino(null);
+            m.setPidPrimanota(0);
+            return m;
     }
 }

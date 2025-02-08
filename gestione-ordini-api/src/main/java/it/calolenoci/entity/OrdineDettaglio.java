@@ -268,7 +268,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
     public static List<OrdineDettaglioDto> findArticoliById(FiltroArticoli filtro) {
         String query = "SELECT o.anno,  o.progressivo, o.progrGenerale,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo,  " +
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo, o.prezzo*(1-o.scontoArticolo/100)*(1-o.scontoC1/100)*(1-o.scontoC2/100)*(1-o.scontoP/100), " +
-                "  o.fUnitaMisura,  " +
+                "  o.fUnitaMisura,  o.magazz as magazzino, " +
                 "god.flagRiservato, god.flagNonDisponibile, god.flagOrdinato, god.flagConsegnato,  o.tono, " +
                 "o.qtyuser1, o.datauser1, " +
                 "a.fornitoreArticoloId.articolo, " +

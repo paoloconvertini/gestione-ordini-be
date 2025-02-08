@@ -1,16 +1,15 @@
 package it.calolenoci.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.Column;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @RegisterForReflection
@@ -31,6 +30,7 @@ public class OrdineDettaglioDto implements Serializable {
     private  Double prezzoScontato;
     private  String fUnitaMisura;
 
+    private String magazz;
     private Double scontoArticolo;
 
     private Double scontoC1;
@@ -261,7 +261,7 @@ public class OrdineDettaglioDto implements Serializable {
         this.intestazione = intestazione;
     }
 
-    //findArticoliById
+
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
                               String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
                               Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,
@@ -314,9 +314,10 @@ public class OrdineDettaglioDto implements Serializable {
         this.progressivoMag = progressivoMag;
         this.intestazione = intestazione;
     }
+    //findArticoliById
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
                               String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
-                              Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,
+                              Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura, String magazzino,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, Double qtyuser1, Date datauser1, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
                               Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
@@ -336,6 +337,7 @@ public class OrdineDettaglioDto implements Serializable {
         this.prezzo = prezzo;
         this.prezzoScontato = prezzoScontato;
         this.fUnitaMisura = fUnitaMisura;
+        this.magazz = magazzino;
         this.flagRiservato = flagRiservato;
         this.flagNonDisponibile = flagNonDisponibile;
         this.flagOrdinato = flagOrdinato;
