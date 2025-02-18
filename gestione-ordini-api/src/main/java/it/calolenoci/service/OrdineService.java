@@ -520,9 +520,6 @@ public class OrdineService {
         Map<String, Object> map = new HashMap<>();
         Map<String, Object> mapPregressi = new HashMap<>();
 
-        query += "AND go.status NOT IN (:list)";
-        map.put("list", ARCHIVIATO.getDescrizione());
-
         map.put("dataConfig", sdf.parse(dataCongig));
         mapPregressi.put("dataConfig", sdf.parse(dataCongig));
 
@@ -568,28 +565,43 @@ public class OrdineService {
         for (Map.Entry<LocalDate, List<OrdineDTO>> localDateListEntry : localDateListMap.entrySet()) {
             LocalDate dataConsegna = localDateListEntry.getKey();
             if(dataConsegna.getDayOfWeek().equals(DayOfWeek.MONDAY)){
-                lunedi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
-                                Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
+                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
+                                Comparator.nullsLast(Comparator.naturalOrder())))
+                        .toList();
+                lunedi.setConsegne(consegne);
             }
             if(dataConsegna.getDayOfWeek().equals(DayOfWeek.TUESDAY)){
-                martedi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
-                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
+                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
+                                Comparator.nullsLast(Comparator.naturalOrder())))
+                        .toList();
+                martedi.setConsegne(consegne);
             }
             if(dataConsegna.getDayOfWeek().equals(DayOfWeek.WEDNESDAY)){
-                mercoledi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
-                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
+                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
+                                Comparator.nullsLast(Comparator.naturalOrder())))
+                        .toList();
+                mercoledi.setConsegne(consegne);
             }
             if(dataConsegna.getDayOfWeek().equals(DayOfWeek.THURSDAY)){
-                giovedi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
-                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
+                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
+                                Comparator.nullsLast(Comparator.naturalOrder()))).toList();
+                giovedi.setConsegne(consegne);
             }
             if(dataConsegna.getDayOfWeek().equals(DayOfWeek.FRIDAY)){
-                venerdi.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
-                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
+                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
+                                Comparator.nullsLast(Comparator.naturalOrder()))).toList();
+                venerdi.setConsegne(consegne);
             }
             if(dataConsegna.getDayOfWeek().equals(DayOfWeek.SATURDAY)){
-                sabato.setConsegne(localDateListEntry.getValue().stream().filter(Objects::nonNull).sorted(Comparator.comparing(OrdineDTO::getOrdine,
-                        Comparator.nullsLast(Comparator.naturalOrder()))).toList());
+                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
+                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
+                                Comparator.nullsLast(Comparator.naturalOrder()))).toList();
+                sabato.setConsegne(consegne);
             }
         }
 
