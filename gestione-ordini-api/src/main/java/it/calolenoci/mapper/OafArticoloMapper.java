@@ -3,10 +3,12 @@ package it.calolenoci.mapper;
 import it.calolenoci.dto.ArticoloDto;
 import it.calolenoci.dto.OrdineFornitoreDettaglioDto;
 import it.calolenoci.entity.GoOrdineFornitoreDettaglioBK;
+import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.entity.OrdineFornitoreDettaglio;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.time.Year;
 import java.util.Date;
 
 @ApplicationScoped
@@ -161,5 +163,145 @@ public class OafArticoloMapper {
         entity.setSysCreateuser(dto.getSysCreateuser());
         entity.setSysUpdateuser(dto.getSysUpdateuser());
         return entity;
+    }
+
+   public OrdineFornitoreDettaglio copyEntity(OrdineFornitoreDettaglio o, Integer progrGenerale, Integer rigo,
+                                              Integer progressivoFornDettaglio, OrdineDettaglio ordineDettaglio){
+       OrdineFornitoreDettaglio fornitoreDettaglio = new OrdineFornitoreDettaglio();
+       fornitoreDettaglio.setProgressivo(o.getProgressivo());
+       fornitoreDettaglio.setProgrGenerale(progressivoFornDettaglio+1);
+       fornitoreDettaglio.setAnno(o.getAnno());
+       fornitoreDettaglio.setSerie(o.getSerie());
+       fornitoreDettaglio.setRigo(rigo + 1);
+       fornitoreDettaglio.setTipoRigo(o.getTipoRigo());
+       fornitoreDettaglio.setPid(progrGenerale);
+       fornitoreDettaglio.setOArticolo(o.getOArticolo());
+       fornitoreDettaglio.setODescrArticolo(o.getODescrArticolo());
+       fornitoreDettaglio.setOQuantita(ordineDettaglio.getQuantita());
+       fornitoreDettaglio.setOQuantitaV(ordineDettaglio.getQuantita());
+       fornitoreDettaglio.setOquantita2(0D);
+       fornitoreDettaglio.setOUnitaMisura(o.getOUnitaMisura());
+       fornitoreDettaglio.setOColli(o.getOColli());
+       fornitoreDettaglio.setOCodiceIva(o.getOCodiceIva());
+       fornitoreDettaglio.setProvenienza("C");
+       fornitoreDettaglio.setMagazzino("B");
+       if (fornitoreDettaglio.getOQuantita() != null && o.getOPrezzo() != null) {
+           fornitoreDettaglio.setValoreTotale(fornitoreDettaglio.getOQuantita() * o.getOPrezzo());
+       }
+       String campoUser5 = "VS.ART." + ordineDettaglio.getCodArtFornitore();
+       fornitoreDettaglio.setCampoUser5(StringUtils.truncate(campoUser5, 25));
+       String nota = "Riferimento n. " + ordineDettaglio.getAnno() + "/" + ordineDettaglio.getSerie() + "/" + ordineDettaglio.getProgressivo() + "-" + ordineDettaglio.getRigo();
+       fornitoreDettaglio.setNota(nota);
+       fornitoreDettaglio.setSaldo(o.getSaldo());
+       fornitoreDettaglio.setSinonimo1(o.getSinonimo1());
+       fornitoreDettaglio.setVariante1(o.getVariante1());
+       fornitoreDettaglio.setVariante2(o.getVariante2());
+       fornitoreDettaglio.setVariante3(o.getVariante3());
+       fornitoreDettaglio.setVariante4(o.getVariante4());
+       fornitoreDettaglio.setVariante5(o.getVariante5());
+       fornitoreDettaglio.setCodiceean(o.getCodiceean());
+       fornitoreDettaglio.setOcoefficiente(o.getOcoefficiente());
+       fornitoreDettaglio.setPrezzoextra(o.getPrezzoextra());
+       fornitoreDettaglio.setDataconfconseg(new Date());
+       fornitoreDettaglio.setDatarichconseg(new Date());
+       fornitoreDettaglio.setOlottomagf(o.getOlottomagf());
+       fornitoreDettaglio.setOpallet(o.getOpallet());
+       fornitoreDettaglio.setOcommessa(o.getOcommessa());
+       fornitoreDettaglio.setOcentrocostor(o.getOcentrocostor());
+       fornitoreDettaglio.setImpprovvfisso(o.getImpprovvfisso());
+       fornitoreDettaglio.setOprovvarticolo(o.getOprovvarticolo());
+       fornitoreDettaglio.setOprovvfornitore(o.getOprovvfornitore());
+       fornitoreDettaglio.setQtyuser1(o.getQtyuser1());
+       fornitoreDettaglio.setQtyuser2(o.getQtyuser2());
+       fornitoreDettaglio.setQtyuser3(o.getQtyuser3());
+       fornitoreDettaglio.setQtyuser4(o.getQtyuser4());
+       fornitoreDettaglio.setQtyuser5(o.getQtyuser5());
+       fornitoreDettaglio.setCampouser1(o.getCampouser1());
+       fornitoreDettaglio.setCampouser2(o.getCampouser2());
+       fornitoreDettaglio.setCampouser3(o.getCampouser3());
+       fornitoreDettaglio.setCampouser4(o.getCampouser4());
+       fornitoreDettaglio.setPidPrimanota(o.getPidPrimanota());
+       fornitoreDettaglio.setUsername(o.getUsername());
+       fornitoreDettaglio.setSysCreatedate(new Date());
+       fornitoreDettaglio.setSysUpdatedate(new Date());
+       fornitoreDettaglio.setSysCreateuser(o.getSysCreateuser());
+       fornitoreDettaglio.setSysUpdateuser(o.getSysUpdateuser());
+       fornitoreDettaglio.setOvocespesa(o.getOvocespesa());
+       fornitoreDettaglio.setOPrezzo(o.getOPrezzo());
+       fornitoreDettaglio.setFScontoArticolo(o.getFScontoArticolo());
+       fornitoreDettaglio.setScontoF1(o.getScontoF1());
+       fornitoreDettaglio.setScontoF2(o.getScontoF2());
+       fornitoreDettaglio.setFScontoP(o.getFScontoP());
+       return fornitoreDettaglio;
+    }
+
+    public OrdineFornitoreDettaglio createRigoRiferimento(String serie, Integer progressivo, String intestazione, Integer rigo, Integer progrGenerale, String user) {
+        OrdineFornitoreDettaglio ordineFornitoreDettaglio = new OrdineFornitoreDettaglio();
+        ordineFornitoreDettaglio.setTipoRigo("C");
+        ordineFornitoreDettaglio.setRigo(rigo + 1);
+        ordineFornitoreDettaglio.setAnno(Year.now().getValue());
+        ordineFornitoreDettaglio.setSerie(serie);
+        ordineFornitoreDettaglio.setProgressivo(progressivo);
+        ordineFornitoreDettaglio.setODescrArticolo("Rif. " + intestazione);
+        ordineFornitoreDettaglio.setProgrGenerale(progrGenerale + 1);
+        ordineFornitoreDettaglio.setNota(" ");
+        ordineFornitoreDettaglio.setOQuantita(0D);
+        ordineFornitoreDettaglio.setOQuantitaV(0D);
+        ordineFornitoreDettaglio.setOquantita2(0D);
+        ordineFornitoreDettaglio.setOUnitaMisura(" ");
+        ordineFornitoreDettaglio.setOColli(0);
+        ordineFornitoreDettaglio.setOCodiceIva(" ");
+        ordineFornitoreDettaglio.setProvenienza(" ");
+        ordineFornitoreDettaglio.setMagazzino(" ");
+        ordineFornitoreDettaglio.setPid(0);
+        ordineFornitoreDettaglio.setOArticolo(" ");
+        ordineFornitoreDettaglio.setCampoUser5(" ");
+        settaCampi(user, ordineFornitoreDettaglio);
+
+        return ordineFornitoreDettaglio;
+    }
+
+    public void settaCampi(String user, OrdineFornitoreDettaglio ordineFornitoreDettaglio) {
+        ordineFornitoreDettaglio.setSaldo(" ");
+        ordineFornitoreDettaglio.setSinonimo1(0);
+        ordineFornitoreDettaglio.setVariante1(" ");
+        ordineFornitoreDettaglio.setVariante2(" ");
+        ordineFornitoreDettaglio.setVariante3(" ");
+        ordineFornitoreDettaglio.setVariante4(" ");
+        ordineFornitoreDettaglio.setVariante5(" ");
+        ordineFornitoreDettaglio.setCodiceean(" ");
+        ordineFornitoreDettaglio.setOcoefficiente(0D);
+        ordineFornitoreDettaglio.setPrezzoextra(0D);
+        ordineFornitoreDettaglio.setDataconfconseg(new Date());
+        ordineFornitoreDettaglio.setDatarichconseg(new Date());
+        ordineFornitoreDettaglio.setOlottomagf(" ");
+        ordineFornitoreDettaglio.setOpallet(0D);
+        ordineFornitoreDettaglio.setOcommessa(" ");
+        ordineFornitoreDettaglio.setOcentrocostor(" ");
+        ordineFornitoreDettaglio.setImpprovvfisso(0D);
+        ordineFornitoreDettaglio.setOprovvarticolo(0D);
+        ordineFornitoreDettaglio.setOprovvfornitore(0D);
+        ordineFornitoreDettaglio.setQtyuser1(0D);
+        ordineFornitoreDettaglio.setQtyuser2(0D);
+        ordineFornitoreDettaglio.setQtyuser3(0D);
+        ordineFornitoreDettaglio.setQtyuser4(0D);
+        ordineFornitoreDettaglio.setQtyuser5(0D);
+        ordineFornitoreDettaglio.setCampouser1(" ");
+        ordineFornitoreDettaglio.setCampouser2(" ");
+        ordineFornitoreDettaglio.setCampouser3(" ");
+        ordineFornitoreDettaglio.setCampouser4(" ");
+        ordineFornitoreDettaglio.setPidPrimanota(0);
+        ordineFornitoreDettaglio.setUsername(user);
+        ordineFornitoreDettaglio.setSysCreatedate(new Date());
+        ordineFornitoreDettaglio.setSysUpdatedate(new Date());
+        ordineFornitoreDettaglio.setSysCreateuser(user);
+        ordineFornitoreDettaglio.setSysUpdateuser(user);
+        ordineFornitoreDettaglio.setOvocespesa(" ");
+        ordineFornitoreDettaglio.setOPrezzo(0D);
+        ordineFornitoreDettaglio.setValoreTotale(0D);
+        ordineFornitoreDettaglio.setFScontoArticolo(0D);
+        ordineFornitoreDettaglio.setScontoF1(0D);
+        ordineFornitoreDettaglio.setScontoF2(0D);
+        ordineFornitoreDettaglio.setFScontoP(0D);
     }
 }

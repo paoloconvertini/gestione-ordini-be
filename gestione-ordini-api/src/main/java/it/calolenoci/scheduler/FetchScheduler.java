@@ -60,13 +60,32 @@ public class FetchScheduler {
     @TransactionConfiguration(timeout = 500)
     public void update() throws ParseException {
         long inizio = System.currentTimeMillis();
-        Integer update;
         List<OrdineDettaglioDto> list = fatturaService.getBolle();
         if (list != null && !list.isEmpty()) {
             Log.debug("Trovate " + list.size() + " bolle");
-            update = articoloService.updateArticoliBolle(list);
-            Log.info("Aggiornati " + update + " articoli");
-            if (update != null && update != 0) {
+            int tentativi = 0;
+            boolean successo = false;
+            boolean update = false;
+            while (tentativi < 2 && !successo) {
+                try {
+                    update = articoloService.updateArticoliBolle(list);
+                    if (update) {
+                        successo = true;
+                        Log.error("Aggiornamento riuscito.");
+                    } else {
+                        throw new RuntimeException("L'aggiornamento non ha avuto successo.");
+                    }
+                } catch (Exception e) {
+                    tentativi++;
+                    Log.error("Tentativo " + tentativi + " fallito: " + e.getMessage());
+
+                    if (tentativi >= 2) {
+                        Log.error("Aggiornamento fallito dopo 2 tentativi.");
+                    }
+                }
+            }
+
+            if (update) {
                 ordineService.checkConsegnati(new FiltroOrdini());
             }
         }

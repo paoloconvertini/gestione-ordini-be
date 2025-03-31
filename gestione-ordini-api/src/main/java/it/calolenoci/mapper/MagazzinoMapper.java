@@ -235,18 +235,20 @@ public class MagazzinoMapper {
 
     public Magazzino buildMagazzino(MagazzinoId id, Integer progrGen, OrdineDettaglio o,
                                     Integer gruppoConto, String sottoConto, String numDoc,
-                                    String causale, String vettore, LocalDate dataOperazione, String user){
+                                    String causale, String vettore, LocalDate dataOperazione, String user, LocalDate dataDocumento){
         Magazzino m = new Magazzino();
         Date dOp = Date.from(dataOperazione.atStartOfDay()
+                .atZone(ZoneId.systemDefault())
+                .toInstant());
+        Date dDoc = Date.from(dataDocumento.atStartOfDay()
                 .atZone(ZoneId.systemDefault())
                 .toInstant());
             m.setMagazzinoId(id);
             m.setProgrgenerale(progrGen);
             m.setDataMagazzino(dOp);
             m.setNumdocmagazzino(numDoc);
-            m.setDatadocmag(new Date());
+            m.setDatadocmag(dDoc);
             m.setNumfatturamag(" ");
-            m.setDatafatturamag(new Date());
             m.setMcausale(causale);
             m.setMmagazzino("B");
             m.setGruppomag(gruppoConto);
@@ -268,8 +270,8 @@ public class MagazzinoMapper {
             m.setMunita(o.getFUnitaMisura());
             m.setMcoefficiente(0D);
             m.setMquantita(o.getQuantita() == null ? 0D : o.getQuantita());
-            m.setMquantitav(o.getQuantitaV() == null ? 0D : o.getQuantitaV());
-            m.setMquantita2(o.getQuantita2() == null ? 0D : o.getQuantita2());
+            m.setMquantitav(o.getQuantita() == null ? 0D : o.getQuantita());
+            m.setMquantita2(o.getQuantita() == null ? 0D : o.getQuantita());
             m.setValore(0D);
             m.setValoreUnitario(0D);
             m.setPrezzo(0D);

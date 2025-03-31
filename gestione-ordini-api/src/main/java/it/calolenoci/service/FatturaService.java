@@ -10,11 +10,13 @@ import it.calolenoci.mapper.FattureMapper;
 import it.calolenoci.mapper.MagazzinoMapper;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import java.text.SimpleDateFormat;
 import java.time.Year;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,6 +27,11 @@ public class FatturaService {
     @Inject
     EntityManager em;
 
+    @ConfigProperty(name = "data.inizio")
+    String dataCongig;
+
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
     @Inject
     FattureMapper fattureMapper;
 
@@ -32,49 +39,57 @@ public class FatturaService {
     MagazzinoMapper magazzinoMapper;
 
     public List<OrdineDettaglioDto> getBolle() {
-        long inizio = System.currentTimeMillis();
-        List<OrdineDettaglioDto> list = OrdineDettaglio.find("select o2.anno,o2.serie,o2.progressivo," +
-                        " o2.progrGenerale, o2.rigo, " +
-                        " (CASE WHEN o2.quantitaV IS NOT NULL AND o2.quantita <> o2.quantitaV THEN o2.quantitaV ELSE o2.quantita END ) as quantita " +
-                        " from OrdineDettaglio o2" +
-                        " join Ordine o ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
-                        " INNER JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo" +
-                        " where (go.status <> 'ARCHIVIATO' OR go.status <> null OR go.status <> '') " +
-                        " AND EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o2.progrGenerale = god.progrGenerale )"
-                          //      + "AND o2.fArticolo = god.fArticolo)"
-                )
-                .project(OrdineDettaglioDto.class).list();
-        Map<Integer, Double> map = new HashMap<>();
-        List<Integer> integers = list.stream().map(OrdineDettaglioDto::getProgrGenerale).toList();
-        Log.debug("getBolle: Trovati " + integers.size() + " integers");
-        if (integers.size() >= 1000) {
-            List<List<Integer>> partition = ListUtils.partition(integers, 1000);
-            for (List<Integer> integerList : partition) {
-                List<FatturaDto> fatturas = FattureDettaglio
+        try {
+            long inizio = System.currentTimeMillis();
+            List<OrdineDettaglioDto> list = OrdineDettaglio.find("select o2.anno,o2.serie,o2.progressivo," +
+                                    " o2.progrGenerale, o2.rigo, " +
+                                    " (CASE WHEN o2.quantitaV IS NOT NULL AND o2.quantita <> o2.quantitaV THEN o2.quantitaV ELSE o2.quantita END ) as quantita " +
+                                    " from OrdineDettaglio o2" +
+                                    " join Ordine o ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
+                                    " INNER JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo" +
+                                    " where (go.status <> 'ARCHIVIATO' OR go.status <> null OR go.status <> '') " +
+                                    " and o.dataConferma >= :data" +
+                                    " AND EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o2.progrGenerale = god.progrGenerale )" +
+                                    " AND EXISTS (SELECT 1 FROM FattureDettaglio f WHERE f.progrOrdCli = o2.progrGenerale )"
+                            //      + "AND o2.fArticolo = god.fArticolo)"
+                            ,
+                            Parameters.with("data", sdf.parse(dataCongig)))
+                    .project(OrdineDettaglioDto.class).list();
+            Map<Integer, Double> map = new HashMap<>();
+            List<Integer> integers = list.stream().filter(o -> o.getQuantita() != null).map(OrdineDettaglioDto::getProgrGenerale).toList();
+            Log.debug("getBolle: Trovati " + integers.size() + " integers");
+            if (integers.size() >= 1000) {
+                List<List<Integer>> partition = ListUtils.partition(integers, 1000);
+                for (List<Integer> integerList : partition) {
+                    List<FatturaDto> fatturas = FattureDettaglio
+                            .find("Select f.progrOrdCli, SUM(f.quantita) as qta " +
+                                            "FROM FattureDettaglio f " +
+                                            "WHERE f.progrOrdCli in (:list) GROUP BY f.progrOrdCli",
+                                    Parameters.with("list", integerList))
+                            .project(FatturaDto.class).list();
+                    fatturas.forEach(fatturaDto -> map.put(fatturaDto.getProgrOrdCli(), fatturaDto.getQta()));
+                }
+            } else {
+                List<FatturaDto> fatturaDtos = FattureDettaglio
                         .find("Select f.progrOrdCli, SUM(f.quantita) as qta " +
                                         "FROM FattureDettaglio f " +
                                         "WHERE f.progrOrdCli in (:list) GROUP BY f.progrOrdCli",
-                                Parameters.with("list", integerList))
+                                Parameters.with("list", integers))
                         .project(FatturaDto.class).list();
-                fatturas.forEach(fatturaDto -> map.put(fatturaDto.getProgrOrdCli(), fatturaDto.getQta()));
+                fatturaDtos.forEach(fatturaDto -> map.put(fatturaDto.getProgrOrdCli(), fatturaDto.getQta()));
             }
-        } else {
-            List<FatturaDto> fatturaDtos = FattureDettaglio
-                    .find("Select f.progrOrdCli, SUM(f.quantita) as qta " +
-                                    "FROM FattureDettaglio f " +
-                                    "WHERE f.progrOrdCli in (:list) GROUP BY f.progrOrdCli",
-                            Parameters.with("list", integers))
-                    .project(FatturaDto.class).list();
-            fatturaDtos.forEach(fatturaDto -> map.put(fatturaDto.getProgrOrdCli(), fatturaDto.getQta()));
+            list.forEach(o -> {
+                if (map.containsKey(o.getProgrGenerale())) {
+                    o.setQtaBolla(map.get(o.getProgrGenerale()));
+                }
+            });
+            long fine = System.currentTimeMillis();
+            Log.debug("Query getBolle: " + (fine - inizio) + " msec");
+            return list.stream().filter(o -> o.getQtaBolla() != null).toList();
+        } catch (Exception e) {
+            Log.error("Errore getBolle ", e);
+            return new ArrayList<>();
         }
-        list.forEach(o -> {
-            if (map.containsKey(o.getProgrGenerale())) {
-                o.setQtaBolla(map.get(o.getProgrGenerale()));
-            }
-        });
-        long fine = System.currentTimeMillis();
-        Log.debug("Query getBolle: " + (fine - inizio) + " msec");
-        return list;
     }
 
     public List<FatturaDto> getBolle(Integer progrCliente) {
@@ -109,13 +124,13 @@ public class FatturaService {
                 resultList.add(a);
                 for (AccontoDto s : listaStorno) {
                     Log.debug("Acconto n." + a.getNumeroFattura() + " contiene storno operazione " + s.getOperazione() + "? " + StringUtils.contains(s.getOperazione(), StringUtils.trim(a.getNumeroFattura())));
-                    if (StringUtils.contains(s.getOperazione(), StringUtils.trim(a.getNumeroFattura()))) {
+                    if (StringUtils.contains(s.getOperazione(), StringUtils.trim(a.getNumeroFattura())) && Objects.equals(s.getIva(), a.getIva())) {
                         a.getRifOrdClienteList().forEach(r -> {
                             String ordCli2 = StringUtils.replace(s.getOrdineCliente(), "/", ".");
                             String ordCli3 = StringUtils.replace(s.getOrdineCliente(), "/", "-");
                             if (StringUtils.contains(r, s.getOrdineCliente()) ||
                                     StringUtils.contains(r, ordCli2)
-                            || StringUtils.contains(r, ordCli3)) {
+                                    || StringUtils.contains(r, ordCli3)) {
                                 List<String> rifList = new ArrayList<>();
                                 rifList.add(s.getRifOrdCliente());
                                 s.setRifOrdClienteList(rifList);
@@ -194,13 +209,13 @@ public class FatturaService {
                 Log.debug("*** CREA BOLLA, lista da trasformare: " + listaDaTrasformare.size());
                 OrdineDettaglioDto dto = listaDaTrasformare.get(i);
                 Log.debug("*** CREA BOLLA, dto della lista da trasformare : " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo()
-                + ", articolo: " + dto.getFArticolo());
+                        + ", articolo: " + dto.getFArticolo());
                 dto.setQtaProntoConsegna(dto.getQtaProntoConsegna() == null ? 0 : dto.getQtaProntoConsegna());
                 Magazzino m;
                 if (StringUtils.containsIgnoreCase(dto.getFDescrArticolo(), "Storno")) {
                     Log.debug("*** CREA BOLLA, lista da trasformare, riga storno : " + dto.getRigo());
-                            fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i, user);
-                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i+1);
+                    fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i, user);
+                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i + 1);
                     m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, fd, f, ordine);
                     Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
                     if (opt.isPresent()) {
@@ -210,21 +225,21 @@ public class FatturaService {
                     Log.debug("*** CREA BOLLA, lista da trasformare, riga articolo : " + dto.getRigo());
                     OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
                     fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
-                    if(dto.getQtaDaConsegnare() != null) {
+                    if (dto.getQtaDaConsegnare() != null) {
                         List<FattureDettaglio> fatture = FattureDettaglio.find("Select f " +
                                         "FROM FattureDettaglio f " +
                                         "WHERE f.progrOrdCli = :id ",
                                 Parameters.with("id", dto.getProgrGenerale())).list();
-                        if(!fatture.isEmpty()){
+                        if (!fatture.isEmpty()) {
                             double sum = fatture.stream().mapToDouble(FattureDettaglio::getQuantita).sum();
                             dto.setQtaDaConsegnare(dto.getQuantita() - sum);
                         } else {
                             dto.setQtaDaConsegnare(dto.getQuantita());
                         }
-                        Log.debug("*** CREA BOLLA, qta prontoConsegna = " + dto.getQtaProntoConsegna());
-                        Log.debug("*** CREA BOLLA, qta ordinata = " + dto.getQuantita());
-                        Log.debug("*** CREA BOLLA, qta da consegnare = " + dto.getQtaDaConsegnare());
-                        Double qtaDaCons = ((dto.getQtaDaConsegnare() == null || (dto.getQtaDaConsegnare() != null && dto.getQtaDaConsegnare() < 0 )) ? 0 : dto.getQtaDaConsegnare());
+                        Log.error("*** CREA BOLLA, qta prontoConsegna = " + dto.getQtaProntoConsegna());
+                        Log.error("*** CREA BOLLA, qta ordinata = " + dto.getQuantita());
+                        Log.error("*** CREA BOLLA, qta da consegnare = " + dto.getQtaDaConsegnare());
+                        Double qtaDaCons = ((dto.getQtaDaConsegnare() == null || (dto.getQtaDaConsegnare() != null && dto.getQtaDaConsegnare() < 0)) ? 0 : dto.getQtaDaConsegnare());
                         Double qta = (qtaDaCons == 0) ? dto.getQuantita() : dto.getQtaDaConsegnare();
                         if (qta - dto.getQtaProntoConsegna() == 0) {
                             o.setSaldoAcconto("S");
@@ -238,14 +253,14 @@ public class FatturaService {
                     if (optional.isPresent()) {
                         Log.debug("*** CREA BOLLA, TmpScarico creato per articolo: " + o.getFArticolo() + ". Qta: " + o.getQuantita());
                         SaldiMagazzino saldiMagazzino = optional.get();
-                        Double qtaScarico = (saldiMagazzino.getQscarichi()==null?0: saldiMagazzino.getQscarichi()) + (o.getQuantita()==null?0:o.getQuantita());
+                        Double qtaScarico = (saldiMagazzino.getQscarichi() == null ? 0 : saldiMagazzino.getQscarichi()) + (o.getQuantita() == null ? 0 : o.getQuantita());
                         qtaScarico = Math.round(qtaScarico * 100.0) / 100.0;
-                        Double qtaGiacenza = (saldiMagazzino.getQcarichi()==null?0: saldiMagazzino.getQcarichi()) - qtaScarico;
+                        Double qtaGiacenza = (saldiMagazzino.getQcarichi() == null ? 0 : saldiMagazzino.getQcarichi()) - qtaScarico;
                         saldiMagazzino.setQscarichi(qtaScarico);
                         saldiMagazzino.setQgiacenza(qtaGiacenza);
                         saldiMagazzinoList.add(saldiMagazzino);
                     } else {
-                        if(StringUtils.equals(o.getTipoRigo(), "" ) || StringUtils.equals(o.getTipoRigo(), " ")) {
+                        if (StringUtils.equals(o.getTipoRigo(), "") || StringUtils.equals(o.getTipoRigo(), " ")) {
                             GoTmpScarico goTmpScarico = new GoTmpScarico();
                             goTmpScarico.setId(new GoTmpScaricoPK(o.getFArticolo(), o.getMagazz(), fd.getProgrGenerale()));
                             goTmpScarico.setAttivo(Boolean.TRUE);
@@ -255,7 +270,7 @@ public class FatturaService {
 
                     }
 
-                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i+1);
+                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i + 1);
                     m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, o, fd, f, ordine);
                     Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
                     if (opt.isPresent()) {
@@ -275,7 +290,7 @@ public class FatturaService {
             if (!saldiMagazzinoList.isEmpty()) {
                 SaldiMagazzino.persist(saldiMagazzinoList);
             }
-            if(!goTmpScaricoList.isEmpty()){
+            if (!goTmpScaricoList.isEmpty()) {
                 GoTmpScarico.persist(goTmpScaricoList);
             }
             result = StringUtils.join("Creata bolla n. ", f.getAnno(), "/", f.getSerie(), "/", f.getProgressivo());
@@ -359,7 +374,7 @@ public class FatturaService {
         if (check) {
             for (OrdineDettaglioDto l : list) {
                 if (StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), StringUtils.join(l.getAnno(), "/", l.getSerie(), "/", l.getProgressivo()))
-                || StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), StringUtils.join(l.getAnno(), "-", l.getSerie(), "-", l.getProgressivo()))) {
+                        || StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), StringUtils.join(l.getAnno(), "-", l.getSerie(), "-", l.getProgressivo()))) {
                     rifCliList.add(rigaFattura.getOperazione());
                     break;
                 }
@@ -390,11 +405,12 @@ public class FatturaService {
 
     public Double getAccontiFatturati(String sottoConto) {
         return Fatture.find("SELECT ISNULL(SUM((f2.prezzo * f2.iva/100) + f2.prezzo), 0) " +
-                "FROM Fatture f " +
-                "JOIN FattureDettaglio  f2 ON f.anno = f2.anno and f.serie = f2.serie and f.progressivo = f2.progressivo " +
-                "WHERE f.gruppoCliente = 1231 AND f.contoCliente = :s and f2.fArticolo =  '*ACC'"
+                        "FROM Fatture f " +
+                        "JOIN FattureDettaglio  f2 ON f.anno = f2.anno and f.serie = f2.serie and f.progressivo = f2.progressivo " +
+                        "WHERE f.gruppoCliente = 1231 AND f.contoCliente = :s and f2.fArticolo =  '*ACC'"
                 , Parameters.with("s", sottoConto)).project(Double.class).firstResult();
     }
+
     public Double getBolleNonFatturate(String sottoConto) {
         return Fatture.find("SELECT ISNULL(SUM(f2.prezzo *(1-f2.scontoarticolo/100)*(1-f2.scontoc1/100)*(1-f2.scontoc2/100)*(1-f2.scontop/100) " +
                 "* f2.quantita * f2.iva/100 + " +

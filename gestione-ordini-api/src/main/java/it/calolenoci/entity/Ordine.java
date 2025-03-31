@@ -124,6 +124,9 @@ public class Ordine extends PanacheEntityBase {
     @Column(name = "SYS_UPDATEDATE")
     private LocalDateTime updateDate;
 
+    @Column(name = "ID_ORDCLI")
+    private Integer id;
+
     public static Ordine findByOrdineId(Integer anno, String serie,  Integer progressivo) {
         return find("anno = :anno and progressivo = :progressivo and serie = :serie",
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)).firstResult();

@@ -116,4 +116,19 @@ public class OAFArticoloResource {
         return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseDto("lista vuota", true)).build();
     }
 
+    @Operation(summary = "Aggiungi rigo ")
+    @POST
+    @RolesAllowed({AMMINISTRATIVO, ADMIN})
+    @Path("/collega-oaf/{progrGenerale}")
+    public Response collegaOaf(Integer progrGenerale, List<ArticoloDto> list) {
+        try {
+            if (list == null || list.isEmpty()) {
+                return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Nessun collegamento creato", false)).build();
+            }
+            return Response.status(Response.Status.OK).entity(articoloService.collegaOAF(progrGenerale, list.get(0), user)).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
+        }
+    }
+
 }

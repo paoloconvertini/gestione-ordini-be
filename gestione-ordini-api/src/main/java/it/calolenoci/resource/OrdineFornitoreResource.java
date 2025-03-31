@@ -199,20 +199,6 @@ public class OrdineFornitoreResource {
         return Response.ok(new ResponseDto("Nota aggiunta", false)).build();
     }
 
-    @Operation(summary = "Unisci ordine a fornitore")
-    @POST
-    @Path("/collegaOAF")
-    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
-    public Response collegaOAF(CollegaOAFDto dto) {
-        try {
-            if (dto == null) {
-                return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Nessun collegamento creato", false)).build();
-            }
-            return Response.status(Response.Status.OK).entity(service.collegaOAF(dto)).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
-        }
-    }
     @Operation(summary = "aggiorna ordine cliente")
     @POST
     @Path("/aggiorna-ordcli")
@@ -240,18 +226,5 @@ public class OrdineFornitoreResource {
         }
     }
 
-    @Operation(summary = "Unisci ordine a fornitore")
-    @POST
-    @Path("/verificaOAF")
-    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
-    public Response verificaOAF(CollegaOAFDto dto) {
-        try {
-            if (dto == null) {
-                return Response.status(Response.Status.NOT_MODIFIED).entity(new ResponseDto("Nessun collegamento creativo", false)).build();
-            }
-            return Response.status(Response.Status.OK).entity(service.verificaOAF(dto)).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
-        }
-    }
+
 }

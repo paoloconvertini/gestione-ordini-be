@@ -783,4 +783,17 @@ public class OrdineService {
         }
     }
 
+    public List<FatturaAccontoView> findOrdineFatturaAcconto(Integer anno,
+                                                             String serie, Integer progressivo, String sottoConto) {
+        List<FatturaAccontoView> result = new ArrayList<>();
+        List<FatturaAccontoView>  ordini =
+                Ordine.find("select SUM(o2.quantita * (o2.prezzo*(1-o2.scontoArticolo/100)*(1-o2.scontoC1/100)*(1-o2.scontoC2/100)*(1-o2.scontoP/100))), o2.fCodiceIva, o2.anno, o2.serie, o2.progressivo " +
+                        "from Ordine o " +
+                        "join OrdineDettaglio o2 ON o2.id = o.id " +
+                        "where o.contoCliente = :c " +
+                        "group by o2.fCodiceIva, o2.anno, o2.serie, o2.progressivo", Parameters.with("c", sottoConto)).project(FatturaAccontoView.class).list();
+
+
+        return result;
+    }
 }

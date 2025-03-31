@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class OrdineFornitoreService {
 
+
+
     @Inject
     OrdineFornitoreMapper ordineFornitoreMapper;
 
@@ -116,7 +118,7 @@ public class OrdineFornitoreService {
                         fornitoreDettaglio.setOCodiceIva("22");
                         fornitoreDettaglio.setProvenienza("C");
                         fornitoreDettaglio.setMagazzino("B");
-                        settaCampi(user, fornitoreDettaglio);
+                        oafArticoloMapper.settaCampi(user, fornitoreDettaglio);
                         if (fornitoreDettaglio.getOQuantita() != null && fornitoreDettaglio.getOPrezzo() != null) {
                             fornitoreDettaglio.setValoreTotale(fornitoreDettaglio.getOQuantita() * fornitoreDettaglio.getOPrezzo());
                         }
@@ -136,7 +138,7 @@ public class OrdineFornitoreService {
                         registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(anno, serie, progressivo, user, AzioneEnum.ORDINATO.getDesczrizione()
                                 , a.getRigo(), null, null, null, null));
                     }
-                    OrdineFornitoreDettaglio rigoRiferimento = createRigoRiferimento(serieOAF, prog, articoloDto.getIntestazioneCliente(),
+                    OrdineFornitoreDettaglio rigoRiferimento = oafArticoloMapper.createRigoRiferimento(serieOAF, prog, articoloDto.getIntestazioneCliente(),
                             ordineFornitoreDettaglios.get(ordineFornitoreDettaglios.size() - 1).getRigo(), progressivoFornDettaglio, user);
                     ordineFornitoreDettaglios.add(rigoRiferimento);
                     progressivoFornDettaglio = rigoRiferimento.getProgrGenerale();
@@ -243,76 +245,6 @@ public class OrdineFornitoreService {
                 .project(Integer.class).singleResult();
     }
 
-    private OrdineFornitoreDettaglio createRigoRiferimento(String serie, Integer progressivo, String intestazione, Integer rigo, Integer progrGenerale, String user) {
-        OrdineFornitoreDettaglio ordineFornitoreDettaglio = new OrdineFornitoreDettaglio();
-        ordineFornitoreDettaglio.setTipoRigo("C");
-        ordineFornitoreDettaglio.setRigo(rigo + 1);
-        ordineFornitoreDettaglio.setAnno(Year.now().getValue());
-        ordineFornitoreDettaglio.setSerie(serie);
-        ordineFornitoreDettaglio.setProgressivo(progressivo);
-        ordineFornitoreDettaglio.setODescrArticolo("Rif. " + intestazione);
-        ordineFornitoreDettaglio.setProgrGenerale(progrGenerale + 1);
-        ordineFornitoreDettaglio.setNota(" ");
-        ordineFornitoreDettaglio.setOQuantita(0D);
-        ordineFornitoreDettaglio.setOQuantitaV(0D);
-        ordineFornitoreDettaglio.setOquantita2(0D);
-        ordineFornitoreDettaglio.setOUnitaMisura(" ");
-        ordineFornitoreDettaglio.setOColli(0);
-        ordineFornitoreDettaglio.setOCodiceIva(" ");
-        ordineFornitoreDettaglio.setProvenienza(" ");
-        ordineFornitoreDettaglio.setMagazzino(" ");
-        ordineFornitoreDettaglio.setPid(0);
-        ordineFornitoreDettaglio.setOArticolo(" ");
-        ordineFornitoreDettaglio.setCampoUser5(" ");
-        settaCampi(user, ordineFornitoreDettaglio);
-
-        return ordineFornitoreDettaglio;
-    }
-
-    private void settaCampi(String user, OrdineFornitoreDettaglio ordineFornitoreDettaglio) {
-        ordineFornitoreDettaglio.setSaldo(" ");
-        ordineFornitoreDettaglio.setSinonimo1(0);
-        ordineFornitoreDettaglio.setVariante1(" ");
-        ordineFornitoreDettaglio.setVariante2(" ");
-        ordineFornitoreDettaglio.setVariante3(" ");
-        ordineFornitoreDettaglio.setVariante4(" ");
-        ordineFornitoreDettaglio.setVariante5(" ");
-        ordineFornitoreDettaglio.setCodiceean(" ");
-        ordineFornitoreDettaglio.setOcoefficiente(0D);
-        ordineFornitoreDettaglio.setPrezzoextra(0D);
-        ordineFornitoreDettaglio.setDataconfconseg(new Date());
-        ordineFornitoreDettaglio.setDatarichconseg(new Date());
-        ordineFornitoreDettaglio.setOlottomagf(" ");
-        ordineFornitoreDettaglio.setOpallet(0D);
-        ordineFornitoreDettaglio.setOcommessa(" ");
-        ordineFornitoreDettaglio.setOcentrocostor(" ");
-        ordineFornitoreDettaglio.setImpprovvfisso(0D);
-        ordineFornitoreDettaglio.setOprovvarticolo(0D);
-        ordineFornitoreDettaglio.setOprovvfornitore(0D);
-        ordineFornitoreDettaglio.setQtyuser1(0D);
-        ordineFornitoreDettaglio.setQtyuser2(0D);
-        ordineFornitoreDettaglio.setQtyuser3(0D);
-        ordineFornitoreDettaglio.setQtyuser4(0D);
-        ordineFornitoreDettaglio.setQtyuser5(0D);
-        ordineFornitoreDettaglio.setCampouser1(" ");
-        ordineFornitoreDettaglio.setCampouser2(" ");
-        ordineFornitoreDettaglio.setCampouser3(" ");
-        ordineFornitoreDettaglio.setCampouser4(" ");
-        ordineFornitoreDettaglio.setPidPrimanota(0);
-        ordineFornitoreDettaglio.setUsername(user);
-        ordineFornitoreDettaglio.setSysCreatedate(new Date());
-        ordineFornitoreDettaglio.setSysUpdatedate(new Date());
-        ordineFornitoreDettaglio.setSysCreateuser(user);
-        ordineFornitoreDettaglio.setSysUpdateuser(user);
-        ordineFornitoreDettaglio.setOvocespesa(" ");
-        ordineFornitoreDettaglio.setOPrezzo(0D);
-        ordineFornitoreDettaglio.setValoreTotale(0D);
-        ordineFornitoreDettaglio.setFScontoArticolo(0D);
-        ordineFornitoreDettaglio.setScontoF1(0D);
-        ordineFornitoreDettaglio.setScontoF2(0D);
-        ordineFornitoreDettaglio.setFScontoP(0D);
-    }
-
     public List<OrdineFornitoreDto> findAllByStatus(FiltroOrdini filtro) throws ParseException {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
                 "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate, go.note";
@@ -331,15 +263,12 @@ public class OrdineFornitoreService {
         if (filtro != null && StringUtils.isNotBlank(filtro.getStatus())) {
             query += " AND  o.provvisorio =:stato";
             params.put("stato", filtro.getStatus());
-            return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine")
-                            , params)
-                    .project(OrdineFornitoreDto.class).list();
         } else {
             query += " AND  (o.provvisorio is null OR o.provvisorio = '' OR o.provvisorio = ' ')";
-            return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"), params)
-                    .project(OrdineFornitoreDto.class).list();
         }
-
+        Log.debug("query: " + query);
+    return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"), params)
+                .project(OrdineFornitoreDto.class).list();
 
     }
 
@@ -492,31 +421,6 @@ public class OrdineFornitoreService {
             Log.error("Verifica OAF: ERROR! ", e);
             result.setMsg("Verifica OAF: ERROR! " + e.getMessage());
             result.setError(Boolean.TRUE);
-            return result;
-        }
-    }
-
-    @Transactional
-    public ResponseDto collegaOAF(CollegaOAFDto dto) {
-        ResponseDto result = new ResponseDto();
-        try {
-            String campoUser5 = "VS.ART." + dto.getDescrArtSuppl();
-            String nota = "Riferimento n. " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo() + "-" + dto.getRigo();
-            int update = OrdineFornitoreDettaglio.update("nota = :n, campoUser5 = :c, provenienza = :p, pid = :g " +
-                            "WHERE anno =:a and serie =:s AND progressivo = :pr AND oArticolo = :art",
-                    Parameters.with("n", nota).and("c", StringUtils.truncate(campoUser5, 25))
-                            .and("p", "C").and("a", dto.getAnnoOAF()).and("s", dto.getSerieOAF())
-                            .and("pr", dto.getProgressivoOAF()).and("g", dto.getProgrGenerale()).and("art", dto.getCodice()));
-            if (update != 0) {
-                Log.debug("Collega OAF: Aggiornati " + update + " record");
-            }
-            result.setError(Boolean.FALSE);
-            result.setMsg("Articolo cliente collegato all'ordine a fornitore " + dto.getAnnoOAF() + "/" + dto.getSerieOAF() + "/" + dto.getProgressivoOAF());
-            return result;
-        } catch (Exception e) {
-            Log.error("Collega OAF: ERROR! ", e);
-            result.setError(Boolean.FALSE);
-            result.setMsg("Collega OAF: ERROR! " + e.getMessage());
             return result;
         }
     }

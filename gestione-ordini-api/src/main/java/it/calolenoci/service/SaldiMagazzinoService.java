@@ -88,7 +88,7 @@ public class SaldiMagazzinoService {
                 MagazzinoId id = new MagazzinoId(Year.now().getValue(), "CF", progressivo, " ", i+1);
                 Magazzino magazzino = magazzinoMapper.buildMagazzino(id, ++progressivoGen, articolo, articoloOptional.get().getGruppo(),
                         articoloOptional.get().getConto(), carico.getNumDoc(), carico.getCausale(),
-                        carico.getVettore(), carico.getDataOperazione(), user);
+                        carico.getVettore(), carico.getDataOperazione(), user, carico.getDataDocumento());
                 magazzinoList.add(magazzino);
                 Optional<SaldiMagazzino> optional = SaldiMagazzino.find("marticolo =:art and  mmagazzino = :mag",
                         Parameters.with("art", articolo.getFArticolo()).and("mag", articolo.getMagazz())).firstResultOptional();

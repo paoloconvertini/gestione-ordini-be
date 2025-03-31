@@ -18,6 +18,8 @@ public class CaricoMagazzinoDto implements Serializable {
 
     LocalDate dataOperazione;
 
+    LocalDate dataDocumento;
+
     String causale;
 
     String vettore;

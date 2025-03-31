@@ -349,6 +349,16 @@ public class OrdineResource {
     public Response findAltriOrdiniCliente(Integer anno, String serie, Integer progressivo, String sottoConto) throws ParseException {
         return Response.ok(ordineService.findAltriOrdiniCliente(anno, serie, progressivo, sottoConto)).build();
     }
+   @Operation(summary = "Returns all the ordini from the database")
+    @GET
+    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
+    @Consumes(APPLICATION_JSON)
+    @Path("/ordine-fattura-acconto/{anno}/{serie}/{progressivo}/{sottoConto}")
+    public Response findOrdineFatturaAcconto(Integer anno, String serie, Integer progressivo, String sottoConto) throws ParseException {
+        return Response.ok(ordineService.findOrdineFatturaAcconto(anno, serie, progressivo, sottoConto)).build();
+    }
 
     @RolesAllowed({ADMIN, LOGISTICA, VENDITORE})
     @PUT

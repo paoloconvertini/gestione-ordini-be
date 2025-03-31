@@ -259,6 +259,9 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 1, name = "SALDOACCONTO")
     private String saldoAcconto;
 
+    @Column(name = "PID_ORDCLI")
+    private Integer id;
+
     public static OrdineDettaglio getById(Integer anno, String serie, Integer progressivo, Integer rigo) {
         return find("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo = :rigo",
                 Parameters.with("anno", anno).and("serie", serie)

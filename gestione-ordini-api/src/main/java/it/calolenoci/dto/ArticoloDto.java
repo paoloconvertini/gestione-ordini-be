@@ -35,6 +35,8 @@ public class ArticoloDto implements Serializable {
     private Integer progrGeneraleFornitore;
     private Double quantita;
 
+    private Double oquantita;
+
     private Double quantitaV;
 
     private Integer colli;
