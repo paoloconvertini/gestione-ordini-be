@@ -53,4 +53,18 @@ public class AmmortamentoCespite extends PanacheEntityBase {
 
     @Column(name = "QUOTA_SUPER")
     private Double superQuota;
+
+    @Override
+    public String toString() {
+        return "AmmortamentoCespite{" +
+                "id='" + id + '\'' +
+                ", idAmmortamento='" + idAmmortamento + '\'' +
+                ", dataAmm=" + dataAmm +
+                ", percAmm=" + percAmm +
+                ", quota=" + quota +
+                ", fondo=" + fondo +
+                ", residuo=" + residuo +
+                ", anno=" + anno +
+                '}';
+    }
 }

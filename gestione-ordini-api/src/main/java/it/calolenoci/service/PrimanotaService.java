@@ -149,7 +149,7 @@ public class PrimanotaService {
                 if(primanotas.isEmpty()){
                     protocollo = 1;
                 } else {
-                    protocollo = Primanota.find("SELECT MAX(protocollo) + 1" +
+                    protocollo = Primanota.find("SELECT MAX(protocollo) + 1 " +
                             "FROM Primanota " +
                             "where anno =:a AND giornale ='' ", Parameters.with("a", dto.getDatamovimento().getYear())).project(Integer.class).firstResult();
                 }

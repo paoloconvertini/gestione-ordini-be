@@ -153,6 +153,7 @@ public class AmmortamentoCespiteService {
             int counter = 1;
             LocalDate dataAmmortamento = LocalDate.of(dataInizio.getYear(), Month.DECEMBER, 31);
             while (residuo > 0 && dataAmmortamento.getYear() <= dataCorrente.getYear()) {
+                Log.debug("-- Inizo calcolo quote ammortamento per cespite = " + cespite.getCespite());
                 if (dataAmmortamento.getYear() == dataCorrente.getYear()) {
                     dataAmmortamento = dataCorrente;
                 }
@@ -178,6 +179,7 @@ public class AmmortamentoCespiteService {
                 }
                 perc = quotaDaSalvare / cespite.getImporto() * 100;
                 AmmortamentoCespite a = mapper.buildAmmortamento(cespite.getId(), perc, quotaDaSalvare, fondo, residuo, dataAmmortamento);
+                Log.debug("--calcolata quota ammortamento: " + a.toString());
                 calcolaSuperAmm(cespite, perc, a);
                 ammortamentoCespiteList.add(a);
                 dataAmmortamento = dataAmmortamento.plusYears(1);
@@ -383,14 +385,14 @@ public class AmmortamentoCespiteService {
                 acquisti.setValoreAggiornato(cespiteDtoList.stream()
                         .filter(c -> c.getAnno() == anno).mapToDouble(CespiteDto::getImporto).sum());
                 vendite.setValoreAggiornato(-(cespiteDtoList.stream()
-                        .filter(c -> c.getImportoVendita() != null && c.getDataVend().getYear() == anno)
+                        .filter(c -> c.getImportoVendita() != null && (c.getDataVend() == null || c.getDataVend().getYear() == anno))
                         .mapToDouble(CespiteDto::getImporto)
                         .sum()));
 
                 cespiteDtoList.forEach(c -> ammortamentoCespiteList2.addAll(c.getAmmortamentoCespiteList()));
                 List<AmmortamentoCespite> ammortamentoCespitesVend = new ArrayList<>();
                 cespiteDtoList.stream()
-                        .filter(c -> c.getImportoVendita() != null && c.getDataVend().getYear() == anno)
+                        .filter(c -> c.getImportoVendita() != null && (c.getDataVend() == null || c.getDataVend().getYear() == anno))
                         .toList()
                         .forEach(c -> ammortamentoCespitesVend.add(c.getAmmortamentoCespiteList()
                                 .stream()
@@ -400,7 +402,11 @@ public class AmmortamentoCespiteService {
                 vendite.setTotaleAmmortamento(-(ammortamentoCespitesVend.stream().mapToDouble(AmmortamentoCespite::getFondo).sum()));
                 vendite.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() + vendite.getTotaleAmmortamento());
                 FiscaleRiepilogoDto ammortamentiDeducibili = new FiscaleRiepilogoDto();
-                ammortamentiDeducibili.setAmmortamentoOrdinario(ammortamentoCespiteList2.stream().filter(a -> a.getAnno() ==anno && a.getQuota() != null).mapToDouble(AmmortamentoCespite::getQuota).sum());
+                List<AmmortamentoCespite> list = ammortamentoCespiteList2.stream().filter(a -> a.getAnno() == anno && a.getQuota() != null &&
+                        StringUtils.equals(a.getDescrizione(), "Ammortamento ordinario deducibile")).toList();
+                list.forEach(x -> Log.debug("quota ammortamento deducibile per anno " + anno + ", ammortamento = " + x.getDescrizione()
+                        + ", quota=" + x.getQuota() + "\n"));
+                ammortamentiDeducibili.setAmmortamentoOrdinario(list.stream().mapToDouble(AmmortamentoCespite::getQuota).sum());
                 ammortamentiDeducibili.setTotaleAmmortamento(ammortamentiDeducibili.getAmmortamentoOrdinario() + ammortamentiDeducibili.getAmmortamentoAnticipato());
                 ammortamentiDeducibili.setFondoAmmortamenti(ammortamentiDeducibili.getTotaleAmmortamento() + vendite.getFondoAmmortamenti());
 
@@ -424,6 +430,7 @@ public class AmmortamentoCespiteService {
 
                 sommaDto.setAcquisti(acquisti);
                 sommaDto.setVendite(vendite);
+                Log.debug("tot ammor: " + ammortamentiDeducibili.getTotaleAmmortamento());
                 sommaDto.setAmmortamentiDeducibili(ammortamentiDeducibili);
                 sommaDto.setFineEsercizio(fineEsercizio);
                 categoriaCespitiDto.setSomma(sommaDto);
@@ -449,6 +456,10 @@ public class AmmortamentoCespiteService {
             FiscaleRiepilogoDto vendite = new FiscaleRiepilogoDto();
             acquisti.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getAcquisti().getValoreAggiornato()).sum());
             vendite.setValoreAggiornato(result.stream().mapToDouble(c -> c.getSomma().getVendite().getValoreAggiornato()).sum());
+            vendite.setTotaleAmmortamento(result.stream().filter(c -> c.getSomma() != null && c.getSomma().getVendite() != null)
+                    .mapToDouble(c -> c.getSomma().getVendite().getTotaleAmmortamento()).sum());
+            vendite.setFondoAmmortamenti(result.stream().filter(c -> c.getSomma() != null && c.getSomma().getVendite() != null)
+                    .mapToDouble(c -> c.getSomma().getVendite().getFondoAmmortamenti()).sum());
 
             FiscaleRiepilogoDto ammortamentiDeducibili = new FiscaleRiepilogoDto();
             ammortamentiDeducibili.setAmmortamentoOrdinario(result.stream().mapToDouble(c -> c.getSomma().getAmmortamentiDeducibili().getAmmortamentoOrdinario()).sum());
