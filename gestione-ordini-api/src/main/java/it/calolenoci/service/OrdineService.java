@@ -535,12 +535,11 @@ public class OrdineService {
             map.put("v", filtro.getVeicolo());
             mapPregressi.put("v", filtro.getVeicolo());
         }
-        LocalDate today = LocalDate.now();
-        // Trova il lunedì della settimana corrente
-        LocalDate monday = today.with(DayOfWeek.MONDAY);
-
-        // Trova il sabato della settimana corrente
-        LocalDate saturday = today.with(DayOfWeek.SATURDAY);
+        // Calcolo lunedì e sabato della settimana desiderata
+        LocalDate monday = LocalDate.now()
+                .with(DayOfWeek.MONDAY)
+                .plusWeeks(filtro.getDeltaSettimana());
+        LocalDate saturday = monday.plusDays(5); // sabato della stessa settimana
         query += " and v.dataConsegna >= :d";
         queryPregressi += " and v.dataConsegna >= :d";
         map.put("d", monday);
@@ -555,62 +554,37 @@ public class OrdineService {
         ordineList = panacheQuery.project(OrdineDTO.class).list();
         ordineList.addAll(dtoPanacheQuery.project(OrdineDTO.class).list());
 
-        ConsegnaGiornalieraDto lunedi = new ConsegnaGiornalieraDto();
-        ConsegnaGiornalieraDto martedi = new ConsegnaGiornalieraDto();
-        ConsegnaGiornalieraDto mercoledi = new ConsegnaGiornalieraDto();
-        ConsegnaGiornalieraDto giovedi = new ConsegnaGiornalieraDto();
-        ConsegnaGiornalieraDto venerdi = new ConsegnaGiornalieraDto();
-        ConsegnaGiornalieraDto sabato = new ConsegnaGiornalieraDto();
-        Map<LocalDate, List<OrdineDTO>> localDateListMap = ordineList.stream().collect(Collectors.groupingBy(OrdineDTO::getDataConsegna));
-        for (Map.Entry<LocalDate, List<OrdineDTO>> localDateListEntry : localDateListMap.entrySet()) {
-            LocalDate dataConsegna = localDateListEntry.getKey();
-            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.MONDAY)){
-                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
-                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
-                                Comparator.nullsLast(Comparator.naturalOrder())))
-                        .toList();
-                lunedi.setConsegne(consegne);
-            }
-            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.TUESDAY)){
-                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
-                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
-                                Comparator.nullsLast(Comparator.naturalOrder())))
-                        .toList();
-                martedi.setConsegne(consegne);
-            }
-            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.WEDNESDAY)){
-                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
-                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
-                                Comparator.nullsLast(Comparator.naturalOrder())))
-                        .toList();
-                mercoledi.setConsegne(consegne);
-            }
-            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.THURSDAY)){
-                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
-                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
-                                Comparator.nullsLast(Comparator.naturalOrder()))).toList();
-                giovedi.setConsegne(consegne);
-            }
-            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.FRIDAY)){
-                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
-                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
-                                Comparator.nullsLast(Comparator.naturalOrder()))).toList();
-                venerdi.setConsegne(consegne);
-            }
-            if(dataConsegna.getDayOfWeek().equals(DayOfWeek.SATURDAY)){
-                List<OrdineDTO> consegne = localDateListEntry.getValue().stream().filter(Objects::nonNull)
-                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
-                                Comparator.nullsLast(Comparator.naturalOrder()))).toList();
-                sabato.setConsegne(consegne);
+
+        Map<DayOfWeek, ConsegnaGiornalieraDto> mappaGiorni = new EnumMap<>(DayOfWeek.class);
+        for (DayOfWeek giorno : DayOfWeek.values()) {
+            if (giorno != DayOfWeek.SUNDAY) {
+                mappaGiorni.put(giorno, new ConsegnaGiornalieraDto());
             }
         }
+        // Raggruppa e ordina le consegne per giorno della settimana
+        Map<LocalDate, List<OrdineDTO>> consegnePerData = ordineList.stream()
+                .filter(o -> o.getDataConsegna() != null)
+                .collect(Collectors.groupingBy(OrdineDTO::getDataConsegna));
 
-        result.setLunedi(lunedi);
-        result.setMartedi(martedi);
-        result.setMercoledi(mercoledi);
-        result.setGiovedi(giovedi);
-        result.setVenerdi(venerdi);
-        result.setSabato(sabato);
+        for (Map.Entry<LocalDate, List<OrdineDTO>> entry : consegnePerData.entrySet()) {
+            LocalDate data = entry.getKey();
+            DayOfWeek giorno = data.getDayOfWeek();
+
+            if (giorno != DayOfWeek.SUNDAY && mappaGiorni.containsKey(giorno)) {
+                List<OrdineDTO> consegneOrdinate = entry.getValue().stream()
+                        .filter(Objects::nonNull)
+                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
+                                Comparator.nullsLast(Comparator.naturalOrder())))
+                        .toList();
+                mappaGiorni.get(giorno).setConsegne(consegneOrdinate);
+            }
+        }
+        result.setLunedi(mappaGiorni.get(DayOfWeek.MONDAY));
+        result.setMartedi(mappaGiorni.get(DayOfWeek.TUESDAY));
+        result.setMercoledi(mappaGiorni.get(DayOfWeek.WEDNESDAY));
+        result.setGiovedi(mappaGiorni.get(DayOfWeek.THURSDAY));
+        result.setVenerdi(mappaGiorni.get(DayOfWeek.FRIDAY));
+        result.setSabato(mappaGiorni.get(DayOfWeek.SATURDAY));
         return result;
     }
 
