@@ -328,16 +328,16 @@ public class AmmortamentoCespiteService {
                 quotaRivDaSalvare = quotaRiv * dataCorrente.getDayOfYear() / (dataCorrente.isLeapYear() ? 366 : 365);
                 fondo = ammortamentoCespite.getFondo() + quotaDaSalvare;
                 fondoRiv = ammortamentoCespite.getFondoRivalutazione() + quotaRivDaSalvare;
-                if (fondoRiv >= cespite.getImporto() + cespite.getImportoRivalutazione()) {
-                    quotaRivDaSalvare = ammortamentoCespite.getResiduo();
+                if (fondoRiv >= cespite.getImportoRivalutazione()) {
+                    fondoRiv = cespite.getImportoRivalutazione();
                     residuo = 0;
-                    fondoRiv = cespite.getImporto() + cespite.getImportoRivalutazione();
+                    quotaRivDaSalvare = fondoRiv - ammortamentoCespite.getFondoRivalutazione();
                 } else {
                     residuo = cespite.getImportoRivalutazione() - fondoRiv;
                 }
                 if (fondo >= cespite.getImporto()) {
-                    quotaDaSalvare = fondo - ammortamentoCespite.getFondo();
                     fondo = cespite.getImporto();
+                    quotaDaSalvare = fondo - ammortamentoCespite.getFondo();
                 }
                 residuoDaSalvare = residuo;
             } else {
