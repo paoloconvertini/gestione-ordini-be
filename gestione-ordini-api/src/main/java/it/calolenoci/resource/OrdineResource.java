@@ -355,9 +355,9 @@ public class OrdineResource {
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
-    @Path("/ordine-fattura-acconto/{anno}/{serie}/{progressivo}/{sottoConto}")
-    public Response findOrdineFatturaAcconto(Integer anno, String serie, Integer progressivo, String sottoConto) throws ParseException {
-        return Response.ok(ordineService.findOrdineFatturaAcconto(anno, serie, progressivo, sottoConto)).build();
+    @Path("/ordine-fattura-acconto/{sottoConto}")
+    public Response findOrdiniPerFatturaAcconto(String sottoConto) throws ParseException {
+        return Response.ok(ordineService.findOrdiniPerFatturaAcconto(sottoConto)).build();
     }
 
     @RolesAllowed({ADMIN, LOGISTICA, VENDITORE})

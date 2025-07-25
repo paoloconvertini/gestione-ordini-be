@@ -4,7 +4,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.*;
 
 import java.io.Serializable;
-import java.util.List;
 
 @Getter
 @Setter
@@ -13,9 +12,10 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode
 @RegisterForReflection
-public class FatturaAccontoView implements Serializable {
+public class FatturaAccontoIvaView implements Serializable {
     private Integer anno;
     private String serie;
     private Integer progressivo;
-    private List<FatturaAccontoIvaView> fatturaAccontoIvaViewList;
+    private String fCodiceIva;
+    private Long importo;
 }

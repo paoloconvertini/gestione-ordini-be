@@ -757,16 +757,43 @@ public class OrdineService {
         }
     }
 
-    public List<FatturaAccontoView> findOrdineFatturaAcconto(Integer anno,
-                                                             String serie, Integer progressivo, String sottoConto) {
+    public List<FatturaAccontoView> findOrdiniPerFatturaAcconto(String sottoConto) {
         List<FatturaAccontoView> result = new ArrayList<>();
-        List<FatturaAccontoView>  ordini =
-                Ordine.find("select SUM(o2.quantita * (o2.prezzo*(1-o2.scontoArticolo/100)*(1-o2.scontoC1/100)*(1-o2.scontoC2/100)*(1-o2.scontoP/100))), o2.fCodiceIva, o2.anno, o2.serie, o2.progressivo " +
-                        "from Ordine o " +
-                        "join OrdineDettaglio o2 ON o2.id = o.id " +
-                        "where o.contoCliente = :c " +
-                        "group by o2.fCodiceIva, o2.anno, o2.serie, o2.progressivo", Parameters.with("c", sottoConto)).project(FatturaAccontoView.class).list();
+        List<FatturaAccontoIvaView> fatturaAccontoIvaViews = new ArrayList<>();
 
+        //recuperare solo articoli ancora da consegnare
+        //recuperare acconti
+        fatturaAccontoIvaViews = Ordine.find("select o.anno, o.serie, o.progressivo, o2.fCodiceIva, " +
+                        "SUM(((CaSE WHEN prezzo is null then 0 ELSE prezzo end)*" +
+                        "(CASE WHEN quantita is null then 0 else quantita end))*" +
+                        "(1-scontoArticolo/100)*(1-scontoC1/100)*(1-scontoC2/100)*(1-scontoP/100)) " +
+                        "from Ordine o " +
+                        "join OrdineDettaglio o2 ON o.id = o2.id and o2.tipoRigo <> 'C' " +
+                        "join GoOrdine og ON og.progressivo = o.progressivo AND og.serie = o.serie " +
+                        "AND o.anno = og.anno AND og.status <> 'ARCHIVIATO' " +
+                        "where o.contoCliente = :c " +
+                        "group by o.anno, o.serie, o.progressivo, o2.fCodiceIva " +
+                        "order by o.anno, o.serie, o.progressivo",
+                Parameters.with("c", sottoConto)).project(FatturaAccontoIvaView.class).list();
+
+        // Raggruppamento per anno, serie, progressivo
+        Map<String, List<FatturaAccontoIvaView>> groupedMap = fatturaAccontoIvaViews.stream()
+                .collect(Collectors.groupingBy(item ->
+                        item.getAnno() + "|" + item.getSerie() + "|" + item.getProgressivo()
+                ));
+
+        // Creazione dei FatturaAccontoView raggruppati
+        result = groupedMap.entrySet().stream()
+                .map(entry -> {
+                    String[] keys = entry.getKey().split("\\|");
+                    FatturaAccontoView view = new FatturaAccontoView();
+                    view.setAnno(Integer.parseInt(keys[0]));
+                    view.setSerie(keys[1]);
+                    view.setProgressivo(Integer.parseInt(keys[2]));
+                    view.setFatturaAccontoIvaViewList(entry.getValue());
+                    return view;
+                })
+                .collect(Collectors.toList());
 
         return result;
     }
