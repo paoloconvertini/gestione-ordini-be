@@ -1,10 +1,12 @@
 package it.calolenoci.service;
 
 import io.quarkus.logging.Log;
+import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.AccontoDto;
 import it.calolenoci.dto.FatturaDto;
 import it.calolenoci.dto.OrdineDettaglioDto;
+import it.calolenoci.dto.OrdinePerIva;
 import it.calolenoci.entity.*;
 import it.calolenoci.mapper.FattureMapper;
 import it.calolenoci.mapper.MagazzinoMapper;
@@ -105,6 +107,7 @@ public class FatturaService {
         return getAcconti(sottoConto, null);
     }
 
+    @TransactionConfiguration(timeout = 5000)
     public List<AccontoDto> getAcconti(String sottoConto, List<OrdineDettaglioDto> lista) {
         List<AccontoDto> resultList = new ArrayList<>();
         List<AccontoDto> listaAcconto = em.createNamedQuery("AccontoDto").setParameter("sottoConto", sottoConto).getResultList();
@@ -173,21 +176,44 @@ public class FatturaService {
             Fatture f = fattureMapper.buildFatture(progressivoFatt, ordine);
             Log.debug("*** CREA BOLLA --- creata fattura n. " + f.getAnno() + "/" + f.getSerie() + "/" + f.getProgressivo());
             f.persist();
-            Map<OrdineId, List<OrdineDettaglioDto>> map = list.stream().collect(Collectors.groupingBy(o ->
-                    new OrdineId(o.getAnno(), o.getSerie(), o.getProgressivo())));
-
+            Map<OrdinePerIva, List<OrdineDettaglioDto>> map = list.stream().collect(Collectors.groupingBy(o ->
+                    new OrdinePerIva(o.getAnno(), o.getSerie(), o.getProgressivo(), o.getFCodiceIva())));
             Log.debug("*** CREA BOLLA --- mappa lista ordine dettaglio: " + map.size());
-            for (OrdineId id : map.keySet()) {
+            for (OrdinePerIva id : map.keySet()) {
                 Log.debug("*** CREA BOLLA, ciclio sulla mappa --- ordine n. " + id.getAnno() + "/" + id.getSerie() + "/" + id.getProgressivo());
                 if (accontoDtos != null && !accontoDtos.isEmpty()) {
-                    Log.debug("*** CREA BOLLA, acconti selezionati: " + accontoDtos.size());
                     final List<OrdineDettaglioDto> dtos = map.get(id);
-                    accontoDtos.stream().filter(a -> AccontoDto.checkOrdineEsiste(a, id)).toList()
-                            .forEach(a -> {
-                                OrdineDettaglioDto dto = fattureMapper.fromAccontoToOrdineDettaglio(a, id);
-                                dtos.add(0, dto);
-                                Log.debug("*** CREA BOLLA, creata voce storno: " + dto.getFDescrArticolo());
-                            });
+                    Map<String, List<AccontoDto>> accontiPerIvaMap = accontoDtos.stream().filter(a -> AccontoDto.checkOrdineEsiste(a, id)).collect(Collectors.groupingBy(AccontoDto::getIva));
+                    for (String s : accontiPerIvaMap.keySet()) {
+                        List<AccontoDto> accontiPerIva = accontiPerIvaMap.get(s);
+                        Log.debug("*** CREA BOLLA, acconti selezionati per Iva e : " + accontiPerIva.size());
+                        accontiPerIva.sort(Comparator.comparing(AccontoDto::getDataFattura));
+                        double sommaArticoli = dtos.stream().filter(d -> StringUtils.isNotBlank(d.getFCodiceIva()) && d.getFCodiceIva().equals(s))
+                                .mapToDouble(dto -> dto.getPrezzoScontato()*dto.getQtaProntoConsegna()).sum();
+                        double prezzo;
+                        double diffAccontoSommaArticoli = sommaArticoli;
+                        // Es. ho sommaArticoli 100, e due acconti, uno da 70 e uno da 120.
+                        // Io devo azzerare acconto da 70 quindi entro nell'else,
+                        // prezzo per storno è 70, aggiorno la differenza che mi rimane da stornare cioè 30
+                        // che devo prendere da secondo account
+                        // ora secondo acconto è maggiore della differenza, quindi entro nell'if, setto prezzo a 30.
+                        // e scrivo seconda voce di storno.
+                        for (AccontoDto a : accontiPerIva) {
+                            if(a.getPrezzo() > diffAccontoSommaArticoli){
+                                prezzo = diffAccontoSommaArticoli;
+                                OrdineDettaglioDto ordineDettaglio = fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzo);
+                                dtos.add(accontiPerIva.indexOf(a), ordineDettaglio);
+                                Log.debug("*** CREA BOLLA, creata voce storno: " + ordineDettaglio.getFDescrArticolo() + " di " + prezzo + " euro");
+                                break;
+                            } else {
+                                prezzo = a.getPrezzo();
+                                diffAccontoSommaArticoli = sommaArticoli - a.getPrezzo();
+                                OrdineDettaglioDto ordineDettaglio = fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzo);
+                                dtos.add(accontiPerIva.indexOf(a), ordineDettaglio);
+                                Log.debug("*** CREA BOLLA, creata voce storno: " + ordineDettaglio.getFDescrArticolo() + " di " + prezzo + " euro");
+                            }
+                        }
+                    }
                 }
             }
 
@@ -384,6 +410,7 @@ public class FatturaService {
         }
     }
 
+    @TransactionConfiguration(timeout = 5000)
     public Double getSaldoContabile(String sottoConto) {
         return Primanota.find("SELECT ISNULL(SUM(importo), 0) " +
                 "FROM Primanota " +
@@ -391,6 +418,7 @@ public class FatturaService {
                 "GROUP BY gruppoconto, sottoconto", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
     }
 
+    @TransactionConfiguration(timeout = 5000)
     public Double getOrdiniAperti(String sottoConto) {
         return Ordine.find("SELECT ISNULL(SUM( o2.prezzo *(1-o2.scontoArticolo/100)*(1-o2.scontoC1/100)*(1-o2.scontoC2/100)*(1-o2.scontoP/100) " +
                 "* god.qtaDaConsegnare * o2.fCodiceIva/100 + " +
@@ -403,6 +431,7 @@ public class FatturaService {
                 "GROUP BY o.gruppoCliente, o.contoCliente", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
     }
 
+    @TransactionConfiguration(timeout = 5000)
     public Double getAccontiFatturati(String sottoConto) {
         return Fatture.find("SELECT ISNULL(SUM((f2.prezzo * f2.iva/100) + f2.prezzo), 0) " +
                         "FROM Fatture f " +
@@ -411,6 +440,7 @@ public class FatturaService {
                 , Parameters.with("s", sottoConto)).project(Double.class).firstResult();
     }
 
+    @TransactionConfiguration(timeout = 5000)
     public Double getBolleNonFatturate(String sottoConto) {
         return Fatture.find("SELECT ISNULL(SUM(f2.prezzo *(1-f2.scontoarticolo/100)*(1-f2.scontoc1/100)*(1-f2.scontoc2/100)*(1-f2.scontop/100) " +
                 "* f2.quantita * f2.iva/100 + " +

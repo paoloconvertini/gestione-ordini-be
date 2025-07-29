@@ -455,10 +455,14 @@ public class OrdineDettaglioDto implements Serializable {
         this.fCodiceIva = fCodiceIva;
     }
 
+    /**
+     * #ArticoloService.getArticoli
+     */
     public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo,
                               String codArtFornitore, String fDescrArticolo, Double quantita, String fUnitaMisura,
                               Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagRiservato,
-                              Double qtaDaConsegnare, String note, Integer annoOAF, String serieOAF, Integer progressivoOAF,
+                              Double qtaDaConsegnare, String note, Double qtaProntoConsegna,
+                              String fCodiceIva, Double prezzoScontato, Integer annoOAF, String serieOAF, Integer progressivoOAF,
                               Date dataOrdineOAF,Integer progrGenerale) {
         this.anno = anno;
         this.progressivo = progressivo;
@@ -475,6 +479,9 @@ public class OrdineDettaglioDto implements Serializable {
         this.flagRiservato = flagRiservato;
         this.qtaDaConsegnare = qtaDaConsegnare;
         this.note = note;
+        this.qtaProntoConsegna = qtaProntoConsegna;
+        this.fCodiceIva = fCodiceIva;
+        this.prezzoScontato = prezzoScontato;
         this.annoOAF = annoOAF;
         this.serieOAF = serieOAF;
         this.progressivoOAF = progressivoOAF;

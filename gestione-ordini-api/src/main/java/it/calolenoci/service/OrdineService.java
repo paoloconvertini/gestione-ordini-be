@@ -58,6 +58,8 @@ public class OrdineService {
     @ConfigProperty(name = "firma.venditore.path")
     String pathFirmaVendtore;
 
+    @Inject
+    FatturaService fatturaService;
 
     @Transactional
     @TransactionConfiguration(timeout = 15)
@@ -757,9 +759,9 @@ public class OrdineService {
         }
     }
 
-    public List<FatturaAccontoView> findOrdiniPerFatturaAcconto(String sottoConto) {
-        List<FatturaAccontoView> result = new ArrayList<>();
-        List<FatturaAccontoIvaView> fatturaAccontoIvaViews = new ArrayList<>();
+    public List<FatturaAccontoView> findOrdiniPerFatturaAcconto(String sottoConto, List<OrdineDettaglioDto> lista) {
+        List<FatturaAccontoView> result;
+        List<FatturaAccontoIvaView> fatturaAccontoIvaViews;
 
         //recuperare solo articoli ancora da consegnare
         //recuperare acconti
@@ -776,6 +778,7 @@ public class OrdineService {
                         "order by o.anno, o.serie, o.progressivo",
                 Parameters.with("c", sottoConto)).project(FatturaAccontoIvaView.class).list();
 
+        List<AccontoDto> acconti = fatturaService.getAcconti(sottoConto, lista);
         // Raggruppamento per anno, serie, progressivo
         Map<String, List<FatturaAccontoIvaView>> groupedMap = fatturaAccontoIvaViews.stream()
                 .collect(Collectors.groupingBy(item ->

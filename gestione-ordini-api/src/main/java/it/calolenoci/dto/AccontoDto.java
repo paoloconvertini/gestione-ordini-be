@@ -76,7 +76,7 @@ public class AccontoDto {
         this.fArticolo = fArticolo;
     }
 
-    public static boolean checkOrdineEsiste(AccontoDto a, OrdineId id){
+    public static boolean checkOrdineEsiste(AccontoDto a, OrdinePerIva id){
         for (String r : a.getRifOrdClienteList()) {
             if(StringUtils.contains(r, StringUtils.join(id.getAnno(), "/", id.getSerie(), "/", id.getProgressivo()))
             || (StringUtils.contains(r, StringUtils.join(id.getAnno(), "-", id.getSerie(), "-", id.getProgressivo())))) {

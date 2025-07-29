@@ -2,6 +2,7 @@ package it.calolenoci.mapper;
 
 import it.calolenoci.dto.AccontoDto;
 import it.calolenoci.dto.OrdineDettaglioDto;
+import it.calolenoci.dto.OrdinePerIva;
 import it.calolenoci.entity.*;
 import org.apache.commons.lang3.StringUtils;
 
@@ -215,7 +216,7 @@ public class FattureMapper {
         return fd;
     }
 
-    public OrdineDettaglioDto fromAccontoToOrdineDettaglio(AccontoDto dto, OrdineId o){
+    public OrdineDettaglioDto fromAccontoToOrdineDettaglio(AccontoDto dto, OrdinePerIva o, double prezzo){
 
         OrdineDettaglioDto fd = new OrdineDettaglioDto();
         fd.setAnno(o.getAnno());
@@ -225,7 +226,7 @@ public class FattureMapper {
         fd.setFArticolo("*ACC");
         fd.setFDescrArticolo("Storno fattura acconto nr. " + StringUtils.trim(dto.getNumeroFattura()) + " del " + sdf.format(dto.getDataFattura()));
         fd.setQuantita(0D);
-        fd.setPrezzo(-dto.getPrezzo());
+        fd.setPrezzo(-prezzo);
         fd.setFUnitaMisura(".");
         fd.setScontoArticolo(0D);
         fd.setScontoC1(0D);
