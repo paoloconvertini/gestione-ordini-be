@@ -2,6 +2,8 @@ package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import it.calolenoci.dto.AccontoDto;
+import it.calolenoci.dto.DdtNettoDto;
+import it.calolenoci.dto.StornoDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,14 +16,64 @@ import java.util.Date;
 @Getter
 @Setter
 @NamedNativeQuery(
+        name = "DdtNettiPerOrdine",
+        query = "SELECT " +
+                "    o.ANNO AS anno, " +
+                "    o.SERIE AS serie, " +
+                "    o.PROGRESSIVO AS progressivo, " +
+                "    f2.FCODICEIVA AS fCodiceIva, " +
+                "    ISNULL(SUM(ISNULL(f2.PREZZO, 0) * ISNULL(f2.QUANTITA, 0) * " +
+                "        (1 - ISNULL(f2.SCONTOARTICOLO, 0)/100) * " +
+                "        (1 - ISNULL(f2.SCONTOC1, 0)/100) * " +
+                "        (1 - ISNULL(f2.SCONTOC2, 0)/100) * " +
+                "        (1 - ISNULL(f2.SCONTOP, 0)/100)), 0) AS importoDdtNetto " +
+                "FROM FATTURE2 f2 " +
+                "JOIN ORDCLI2 o2 ON f2.PROGRORDCLI = o2.PROGRGENERALE " +
+                "JOIN ORDCLI o ON o.ANNO = o2.ANNO AND o.SERIE = o2.SERIE AND o.PROGRESSIVO = o2.PROGRESSIVO " +
+                "WHERE f2.TIPORIGO <> 'V' " +
+                "AND o.ANNO = :anno " +
+                "AND o.SERIE = :serie " +
+                "AND o.PROGRESSIVO = :progressivo " +
+                "AND f2.FCODICEIVA = :fCodiceIva " +
+                "GROUP BY o.ANNO, o.SERIE, o.PROGRESSIVO, f2.FCODICEIVA",
+        resultSetMapping = "DdtNettoDtoMapping"
+)
+
+@NamedNativeQuery(
+        name = "StorniAcconti",
+        query = "SELECT f2.FCODICEIVA AS fCodiceIva, -SUM(f2.PREZZO) AS importo " +
+                " FROM FATTURE2 f2 " +
+                " JOIN FATTURE f ON f2.PROGRESSIVO = f.PROGRESSIVO AND f2.SERIE = f.SERIE AND f2.ANNO = f.ANNO " +
+                " WHERE f2.TIPORIGO = 'V' " +
+                " AND f2.FDESCRARTICOLO LIKE CONCAT('%', :numeroFattura, '%')"
+                + " and f2.FDESCRARTICOLO LIKE CONCAT('%', :dataAcconto, '%')" +
+                " AND f.CONTOCLIENTE = :sottoConto" +
+                " GROUP BY f2.FCODICEIVA",
+        resultSetMapping = "StornoAccontoDtoMapping"
+)
+
+@NamedNativeQuery(
         name = "AccontoDto",
         query =
                 "select f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura, "
                         + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO "
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO"
-                        + " WHERE 1=1 and f.serie = 'A' and F.PROGRESSIVO > 0"
-                        + " and f.CONTOCLIENTE = :sottoConto ",
+                        + " WHERE 1=1 and f.serie = 'A' and f.PROGRESSIVO > 0"
+                        + " and f.CONTOCLIENTE = :sottoConto " +
+                        "   ORDER BY f2.rigo ",
+        resultSetMapping = "AccontoDto"
+)
+@NamedNativeQuery(
+        name = "AccontoPerOrdineANDIva",
+        query =
+                "select f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura, "
+                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO "
+                        + " FROM FATTURE f"
+                        + " JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO"
+                        + " JOIN FATTURE2 f5 ON f5.ANNO = f2.ANNO AND f5.SERIE = f2.SERIE AND f2.PROGRESSIVO = f5.PROGRESSIVO"
+                        + " WHERE 1=1 and f.serie = 'A' and f.PROGRESSIVO > 0"
+                        + " and f5.FDESCRARTICOLO like :oper and f2.FCODICEIVA =:i ",
         resultSetMapping = "AccontoDto"
 )
 @NamedNativeQuery(
@@ -35,12 +87,55 @@ import java.util.Date;
                         + " join ORDCLI2 o2 ON o2.PROGRGENERALE = f5.PROGRORDCLI"
                         + " join ORDCLI o ON o2.ANNO = o.ANNO AND o2.SERIE = o.SERIE AND o2.PROGRESSIVO = o.PROGRESSIVO"
 
-                        + " WHERE f4.FDESCRARTICOLO like  '%Storno%'"
-                        + " and f.CONTOCLIENTE = :sottoConto",
+                        + " WHERE f4.FDESCRARTICOLO LIKE CONCAT('%',:numeroFattura, '%')"
+                        + " and f4.FDESCRARTICOLO LIKE CONCAT('%', :dataAcconto, '%')"
+                        + " and f.CONTOCLIENTE = :sottoConto "
+                        + " and f4.FCODICEIVA = :iva",
         resultSetMapping = "StornoDto"
 )
 @SqlResultSetMapping(
+        name="StornoAccontoDtoMapping",
+        classes = @ConstructorResult(
+                targetClass = StornoDto.class,
+                columns = {
+                        @ColumnResult(name = "fCodiceIva", type = String.class),
+                        @ColumnResult(name = "importo", type = Double.class),
+                }
+        )
+)
+@SqlResultSetMapping(
+        name = "DdtNettoDtoMapping",
+        classes = @ConstructorResult(
+                targetClass = DdtNettoDto.class,
+                columns = {
+                        @ColumnResult(name = "anno", type = Integer.class),
+                        @ColumnResult(name = "serie", type = String.class),
+                        @ColumnResult(name = "progressivo", type = Integer.class),
+                        @ColumnResult(name = "fCodiceIva", type = String.class),
+                        @ColumnResult(name = "importoDdtNetto", type = Double.class)
+                }
+        )
+)
+@SqlResultSetMapping(
         name = "AccontoDto",
+        classes = @ConstructorResult(
+                targetClass = AccontoDto.class,
+                columns = {
+                        @ColumnResult(name = "contoCliente"),
+                        @ColumnResult(name = "anno"),
+                        @ColumnResult(name = "serie"),
+                        @ColumnResult(name = "progressivo"),
+                        @ColumnResult(name = "dataFattura"),
+                        @ColumnResult(name = "numeroFattura"),
+                        @ColumnResult(name = "operazione"),
+                        @ColumnResult(name = "prezzo"),
+                        @ColumnResult(name = "iva"),
+                        @ColumnResult(name= "fArticolo")
+                }
+        )
+)
+@SqlResultSetMapping(
+        name = "AccontoPerOrdineANDIva",
         classes = @ConstructorResult(
                 targetClass = AccontoDto.class,
                 columns = {
@@ -428,4 +523,13 @@ public class Fatture extends PanacheEntityBase {
     @Column(name = "FLINVIORIFATT")
     private String flinviorifatt;
 
+    @Column(name = "ID_FATTURE")
+    private Integer idFatture;
+
+    @Column(name = "DATASCONTRINO")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dataScontrino;
+
+    @Column(name = "FLDDTEMAIL")
+    private String flDttEmail;
 }

@@ -18,5 +18,4 @@ public class FatturaAccontoView implements Serializable {
     private String serie;
     private Integer progressivo;
     private List<FatturaAccontoIvaView> fatturaAccontoIvaViewList;
-    private List<AccontoDto> acconti;
 }

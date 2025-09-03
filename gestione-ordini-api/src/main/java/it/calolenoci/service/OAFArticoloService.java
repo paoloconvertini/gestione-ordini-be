@@ -212,10 +212,10 @@ public class OAFArticoloService {
             } else {
                 double qta = dto.getOquantita() - ordineDettaglio.getQuantita();
                 OrdineFornitoreDettaglio.update("oQuantita = :q,oQuantitaV = :qv " +
-                                "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo ",
+                                "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:r",
                         Parameters.with("anno", dto.getAnno())
                                 .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo()).
-                        and("q", qta).and("qv", qta));
+                        and("q", qta).and("qv", qta).and("r", dto.getRigo()));
 
                 Integer rigo = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(f.rigo) IS NULL THEN 0 ELSE MAX(f.rigo) END " +
                                         "FROM OrdineFornitoreDettaglio f " +

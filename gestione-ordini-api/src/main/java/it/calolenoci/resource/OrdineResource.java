@@ -15,6 +15,7 @@ import it.calolenoci.service.FirmaService;
 import it.calolenoci.service.JasperService;
 import it.calolenoci.service.OrdineService;
 import net.sf.jasperreports.engine.JRException;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
@@ -356,8 +357,20 @@ public class OrdineResource {
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
     @Path("/ordine-fattura-acconto/{sottoConto}")
-    public Response findOrdiniPerFatturaAcconto(String sottoConto, List<OrdineDettaglioDto> list) throws ParseException {
-        return Response.ok(ordineService.findOrdiniPerFatturaAcconto(sottoConto, list)).build();
+    public Response findOrdiniPerFatturaAcconto(String sottoConto) throws ParseException {
+        return Response.ok(ordineService.findOrdiniPerFatturaAcconto(sottoConto)).build();
+    }
+
+    @Operation(summary = "Returns all the ordini from the database")
+    @POST
+    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
+    @APIResponse(responseCode = "204", description = "No Ordini")
+    @Consumes(APPLICATION_JSON)
+    @Path("/crea-fattura-acconto")
+    public Response creaFatturaAcconto(List<FatturaAccontoDto> fatturaAccontoDtoList) {
+        String result = ordineService.creaFatturaAcconto(fatturaAccontoDtoList, user);
+        return Response.ok(new ResponseDto(result, StringUtils.isBlank(result))).build();
     }
 
     @RolesAllowed({ADMIN, LOGISTICA, VENDITORE})

@@ -159,7 +159,7 @@ public class ArticoloResource {
     @APIResponse(responseCode = "204", description = "No Articoli")
     @Path("/cercaAcconti/{sottoConto}")
     public Response cercaAcconti(String sottoConto, List<OrdineDettaglioDto> list) {
-        return Response.ok(fatturaService.getAcconti(sottoConto, list)).build();
+        return Response.ok(fatturaService.getAccontiPerOrdiniClienti(sottoConto, list)).build();
     }
 
     @Operation(summary = "Returns all the articoli from the database")

@@ -45,6 +45,13 @@ public class AccontoDto {
 
     private String uuidAS;
 
+    private Double importoResiduo; // importo residuo (imponibile -
+
+    private Double importoResiduoIvato; // importo residuo (ivato -
+
+    private List<AccontoDto> storni;
+
+
     public AccontoDto(String contoCliente, Integer anno,String serie, Integer progressivo,
                       Date dataFattura, String numeroFattura, String rifOrdCliente,
                       String operazione, Double prezzo, String iva, String ordineCliente) {
@@ -77,12 +84,8 @@ public class AccontoDto {
     }
 
     public static boolean checkOrdineEsiste(AccontoDto a, OrdinePerIva id){
-        for (String r : a.getRifOrdClienteList()) {
-            if(StringUtils.contains(r, StringUtils.join(id.getAnno(), "/", id.getSerie(), "/", id.getProgressivo()))
-            || (StringUtils.contains(r, StringUtils.join(id.getAnno(), "-", id.getSerie(), "-", id.getProgressivo())))) {
-               return true;
-            }
-        }
-        return false;
+        return StringUtils.contains(a.getRifOrdCliente(), StringUtils.join(id.getAnno(), "/", id.getSerie(), "/", id.getProgressivo()))
+                || (StringUtils.contains(a.getRifOrdCliente(), StringUtils.join(id.getAnno(), "-", id.getSerie(), "-", id.getProgressivo())));
     }
+
 }

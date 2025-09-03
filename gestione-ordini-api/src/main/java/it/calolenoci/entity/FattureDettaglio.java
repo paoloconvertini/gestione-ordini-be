@@ -286,4 +286,9 @@ public class FattureDettaglio extends PanacheEntityBase {
     @Column(name = "SYS_UPDATEUSER")
     private String sysUpdateuser;
 
+    @Column(name= "PID_FATTURE")
+    private Integer pidFatture;
+
+    @Column(name="FERIFAMMINISTRAZIONE", length = 20)
+    private String ferifAmministrazione;
 }

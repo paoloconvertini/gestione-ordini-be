@@ -1,5 +1,7 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
@@ -21,11 +23,19 @@ import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
 import java.time.Year;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+
 
 @ApplicationScoped
 public class FatturaService {
 
+    // Regex migliorata: intercetta "ordine" o "ns.ordine" con eventuale "n." prima del numero
+    // Poi cattura anno, serie e progressivo con / o - come separatori
+    private static final Pattern ORDER_PATTERN = Pattern.compile(
+            "(?i)(?:ns\\.?\\s*)?ordine\\s*(?:n\\.?\\s*)?(\\d{4})\\s*[/\\-]\\s*([A-Z0-9]+)\\s*[/\\-]\\s*(\\d+)"
+    );
     @Inject
     EntityManager em;
 
@@ -33,6 +43,7 @@ public class FatturaService {
     String dataCongig;
 
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    public SimpleDateFormat sdf2 = new SimpleDateFormat("dd/MM/yyyy");
 
     @Inject
     FattureMapper fattureMapper;
@@ -103,77 +114,78 @@ public class FatturaService {
                 .list();
     }
 
+    @TransactionConfiguration(timeout = 50000)
     public List<AccontoDto> getAcconti(String sottoConto) {
-        return getAcconti(sottoConto, null);
-    }
-
-    @TransactionConfiguration(timeout = 5000)
-    public List<AccontoDto> getAcconti(String sottoConto, List<OrdineDettaglioDto> lista) {
         List<AccontoDto> resultList = new ArrayList<>();
         List<AccontoDto> listaAcconto = em.createNamedQuery("AccontoDto").setParameter("sottoConto", sottoConto).getResultList();
-        List<AccontoDto> listaStorno = em.createNamedQuery("StornoDto").setParameter("sottoConto", sottoConto).getResultList();
-        Log.debug("Lista storni: " + listaStorno.size());
-        if (listaAcconto.isEmpty() && listaStorno.isEmpty()) {
-            Log.debug("Entrambe le liste sono vuote");
-            return resultList;
-        }
         if (listaAcconto.isEmpty()) {
             Log.debug("La lista acconti è vuota");
-            return listaStorno;
+            return resultList;
         } else {
-            List<AccontoDto> listaAcconti = settaRifOrdCliente(listaAcconto, lista);
+            List<AccontoDto> listaAcconti = settaRifOrdCliente(listaAcconto);
+            return getAccontoDtos(sottoConto, resultList, listaAcconti);
+        }
+    }
+
+    @TransactionConfiguration(timeout = 50000)
+    public List<AccontoDto> getAccontiPerOrdiniClienti(String sottoConto, List<OrdineDettaglioDto> lista) {
+        List<AccontoDto> resultList = new ArrayList<>();
+        List<AccontoDto> listaAcconti;
+        List<AccontoDto> listaDto = new ArrayList<>();
+        List<AccontoDto> listaAcconto = em.createNamedQuery("AccontoDto").setParameter("sottoConto", sottoConto).getResultList();
+        if (listaAcconto.isEmpty()) {
+            Log.debug("La lista acconti è vuota");
+            return resultList;
+        } else {
+            listaAcconti = settaRifOrdCliente(listaAcconto);
             for (AccontoDto a : listaAcconti) {
-                a.setUuidAS("" + UUID.randomUUID());
-                resultList.add(a);
-                for (AccontoDto s : listaStorno) {
-                    Log.debug("Acconto n." + a.getNumeroFattura() + " contiene storno operazione " + s.getOperazione() + "? " + StringUtils.contains(s.getOperazione(), StringUtils.trim(a.getNumeroFattura())));
-                    if (StringUtils.contains(s.getOperazione(), StringUtils.trim(a.getNumeroFattura())) && Objects.equals(s.getIva(), a.getIva())) {
-                        a.getRifOrdClienteList().forEach(r -> {
-                            String ordCli2 = StringUtils.replace(s.getOrdineCliente(), "/", ".");
-                            String ordCli3 = StringUtils.replace(s.getOrdineCliente(), "/", "-");
-                            if (StringUtils.contains(r, s.getOrdineCliente()) ||
-                                    StringUtils.contains(r, ordCli2)
-                                    || StringUtils.contains(r, ordCli3)) {
-                                List<String> rifList = new ArrayList<>();
-                                rifList.add(s.getRifOrdCliente());
-                                s.setRifOrdClienteList(rifList);
-                                s.setUuidAS("" + a.getUuidAS());
-                                Log.debug("AccontoDto :" + s);
-                                resultList.add(s);
-                            }
-                        });
+                for (OrdineDettaglioDto o : lista) {
+                    if(a.getRifOrdCliente().equals(StringUtils.join(o.getAnno(), "/", o.getSerie(), "/", o.getProgressivo()))
+                            && a.getIva().equals(o.getFCodiceIva())){
+                        listaDto.add(a);
                     }
                 }
             }
+
         }
 
-        if (lista != null && !lista.isEmpty()) {
-            List<AccontoDto> accontoDtoList = new ArrayList<>();
-            Map<String, List<AccontoDto>> mapAccontoStorno = resultList.stream().collect(Collectors.groupingBy(AccontoDto::getUuidAS));
-            Log.debug("Mappa acconti storno size: " + mapAccontoStorno.size());
-            for (String uuid : mapAccontoStorno.keySet()) {
-                double sum = mapAccontoStorno.get(uuid).stream().mapToDouble(AccontoDto::getPrezzo).sum();
-                Log.debug("Somma saldo " + uuid + ":" + sum);
-                if (sum > 0) {
-                    AccontoDto dto = mapAccontoStorno.get(uuid).stream().filter(a -> a.getPrezzo() > 0).findFirst().get();
-                    dto.setPrezzo(sum);
-                    accontoDtoList.add(dto);
-                }
-            }
-            return accontoDtoList;
+        if (listaDto.isEmpty()) {
+            Log.debug("La lista acconti è vuota");
+            return resultList;
+        } else {
+             return getAccontoDtos(sottoConto, resultList, listaDto).stream().filter(a -> a.getImportoResiduo() > 0).toList();
         }
 
-        return resultList;
     }
+
+    private List<AccontoDto> getAccontoDtos(String sottoConto, List<AccontoDto> resultList, List<AccontoDto> listaAcconto) {
+        for (AccontoDto a : listaAcconto) {
+            List<AccontoDto> listaStorno = em.createNamedQuery("StornoDto")
+                    .setParameter("sottoConto", sottoConto)
+                    .setParameter("numeroFattura", a.getNumeroFattura())
+                    .setParameter("iva", a.getIva())
+                    .setParameter("dataAcconto", sdf2.format(a.getDataFattura()))
+                    .getResultList();
+            a.setStorni(listaStorno.stream().filter(s  -> s.getOrdineCliente().equals(a.getRifOrdCliente())).toList());
+        }
+        resultList.addAll(listaAcconto.stream().filter(a -> a.getPrezzo() > 0).toList());
+        for (AccontoDto dto : resultList) {
+            double sommaStorni = dto.getStorni().stream().mapToDouble(AccontoDto::getPrezzo).sum();
+            dto.setImportoResiduo(dto.getPrezzo() + sommaStorni);
+        }
+        return resultList.stream().sorted(Comparator.comparing(AccontoDto::getNumeroFattura)).toList();
+    }
+
 
     @Transactional
     public String creaBolla(List<OrdineDettaglioDto> list, List<AccontoDto> accontoDtos, String user) {
         String result = null;
         try {
-            Integer progressivoFatt = OrdineFornitore.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM Fatture o WHERE anno = :anno and serie = 'B'", Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
-            Integer progressivoFattDettaglio = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM FattureDettaglio o").project(Integer.class).firstResult();
+            Integer progressivoFatt = Fatture.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM Fatture o WHERE anno = :anno and serie = 'B'", Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
+            Integer progressivoFattDettaglio = FattureDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM FattureDettaglio o").project(Integer.class).firstResult();
             Ordine ordine = Ordine.findByOrdineId(list.get(0).getAnno(), list.get(0).getSerie(), list.get(0).getProgressivo());
-            Fatture f = fattureMapper.buildFatture(progressivoFatt, ordine);
+            Integer idFatture = Fatture.find("SELECT ISNULL(MAX(idFatture),0) FROM Fatture f ").project(Integer.class).firstResult();
+            Fatture f = fattureMapper.buildFatture(progressivoFatt, ordine, user, idFatture);
             Log.debug("*** CREA BOLLA --- creata fattura n. " + f.getAnno() + "/" + f.getSerie() + "/" + f.getProgressivo());
             f.persist();
             Map<OrdinePerIva, List<OrdineDettaglioDto>> map = list.stream().collect(Collectors.groupingBy(o ->
@@ -287,8 +299,12 @@ public class FatturaService {
                         saldiMagazzinoList.add(saldiMagazzino);
                     } else {
                         if (StringUtils.equals(o.getTipoRigo(), "") || StringUtils.equals(o.getTipoRigo(), " ")) {
-                            GoTmpScarico goTmpScarico = new GoTmpScarico();
-                            goTmpScarico.setId(new GoTmpScaricoPK(o.getFArticolo(), o.getMagazz(), fd.getProgrGenerale()));
+                            GoTmpScaricoPK pk = new GoTmpScaricoPK(o.getFArticolo(), o.getMagazz(), fd.getProgrGenerale());
+                            GoTmpScarico goTmpScarico = GoTmpScarico.findById(pk);
+                            if(goTmpScarico == null) {
+                                goTmpScarico = new GoTmpScarico();
+                            }
+                            goTmpScarico.setId(pk);
                             goTmpScarico.setAttivo(Boolean.TRUE);
                             goTmpScaricoList.add(goTmpScarico);
                             Log.debug("*** CREA BOLLA, TmpScarico creato per articolo: " + o.getFArticolo() + ". Qta: " + o.getQuantita());
@@ -326,7 +342,62 @@ public class FatturaService {
         return result;
     }
 
-    private List<AccontoDto> settaRifOrdCliente(List<AccontoDto> listaAcconto, List<OrdineDettaglioDto> lista) {
+    public List<AccontoDto> settaRifOrdCliente(List<AccontoDto> listaAcconto) {
+
+        Map<String, List<AccontoDto>> mapByNumFatt = listaAcconto.stream().filter(a -> StringUtils.isNotBlank(a.getNumeroFattura()))
+                .collect(Collectors.groupingBy(AccontoDto::getNumeroFattura));
+
+        for (String numFatt : mapByNumFatt.keySet()) {
+            List<AccontoDto> righeFattura = mapByNumFatt.get(numFatt);
+            if (righeFattura.isEmpty()) {
+                continue;
+            }
+            List<AccontoDto> accBlock = new ArrayList<>();
+            int lastAccIndex = -1;
+
+            for (int i = 0; i < righeFattura.size(); i++) {
+                AccontoDto dto = righeFattura.get(i);
+
+                // Caso: riga con *ACC
+                if ("*ACC".equalsIgnoreCase(dto.getFArticolo())) {
+                    accBlock.add(dto);
+                    lastAccIndex = i;
+                    continue;
+                }
+
+                // Caso: siamo 2 righe dopo l'ultimo *ACC
+                if (lastAccIndex != -1 && i == lastAccIndex + 2) {
+                    String descr = dto.getOperazione();
+                    String ordine = estraiNumeroOrdine(descr);
+                    if (ordine != null) {
+                        for (AccontoDto acc : accBlock) {
+                            acc.setRifOrdCliente(ordine);
+                        }
+                    }
+                    accBlock.clear();
+                    lastAccIndex = -1;
+                }
+            }
+        }
+        final List<AccontoDto> listaAcconti = new ArrayList<>();
+        mapByNumFatt.values().forEach(list -> listaAcconti.addAll(list.stream().filter(a -> a.getRifOrdCliente() != null).toList()));
+
+        listaAcconti.sort(Comparator.comparing(AccontoDto::getDataFattura));
+        Log.debug("Acconti post elaborazione: " + listaAcconti.size());
+        return listaAcconti;
+    }
+
+    private static String estraiNumeroOrdine(String descr) {
+        if (descr == null) return null;
+        Matcher m = ORDER_PATTERN.matcher(descr);
+        if (m.find()) {
+            // Restituisce nel formato standard ANNO/SERIE/PROGRESSIVO
+            return m.group(1) + "/" + m.group(2) + "/" + m.group(3);
+        }
+        return null;
+    }
+
+    private List<AccontoDto> settaRifOrdCliente2(List<AccontoDto> listaAcconto, List<OrdineDettaglioDto> lista) {
         boolean check = lista != null;
         //FIXME considerare anche il caso in cui su stessa fattura ho due aliquote di IVA diversa
         Map<String, List<AccontoDto>> mapByNumFatt = listaAcconto.stream().collect(Collectors.groupingBy(AccontoDto::getNumeroFattura));

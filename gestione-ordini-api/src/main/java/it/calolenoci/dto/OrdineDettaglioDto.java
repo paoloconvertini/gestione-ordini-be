@@ -314,9 +314,12 @@ public class OrdineDettaglioDto implements Serializable {
         this.progressivoMag = progressivoMag;
         this.intestazione = intestazione;
     }
-    //findArticoliById
+
+    /**
+     * {@link it.calolenoci.entity.OrdineDettaglio#findArticoliById(FiltroArticoli)}
+     */
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
-                              String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
+                              String serie, String fArticolo, String fCodiceIva, String codArtFornitore, String fDescrArticolo,
                               Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura, String magazzino,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, Double qtyuser1, Date datauser1, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
@@ -331,6 +334,7 @@ public class OrdineDettaglioDto implements Serializable {
         this.rigo = rigo;
         this.serie = serie;
         this.fArticolo = fArticolo;
+        this.fCodiceIva = fCodiceIva;
         this.codArtFornitore = codArtFornitore;
         this.fDescrArticolo = fDescrArticolo;
         this.quantita = quantita;

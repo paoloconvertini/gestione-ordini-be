@@ -1,6 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
@@ -10,6 +9,7 @@ import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.StatoOrdineEnum;
+import it.calolenoci.mapper.FattureMapper;
 import it.calolenoci.mapper.GoOrdineDettaglioMapper;
 import it.calolenoci.mapper.GoOrdineMapper;
 import net.sf.jasperreports.engine.JRException;
@@ -18,19 +18,19 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static it.calolenoci.enums.StatoOrdineEnum.ARCHIVIATO;
-import static it.calolenoci.enums.StatoOrdineEnum.COMPLETO;
 
 @ApplicationScoped
 public class OrdineService {
@@ -50,6 +50,8 @@ public class OrdineService {
     String path;
 
     @Inject
+    FattureMapper fattureMapper;
+    @Inject
     ArticoloService articoloService;
 
     @Inject
@@ -60,6 +62,9 @@ public class OrdineService {
 
     @Inject
     FatturaService fatturaService;
+
+    @Inject
+    EntityManager em;
 
     @Transactional
     @TransactionConfiguration(timeout = 15)
@@ -759,16 +764,14 @@ public class OrdineService {
         }
     }
 
-    public List<FatturaAccontoView> findOrdiniPerFatturaAcconto(String sottoConto, List<OrdineDettaglioDto> lista) {
-        List<FatturaAccontoView> result;
-        List<FatturaAccontoIvaView> fatturaAccontoIvaViews;
-
-        //recuperare solo articoli ancora da consegnare
-        //recuperare acconti
-        fatturaAccontoIvaViews = Ordine.find("select o.anno, o.serie, o.progressivo, o2.fCodiceIva, " +
+    public List<FatturaAccontoView> findOrdiniPerFatturaAcconto(String sottoConto) {
+        List<FatturaAccontoIvaView> fatturaAccontoIvaViews = Ordine.find("select o.anno, o.serie, o.progressivo, o2.fCodiceIva, " +
                         "SUM(((CaSE WHEN prezzo is null then 0 ELSE prezzo end)*" +
                         "(CASE WHEN quantita is null then 0 else quantita end))*" +
-                        "(1-scontoArticolo/100)*(1-scontoC1/100)*(1-scontoC2/100)*(1-scontoP/100)) " +
+                        "(1 - COALESCE(o2.scontoArticolo, 0)/100)*" +
+                        "(1 - COALESCE(o2.scontoC1, 0)/100)" +
+                        "*(1 - COALESCE(o2.scontoC2, 0)/100)" +
+                        "*(1 - COALESCE(o2.scontoP, 0)/100)) " +
                         "from Ordine o " +
                         "join OrdineDettaglio o2 ON o.id = o2.id and o2.tipoRigo <> 'C' " +
                         "join GoOrdine og ON og.progressivo = o.progressivo AND og.serie = o.serie " +
@@ -778,26 +781,142 @@ public class OrdineService {
                         "order by o.anno, o.serie, o.progressivo",
                 Parameters.with("c", sottoConto)).project(FatturaAccontoIvaView.class).list();
 
-        List<AccontoDto> acconti = fatturaService.getAcconti(sottoConto, lista);
-        // Raggruppamento per anno, serie, progressivo
+        // 2) Raggruppo per anno|serie|progressivo
         Map<String, List<FatturaAccontoIvaView>> groupedMap = fatturaAccontoIvaViews.stream()
-                .collect(Collectors.groupingBy(item ->
-                        item.getAnno() + "|" + item.getSerie() + "|" + item.getProgressivo()
-                ));
+                .collect(Collectors.groupingBy(item -> item.getAnno() + "/" + item.getSerie() + "/" + item.getProgressivo()));
 
-        // Creazione dei FatturaAccontoView raggruppati
-        result = groupedMap.entrySet().stream()
-                .map(entry -> {
-                    String[] keys = entry.getKey().split("\\|");
-                    FatturaAccontoView view = new FatturaAccontoView();
-                    view.setAnno(Integer.parseInt(keys[0]));
-                    view.setSerie(keys[1]);
-                    view.setProgressivo(Integer.parseInt(keys[2]));
-                    view.setFatturaAccontoIvaViewList(entry.getValue());
-                    return view;
-                })
-                .collect(Collectors.toList());
+        List<FatturaAccontoView> result = new ArrayList<>();
+
+        // 3) Per ogni gruppo di ordine
+        for (Map.Entry<String, List<FatturaAccontoIvaView>> entry : groupedMap.entrySet()) {
+            String[] keys = entry.getKey().split("/");
+            int anno = Integer.parseInt(keys[0]);
+            String serie = keys[1];
+            int progressivo = Integer.parseInt(keys[2]);
+
+            FatturaAccontoView view = new FatturaAccontoView();
+            view.setAnno(anno);
+            view.setSerie(serie);
+            view.setProgressivo(progressivo);
+
+            List<FatturaAccontoIvaView> ivaViews = entry.getValue();
+
+            // Per ogni codice IVA calcolo acconti, storni e DDT
+            for (FatturaAccontoIvaView ivaView : ivaViews) {
+                String codiceIva = ivaView.getFCodiceIva();
+                // Recupero acconti associati a questo ordine e codice IVA
+                List<AccontoDto> listaAcconto = em.createNamedQuery("AccontoDto").setParameter("sottoConto", sottoConto).getResultList();
+                List<AccontoDto> listaAcconti = fatturaService.settaRifOrdCliente(listaAcconto);
+                List<AccontoDto> accontoDtos = listaAcconti.stream().filter(a -> a.getIva().equals(codiceIva) &&
+                        a.getRifOrdCliente().equals(entry.getKey())).toList();
+                for (AccontoDto a : accontoDtos) {
+                    // Recupero storni associati alla fattura acconto (numero fattura da AccontoDto)
+                    List<AccontoDto> listaStorno = em.createNamedQuery("StornoDto")
+                            .setParameter("sottoConto", sottoConto)
+                            .setParameter("numeroFattura", a.getNumeroFattura())
+                            .setParameter("iva", a.getIva())
+                            .setParameter("dataAcconto", fatturaService.sdf2.format(a.getDataFattura()))
+                            .getResultList();
+                    a.setStorni(listaStorno.stream().filter(s  -> s.getOrdineCliente().equals(a.getRifOrdCliente())).toList());
+                    double sommaStorni = a.getStorni().stream().mapToDouble(AccontoDto::getPrezzo).sum();
+                    a.setImportoResiduo(a.getPrezzo() + sommaStorni);
+                    a.setImportoResiduoIvato(a.getImportoResiduo()+(a.getImportoResiduo()*Double.parseDouble(a.getIva())/100));
+                }
+                ivaView.setAcconti(accontoDtos);
+
+                // Recupero importo DDT netto da tabella FATTURE per questo ordine e codice IVA
+                // Supponendo che DDT siano fatture con tipoDoc = 'DDT'
+                List<DdtNettoDto> listaDdt = em.createNamedQuery("DdtNettiPerOrdine", DdtNettoDto.class)
+                        .setParameter("anno",anno)
+                        .setParameter("serie", serie)
+                        .setParameter("progressivo", progressivo)
+                        .setParameter("fCodiceIva", codiceIva)
+                        .getResultList();
+                ivaView.setDdtList(listaDdt);
+                double sommaDtt = listaDdt.stream().mapToDouble(DdtNettoDto::getImportoDdtNetto).sum();
+                double sommaAccontiStornati = ivaView.getAcconti().stream()
+                        .mapToDouble(AccontoDto::getImportoResiduo)
+                        .sum();
+                double sommaAccontiStornatiIvato = ivaView.getAcconti().stream()
+                        .mapToDouble(AccontoDto::getImportoResiduoIvato)
+                        .sum();
+
+
+                double residuo = (ivaView.getImporto() - sommaDtt);
+
+                ivaView.setResiduoAcconti(sommaAccontiStornati);
+                ivaView.setResiduoAccontiIvato(sommaAccontiStornatiIvato);
+                ivaView.setImportoResiduo(residuo);
+                ivaView.setImportoResiduoIvato(residuo+(residuo*Double.parseDouble(codiceIva)/100));
+                ivaView.setImportoIvato(ivaView.getImporto()+(ivaView.getImporto()*Double.parseDouble(codiceIva)/100));
+                ivaView.setResiduoFatturabile(ivaView.getImportoResiduo() - ivaView.getResiduoAcconti());
+                ivaView.setResiduoFatturabileIvato(ivaView.getResiduoFatturabile() +
+                        (ivaView.getResiduoFatturabile()*Double.parseDouble(codiceIva)/100));
+            }
+
+            view.setFatturaAccontoIvaViewList(ivaViews);
+            result.add(view);
+        }
 
         return result;
+    }
+
+    @Transactional
+    public String creaFatturaAcconto(List<FatturaAccontoDto> fatturaAccontoDtoList, String user) {
+        String result = null;
+        try {
+            Integer progressivoFatt = Fatture.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 1 ELSE (MAX(progressivo)+1) END FROM Fatture o WHERE anno = :anno and serie = 'A'", Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
+            Integer progressivoFattDettaglio = FattureDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 1 ELSE (MAX(progrGenerale)+1) END FROM FattureDettaglio o").project(Integer.class).firstResult();
+            Ordine ordine = Ordine.findByOrdineId(fatturaAccontoDtoList.get(0).getAnno(), fatturaAccontoDtoList.get(0).getSerie(), fatturaAccontoDtoList.get(0).getProgressivo());
+            Integer idFatture = Fatture.find("SELECT ISNULL((MAX(idFatture)+1),1) FROM Fatture f ").project(Integer.class).firstResult();
+            Integer progressivoGen = Fatture.find("SELECT ISNULL((MAX(progressivogen)+1),1) FROM Fatture f ").project(Integer.class).firstResult();
+            Fatture fatture = fattureMapper.buildFatturaAcconto(progressivoFatt, ordine, user, idFatture, progressivoGen);
+            Fatture.persist(fatture);
+            Map<String, List<FatturaAccontoDto>> mappaFattureAccontoByOrdCliente = fatturaAccontoDtoList.stream()
+                    .collect(Collectors.groupingBy(item -> item.getAnno() + "/" + item.getSerie() + "/" + item.getProgressivo()));
+
+            List<FattureDettaglio> fattureDaSalvare = new ArrayList<>();
+            int rigo =1;
+            for (Map.Entry<String, List<FatturaAccontoDto>> entry : mappaFattureAccontoByOrdCliente.entrySet()) {
+                String[] keys = entry.getKey().split("/");
+                int anno = Integer.parseInt(keys[0]);
+                String serie = keys[1];
+                int progressivo = Integer.parseInt(keys[2]);
+                List<FatturaAccontoDto> dtoByOrdine = entry.getValue();
+                FattureDettaglio fattureDettaglio;
+                for (FatturaAccontoDto d : dtoByOrdine) {
+                    fattureDettaglio = fattureMapper.buildFatturaAccontoDettaglio(d.getIva(), fatture,
+                            progressivoFattDettaglio, rigo, user,
+                            "V", "*ACC", d.isASaldo() ? "A SALDO" : "Acconto",
+                            d.getNuovoAcconto(), ".", "B");
+                     fattureDaSalvare.add(fattureDettaglio);
+                    rigo++;
+                    progressivoFattDettaglio++;
+                }
+                FattureDettaglio c1 = fattureMapper.buildFatturaAccontoDettaglio("", fatture, progressivoFattDettaglio, rigo, user,
+                        "C", "", "Su prossima fornitura di materiale come da",
+                        0D, "", "");
+                fattureDaSalvare.add(c1);
+                rigo++;
+                progressivoFattDettaglio++;
+                Ordine ord = Ordine.findByOrdineId(anno, serie, progressivo);
+                String desc = "ordine n." + anno + "/" + serie + "/" + progressivo + " del " + fatturaService.sdf2.format(ord.getDataOrdine());
+                FattureDettaglio c2 = fattureMapper.buildFatturaAccontoDettaglio("", fatture, progressivoFattDettaglio, rigo, user,
+                        "C", "", desc,
+                        0D, "", "");
+                fattureDaSalvare.add(c2);
+                rigo++;
+                progressivoFattDettaglio++;
+            }
+            if(!fattureDaSalvare.isEmpty()) {
+                FattureDettaglio.persist(fattureDaSalvare);
+                result = StringUtils.join("Creata fattura acconto n. ", fatture.getAnno(), "/", fatture.getSerie(),
+                        "/", fatture.getProgressivo());
+            }
+            return result;
+        } catch (Exception e) {
+            Log.error("Errore nella creazione della fattura di acconto: " + e.getMessage(), e);
+        }
+        return "Errore nella creazione della fattura di acconto";
     }
 }
