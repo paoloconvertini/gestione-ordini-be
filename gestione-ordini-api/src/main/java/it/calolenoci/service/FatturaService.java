@@ -5,10 +5,7 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
-import it.calolenoci.dto.AccontoDto;
-import it.calolenoci.dto.FatturaDto;
-import it.calolenoci.dto.OrdineDettaglioDto;
-import it.calolenoci.dto.OrdinePerIva;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.mapper.FattureMapper;
 import it.calolenoci.mapper.MagazzinoMapper;
@@ -138,6 +135,11 @@ public class FatturaService {
             return resultList;
         } else {
             listaAcconti = settaRifOrdCliente(listaAcconto);
+
+            // 🔴 ESCLUDO gli acconti NON validati (senza numero e/o data)
+            listaAcconti = listaAcconti.stream()
+                    .filter(a -> StringUtils.isNotBlank(a.getNumeroFattura()) && a.getDataFattura() != null)
+                    .toList();
             for (AccontoDto a : listaAcconti) {
                 for (OrdineDettaglioDto o : lista) {
                     if(a.getRifOrdCliente().equals(StringUtils.join(o.getAnno(), "/", o.getSerie(), "/", o.getProgressivo()))
@@ -157,6 +159,30 @@ public class FatturaService {
         }
 
     }
+
+    // dentro FatturaService
+
+    public long countAccontiNonValidatiByOrdine(Integer annoOrd, String serieOrd, Integer progOrd) {
+        String chiaveSlash = annoOrd + "/" + serieOrd + "/" + progOrd;
+        String chiaveDash  = annoOrd + "-" + serieOrd + "-" + progOrd;
+
+        String hql =
+                "select distinct f.anno, f.serie, f.progressivo " +
+                        "from Fatture f, FattureDettaglio dAcc, FattureDettaglio dDesc " +
+                        "where f.anno = dAcc.anno and f.serie = dAcc.serie and f.progressivo = dAcc.progressivo " +
+                        "  and f.anno = dDesc.anno and f.serie = dDesc.serie and f.progressivo = dDesc.progressivo " +
+                        "  and (f.numeroFattura is null or f.numeroFattura = '') " +
+                        "  and f.dataFattura is null " +
+                        "  and dAcc.fArticolo = '*ACC' " +
+                        "  and ( lower(dDesc.fDescrArticolo) like concat('%', lower(?1), '%') " +
+                        "     or lower(dDesc.fDescrArticolo) like concat('%', lower(?2), '%') )";
+
+        // Nota: contiamo la size della lista di triple distinte (anno/serie/progr)
+        @SuppressWarnings("unchecked")
+        List<AccontoLightDto> triples = Fatture.find(hql, chiaveSlash, chiaveDash).project(AccontoLightDto.class).list();
+        return triples.size();
+    }
+
 
     private List<AccontoDto> getAccontoDtos(String sottoConto, List<AccontoDto> resultList, List<AccontoDto> listaAcconto) {
         for (AccontoDto a : listaAcconto) {
@@ -343,6 +369,68 @@ public class FatturaService {
     }
 
     public List<AccontoDto> settaRifOrdCliente(List<AccontoDto> listaAcconto) {
+        if (listaAcconto == null || listaAcconto.isEmpty()) return Collections.emptyList();
+
+        // Raggruppo per (anno, serie, progressivo) e preservo l’ordine di incontro
+        Map<FattKey, List<AccontoDto>> mapByDoc =
+                listaAcconto.stream()
+                        .filter(a -> a.getAnno() != null && a.getSerie() != null && a.getProgressivo() != null)
+                        .collect(Collectors.groupingBy(
+                                a -> new FattKey(a.getAnno(), a.getSerie(), a.getProgressivo()),
+                                LinkedHashMap::new, // preserva l’ordine dei gruppi
+                                Collectors.toList() // preserva l’ordine degli elementi (ordine dello stream)
+                        ));
+
+        // Per ciascun “documento” (anno/serie/progr) applico la logica *ACC -> riga +2 = riferimento ordine
+        for (List<AccontoDto> righeFattura : mapByDoc.values()) {
+            if (righeFattura.isEmpty()) continue;
+
+            List<AccontoDto> accBlock = new ArrayList<>();
+            int lastAccIndex = -1;
+
+            for (int i = 0; i < righeFattura.size(); i++) {
+                AccontoDto dto = righeFattura.get(i);
+
+                // Riga di acconto: FARTICOLO = "*ACC" (dal CSV è lì)
+                if ("*ACC".equalsIgnoreCase(dto.getFArticolo())) {
+                    accBlock.add(dto);
+                    lastAccIndex = i;
+                    continue;
+                }
+
+                // Due righe dopo l’ultimo *ACC trovo la descrizione con l’ordine
+                if (lastAccIndex != -1 && i == lastAccIndex + 2) {
+                    String descr = dto.getOperazione();
+                    String ordine = estraiNumeroOrdine(descr);
+                    if (ordine != null) {
+                        for (AccontoDto acc : accBlock) {
+                            acc.setRifOrdCliente(ordine);
+                        }
+                    }
+                    accBlock.clear();
+                    lastAccIndex = -1;
+                }
+            }
+        }
+
+        // Ritorno SOLO le righe con riferimento ordine non nullo
+        final List<AccontoDto> listaAcconti = mapByDoc.values().stream()
+                .flatMap(List::stream)
+                .filter(a -> a.getRifOrdCliente() != null).sorted(Comparator
+                        .comparing(AccontoDto::getAnno, Comparator.nullsLast(Integer::compareTo))
+                        .thenComparing(AccontoDto::getSerie, Comparator.nullsLast(String::compareTo))
+                        .thenComparing(AccontoDto::getProgressivo, Comparator.nullsLast(Integer::compareTo))
+                        .thenComparing(AccontoDto::getDataFattura, Comparator.nullsLast(Date::compareTo)))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // Ordinamento sicuro anche senza numero/data fattura:
+        // prima per anno, poi serie, poi progressivo, poi (se presente) per data
+
+        Log.debug("Acconti post elaborazione: " + listaAcconti.size());
+        return listaAcconti;
+    }
+
+    public List<AccontoDto> settaRifOrdCliente2(List<AccontoDto> listaAcconto) {
 
         Map<String, List<AccontoDto>> mapByNumFatt = listaAcconto.stream().filter(a -> StringUtils.isNotBlank(a.getNumeroFattura()))
                 .collect(Collectors.groupingBy(AccontoDto::getNumeroFattura));
@@ -387,6 +475,33 @@ public class FatturaService {
         return listaAcconti;
     }
 
+    // Chiave di raggruppamento (anno, serie, progressivo)
+    private static final class FattKey {
+        final Integer anno;
+        final String serie;
+        final Integer progressivo;
+
+        FattKey(Integer anno, String serie, Integer progressivo) {
+            this.anno = anno;
+            this.serie = serie;
+            this.progressivo = progressivo;
+        }
+        @Override public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof FattKey)) return false;
+            FattKey fk = (FattKey) o;
+            return Objects.equals(anno, fk.anno)
+                    && Objects.equals(serie, fk.serie)
+                    && Objects.equals(progressivo, fk.progressivo);
+        }
+        @Override public int hashCode() {
+            return Objects.hash(anno, serie, progressivo);
+        }
+        @Override public String toString() {
+            return anno + "/" + serie + "/" + progressivo;
+        }
+    }
+
     private static String estraiNumeroOrdine(String descr) {
         if (descr == null) return null;
         Matcher m = ORDER_PATTERN.matcher(descr);
@@ -397,89 +512,6 @@ public class FatturaService {
         return null;
     }
 
-    private List<AccontoDto> settaRifOrdCliente2(List<AccontoDto> listaAcconto, List<OrdineDettaglioDto> lista) {
-        boolean check = lista != null;
-        //FIXME considerare anche il caso in cui su stessa fattura ho due aliquote di IVA diversa
-        Map<String, List<AccontoDto>> mapByNumFatt = listaAcconto.stream().collect(Collectors.groupingBy(AccontoDto::getNumeroFattura));
-        Log.debug("Lista acconti size: " + mapByNumFatt.size());
-        for (String numFatt : mapByNumFatt.keySet()) {
-            int rowACC = 0;
-            //ciclo sulle righe della singola fattura
-            List<AccontoDto> righeFattura = mapByNumFatt.get(numFatt);
-            if (righeFattura.isEmpty()) {
-                continue;
-            }
-            long acc = righeFattura.stream().filter(a -> StringUtils.equals("*ACC", a.getFArticolo())).count();
-            long ord = righeFattura.stream().filter(a -> StringUtils.containsIgnoreCase(a.getOperazione(), "ord")).count();
-            // situazione con acconti e ordine cliente uguale
-            if ((acc == ord)) {
-                Log.debug("situazione con acconti e ordine cliente uguale per fattura " + numFatt);
-                for (int i = 0; i < righeFattura.size(); i++) {
-                    AccontoDto rigaFattura = righeFattura.get(i);
-                    if (StringUtils.equals("*ACC", rigaFattura.getFArticolo())) {
-                        rowACC = i;
-                        continue;
-                    }
-                    if (i == rowACC + 2) {
-                        List<String> rifCliList = new ArrayList<>();
-                        checkOrdCli(lista, check, rifCliList, rigaFattura);
-                        righeFattura.get(rowACC).setRifOrdClienteList(rifCliList);
-                    }
-                }
-                // situazione con 2 acconti e unico ordine cliente
-            } else if (acc > 1 && ord == 1) {
-                List<Integer> rowACCs = new ArrayList<>();
-                List<String> rifCliList = new ArrayList<>();
-                Log.debug("situazione con 2 acconti e unico ordine cliente per fattura " + numFatt);
-                for (int i = 0; i < righeFattura.size(); i++) {
-                    AccontoDto rigaFattura = righeFattura.get(i);
-                    if (StringUtils.equals("*ACC", rigaFattura.getFArticolo())) {
-                        rowACCs.add(i);
-                        continue;
-                    }
-                    if (StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), "ord")) {
-                        checkOrdCli(lista, check, rifCliList, rigaFattura);
-                    }
-                }
-                rowACCs.forEach(r -> righeFattura.get(r).setRifOrdClienteList(rifCliList));
-            } else if (acc == 1 && ord > 1) {
-                List<String> rifCliList = new ArrayList<>();
-                Log.debug("situazione con unico acconto e più ordini clienti per fattura " + numFatt);
-                for (int i = 0; i < righeFattura.size(); i++) {
-                    AccontoDto rigaFattura = righeFattura.get(i);
-                    if (StringUtils.equals("*ACC", rigaFattura.getFArticolo())) {
-                        rowACC = i;
-                        continue;
-                    }
-                    if (StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), "ord")) {
-                        checkOrdCli(lista, check, rifCliList, rigaFattura);
-                    }
-                }
-                righeFattura.get(rowACC).setRifOrdClienteList(rifCliList);
-            }
-        }
-
-        final List<AccontoDto> listaAcconti = new ArrayList<>();
-        mapByNumFatt.values().forEach(list -> listaAcconti.addAll(list.stream().filter(a -> a.getRifOrdClienteList() != null && !a.getRifOrdClienteList().isEmpty()).toList()));
-
-        listaAcconti.sort(Comparator.comparing(AccontoDto::getDataFattura));
-        Log.debug("Acconti post elaborazione: " + listaAcconti.size());
-        return listaAcconti;
-    }
-
-    private void checkOrdCli(List<OrdineDettaglioDto> list, boolean check, List<String> rifCliList, AccontoDto rigaFattura) {
-        if (check) {
-            for (OrdineDettaglioDto l : list) {
-                if (StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), StringUtils.join(l.getAnno(), "/", l.getSerie(), "/", l.getProgressivo()))
-                        || StringUtils.containsIgnoreCase(rigaFattura.getOperazione(), StringUtils.join(l.getAnno(), "-", l.getSerie(), "-", l.getProgressivo()))) {
-                    rifCliList.add(rigaFattura.getOperazione());
-                    break;
-                }
-            }
-        } else {
-            rifCliList.add(rigaFattura.getOperazione());
-        }
-    }
 
     @TransactionConfiguration(timeout = 5000)
     public Double getSaldoContabile(String sottoConto) {
@@ -520,5 +552,46 @@ public class FatturaService {
                 "FROM Fatture f " +
                 "join FattureDettaglio  f2 on f.anno = f2.anno and f.serie = f2.serie and f.progressivo = f2.progressivo " +
                 "WHERE f.gruppoCliente = 1231 AND f.contoCliente = :s and f.flagfattura <> 'S' ", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
+    }
+
+    /**
+     * Elenco fatture di acconto NON validate (senza numero/data) che,
+     * nelle righe descrittive, contengono il riferimento all'ORDINE indicato.
+     * Matching robusto: sia "YYYY/SSS/PPPP" che "YYYY-SSS-PPPP".
+     */
+    public List<AccontoLightDto> findAccontiNonValidatiByOrdine(Integer annoOrd, String serieOrd, Integer progOrd) {
+        String chiaveSlash = annoOrd + "/" + serieOrd + "/" + progOrd;
+        String chiaveDash  = annoOrd + "-" + serieOrd + "-" + progOrd;
+
+        String hql =
+                "select distinct f.anno, f.serie, f.progressivo "  +
+                        "from Fatture f, FattureDettaglio dAcc, FattureDettaglio dDesc " +
+                        "where f.anno = dAcc.anno and f.serie = dAcc.serie and f.progressivo = dAcc.progressivo " +
+                        "  and f.anno = dDesc.anno and f.serie = dDesc.serie and f.progressivo = dDesc.progressivo " +
+                        "  and (f.numeroFattura is null or f.numeroFattura = '') " +
+                        "  and f.dataFattura is null " +
+                        "  and dAcc.fArticolo = '*ACC' " +
+                        "  and ( lower(dDesc.fDescrArticolo) like concat('%', lower(?1), '%') " +
+                        "     or lower(dDesc.fDescrArticolo) like concat('%', lower(?2), '%') ) " +
+                        "order by f.anno, f.serie, f.progressivo";
+
+        @SuppressWarnings("unchecked")
+        List<AccontoLightDto> list = Fatture.find(hql, chiaveSlash, chiaveDash)
+                .project(AccontoLightDto.class)
+                .list();
+        return list;
+    }
+
+    /**
+     * True se la fattura è validata (numero e data presenti).
+     */
+    public boolean isValidata(Integer anno, String serie, Integer progressivo) {
+        long cnt = Fatture.count(
+                "anno = ?1 and serie = ?2 and progressivo = ?3 " +
+                        "and (numeroFattura is not null and numeroFattura <> '') " +
+                        "and dataFattura is not null",
+                anno, serie, progressivo
+        );
+        return cnt > 0;
     }
 }

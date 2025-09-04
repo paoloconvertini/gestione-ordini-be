@@ -56,19 +56,19 @@ import java.util.Date;
         name = "AccontoDto",
         query =
                 "select f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura, "
-                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO "
+                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO  as fArticolo"
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO"
                         + " WHERE 1=1 and f.serie = 'A' and f.PROGRESSIVO > 0"
                         + " and f.CONTOCLIENTE = :sottoConto " +
-                        "   ORDER BY f2.rigo ",
+                        "   ORDER BY f2.anno, f2.serie, f2.progressivo, f2.rigo ",
         resultSetMapping = "AccontoDto"
 )
 @NamedNativeQuery(
         name = "AccontoPerOrdineANDIva",
         query =
                 "select f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura, "
-                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO "
+                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO  as fArticolo"
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO"
                         + " JOIN FATTURE2 f5 ON f5.ANNO = f2.ANNO AND f5.SERIE = f2.SERIE AND f2.PROGRESSIVO = f5.PROGRESSIVO"

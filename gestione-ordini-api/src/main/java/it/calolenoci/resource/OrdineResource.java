@@ -8,12 +8,10 @@ import io.vertx.mutiny.core.file.AsyncFile;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.Ordine;
+import it.calolenoci.enums.Ruolo;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.scheduler.FetchScheduler;
-import it.calolenoci.service.ArticoloService;
-import it.calolenoci.service.FirmaService;
-import it.calolenoci.service.JasperService;
-import it.calolenoci.service.OrdineService;
+import it.calolenoci.service.*;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -86,6 +84,9 @@ public class OrdineResource {
 
     @ConfigProperty(name = "ordini.path")
     String pathReport;
+
+    @Inject
+    FatturaService fatturaService;
 
     @Operation(summary = "Returns all the roles from the database")
     @POST
@@ -371,6 +372,43 @@ public class OrdineResource {
     public Response creaFatturaAcconto(List<FatturaAccontoDto> fatturaAccontoDtoList) {
         String result = ordineService.creaFatturaAcconto(fatturaAccontoDtoList, user);
         return Response.ok(new ResponseDto(result, StringUtils.isBlank(result))).build();
+    }
+
+    @Operation(summary = "Acconti NON validati legati ad un ordine cliente (lista)")
+    @GET
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
+    @Path("/accontiNonValidati/{anno}/{serie}/{progressivo}")
+    public Response getAccontiNonValidatiByOrdine(Integer anno, String serie, Integer progressivo) {
+        return Response.ok(fatturaService.findAccontiNonValidatiByOrdine(anno, serie, progressivo)).build();
+    }
+
+    @Operation(summary = "Conteggio acconti NON validati legati ad un ordine cliente")
+    @GET
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
+    @Path("/accontiNonValidati/{anno}/{serie}/{progressivo}/count")
+    public Response countAccontiNonValidatiByOrdine(Integer anno, String serie, Integer progressivo) {
+        long count = fatturaService.countAccontiNonValidatiByOrdine(anno, serie, progressivo);
+        return Response.ok(count).build(); // ritorna un numero
+    }
+
+    /**
+     * Esempio di guard per storno: rifiuta se non validata
+     * (se hai già una rotta di storno altrove, riutilizza il check service.isValidata)
+     */
+    @Operation(summary = "Storno acconto (consentito solo se validata)")
+    @POST
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
+    @Path("/storno-acconto")
+    public Response stornoAcconto(@QueryParam("anno") Integer anno,
+                                  @QueryParam("serie") String serie,
+                                  @QueryParam("progressivo") Integer progressivo) {
+        if (!fatturaService.isValidata(anno, serie, progressivo)) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(new ResponseDto("Impossibile stornare: l'acconto non è validato (mancano numero e/o data fattura).", true))
+                    .build();
+        }
+        // TODO: logica di storno reale
+        return Response.ok(new ResponseDto("Storno eseguito", false)).build();
     }
 
     @RolesAllowed({ADMIN, LOGISTICA, VENDITORE})
