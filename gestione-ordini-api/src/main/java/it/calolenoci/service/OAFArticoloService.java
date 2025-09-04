@@ -158,94 +158,147 @@ public class OAFArticoloService {
     }
 
     @Transactional
-    public ResponseDto collegaOAF(Integer progrGenerale, ArticoloDto dto, String user) {
+    public ResponseDto collegaOAF(Integer progrGeneraleOrdCli, ArticoloDto dto, String user) {
         ResponseDto result = new ResponseDto();
+
         try {
-            Optional<OrdineDettaglio> opt = OrdineDettaglio.find("progrGenerale = :p", Parameters.with("p", progrGenerale)).singleResultOptional();
-            if(opt.isEmpty()) {
-                Log.error("Collega OAF: articolo non torvato con progrGenerale= " + progrGenerale);
-                result.setError(Boolean.FALSE);
-                result.setMsg("Collega OAF: articolo non torvato con progrGenerale= " + progrGenerale);
+            // 1) Validazioni base
+            if (progrGeneraleOrdCli == null) {
+                result.setError(Boolean.TRUE);
+                result.setMsg("Collega OAF: progrGenerale dell'ordine cliente mancante");
+                return result;
+            }
+            if (dto == null) {
+                result.setError(Boolean.TRUE);
+                result.setMsg("Collega OAF: dto nullo");
                 return result;
             }
 
-            Integer progressivoFornDettaglio = OrdineFornitoreDettaglio.
-                    find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END " +
-                            "FROM OrdineFornitoreDettaglio").project(Integer.class).firstResult();
-
-            OrdineDettaglio ordineDettaglio = opt.get();
-            String intestazione = "";
-            Optional<String> optional = Ordine.find("SELECT p.intestazione " +
-                                    "FROM PianoConti p " +
-                                    "JOIN Ordine o on o.contoCliente = p.sottoConto AND o.gruppoCliente = p.gruppoConto" +
-                                    " AND o.anno = :a and o.serie = :s and o.progressivo = :p",
-                            Parameters.with("a", ordineDettaglio.getAnno()).and("s", ordineDettaglio.getSerie())
-                                    .and("p", ordineDettaglio.getProgressivo())).project(String.class)
+            // 2) Recupero riga ordine cliente (quantità da legare)
+            Optional<OrdineDettaglio> optCli = OrdineDettaglio
+                    .find("progrGenerale = :p", Parameters.with("p", progrGeneraleOrdCli))
                     .singleResultOptional();
-            if(optional.isPresent()) {
-                intestazione = optional.get();
-            }
-            if(Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())){
-                String campoUser5 = "VS.ART." + ordineDettaglio.getCodArtFornitore();
-                String nota = "Riferimento n. " + ordineDettaglio.getAnno() + "/" + ordineDettaglio.getSerie() + "/" + ordineDettaglio.getProgressivo() + "-" + ordineDettaglio.getRigo();
-                int update = OrdineFornitoreDettaglio.update("nota = :n, campoUser5 = :c, provenienza = :p, pid = :g " +
-                                "WHERE progrGenerale = :pr",
-                        Parameters.with("n", nota).and("c", StringUtils.truncate(campoUser5, 25))
-                                .and("p", "C").and("pr", dto.getProgrGenerale())
-                                .and("g", ordineDettaglio.getProgrGenerale()));
-                if (update != 0) {
-                    Log.debug("Collega OAF: Aggiornati " + update + " record");
-                }
 
-                OrdineFornitoreDettaglio rigoRif = mapper.createRigoRiferimento(dto.getSerie(), dto.getProgressivo(), intestazione, (dto.getRigo()+1),
-                        (progressivoFornDettaglio+1), user);
-                rigoRif.persist();
-
-                OrdineFornitoreDettaglio.update("rigo = (rigo+1) WHERE anno = :anno AND serie = :serie" +
-                                " AND progressivo = :progressivo and rigo >=:rigo",
-                        Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
-                                .and("progressivo", dto.getProgressivo()).and("rigo", rigoRif.getRigo()));
-
-                result.setError(Boolean.FALSE);
-                result.setMsg("Articolo cliente collegato all'ordine a fornitore " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo());
+            if (optCli.isEmpty()) {
+                Log.error("Collega OAF: ordine cliente non trovato con progrGenerale = " + progrGeneraleOrdCli);
+                result.setError(Boolean.TRUE);
+                result.setMsg("Ordine cliente non trovato (progrGenerale=" + progrGeneraleOrdCli + ")");
                 return result;
-            } else {
-                double qta = dto.getOquantita() - ordineDettaglio.getQuantita();
-                OrdineFornitoreDettaglio.update("oQuantita = :q,oQuantitaV = :qv " +
-                                "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:r",
-                        Parameters.with("anno", dto.getAnno())
-                                .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo()).
-                        and("q", qta).and("qv", qta).and("r", dto.getRigo()));
-
-                Integer rigo = OrdineFornitoreDettaglio.find("SELECT CASE WHEN MAX(f.rigo) IS NULL THEN 0 ELSE MAX(f.rigo) END " +
-                                        "FROM OrdineFornitoreDettaglio f " +
-                                        " WHERE f.anno = :anno AND f.serie = :serie AND f.progressivo = :progressivo ",
-                                Parameters.with("anno", dto.getAnno())
-                                        .and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo()))
-                        .project(Integer.class).singleResult();
-
-                Optional<OrdineFornitoreDettaglio> singleResultOptional = OrdineFornitoreDettaglio.find("anno = :a AND serie = :s AND " +
-                        "progressivo = :p AND rigo =:r", Parameters.with("a", dto.getAnno()).and("s", dto.getSerie())
-                        .and("p", dto.getProgressivo()).and("r", dto.getRigo())).singleResultOptional();
-                if(singleResultOptional.isPresent()){
-                    OrdineFornitoreDettaglio o = singleResultOptional.get();
-                    OrdineFornitoreDettaglio fornitoreDettaglio = mapper.copyEntity(o, progrGenerale, rigo, progressivoFornDettaglio, ordineDettaglio);
-                    fornitoreDettaglio.persist();
-                    OrdineFornitoreDettaglio rigoRif = mapper.createRigoRiferimento(dto.getSerie(), dto.getProgressivo(), intestazione, (rigo+1),
-                            (progressivoFornDettaglio+1), user);
-                    rigoRif.persist();
-                }
-
             }
+            OrdineDettaglio ordineDettaglio = optCli.get();
+            Double qtaCliente = (ordineDettaglio.getQuantita() == null ? 0D : ordineDettaglio.getQuantita());
+
+            // 3) Recupero riga OAF di partenza (anno/serie/progressivo/rigo presi dal dto)
+            Optional<OrdineFornitoreDettaglio> optOaf = OrdineFornitoreDettaglio.find(
+                            "anno = :a AND serie = :s AND progressivo = :p AND rigo = :r",
+                            Parameters.with("a", dto.getAnno())
+                                    .and("s", dto.getSerie())
+                                    .and("p", dto.getProgressivo())
+                                    .and("r", dto.getRigo()))
+                    .singleResultOptional();
+
+            if (optOaf.isEmpty()) {
+                result.setError(Boolean.TRUE);
+                result.setMsg("Riga OAF non trovata: " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo() + " rigo " + dto.getRigo());
+                return result;
+            }
+            OrdineFornitoreDettaglio oafOrig = optOaf.get();
+            Double qtaOAF = (oafOrig.getOQuantita() == null ? 0D : oafOrig.getOQuantita());
+
+            // 4) Coerenza quantità
+            if (qtaCliente <= 0) {
+                result.setError(Boolean.TRUE);
+                result.setMsg("Quantità ordine cliente nulla o negativa: " + qtaCliente);
+                return result;
+            }
+            if (qtaCliente > qtaOAF) {
+                result.setError(Boolean.TRUE);
+                result.setMsg("Quantità cliente (" + qtaCliente + ") superiore a quantità OAF (" + qtaOAF + ")");
+                return result;
+            }
+
+            // 5) Riduco la riga OAF originale (parte che resta “a magazzino”)
+            double qtaResidua = qtaOAF - qtaCliente;
+            oafOrig.setOQuantita(qtaResidua);
+            oafOrig.setOQuantitaV(qtaResidua);
+            // (eventuale ricalcolo valoreTotale se lo gestisci qui; lasciato com'è se lo calcoli altrove)
+            oafOrig.persist(); // Panache: dirty checking, ma persisto per chiarezza
+
+            // 6) Calcolo append in coda (nuovi rigo / nuovi progrGenerale)
+            Integer maxRigo = OrdineFornitoreDettaglio
+                    .find("SELECT CASE WHEN MAX(f.rigo) IS NULL THEN 0 ELSE MAX(f.rigo) END " +
+                                    "FROM OrdineFornitoreDettaglio f " +
+                                    "WHERE f.anno = :anno AND f.serie = :serie AND f.progressivo = :progressivo",
+                            Parameters.with("anno", dto.getAnno())
+                                    .and("serie", dto.getSerie())
+                                    .and("progressivo", dto.getProgressivo()))
+                    .project(Integer.class)
+                    .firstResult();
+
+            Integer maxProgrGen = OrdineFornitoreDettaglio
+                    .find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM OrdineFornitoreDettaglio")
+                    .project(Integer.class)
+                    .firstResult();
+
+            int baseRigo = (maxRigo == null ? 0 : maxRigo);                 // base per avere +1 e +2
+            int baseProgrGen = (maxProgrGen == null ? 0 : maxProgrGen);     // base per avere +1 e +2
+
+            // 7) Intestazione cliente (per riga commento)
+            String intestazione = "";
+            Optional<String> optInt = Ordine.find("SELECT p.intestazione " +
+                                    "FROM PianoConti p " +
+                                    "JOIN Ordine o on o.contoCliente = p.sottoConto AND o.gruppoCliente = p.gruppoConto " +
+                                    " AND o.anno = :a and o.serie = :s and o.progressivo = :p",
+                            Parameters.with("a", ordineDettaglio.getAnno())
+                                    .and("s", ordineDettaglio.getSerie())
+                                    .and("p", ordineDettaglio.getProgressivo()))
+                    .project(String.class)
+                    .singleResultOptional();
+            if (optInt.isPresent()) {
+                intestazione = optInt.get();
+            }
+
+            // 8) Nuova riga ARTICOLO “cliente”, appesa in fondo
+            //    uso il mapper.copyEntity(..): lui fa rigo = (paramRigo + 1) e progrGenerale = (progressivoFornDettaglio + 1)
+            OrdineFornitoreDettaglio nuovaRigaCliente = mapper.copyEntity(
+                    oafOrig,
+                    progrGeneraleOrdCli,              // pid = progrGenerale dell'ordine cliente
+                    baseRigo,                         // così diventa baseRigo+1 (append)
+                    baseProgrGen,                     // così diventa baseProgrGen+1
+                    ordineDettaglio                   // per quantità, campoUser5, nota, ecc.
+            );
+            // quantità della riga cliente = quantità ordine cliente
+            nuovaRigaCliente.setOQuantita(qtaCliente);
+            nuovaRigaCliente.setOQuantitaV(qtaCliente);
+            if (nuovaRigaCliente.getOQuantita() != null && oafOrig.getOPrezzo() != null) {
+                nuovaRigaCliente.setValoreTotale(nuovaRigaCliente.getOQuantita() * oafOrig.getOPrezzo());
+            }
+            nuovaRigaCliente.persist();
+
+            // 9) Riga di COMMENTO immediatamente dopo (append in fondo)
+            //    createRigoRiferimento fa rigo = (paramRigo + 1) e progrGenerale = (paramProgrGen + 1)
+            OrdineFornitoreDettaglio rigoCommento = mapper.createRigoRiferimento(
+                    dto.getSerie(),                    // serie OAF
+                    dto.getProgressivo(),              // progressivo OAF
+                    intestazione,                      // "Rif. <intestazione>"
+                    baseRigo + 1,                      // -> (baseRigo+1)+1 = baseRigo+2 (subito dopo nuova riga cliente)
+                    baseProgrGen + 1,                  // -> (baseProgrGen+1)+1
+                    user
+            );
+            rigoCommento.persist();
 
             result.setError(Boolean.FALSE);
-            result.setMsg("Articolo cliente collegato all'ordine a fornitore " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo());
+            result.setMsg("Collegato all'OAF " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo()
+                    + ": riga cliente aggiunta (rigo " + nuovaRigaCliente.getRigo() + ") e commento (rigo " + rigoCommento.getRigo() + "). "
+                    + "Residuo riga originale: " + qtaResidua);
             return result;
+
         } catch (Exception e) {
             Log.error("Collega OAF: ERROR! ", e);
-            result.setError(Boolean.FALSE);
+            result.setError(Boolean.TRUE);
             result.setMsg("Collega OAF: ERROR! " + e.getMessage());
             return result;
         }
     }
+
 }
