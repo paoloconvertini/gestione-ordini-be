@@ -2,7 +2,8 @@ name: build-and-push-backend
 on:
   push:
     tags:
-      - 'v*'   # es: v5.2.1
+      - 'v*'
+  workflow_dispatch: {}
 permissions:
   contents: read
   packages: write
@@ -20,6 +21,7 @@ jobs:
           cache: maven
 
       - name: Build (skip tests se vuoi)
+        working-directory: gestione-ordini-api
         run: mvn -B -DskipTests package
 
       - name: Extract version from tag
@@ -50,8 +52,8 @@ jobs:
           platforms: linux/amd64 # ,linux/arm64 se ti serve
           push: true
           tags: |
-            pconvertini/gestione-ordini-api:${{ steps.vars.outputs.version }}
-            pconvertini/gestione-ordini-api:${{ steps.vars.outputs.minor }}
-            pconvertini/gestione-ordini-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/gestione-ordini-api:${{ steps.vars.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/gestione-ordini-api:${{ steps.vars.outputs.minor }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/gestione-ordini-api:latest
           cache-from: type=registry,ref=pconvertini/gestione-ordini-api:buildcache
           cache-to: type=registry,ref=pconvertini/gestione-ordini-api:buildcache,mode=max

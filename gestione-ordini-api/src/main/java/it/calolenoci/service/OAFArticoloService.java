@@ -162,7 +162,6 @@ public class OAFArticoloService {
         ResponseDto result = new ResponseDto();
 
         try {
-            // 1) Validazioni base
             if (progrGeneraleOrdCli == null) {
                 result.setError(Boolean.TRUE);
                 result.setMsg("Collega OAF: progrGenerale dell'ordine cliente mancante");
