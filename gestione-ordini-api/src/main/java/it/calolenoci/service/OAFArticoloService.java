@@ -173,7 +173,6 @@ public class OAFArticoloService {
                 return result;
             }
 
-            // 2) Recupero riga ordine cliente (quantità da legare)
             Optional<OrdineDettaglio> optCli = OrdineDettaglio
                     .find("progrGenerale = :p", Parameters.with("p", progrGeneraleOrdCli))
                     .singleResultOptional();
