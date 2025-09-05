@@ -120,7 +120,6 @@ public class FatturaService {
             return resultList;
         } else {
             List<AccontoDto> listaAcconti = settaRifOrdCliente(listaAcconto);
-            // 🔴 ESCLUDO gli acconti NON validati (senza numero e/o data)
             listaAcconti = listaAcconti.stream()
                     .filter(a -> StringUtils.isNotBlank(a.getNumeroFattura()) && a.getDataFattura() != null)
                     .toList();
