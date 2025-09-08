@@ -212,8 +212,7 @@ public class FatturaService {
             Integer progressivoFatt = Fatture.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM Fatture o WHERE anno = :anno and serie = 'B'", Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
             Integer progressivoFattDettaglio = FattureDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM FattureDettaglio o").project(Integer.class).firstResult();
             Ordine ordine = Ordine.findByOrdineId(list.get(0).getAnno(), list.get(0).getSerie(), list.get(0).getProgressivo());
-            Integer idFatture = Fatture.find("SELECT ISNULL(MAX(idFatture),0) FROM Fatture f ").project(Integer.class).firstResult();
-            Fatture f = fattureMapper.buildFatture(progressivoFatt, ordine, user, idFatture);
+            Fatture f = fattureMapper.buildFatture(progressivoFatt, ordine, user);
             Log.debug("*** CREA BOLLA --- creata fattura n. " + f.getAnno() + "/" + f.getSerie() + "/" + f.getProgressivo());
             f.persist();
             Map<OrdinePerIva, List<OrdineDettaglioDto>> map = list.stream().collect(Collectors.groupingBy(o ->

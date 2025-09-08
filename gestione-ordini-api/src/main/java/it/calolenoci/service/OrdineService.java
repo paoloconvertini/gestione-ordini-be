@@ -775,7 +775,8 @@ public class OrdineService {
                         "     (1 - COALESCE(o2.scontoC2, 0)/100) * " +
                         "     (1 - COALESCE(o2.scontoP, 0)/100) ) " +
                         "from Ordine o " +
-                        " join OrdineDettaglio o2 on o.id = o2.id and o2.tipoRigo <> 'C' " +
+                        " join OrdineDettaglio o2 on o.anno = o2.anno and o.serie = o2.serie and " +
+                        " o.progressivo = o2.progressivo and o2.tipoRigo <> 'C' " +
                         " join GoOrdine og on og.progressivo = o.progressivo and og.serie = o.serie and o.anno = og.anno and og.status <> 'ARCHIVIATO' " +
                         "where o.contoCliente = :c " +
                         "group by o.anno, o.serie, o.progressivo, o2.fCodiceIva " +
@@ -893,9 +894,8 @@ public class OrdineService {
             Integer progressivoFatt = Fatture.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 1 ELSE (MAX(progressivo)+1) END FROM Fatture o WHERE anno = :anno and serie = 'A'", Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
             Integer progressivoFattDettaglio = FattureDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 1 ELSE (MAX(progrGenerale)+1) END FROM FattureDettaglio o").project(Integer.class).firstResult();
             Ordine ordine = Ordine.findByOrdineId(fatturaAccontoDtoList.get(0).getAnno(), fatturaAccontoDtoList.get(0).getSerie(), fatturaAccontoDtoList.get(0).getProgressivo());
-            Integer idFatture = Fatture.find("SELECT ISNULL((MAX(idFatture)+1),1) FROM Fatture f ").project(Integer.class).firstResult();
             Integer progressivoGen = Fatture.find("SELECT ISNULL((MAX(progressivogen)+1),1) FROM Fatture f ").project(Integer.class).firstResult();
-            Fatture fatture = fattureMapper.buildFatturaAcconto(progressivoFatt, ordine, user, idFatture, progressivoGen);
+            Fatture fatture = fattureMapper.buildFatturaAcconto(progressivoFatt, ordine, user, progressivoGen);
             Fatture.persist(fatture);
             Map<String, List<FatturaAccontoDto>> mappaFattureAccontoByOrdCliente = fatturaAccontoDtoList.stream()
                     .collect(Collectors.groupingBy(item -> item.getAnno() + "/" + item.getSerie() + "/" + item.getProgressivo()));

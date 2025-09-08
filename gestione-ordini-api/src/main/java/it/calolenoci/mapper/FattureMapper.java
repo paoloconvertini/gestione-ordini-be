@@ -19,7 +19,7 @@ public class FattureMapper {
 
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-    public Fatture buildFatture(Integer progressivoFatt, Ordine ordine, String user, Integer idFatture) {
+    public Fatture buildFatture(Integer progressivoFatt, Ordine ordine, String user) {
         String serie = "B";
         Fatture f = new Fatture();
         f.setAnno(Year.now().getValue());
@@ -131,7 +131,6 @@ public class FattureMapper {
         f.setSysUpdatedate(Timestamp.valueOf(ZonedDateTime.now(zone).toLocalDateTime()));
         f.setSysUpdateuser(user);
         f.setFlinviorifatt("");
-        f.setIdFatture(idFatture);
         f.setFlDttEmail("");
         return f;
     }
@@ -412,7 +411,7 @@ public class FattureMapper {
         return fd;
     }
 
-    public Fatture buildFatturaAcconto(Integer progressivoFatt, Ordine ordine, String user, Integer idFatture, Integer progressivoGen) {
+    public Fatture buildFatturaAcconto(Integer progressivoFatt, Ordine ordine, String user, Integer progressivoGen) {
         Fatture f = new Fatture();
         f.setAnno(Year.now().getValue());
         f.setSerie("A");
@@ -514,7 +513,6 @@ public class FattureMapper {
         f.setSysUpdatedate(Timestamp.valueOf(ZonedDateTime.now(zone).toLocalDateTime()));
         f.setSysUpdateuser(user);
         f.setFlinviorifatt("");
-        f.setIdFatture(idFatture);
         f.setFlDttEmail("");
         return f;
     }
