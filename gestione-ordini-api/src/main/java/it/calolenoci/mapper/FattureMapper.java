@@ -214,7 +214,6 @@ public class FattureMapper {
         fd.setSysUpdatedate(new Date());
         fd.setSysCreateuser(user);
         fd.setSysUpdateuser(user);
-        fd.setPidFatture(f.getIdFatture());
         fd.setFerifAmministrazione(" ");
         return fd;
     }
@@ -320,7 +319,6 @@ public class FattureMapper {
         fd.setSysUpdatedate(new Date());
         fd.setSysCreateuser(user);
         fd.setSysUpdateuser(user);
-        fd.setPidFatture(f.getIdFatture());
         fd.setFerifAmministrazione(" ");
         return fd;
     }
@@ -406,7 +404,6 @@ public class FattureMapper {
         fd.setSysUpdatedate(new Date());
         fd.setSysCreateuser(user);
         fd.setSysUpdateuser(user);
-        fd.setPidFatture(f.getIdFatture());
         fd.setFerifAmministrazione(" ");
         return fd;
     }
