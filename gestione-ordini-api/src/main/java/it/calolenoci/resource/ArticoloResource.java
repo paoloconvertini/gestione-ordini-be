@@ -233,7 +233,6 @@ public class ArticoloResource {
         }
         return Response.status(Response.Status.CREATED).entity(new ResponseDto("lista vuota", true)).build();
     }
-
     @Operation(summary = "Save dettaglio ordine")
     @POST
     @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
