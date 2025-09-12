@@ -523,9 +523,6 @@ public class Fatture extends PanacheEntityBase {
     @Column(name = "FLINVIORIFATT")
     private String flinviorifatt;
 
-    @Column(name = "ID_FATTURE")
-    private Integer idFatture;
-
     @Column(name = "DATASCONTRINO")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataScontrino;
