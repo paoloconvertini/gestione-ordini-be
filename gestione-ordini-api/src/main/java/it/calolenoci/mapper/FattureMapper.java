@@ -408,11 +408,11 @@ public class FattureMapper {
         return fd;
     }
 
-    public Fatture buildFatturaAcconto(Integer progressivoFatt, Ordine ordine, String user, Integer progressivoGen) {
+    public Fatture buildFatturaAcconto(Integer progressivoFatt, Ordine ordine, String user) {
         Fatture f = new Fatture();
         f.setAnno(Year.now().getValue());
         f.setSerie("A");
-        f.setProgressivo(progressivoFatt + 1);
+        f.setProgressivo(progressivoFatt);
         f.setGruppoCliente(1231);
         f.setGruppoFattura(1231);
         f.setContoCliente(ordine.getContoCliente());
@@ -420,6 +420,8 @@ public class FattureMapper {
         f.setTipoFattura("A");
         f.setNumeroallegato("");
         f.setNumfatfornitore(0);
+        f.setNumeroFattura("");
+        f.setNumeroBolla("");
         f.setFcodicepagament(ordine.getCodicePagamento());
         f.setFcoddiffpag(ordine.getFcoddiffpag());
         f.setOggetto(ordine.getOggetto());
@@ -430,7 +432,7 @@ public class FattureMapper {
         f.setAgente(ordine.getAgente());
         f.setListino(ordine.getListino());
         f.setModoconsegna(" ");
-        f.setVettore("D");
+        f.setVettore("");
         f.setTarga(" ");
         f.setTargarimorchio(" ");
         f.setVettore2(" ");
@@ -439,19 +441,17 @@ public class FattureMapper {
         f.setCodicecolli(" ");
         f.setNumerocolli(ordine.getNumerocolli());
         ZoneId zone = ZoneId.of("Europe/Paris");
-        ZonedDateTime zonedDateTime = ZonedDateTime.now(zone);
-        ZonedDateTime d = zonedDateTime.withHour(0).withMinute(0).withSecond(0);
-        f.setDatatrasporto(java.sql.Date.valueOf(d.toLocalDate()));
-        ZonedDateTime t = ZonedDateTime.now(zone).withYear(1899).withMonth(12).withDayOfMonth(30);
-        f.setOratrasporto(Timestamp.valueOf(t.toLocalDateTime()));
+        f.setDatatrasporto(null);
+        f.setOratrasporto(null);
         f.setStatoconsegna("");
-        f.setDataorabolla(Timestamp.valueOf(ZonedDateTime.now(zone).toLocalDateTime()));
+        f.setDataorabolla(null);
         f.setTempoallestimento(0);
-        f.setFlagvettore("N");
+        f.setFlagvettore("");
         f.setProgrinviovettore(0);
         f.setTotpeso(0D);
         f.setTotpedane(0);
         f.setTotvolume(0D);
+        f.setTotpesonetto(0D);
         f.setIntestdiverse("");
         f.setIndirdiverse("");
         f.setLocdiverse("");
@@ -462,8 +462,8 @@ public class FattureMapper {
         f.setLocdiverse("");
         f.setCapdiverse("");
         f.setProvdiverse("");
-        f.setFlagfattura("S");
-        f.setFlagbolla("S");
+        f.setFlagfattura("");
+        f.setFlagbolla("");
         f.setBollasola("N");
         f.setScontocliente1(0D);
         f.setScontocliente2(0D);
@@ -492,7 +492,7 @@ public class FattureMapper {
         f.setFlspedito("N");
         f.setFlentro(0);
         f.setPriorita(0);
-        f.setProgressivogen(progressivoGen);
+        f.setProgressivogen(0);
         f.setValusern1(0D);
         f.setValusern2(0D);
         f.setValuseralfa1("");

@@ -894,8 +894,7 @@ public class OrdineService {
             Integer progressivoFatt = Fatture.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 1 ELSE (MAX(progressivo)+1) END FROM Fatture o WHERE anno = :anno and serie = 'A'", Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
             Integer progressivoFattDettaglio = FattureDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 1 ELSE (MAX(progrGenerale)+1) END FROM FattureDettaglio o").project(Integer.class).firstResult();
             Ordine ordine = Ordine.findByOrdineId(fatturaAccontoDtoList.get(0).getAnno(), fatturaAccontoDtoList.get(0).getSerie(), fatturaAccontoDtoList.get(0).getProgressivo());
-            Integer progressivoGen = Fatture.find("SELECT ISNULL((MAX(progressivogen)+1),1) FROM Fatture f ").project(Integer.class).firstResult();
-            Fatture fatture = fattureMapper.buildFatturaAcconto(progressivoFatt, ordine, user, progressivoGen);
+            Fatture fatture = fattureMapper.buildFatturaAcconto(progressivoFatt, ordine, user);
             Fatture.persist(fatture);
             Map<String, List<FatturaAccontoDto>> mappaFattureAccontoByOrdCliente = fatturaAccontoDtoList.stream()
                     .collect(Collectors.groupingBy(item -> item.getAnno() + "/" + item.getSerie() + "/" + item.getProgressivo()));
