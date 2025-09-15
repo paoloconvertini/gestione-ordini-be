@@ -27,6 +27,8 @@ public class AccontoDto {
 
     private Date dataFattura;
 
+    private Date dataBolla;
+
     private String numeroFattura;
 
     private String rifOrdCliente;
@@ -68,6 +70,23 @@ public class AccontoDto {
         this.ordineCliente = ordineCliente;
     }
 
+    public AccontoDto(String contoCliente, Integer anno,String serie, Integer progressivo, Date dataBolla,
+                      Date dataFattura, String numeroFattura, String rifOrdCliente,
+                      String operazione, Double prezzo, String iva, String ordineCliente) {
+        this.contoCliente = contoCliente;
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataBolla = dataBolla;
+        this.dataFattura = dataFattura;
+        this.numeroFattura = numeroFattura;
+        this.rifOrdCliente = rifOrdCliente;
+        this.operazione = operazione;
+        this.prezzo = prezzo;
+        this.iva = iva;
+        this.ordineCliente = ordineCliente;
+    }
+
     public AccontoDto(String contoCliente, Integer anno,String serie, Integer progressivo,
                       Date dataFattura, String numeroFattura,
                       String operazione, Double prezzo, String iva, String fArticolo) {
@@ -75,6 +94,22 @@ public class AccontoDto {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
+        this.dataFattura = dataFattura;
+        this.numeroFattura = numeroFattura;
+        this.operazione = operazione;
+        this.prezzo = prezzo;
+        this.iva = iva;
+        this.fArticolo = fArticolo;
+    }
+
+    public AccontoDto(String contoCliente, Integer anno,String serie, Integer progressivo, Date dataBolla,
+                      Date dataFattura, String numeroFattura,
+                      String operazione, Double prezzo, String iva, String fArticolo) {
+        this.contoCliente = contoCliente;
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataBolla = dataBolla;
         this.dataFattura = dataFattura;
         this.numeroFattura = numeroFattura;
         this.operazione = operazione;

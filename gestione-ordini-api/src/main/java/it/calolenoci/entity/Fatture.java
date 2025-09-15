@@ -55,7 +55,7 @@ import java.util.Date;
 @NamedNativeQuery(
         name = "AccontoDto",
         query =
-                "select f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura, "
+                "select f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATABOLLA as dataBolla, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura, "
                         + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO  as fArticolo"
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO"
@@ -78,7 +78,7 @@ import java.util.Date;
 )
 @NamedNativeQuery(
         name = "StornoDto",
-        query = " select distinct f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura"
+        query = " select distinct f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATABOLLA as dataBolla, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura"
                         + " , concat('ns.ordine n.', o.anno,'/', o.serie,'/',  o.PROGRESSIVO, ' del ', FORMAT(o.DATAORDINE, 'dd.MM.yyyy')) as rifOrdCliente"
                         + " , f4.FDESCRARTICOLO as operazione, f4.PREZZO as prezzo, f4.FCODICEIVA as iva, concat(o.anno,'/', o.serie,'/',  o.PROGRESSIVO) as ordineCliente"
                         + " FROM FATTURE f"
@@ -125,6 +125,7 @@ import java.util.Date;
                         @ColumnResult(name = "anno"),
                         @ColumnResult(name = "serie"),
                         @ColumnResult(name = "progressivo"),
+                        @ColumnResult(name = "dataBolla"),
                         @ColumnResult(name = "dataFattura"),
                         @ColumnResult(name = "numeroFattura"),
                         @ColumnResult(name = "operazione"),
@@ -161,6 +162,7 @@ import java.util.Date;
                         @ColumnResult(name = "anno"),
                         @ColumnResult(name = "serie"),
                         @ColumnResult(name = "progressivo"),
+                        @ColumnResult(name = "dataBolla"),
                         @ColumnResult(name = "dataFattura"),
                         @ColumnResult(name = "numeroFattura"),
                         @ColumnResult(name = "rifOrdCliente"),

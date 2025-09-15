@@ -28,11 +28,21 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class FatturaService {
 
-    // Regex migliorata: intercetta "ordine" o "ns.ordine" con eventuale "n." prima del numero
-    // Poi cattura anno, serie e progressivo con / o - come separatori
-    private static final Pattern ORDER_PATTERN = Pattern.compile(
-            "(?i)(?:ns\\.?\\s*)?ordine\\s*(?:n\\.?\\s*)?(\\d{4})\\s*[/\\-]\\s*([A-Z0-9]+)\\s*[/\\-]\\s*(\\d+)"
+    // Esempi validi:
+    // "ordine n 2025/AB/123", "ord. n. 2025-AB-123", "ORD: 2025/ab/123",
+    // "n 2025/AB/123", "n. 2025-AB-123", "n° 2025/AB/123", "nº 2025/AB/123"
+    private static final Pattern ORDER_WORDY = Pattern.compile(
+            "(?i)(?:\\b(?:ns|nostr[oi])\\.?\\s*)?" +        // opz. ns / nostro
+                    "(?:conf(?:\\.|erma)\\s*)?" +                   // opz. conf./conferma
+                    "ord(?:ine)?\\s*" +                             // ord / ordine
+                    "(?:n[°.\\s]*)?" +                              // opz. n / n. / n°
+                    "(\\d{4})\\s*[/\\-\\s]\\s*([A-Z0-9]+)\\s*[/\\-\\s]\\s*(\\d+)"
     );
+
+    private static final Pattern ORDER_TRIPLE = Pattern.compile(
+            "(?i)\\b(\\d{4})\\s*[/\\-\\s]\\s*([A-Z0-9]+)\\s*[/\\-\\s]\\s*(\\d+)\\b"
+    );
+
     @Inject
     EntityManager em;
 
@@ -201,7 +211,7 @@ public class FatturaService {
             double sommaStorni = dto.getStorni().stream().mapToDouble(AccontoDto::getPrezzo).sum();
             dto.setImportoResiduo(dto.getPrezzo() + sommaStorni);
         }
-        return resultList.stream().sorted(Comparator.comparing(AccontoDto::getNumeroFattura)).toList();
+        return resultList.stream().sorted(Comparator.comparing(AccontoDto::getRifOrdCliente)).toList();
     }
 
 
@@ -504,12 +514,24 @@ public class FatturaService {
     }
 
     private static String estraiNumeroOrdine(String descr) {
-        if (descr == null) return null;
-        Matcher m = ORDER_PATTERN.matcher(descr);
-        if (m.find()) {
-            // Restituisce nel formato standard ANNO/SERIE/PROGRESSIVO
-            return m.group(1) + "/" + m.group(2) + "/" + m.group(3);
+        if (StringUtils.isBlank(descr)) return null;
+
+        // Fast guard: se non ci sono né slash né trattini né “ord”, scarta subito
+        if (!(descr.indexOf('/') >= 0 || descr.indexOf('-') >= 0 ||
+                StringUtils.containsIgnoreCase(descr, "ord"))) {
+            return null;
         }
+
+        // 1) Se c'è “ord” (ord., ordine, ord…), prova il pattern “parlato”
+        if (StringUtils.containsIgnoreCase(descr, "ord")) {
+            Matcher m = ORDER_WORDY.matcher(descr);
+            if (m.find()) return m.group(1) + "/" + m.group(2) + "/" + m.group(3);
+        }
+
+        // 2) In ogni caso, fallback sul tripletto nudo
+        Matcher g = ORDER_TRIPLE.matcher(descr);
+        if (g.find()) return g.group(1) + "/" + g.group(2) + "/" + g.group(3);
+
         return null;
     }
 
