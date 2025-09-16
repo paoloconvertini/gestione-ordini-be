@@ -129,11 +129,13 @@ public class FatturaService {
             Log.debug("La lista acconti è vuota");
             return resultList;
         } else {
-            List<AccontoDto> listaAcconti = settaRifOrdCliente(listaAcconto);
-            listaAcconti = listaAcconti.stream()
+            List<AccontoDto> listaAcconti = settaRifOrdCliente(listaAcconto).stream()
                     .filter(a -> StringUtils.isNotBlank(a.getNumeroFattura()) && a.getDataFattura() != null)
                     .toList();
-            return getAccontoDtos(sottoConto, resultList, listaAcconti);
+
+            // ✅ deduplica subito
+            return getAccontoDtos(sottoConto, resultList, new ArrayList<>(new HashSet<>(listaAcconti)));
+
         }
     }
 
@@ -141,7 +143,7 @@ public class FatturaService {
     public List<AccontoDto> getAccontiPerOrdiniClienti(String sottoConto, List<OrdineDettaglioDto> lista) {
         List<AccontoDto> resultList = new ArrayList<>();
         List<AccontoDto> listaAcconti;
-        List<AccontoDto> listaDto = new ArrayList<>();
+        Set<AccontoDto> listaDto = new HashSet<>();
         List<AccontoDto> listaAcconto = em.createNamedQuery("AccontoDto").setParameter("sottoConto", sottoConto).getResultList();
         if (listaAcconto.isEmpty()) {
             Log.debug("La lista acconti è vuota");
@@ -167,7 +169,9 @@ public class FatturaService {
             Log.debug("La lista acconti è vuota");
             return resultList;
         } else {
-             return getAccontoDtos(sottoConto, resultList, listaDto).stream().filter(a -> a.getImportoResiduo() > 0).toList();
+            return getAccontoDtos(sottoConto, resultList, new ArrayList<>(listaDto)).stream()
+                    .filter(a -> a.getImportoResiduo() > 0)
+                    .toList();
         }
 
     }
@@ -206,13 +210,19 @@ public class FatturaService {
                     .getResultList();
             a.setStorni(listaStorno.stream().filter(s  -> s.getOrdineCliente().equals(a.getRifOrdCliente())).toList());
         }
-        resultList.addAll(listaAcconto.stream().filter(a -> a.getPrezzo() > 0).toList());
+        Set<AccontoDto> unici = listaAcconto.stream()
+                .filter(a -> a.getPrezzo() > 0)
+                .collect(Collectors.toSet());
+
+        resultList.addAll(unici);
         for (AccontoDto dto : resultList) {
             double sommaStorni = dto.getStorni().stream().mapToDouble(AccontoDto::getPrezzo).sum();
             dto.setImportoResiduo(dto.getPrezzo() + sommaStorni);
         }
-        return resultList.stream().sorted(Comparator.comparing(AccontoDto::getRifOrdCliente)).toList();
-    }
+        return resultList.stream()
+                .distinct() // sicurezza extra
+                .sorted(Comparator.comparing(AccontoDto::getRifOrdCliente))
+                .toList();    }
 
 
     @Transactional
@@ -437,51 +447,6 @@ public class FatturaService {
         // Ordinamento sicuro anche senza numero/data fattura:
         // prima per anno, poi serie, poi progressivo, poi (se presente) per data
 
-        Log.debug("Acconti post elaborazione: " + listaAcconti.size());
-        return listaAcconti;
-    }
-
-    public List<AccontoDto> settaRifOrdCliente2(List<AccontoDto> listaAcconto) {
-
-        Map<String, List<AccontoDto>> mapByNumFatt = listaAcconto.stream().filter(a -> StringUtils.isNotBlank(a.getNumeroFattura()))
-                .collect(Collectors.groupingBy(AccontoDto::getNumeroFattura));
-
-        for (String numFatt : mapByNumFatt.keySet()) {
-            List<AccontoDto> righeFattura = mapByNumFatt.get(numFatt);
-            if (righeFattura.isEmpty()) {
-                continue;
-            }
-            List<AccontoDto> accBlock = new ArrayList<>();
-            int lastAccIndex = -1;
-
-            for (int i = 0; i < righeFattura.size(); i++) {
-                AccontoDto dto = righeFattura.get(i);
-
-                // Caso: riga con *ACC
-                if ("*ACC".equalsIgnoreCase(dto.getFArticolo())) {
-                    accBlock.add(dto);
-                    lastAccIndex = i;
-                    continue;
-                }
-
-                // Caso: siamo 2 righe dopo l'ultimo *ACC
-                if (lastAccIndex != -1 && i == lastAccIndex + 2) {
-                    String descr = dto.getOperazione();
-                    String ordine = estraiNumeroOrdine(descr);
-                    if (ordine != null) {
-                        for (AccontoDto acc : accBlock) {
-                            acc.setRifOrdCliente(ordine);
-                        }
-                    }
-                    accBlock.clear();
-                    lastAccIndex = -1;
-                }
-            }
-        }
-        final List<AccontoDto> listaAcconti = new ArrayList<>();
-        mapByNumFatt.values().forEach(list -> listaAcconti.addAll(list.stream().filter(a -> a.getRifOrdCliente() != null).toList()));
-
-        listaAcconti.sort(Comparator.comparing(AccontoDto::getDataFattura));
         Log.debug("Acconti post elaborazione: " + listaAcconti.size());
         return listaAcconti;
     }

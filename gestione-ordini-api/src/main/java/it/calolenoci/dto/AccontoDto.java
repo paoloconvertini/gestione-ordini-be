@@ -15,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@EqualsAndHashCode(of = {"anno", "serie", "progressivo", "numeroFattura", "dataFattura", "iva", "rifOrdCliente"})
 public class AccontoDto {
     
     private Integer anno;
