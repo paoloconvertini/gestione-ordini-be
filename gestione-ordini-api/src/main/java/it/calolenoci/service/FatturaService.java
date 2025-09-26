@@ -204,7 +204,7 @@ public class FatturaService {
         for (AccontoDto a : listaAcconto) {
             List<AccontoDto> listaStorno = em.createNamedQuery("StornoDto")
                     .setParameter("sottoConto", sottoConto)
-                    .setParameter("numeroFattura", a.getNumeroFattura())
+                    .setParameter("numeroFattura", StringUtils.trim(a.getNumeroFattura()))
                     .setParameter("iva", a.getIva())
                     .setParameter("dataAcconto", sdf2.format(a.getDataFattura()))
                     .getResultList();
