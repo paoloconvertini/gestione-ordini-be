@@ -56,7 +56,7 @@ import java.util.Date;
         name = "AccontoDto",
         query =
                 "select f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATABOLLA as dataBolla, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura, "
-                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO  as fArticolo"
+                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO  as fArticolo, f.NUMEROBOLLA "
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO"
                         + " WHERE 1=1 and f.serie = 'A' and f.PROGRESSIVO > 0"
@@ -80,7 +80,7 @@ import java.util.Date;
         name = "StornoDto",
         query = " select distinct f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATABOLLA as dataBolla, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura"
                         + " , concat('ns.ordine n.', o.anno,'/', o.serie,'/',  o.PROGRESSIVO, ' del ', FORMAT(o.DATAORDINE, 'dd.MM.yyyy')) as rifOrdCliente"
-                        + " , f4.FDESCRARTICOLO as operazione, f4.PREZZO as prezzo, f4.FCODICEIVA as iva, concat(o.anno,'/', o.serie,'/',  o.PROGRESSIVO) as ordineCliente"
+                        + " , f4.FDESCRARTICOLO as operazione, f4.PREZZO as prezzo, f4.FCODICEIVA as iva, concat(o.anno,'/', o.serie,'/',  o.PROGRESSIVO) as ordineCliente, f.NUMEROBOLLA "
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f4 ON f.ANNO = f4.ANNO AND f.SERIE = f4.SERIE AND f.PROGRESSIVO = f4.PROGRESSIVO"
                         + " JOIN FATTURE2 f5 ON f5.ANNO = f4.ANNO AND f5.SERIE = f4.SERIE AND f.PROGRESSIVO = f5.PROGRESSIVO"
@@ -131,7 +131,8 @@ import java.util.Date;
                         @ColumnResult(name = "operazione"),
                         @ColumnResult(name = "prezzo"),
                         @ColumnResult(name = "iva"),
-                        @ColumnResult(name= "fArticolo")
+                        @ColumnResult(name= "fArticolo"),
+                        @ColumnResult(name = "numeroBolla")
                 }
         )
 )
@@ -169,7 +170,9 @@ import java.util.Date;
                         @ColumnResult(name = "operazione"),
                         @ColumnResult(name = "prezzo"),
                         @ColumnResult(name = "iva"),
-                        @ColumnResult(name= "ordineCliente")
+                        @ColumnResult(name= "ordineCliente"),
+                        @ColumnResult(name= "numeroBolla")
+
                 }
         )
 )

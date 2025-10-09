@@ -17,6 +17,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.time.Year;
 import java.util.*;
@@ -247,29 +249,29 @@ public class FatturaService {
                         List<AccontoDto> accontiPerIva = accontiPerIvaMap.get(s);
                         Log.debug("*** CREA BOLLA, acconti selezionati per Iva e : " + accontiPerIva.size());
                         accontiPerIva.sort(Comparator.comparing(AccontoDto::getDataFattura));
-                        double sommaArticoli = dtos.stream().filter(d -> StringUtils.isNotBlank(d.getFCodiceIva()) && d.getFCodiceIva().equals(s))
+                        double diffAccontoSommaArticoli = dtos.stream().filter(d -> StringUtils.isNotBlank(d.getFCodiceIva()) && d.getFCodiceIva().equals(s))
                                 .mapToDouble(dto -> dto.getPrezzoScontato()*dto.getQtaProntoConsegna()).sum();
-                        double prezzo;
-                        double diffAccontoSommaArticoli = sommaArticoli;
-                        // Es. ho sommaArticoli 100, e due acconti, uno da 70 e uno da 120.
-                        // Io devo azzerare acconto da 70 quindi entro nell'else,
-                        // prezzo per storno è 70, aggiorno la differenza che mi rimane da stornare cioè 30
-                        // che devo prendere da secondo account
-                        // ora secondo acconto è maggiore della differenza, quindi entro nell'if, setto prezzo a 30.
-                        // e scrivo seconda voce di storno.
                         for (AccontoDto a : accontiPerIva) {
-                            if(a.getPrezzo() > diffAccontoSommaArticoli){
+                            if (diffAccontoSommaArticoli <= 0) {
+                                break; // ho già stornato tutto
+                            }
+
+                            double prezzo;
+                            if (a.getPrezzo() > diffAccontoSommaArticoli) {
                                 prezzo = diffAccontoSommaArticoli;
-                                OrdineDettaglioDto ordineDettaglio = fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzo);
-                                dtos.add(accontiPerIva.indexOf(a), ordineDettaglio);
-                                Log.debug("*** CREA BOLLA, creata voce storno: " + ordineDettaglio.getFDescrArticolo() + " di " + prezzo + " euro");
-                                break;
+                                diffAccontoSommaArticoli = 0;
                             } else {
                                 prezzo = a.getPrezzo();
-                                diffAccontoSommaArticoli = sommaArticoli - a.getPrezzo();
-                                OrdineDettaglioDto ordineDettaglio = fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzo);
-                                dtos.add(accontiPerIva.indexOf(a), ordineDettaglio);
-                                Log.debug("*** CREA BOLLA, creata voce storno: " + ordineDettaglio.getFDescrArticolo() + " di " + prezzo + " euro");
+                                diffAccontoSommaArticoli -= prezzo;
+                            }
+
+                            if (prezzo > 0) {
+                                double prezzoArrotondato = BigDecimal.valueOf(prezzo)
+                                        .setScale(2, RoundingMode.HALF_UP)
+                                        .doubleValue();
+                                OrdineDettaglioDto ordineDettaglio = fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzoArrotondato);
+                                dtos.add(ordineDettaglio); // non usare indexOf
+                                Log.debug("*** CREA BOLLA, creata voce storno: " + ordineDettaglio.getFDescrArticolo() + " di " + prezzoArrotondato + " euro");
                             }
                         }
                     }
@@ -278,6 +280,11 @@ public class FatturaService {
 
             List<OrdineDettaglioDto> listaDaTrasformare = new ArrayList<>();
             map.values().forEach(listaDaTrasformare::addAll);
+            listaDaTrasformare.sort(Comparator
+                    .comparing(OrdineDettaglioDto::getAnno)
+                    .thenComparing(OrdineDettaglioDto::getSerie)
+                    .thenComparing(OrdineDettaglioDto::getProgressivo)
+                    .thenComparing(OrdineDettaglioDto::getRigo, Comparator.nullsFirst(Integer::compareTo)));
 
             List<FattureDettaglio> fattureDaSalvare = new ArrayList<>();
             List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
@@ -371,6 +378,7 @@ public class FatturaService {
                 fattureDaSalvare.add(fd);
             }
             Log.debug("*** CREA BOLLA, fatture da salvare: " + fattureDaSalvare.size());
+
             FattureDettaglio.persist(fattureDaSalvare);
             OrdineDettaglio.persist(ordineDettaglioList);
             if (!magazzinoList.isEmpty()) {
