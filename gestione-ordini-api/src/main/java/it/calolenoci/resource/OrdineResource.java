@@ -313,15 +313,19 @@ public class OrdineResource {
     @Produces(MediaType.TEXT_PLAIN)
     @PermitAll
     public Uni<Response> streamDataFromFile(String sottoConto, Integer anno, String serie, Integer progressivo) {
-        final OpenOptions openOptions = (new OpenOptions()).setCreate(false).setWrite(false);
+        final OpenOptions openOptions = new OpenOptions().setCreate(false).setWrite(false);
         String ordineId = sottoConto + "_" + anno + "_" + serie + "_" + progressivo + ".pdf";
+        String fullPath = pathReport + anno + "/" + serie + "/" + ordineId;
 
-        Uni<AsyncFile> uni1 = vertx.fileSystem()
-                .open(pathReport + anno + "/" + serie + "/" + ordineId, openOptions);
-
-        return uni1.onItem()
-                .transform(asyncFile -> Response.ok(asyncFile)
-                        .header("Content-Disposition", "attachment;filename=" + ordineId)
+        return vertx.fileSystem()
+                .open(fullPath, openOptions)
+                .onItem().transform(asyncFile ->
+                        Response.ok(asyncFile)
+                                .header("Content-Disposition", "attachment;filename=" + ordineId)
+                                .build()
+                )
+                .onFailure().recoverWithItem(err -> Response.status(Response.Status.NOT_FOUND)
+                        .entity("File non trovato: " + ordineId)
                         .build());
     }
 
