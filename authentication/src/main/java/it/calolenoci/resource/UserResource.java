@@ -2,9 +2,7 @@ package it.calolenoci.resource;
 
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
-import it.calolenoci.dto.ResponseDTO;
-import it.calolenoci.dto.SuperUserDTO;
-import it.calolenoci.dto.UserResponseDTO;
+import it.calolenoci.dto.*;
 import it.calolenoci.entity.Role;
 import it.calolenoci.entity.User;
 import it.calolenoci.service.CryptoService;
@@ -30,8 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 
-import static it.calolenoci.constant.Ruolo.ADMIN;
-import static it.calolenoci.constant.Ruolo.USER;
+import static it.calolenoci.constant.Ruolo.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path("api/users")
@@ -49,43 +46,69 @@ public class UserResource {
 
     @POST
     @Transactional
-    //@RolesAllowed({ADMIN})
-    @PermitAll
-    @APIResponse(responseCode = "200", description = "User salvato con successo")
+    @RolesAllowed({ADMIN})
+    @APIResponse(responseCode = "201", description = "User salvato con successo")
     public Response saveUser(UserResponseDTO user) {
-        User entity = new User();
-        int count = 1;
-        boolean exists = true;
-        while (exists || count == user.getName().length()) {
-            entity.username = StringUtils.truncate(user.getName(), count) + user.getLastname();
-            count++;
-            exists = (User.findByUsername(entity.username) != null);
+
+        if (StringUtils.isBlank(user.getUsername())) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponseDTO("INVALID", "VALIDATION", "Username obbligatorio"))
+                    .build();
         }
+
+        User existing = User.findByUsername(user.getUsername());
+        if (existing != null) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(new ErrorResponseDTO("CONFLICT", "VALIDATION", "Username già presente"))
+                    .build();
+        }
+
+        User entity = new User();
+        entity.username = user.getUsername();
         entity.name = user.getName();
         entity.lastname = user.getLastname();
         entity.password = cryptoService.encrypt(user.getPassword());
-        if (user.getDataNascita() != null) {
-            entity.dataNascita = user.getDataNascita();
-        }
-        if (StringUtils.isNotBlank(user.getEmail())) {
-            entity.email = user.getEmail();
-        }
-        if (!user.getRoles().isEmpty()) {
-            List<Role> collect = user.getRoles().stream().map(r -> Role.findByName(r.name)).toList();
-            entity.roles.addAll(collect);
+        entity.dataNascita = user.getDataNascita();
+        entity.email = user.getEmail();
+        entity.codVenditore = user.getCodVenditore();
+        if (user.getRoles() != null) {
+            entity.roles.clear();
+            for (SimpleRoleDTO r : user.getRoles()) {
+                Role role = Role.findById(r.id);
+                if (role != null) {
+                    entity.roles.add(role);
+                }
+            }
         }
         entity.persist();
-        return Response.status(Response.Status.CREATED).entity(user).build();
+        return Response.status(Response.Status.CREATED).entity(entity).build();
     }
 
     @GET
     @Path("/{idUser}")
-    //@RolesAllowed({ADMIN})
-    @PermitAll
+    @RolesAllowed({ADMIN})
     public Response getUser(Long idUser) {
+
         User entity = findUserById(idUser);
-        return Response.ok(entity).build();
+
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(entity.id);
+        dto.setUsername(entity.username);
+        dto.setName(entity.name);
+        dto.setLastname(entity.lastname);
+        dto.setDataNascita(entity.dataNascita);
+        dto.setEmail(entity.email);
+        dto.setCodVenditore(entity.codVenditore);
+
+        dto.setRoles(
+                entity.roles.stream()
+                        .map(r -> new SimpleRoleDTO(r.id, r.name))
+                        .toList()
+        );
+
+        return Response.ok(dto).build();
     }
+
 
     @Operation(summary = "Returns all the roles from the database")
     @GET
@@ -98,7 +121,7 @@ public class UserResource {
 
     @Operation(summary = "Returns all the roles from the database")
     @POST
-    @PermitAll
+    @RolesAllowed({ADMIN, LOGISTICA, AMMINISTRATIVO, VENDITORE, MAGAZZINIERE})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Users")
     @Path("/byRole")
@@ -128,7 +151,7 @@ public class UserResource {
 
     @Operation(summary = "Returns all the roles from the database")
     @GET
-    @PermitAll
+    @RolesAllowed({ADMIN, LOGISTICA, AMMINISTRATIVO, VENDITORE, MAGAZZINIERE})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Users")
     @Path("/getVenditori")
@@ -163,7 +186,7 @@ public class UserResource {
     @PUT
     @Path("/{username}")
     @Transactional
-    @PermitAll
+    @RolesAllowed({ADMIN})
     @APIResponse(responseCode = "404", description = "User non trovato")
     @APIResponse(responseCode = "200", description = "User aggiornato con successo")
     public Response updatePassword(String username, UserResponseDTO dto) {
@@ -175,36 +198,60 @@ public class UserResource {
     @PUT
     @Path("/update/{id}")
     @Transactional
-    //@RolesAllowed({ADMIN})
-    @PermitAll
+    @RolesAllowed({ADMIN})
     @APIResponse(responseCode = "404", description = "User non trovato")
     @APIResponse(responseCode = "200", description = "User aggiornato con successo")
-    public Response update(Long id, UserResponseDTO user) {
-        User entity = findUserById(id);
+    public Response update(@PathParam("id") Long id, UserResponseDTO user) {
 
-        if (StringUtils.isNotBlank(user.getName())) {
-            entity.name = user.getName();
+        User entity = User.findById(id);
+        if (entity == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponseDTO("NOT_FOUND", "USER", "Utente non trovato"))
+                    .build();
         }
-        if (StringUtils.isNotBlank(user.getLastname())) {
-            entity.lastname = user.getLastname();
+
+        // Username obbligatorio
+        if (StringUtils.isBlank(user.getUsername())) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponseDTO("INVALID", "VALIDATION", "Username obbligatorio"))
+                    .build();
         }
-        if (user.getDataNascita() != null) {
-            entity.dataNascita = user.getDataNascita();
+
+        // Controllo unicità username
+        User existing = User.findByUsername(user.getUsername());
+        if (existing != null && !existing.id.equals(id)) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(new ErrorResponseDTO("CONFLICT", "VALIDATION", "Username già usato da un altro utente"))
+                    .build();
         }
-        if (user.getEmail() != null) {
-            entity.email = user.getEmail();
+
+        // Aggiorno campi base
+        entity.username = user.getUsername();
+        entity.name = user.getName();
+        entity.lastname = user.getLastname();
+        entity.dataNascita = user.getDataNascita();
+        entity.email = user.getEmail();
+        entity.codVenditore = user.getCodVenditore();
+
+        // Aggiorno ruoli — VERSIONE CORRETTA
+        entity.roles.clear();
+        if (user.getRoles() != null) {
+            for (SimpleRoleDTO r : user.getRoles()) {
+                Role role = Role.findById(r.id);
+                if (role != null) {
+                    entity.roles.add(role);
+                }
+            }
         }
-        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
-            entity.roles = new LinkedHashSet<>();
-            List<Role> collect = user.getRoles().stream().map(r -> Role.findByName(r.name)).toList();
-            entity.roles.addAll(collect);
-        }
+
+        // Aggiorno password solo se presente
         if (StringUtils.isNotBlank(user.getPassword())) {
             entity.password = cryptoService.encrypt(user.getPassword());
         }
 
-        return Response.ok().entity(new ResponseDTO("Utente aggiornato!", false)).build();
+        return Response.ok(new ResponseDTO("Utente aggiornato!", false)).build();
     }
+
 
     private User findUserById(Long id) {
         User entity = User.findById(id);

@@ -23,7 +23,7 @@ public class UserResponseDTO extends SuperUserDTO{
 
     private Date dataNascita;
 
-    private List<Role> roles;
+    private List<SimpleRoleDTO> roles;
 
     public UserResponseDTO(String fullname, String email, String codVenditore, Boolean checked) {
         this.fullname = fullname;
