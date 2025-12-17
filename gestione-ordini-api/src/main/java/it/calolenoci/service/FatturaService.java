@@ -63,51 +63,71 @@ public class FatturaService {
     public List<OrdineDettaglioDto> getBolle() {
         try {
             long inizio = System.currentTimeMillis();
-            List<OrdineDettaglioDto> list = OrdineDettaglio.find("select o2.anno,o2.serie,o2.progressivo," +
+
+            // 1) Prelevo i righi degli ordini che hanno fatture associate
+            List<OrdineDettaglioDto> list = OrdineDettaglio.find(
+                            "select o2.anno, o2.serie, o2.progressivo, " +
                                     " o2.progrGenerale, o2.rigo, " +
-                                    " (CASE WHEN o2.quantitaV IS NOT NULL AND o2.quantita <> o2.quantitaV THEN o2.quantitaV ELSE o2.quantita END ) as quantita " +
-                                    " from OrdineDettaglio o2" +
-                                    " join Ordine o ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
-                                    " INNER JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo" +
-                                    " where (go.status <> 'ARCHIVIATO' OR go.status <> null OR go.status <> '') " +
-                                    " and o.dataConferma >= :data" +
-                                    " AND EXISTS (SELECT 1 FROM GoOrdineDettaglio god WHERE o2.progrGenerale = god.progrGenerale )" +
-                                    " AND EXISTS (SELECT 1 FROM FattureDettaglio f WHERE f.progrOrdCli = o2.progrGenerale )"
-                            //      + "AND o2.fArticolo = god.fArticolo)"
-                            ,
-                            Parameters.with("data", sdf.parse(dataCongig)))
-                    .project(OrdineDettaglioDto.class).list();
-            Map<Integer, Double> map = new HashMap<>();
-            List<Integer> integers = list.stream().filter(o -> o.getQuantita() != null).map(OrdineDettaglioDto::getProgrGenerale).toList();
-            Log.debug("getBolle: Trovati " + integers.size() + " integers");
-            if (integers.size() >= 1000) {
-                List<List<Integer>> partition = ListUtils.partition(integers, 1000);
-                for (List<Integer> integerList : partition) {
-                    List<FatturaDto> fatturas = FattureDettaglio
-                            .find("Select f.progrOrdCli, SUM(f.quantita) as qta " +
-                                            "FROM FattureDettaglio f " +
-                                            "WHERE f.progrOrdCli in (:list) GROUP BY f.progrOrdCli",
-                                    Parameters.with("list", integerList))
-                            .project(FatturaDto.class).list();
-                    fatturas.forEach(fatturaDto -> map.put(fatturaDto.getProgrOrdCli(), fatturaDto.getQta()));
-                }
-            } else {
-                List<FatturaDto> fatturaDtos = FattureDettaglio
-                        .find("Select f.progrOrdCli, SUM(f.quantita) as qta " +
-                                        "FROM FattureDettaglio f " +
-                                        "WHERE f.progrOrdCli in (:list) GROUP BY f.progrOrdCli",
-                                Parameters.with("list", integers))
-                        .project(FatturaDto.class).list();
-                fatturaDtos.forEach(fatturaDto -> map.put(fatturaDto.getProgrOrdCli(), fatturaDto.getQta()));
+                                    " (CASE WHEN o2.quantitaV IS NOT NULL AND o2.quantita <> o2.quantitaV " +
+                                    "       THEN o2.quantitaV ELSE o2.quantita END) as quantita " +
+                                    "from OrdineDettaglio o2 " +
+                                    "join Ordine o ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
+                                    "join GoOrdine go ON go.anno = o.anno AND go.serie = o.serie AND go.progressivo = o.progressivo " +
+                                    "where go.status <> 'ARCHIVIATO' " +
+                                    "and o.dataConferma >= :data " +
+                                    "and exists (select 1 from GoOrdineDettaglio god where god.progrGenerale = o2.progrGenerale) " +
+                                    "and exists (select 1 from FattureDettaglio f where f.progrOrdCli = o2.progrGenerale)",
+                            Parameters.with("data", sdf.parse(dataCongig))
+                    )
+                    .project(OrdineDettaglioDto.class)
+                    .list();
+
+            if (list.isEmpty()) {
+                Log.debug("Nessuna bolla trovata");
+                return list;
             }
-            list.forEach(o -> {
-                if (map.containsKey(o.getProgrGenerale())) {
-                    o.setQtaBolla(map.get(o.getProgrGenerale()));
+
+            Log.debug("Trovate " + list.size() + " bolle");
+
+            // 2) Ricavo TUTTE le somme delle fatture con un UNICO GROUP BY
+            List<Integer> progrGenerali = list.stream()
+                    .map(OrdineDettaglioDto::getProgrGenerale)
+                    .toList();
+
+            // Somma quantità fatturate per ogni progrGenerale (CAST in DECIMAL per evitare problemi con FLOAT)
+            List<FatturaDto> somme = FattureDettaglio.find(
+                            "select f.progrOrdCli as progrOrdCli, " +
+                                    "CAST(SUM(ISNULL(f.quantita,0)) AS decimal(18,6)) as qta " +
+                                    "from FattureDettaglio f " +
+                                    "where f.progrOrdCli in (:list) " +
+                                    "group by f.progrOrdCli",
+                            Parameters.with("list", progrGenerali)
+                    )
+                    .project(FatturaDto.class)
+                    .list();
+
+            // Mappo sommatorie
+            Map<Integer, Double> map = new HashMap<>();
+            for (FatturaDto dto : somme) {
+                map.put(dto.getProgrOrdCli(), dto.getQta());
+            }
+
+            // 3) Assegno qtaBolla ai DTO
+            for (OrdineDettaglioDto dto : list) {
+                Double qtaBolla = map.get(dto.getProgrGenerale());
+                if (qtaBolla != null) {
+                    dto.setQtaBolla(qtaBolla);
                 }
-            });
+            }
+
             long fine = System.currentTimeMillis();
-            Log.debug("Query getBolle: " + (fine - inizio) + " msec");
-            return list.stream().filter(o -> o.getQtaBolla() != null).toList();
+            Log.debug("Query getBolle ottimizzata: " + (fine - inizio) + " ms");
+
+            // Ritorno solo quelli che hanno una quantità fatturata
+            return list.stream()
+                    .filter(o -> o.getQtaBolla() != null)
+                    .toList();
+
         } catch (Exception e) {
             Log.error("Errore getBolle ", e);
             return new ArrayList<>();

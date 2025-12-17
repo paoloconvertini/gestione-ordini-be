@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ArticoloService {
@@ -45,6 +46,9 @@ public class ArticoloService {
     GoOrdineDettaglioMapper goOrdineDettaglioMapper;
 
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+    @Inject
+    AuditService auditService;
 
     @Inject
     MailService mailService;
@@ -90,71 +94,121 @@ public class ArticoloService {
     public boolean updateArticoliBolle(List<OrdineDettaglioDto> list) {
         long inizio = System.currentTimeMillis();
         try {
-            List<GoOrdineDettaglio> listToSave = new ArrayList<>();
-            List<OrdineId> ids = new ArrayList<>();
-            for (OrdineDettaglioDto e : list) {
-                Double qtaDaConsegnare = (e.getQuantita() - e.getQtaBolla());
-                Optional<GoOrdineDettaglio> optional =
-                GoOrdineDettaglio.find("progrGenerale = :progrGenerale AND (qtaDaConsegnare is null OR " +
-                                "qtaDaConsegnare <> :q) ",
-                        Parameters.with("progrGenerale", e.getProgrGenerale()).and("q", qtaDaConsegnare)).singleResultOptional();
-                if (optional.isPresent()) {
-                    GoOrdineDettaglio goOrdineDettaglio = optional.get();
-                    if (goOrdineDettaglio.getQtaDaConsegnare() != null && goOrdineDettaglio.getQtaDaConsegnare() == 0) {
-                        continue;
-                    }
-                    if (goOrdineDettaglio.getQtaDaConsegnare() == null ||
-                            !Objects.equals(goOrdineDettaglio.getQtaDaConsegnare(), qtaDaConsegnare)) {
-                        Log.error("Ho da consegnare per progrOrdCli= " + e.getProgrGenerale() );
-                        Double diffQtaCons = (e.getQuantita() - (goOrdineDettaglio.getQtaDaConsegnare() == null ? 0 : goOrdineDettaglio.getQtaDaConsegnare()));
-                        if (qtaDaConsegnare == 0) {
-                            goOrdineDettaglio.setQtaConsegnatoSenzaBolla(null);
-                        }
-                        goOrdineDettaglio.setFlagConsegnato((qtaDaConsegnare == 0));
-                        if (!diffQtaCons.equals(e.getQtaBolla())) {
-                            goOrdineDettaglio.setQtaProntoConsegna(null);
-                            goOrdineDettaglio.setQtaRiservata(null);
-                        }
-                        goOrdineDettaglio.setFlProntoConsegna(diffQtaCons.equals(e.getQtaBolla()));
-                        goOrdineDettaglio.setQtaDaConsegnare(qtaDaConsegnare);
-                        goOrdineDettaglio.setFlBolla(Boolean.TRUE);
-                        listToSave.add(goOrdineDettaglio);
-                        OrdineId ordineId = new OrdineId(e.getAnno(), e.getSerie(), e.getProgressivo());
-                        if (!ids.contains(ordineId)) {
-                            ids.add(ordineId);
-                        }
-                    }
+
+            if (list == null || list.isEmpty()) {
+                Log.debug("Nessun articolo da aggiornare.");
+                return true;
+            }
+
+            // 1️⃣ Precarico TUTTI i progrGenerale coinvolti
+            List<Integer> progrGenerali = list.stream()
+                    .map(OrdineDettaglioDto::getProgrGenerale)
+                    .distinct()
+                    .toList();
+
+            // Mappa per accesso rapido ai GoOrdineDettaglio
+            Map<Integer, GoOrdineDettaglio> goMap =
+                    GoOrdineDettaglio.find("progrGenerale in (:pg)", Parameters.with("pg", progrGenerali))
+                            .<GoOrdineDettaglio>stream()
+                            .collect(Collectors.toMap(
+                                    GoOrdineDettaglio::getProgrGenerale,
+                                    g -> g
+                            ));
+
+            List<GoOrdineDettaglio> toUpdate = new ArrayList<>();
+            Set<OrdineId> ordiniCoinvolti = new HashSet<>();
+
+            final double TOLLERANZA = 0.1;
+
+            // 2️⃣ Calcolo differenze + aggiornamenti
+            for (OrdineDettaglioDto dto : list) {
+
+                GoOrdineDettaglio go = goMap.get(dto.getProgrGenerale());
+                if (go == null) {
+                    continue; // nessun dettaglio GO → ignoro
+                }
+
+                Double qta = dto.getQuantita();
+                Double qtaBolla = dto.getQtaBolla();
+                if (qta == null || qtaBolla == null) continue;
+
+                double qtaDaConsegnare = qta - qtaBolla;
+                Double oldQtaDaCons = go.getQtaDaConsegnare() == null ? 0.0 : go.getQtaDaConsegnare();
+
+                // Se non cambia nulla in maniera significativa → skip
+                if (Math.abs(oldQtaDaCons - qtaDaConsegnare) <= TOLLERANZA) {
+                    continue;
+                }
+
+                // Rilevo che devo aggiornare
+                Log.error("Ho da consegnare per progrOrdCli = " + dto.getProgrGenerale());
+
+                // 3️⃣ Logica quantità & flag consegnato
+                if (Math.abs(qtaDaConsegnare) <= TOLLERANZA) {
+                    go.setQtaConsegnatoSenzaBolla(null);
+                    go.setFlagConsegnato(true);
+                    go.setQtaDaConsegnare(0.0);
+                } else {
+                    go.setFlagConsegnato(false);
+                    go.setQtaDaConsegnare(qtaDaConsegnare);
+                }
+
+                // 4️⃣ Logica differenza vs qtaBolla
+                double diffQtaCons = qta - oldQtaDaCons;
+                double diff = Math.abs(diffQtaCons - qtaBolla);
+
+                if (diff > TOLLERANZA) {
+                    // differenza significativa → resetto
+                    go.setQtaProntoConsegna(null);
+                    go.setQtaRiservata(null);
+                    go.setFlProntoConsegna(false);
+                } else {
+                    go.setFlProntoConsegna(true);
+                }
+
+                // 5️⃣ Flag bolla sempre true
+                go.setFlBolla(Boolean.TRUE);
+
+                toUpdate.add(go);
+                ordiniCoinvolti.add(new OrdineId(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
+            }
+
+            // 6️⃣ Persist UNA SOLA VOLTA
+            if (!toUpdate.isEmpty()) {
+                GoOrdineDettaglio.persist(toUpdate);
+            }
+
+            // 7️⃣ Aggiornamento warnNoBolla per tutti gli ordini coinvolti
+            for (OrdineId id : ordiniCoinvolti) {
+
+                Long count = GoOrdineDettaglio.find(
+                        "anno = :a AND serie = :s AND progressivo = :p " +
+                                "AND qtaConsegnatoSenzaBolla IS NOT NULL " +
+                                "AND qtaConsegnatoSenzaBolla > 0",
+                        Parameters.with("a", id.getAnno())
+                                .and("s", id.getSerie())
+                                .and("p", id.getProgressivo())
+                ).count();
+
+                if (count == 0) {
+                    GoOrdine.update(
+                            "warnNoBolla = 'F' WHERE anno = :a AND serie = :s AND progressivo = :p",
+                            Parameters.with("a", id.getAnno())
+                                    .and("s", id.getSerie())
+                                    .and("p", id.getProgressivo())
+                    );
                 }
             }
 
-            if (!listToSave.isEmpty()) {
-                GoOrdineDettaglio.persist(listToSave);
-                Map<OrdineId, List<GoOrdineDettaglio>> goMap = new HashMap<>();
-                for (OrdineId e : ids) {
-                    List<GoOrdineDettaglio> ordineDettaglioList = GoOrdineDettaglio
-                            .find("anno =:anno AND serie =:serie AND progressivo =:progressivo",
-                                    Parameters.with("anno", e.getAnno()).and("serie", e.getSerie())
-                                            .and("progressivo", e.getProgressivo())).list();
-                    goMap.put(e, ordineDettaglioList);
-                }
+            long fine = System.currentTimeMillis();
+            Log.error("UpdateArticoliBolle (ottimizzato): " + (fine - inizio) + " ms");
 
-                for (OrdineId id : goMap.keySet()) {
-                    if (goMap.get(id).stream()
-                            .allMatch(b -> b.getQtaConsegnatoSenzaBolla() == null || b.getQtaConsegnatoSenzaBolla() == 0)) {
-                        GoOrdine.update("warnNoBolla = 'F' where anno =:anno and serie =:serie and progressivo = :progressivo",
-                                Parameters.with("anno", id.getAnno())
-                                        .and("serie", id.getSerie())
-                                        .and("progressivo", id.getProgressivo()));
-                    }
-                }
-            }
+            return true;
+
         } catch (Exception e) {
             Log.error("Errore UpdateArticoliBolle: " + e.getMessage(), e);
             return false;
         }
-        long fine = System.currentTimeMillis();
-        Log.error("UpdateArticoliBolle: " + (fine - inizio) / 1000 + " sec");
-        return true;
     }
 
     public boolean findNoProntaConsegna(Integer anno, String serie, Integer progressivo) {
@@ -164,16 +218,36 @@ public class ArticoloService {
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) == 0;
     }
 
+    @Transactional
     public void checkNoBolle() {
         long inizio = System.currentTimeMillis();
-        GoOrdineDettaglio.update("flagConsegnato = 'F', qtaDaConsegnare = null," +
-                " flBolla = 'F' WHERE progrGenerale IN (" +
-                "select god.progrGenerale " +
-                "FROM GoOrdineDettaglio god " +
-                "WHERE NOT EXISTS (SELECT 1 FROM FattureDettaglio f2 WHERE f2.progrOrdCli = god.progrGenerale) " +
-                "AND god.flBolla = 'T' " +
-                "AND EXISTS (SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = god.progrGenerale))"
-        );
+
+        List<GoOrdineDettaglio> daReset = GoOrdineDettaglio.find(
+                "flBolla = TRUE AND NOT EXISTS (" +
+                        "   SELECT 1 FROM FattureDettaglio f WHERE f.progrOrdCli = progrGenerale" +
+                        ") AND EXISTS (" +
+                        "   SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale" +
+                        ")"
+        ).list();
+
+        for (GoOrdineDettaglio god : daReset) {
+
+            OrdineDettaglio od = OrdineDettaglio.find(
+                    "progrGenerale = ?1", god.getProgrGenerale()
+            ).firstResult();
+
+            if (od == null) continue; // sicurezza
+
+            // Reset coerente
+            god.setFlBolla(false);
+            god.setFlagConsegnato(false);
+            god.setQtaDaConsegnare(od.getQuantita());  // IMPORTANTISSIMO
+
+            Log.info("checkNoBolle: reset progrGenerale=" + god.getProgrGenerale());
+        }
+
+        GoOrdineDettaglio.persist(daReset);
+
         long fine = System.currentTimeMillis();
         Log.info("CheckNoBolle: " + (fine - inizio) + " msec");
     }

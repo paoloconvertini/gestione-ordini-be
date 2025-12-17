@@ -94,7 +94,7 @@ public class ArticoloResource {
         }
     }
 
-    @Operation(summary = "Returns all the articoli from the database")
+    @Operation(summary = "Returns all the articoli from the database by id order")
     @POST
     @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = OrdineDettaglio.class, type = SchemaType.ARRAY)))

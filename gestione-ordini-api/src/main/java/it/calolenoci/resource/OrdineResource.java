@@ -152,7 +152,7 @@ public class OrdineResource {
         return Response.ok(allByStatus).build();
     }
 
-    @Operation(summary = "Returns all the ordini from the database")
+    @Operation(summary = "Lista degli ordini per la pagina delle consegne")
     @POST
     @PermitAll
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
@@ -171,6 +171,23 @@ public class OrdineResource {
         }
         return Response.ok(ordineService.findAllByStati(filtro)).build();
     }
+
+    @POST
+    @Path("/consegne/map")
+    public Response getOrdiniMappa(FiltroOrdini filtro) throws ParseException {
+        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
+            List<String> stati = new ArrayList<>();
+            stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
+            stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
+            stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
+            stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
+            filtro.setStati(stati);
+            filtro.setStatus(null);
+        }
+        filtro.setSize(0); // oppure null
+        return Response.ok(ordineService.findAllByStati(filtro).getList()).build();
+    }
+
 
     @Operation(summary = "Returns all the ordini from the database")
     @POST
