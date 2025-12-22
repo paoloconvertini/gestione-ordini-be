@@ -20,6 +20,7 @@ import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.Year;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -51,7 +52,6 @@ public class FatturaService {
     @ConfigProperty(name = "data.inizio")
     String dataCongig;
 
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     public SimpleDateFormat sdf2 = new SimpleDateFormat("dd/MM/yyyy");
 
     @Inject
@@ -63,7 +63,7 @@ public class FatturaService {
     public List<OrdineDettaglioDto> getBolle() {
         try {
             long inizio = System.currentTimeMillis();
-
+            LocalDate data = LocalDate.parse(dataCongig);
             // 1) Prelevo i righi degli ordini che hanno fatture associate
             List<OrdineDettaglioDto> list = OrdineDettaglio.find(
                             "select o2.anno, o2.serie, o2.progressivo, " +
@@ -77,7 +77,7 @@ public class FatturaService {
                                     "and o.dataConferma >= :data " +
                                     "and exists (select 1 from GoOrdineDettaglio god where god.progrGenerale = o2.progrGenerale) " +
                                     "and exists (select 1 from FattureDettaglio f where f.progrOrdCli = o2.progrGenerale)",
-                            Parameters.with("data", sdf.parse(dataCongig))
+                            Parameters.with("data", data)
                     )
                     .project(OrdineDettaglioDto.class)
                     .list();

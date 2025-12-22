@@ -23,7 +23,6 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Year;
@@ -45,8 +44,6 @@ public class OrdineService {
     @ConfigProperty(name = "data.inizio")
     String dataCongig;
 
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
     @ConfigProperty(name = "ordini.path")
     String path;
 
@@ -66,6 +63,9 @@ public class OrdineService {
 
     @Inject
     EntityManager em;
+
+    @Inject
+    AuditService auditService;
 
     @Transactional
     @TransactionConfiguration(timeout = 15)
@@ -91,7 +91,8 @@ public class OrdineService {
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' ";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
         if (filtro.getProntoConsegna()) {
             query += " AND go.hasProntoConsegna = true ";
         }
@@ -99,7 +100,7 @@ public class OrdineService {
         long inizioQuery = System.currentTimeMillis();
 
         Sort sorting = Sort.descending("go.hasCarico", "dataConferma");
-        if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
+        if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getFiltroStatus())) {
             sorting = Sort.descending("o.updateDate", "go.hasCarico");
         }
         PanacheQuery<Ordine> panacheQuery = Ordine.find(query, sorting, map);
@@ -130,9 +131,9 @@ public class OrdineService {
             query += " and o.progressivo = :p";
             map.put("p", filtro.getProgressivo());
         }
-        if (StringUtils.isNotBlank(filtro.getStatus())) {
+        if (StringUtils.isNotBlank(filtro.getFiltroStatus())) {
             query += " AND go.status = :status ";
-            map.put("status", filtro.getStatus());
+            map.put("status", filtro.getFiltroStatus());
         } else {
             query += " AND (go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '') ";
         }
@@ -148,7 +149,8 @@ public class OrdineService {
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String format = filtro.getDataOrdine().format(dateTimeFormatter);
             query += " and o.dataConferma = :d";
-            map.put("d", sdf.parse(format));
+            LocalDate data = LocalDate.parse(dataCongig);
+            map.put("d", data);
         }
         return query;
     }
@@ -181,7 +183,8 @@ public class OrdineService {
                 "AND o.contoCliente = :sottoConto";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
         map.put("sottoConto", sottoConto);
 
         List<OrdineDTO> list = Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
@@ -198,7 +201,8 @@ public class OrdineService {
                 "AND p.latitudine = 0 AND p.provincia <> 'EE'";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
 
         return Ordine.find(query, map).project(PianoContiDto.class).list();
     }
@@ -207,17 +211,14 @@ public class OrdineService {
     public void checkStatusDettaglio(FiltroOrdini filtroOrdini) {
         // Costruisco la lista degli stati da considerare
         List<String> stati = new ArrayList<>();
-        if (StringUtils.isBlank(filtroOrdini.getStatus())) {
+        if (StringUtils.isBlank(filtroOrdini.getFiltroStatus())) {
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
         } else {
-            stati.add(filtroOrdini.getStatus());
+            stati.add(filtroOrdini.getFiltroStatus());
         }
         long inizio = System.currentTimeMillis();
 
-        // Query senza DISTINCT e senza JOIN "espansiva":
-        // - 1 riga per ogni ordine
-        // - stesso insieme di ordini dell'implementazione originale
         String jpql =
                 "SELECT o.anno, o.serie, o.progressivo, o.status " +
                         "FROM GoOrdine o " +
@@ -243,15 +244,30 @@ public class OrdineService {
 
         if (!ordineList.isEmpty()) {
             for (GoOrdineDto o : ordineList) {
-                Log.info("Ordineid checkStatusDettaglio= " +
-                        o.getAnno() + "/" + o.getSerie() + "/" + o.getProgressivo() +
-                        ", old status " + o.getStatus());
+                // ======== AUDIT ========
+                String newStatus = StatoOrdineEnum.DA_PROCESSARE.getDescrizione();
 
-                // UPDATE identico alla versione originale (stessa semantica)
+                if (!Objects.equals(o.getStatus(), newStatus)) {
+                    auditService.logChange(
+                            "GO_ORDINE",
+                            o.getAnno(),
+                            o.getSerie(),
+                            o.getProgressivo(),
+                            null,  // rigo
+                            null,  // progrGenerale
+                            "status",
+                            o.getStatus(),
+                            newStatus,
+                            "checkStatusDettaglio",
+                            null
+                    );
+                }
+
+                // ======== UPDATE ORIGINALE ========
                 GoOrdine.update(
                         "status = :status " +
                                 "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo",
-                        Parameters.with("status", StatoOrdineEnum.DA_PROCESSARE.getDescrizione())
+                        Parameters.with("status", newStatus)
                                 .and("anno", o.getAnno())
                                 .and("serie", o.getSerie())
                                 .and("progressivo", o.getProgressivo())
@@ -260,35 +276,31 @@ public class OrdineService {
         }
 
         long fine = System.currentTimeMillis();
-        Log.error("check nuovi articoli: " + (fine - inizio) + " msec");
+        Log.debug("check nuovi articoli: " + (fine - inizio) + " msec");
+
+        // ======== FLUSH AUDIT ========
+        auditService.flush();
     }
+
 
     @Transactional
     public void checkConsegnati(FiltroOrdini filtro) {
         long inizio = System.currentTimeMillis();
 
-        // 1️⃣ STATI considerati chiudibili
         List<String> statiValidi = new ArrayList<>();
-        if (StringUtils.isBlank(filtro.getStatus())) {
+        if (StringUtils.isBlank(filtro.getFiltroStatus())) {
             statiValidi.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             statiValidi.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             statiValidi.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-            statiValidi.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione()); // aggiunto come richiesto
+            statiValidi.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
         } else {
-            statiValidi.add(filtro.getStatus());
+            statiValidi.add(filtro.getFiltroStatus());
         }
 
-        // 2️⃣ Filtri dinamici
         Map<String, Object> params = new HashMap<>();
         params.put("stati", statiValidi);
         params.put("warn", Boolean.FALSE);
 
-        // 3️⃣ Query: trova gli ordini archiviabili
-        // REGOLE:
-        // - Nessuna riga ARTICOLO (tipoRigo = ' ') con saldoAcconto <> 'S'
-        // - Stato corrente ∈ statiValidi
-        // - warnNoBolla = false
-        // - Filtri aggiuntivi del FiltroOrdini
         String query =
                 "SELECT go.anno, go.serie, go.progressivo, go.status, go.hasProntoConsegna, go.hasCarico " +
                         "FROM GoOrdine go " +
@@ -300,10 +312,9 @@ public class OrdineService {
                         "      AND o.serie = go.serie " +
                         "      AND o.progressivo = go.progressivo " +
                         "      AND o.tipoRigo = ' ' " +
-                        "      AND o.saldoAcconto <> 'S' " + // se esiste UNA sola riga non chiusa → non archivio
+                        "      AND o.saldoAcconto <> 'S' " +
                         ")";
 
-        // applico eventuali filtri aggiuntivi del frontend
         query = applyFiltersConsegna(filtro, query, params);
 
         long t0 = System.currentTimeMillis();
@@ -311,15 +322,56 @@ public class OrdineService {
                 .project(GoOrdineDto.class)
                 .list();
         long t1 = System.currentTimeMillis();
-        Log.error("checkConsegnati - query ricerca: " + (t1 - t0) + " ms");
+        Log.debug("checkConsegnati - query ricerca: " + (t1 - t0) + " ms");
 
-        // 4️⃣ Aggiornamento batch (ordine per ordine)
         if (!ordini.isEmpty()) {
             for (GoOrdineDto o : ordini) {
-                Log.error("Archiviazione ordine = " + o.getAnno() + "/" + o.getSerie() + "/" + o.getProgressivo() +
-                        ", old status=" + o.getStatus() +
-                        ", old hasProntoConsegna=" + o.getHasProntoConsegna() +
-                        ", old hasCarico=" + o.getHasCarico());
+                // ========== AUDIT (prima della update) ==========
+                String entity = "GO_ORDINE";
+                Integer anno = o.getAnno();
+                String serie = o.getSerie();
+                Integer progressivo = o.getProgressivo();
+
+                // 1) STATUS → ARCHIVIATO
+                if (!Objects.equals(o.getStatus(), StatoOrdineEnum.ARCHIVIATO.getDescrizione())) {
+                    auditService.logChange(
+                            entity, anno, serie, progressivo,
+                            null, null,
+                            "status",
+                            o.getStatus(),
+                            StatoOrdineEnum.ARCHIVIATO.getDescrizione(),
+                            "checkConsegnati",
+                            null
+                    );
+                }
+
+                // 2) hasProntoConsegna → false
+                if (!Objects.equals(o.getHasProntoConsegna(), Boolean.FALSE)) {
+                    auditService.logChange(
+                            entity, anno, serie, progressivo,
+                            null, null,
+                            "hasProntoConsegna",
+                            o.getHasProntoConsegna(),
+                            Boolean.FALSE,
+                            "checkConsegnati",
+                            null
+                    );
+                }
+
+                // 3) hasCarico → false
+                if (!Objects.equals(o.getHasCarico(), Boolean.FALSE)) {
+                    auditService.logChange(
+                            entity, anno, serie, progressivo,
+                            null, null,
+                            "hasCarico",
+                            o.getHasCarico(),
+                            Boolean.FALSE,
+                            "checkConsegnati",
+                            null
+                    );
+                }
+
+                // ========== UPDATE DB ==========
 
                 GoOrdine.update(
                         "status = :st, hasProntoConsegna = :pc, hasCarico = :hc " +
@@ -327,37 +379,36 @@ public class OrdineService {
                         Parameters.with("st", StatoOrdineEnum.ARCHIVIATO.getDescrizione())
                                 .and("pc", Boolean.FALSE)
                                 .and("hc", Boolean.FALSE)
-                                .and("a", o.getAnno())
-                                .and("s", o.getSerie())
-                                .and("p", o.getProgressivo())
+                                .and("a", anno)
+                                .and("s", serie)
+                                .and("p", progressivo)
                 );
             }
         }
 
         long fine = System.currentTimeMillis();
-        Log.error("checkConsegnati - totale: " + (fine - inizio) + " ms");
+        Log.debug("checkConsegnati - totale: " + (fine - inizio) + " ms");
+        auditService.flush();
     }
+
 
     @Transactional
     public void checkNoProntaConegna(FiltroOrdini filtro) {
 
         // 1) Stati da considerare
         List<String> stati = new ArrayList<>();
-        if (StringUtils.isBlank(filtro.getStatus())) {
+        if (StringUtils.isBlank(filtro.getFiltroStatus())) {
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             stati.add(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
         } else {
-            stati.add(filtro.getStatus());
+            stati.add(filtro.getFiltroStatus());
         }
 
         long t0 = System.currentTimeMillis();
 
-        // 2) Query corretta:
-        //    prendi solo ordini che oggi risultano hasProntoConsegna = TRUE
-        //    ma che hanno almeno UNA riga flProntoConsegna = FALSE.
         String query =
                 "SELECT go.anno, go.serie, go.progressivo, go.status, go.hasProntoConsegna " +
                         "FROM GoOrdine go " +
@@ -389,16 +440,30 @@ public class OrdineService {
                 .list();
 
         long t1 = System.currentTimeMillis();
-        Log.error("checkNoProntaConsegna - query: " + (t1 - t0) + " msec");
+        Log.debug("checkNoProntaConsegna - query: " + (t1 - t0) + " msec");
 
         // 3) Aggiornamento dei flag
         if (!ordini.isEmpty()) {
             for (GoOrdineDto o : ordini) {
 
-                Log.error("Ordine checkNoProntaConsegna = " +
-                        o.getAnno() + "/" + o.getSerie() + "/" + o.getProgressivo() +
-                        " — era hasProntoConsegna=TRUE, ora lo metto a FALSE");
+                // ======== AUDIT ========
+                if (!Objects.equals(o.getHasProntoConsegna(), Boolean.FALSE)) {
+                    auditService.logChange(
+                            "GO_ORDINE",
+                            o.getAnno(),
+                            o.getSerie(),
+                            o.getProgressivo(),
+                            null,               // rigo
+                            null,               // progrGenerale
+                            "hasProntoConsegna",
+                            o.getHasProntoConsegna(),
+                            Boolean.FALSE,
+                            "checkNoProntaConsegna",
+                            null
+                    );
+                }
 
+                // ======== UPDATE ========
                 GoOrdine.update(
                         "hasProntoConsegna = FALSE " +
                                 "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo",
@@ -410,7 +475,10 @@ public class OrdineService {
         }
 
         long t2 = System.currentTimeMillis();
-        Log.error("checkNoProntaConsegna - aggiornamento: " + (t2 - t1) + " msec");
+        Log.debug("checkNoProntaConsegna - aggiornamento: " + (t2 - t1) + " msec");
+
+        // ======== FLUSH ========
+        auditService.flush();
     }
 
 
@@ -454,9 +522,10 @@ public class OrdineService {
 
     public void addNuoviOrdini() throws ParseException {
         long inizio = System.currentTimeMillis();
+        LocalDate data = LocalDate.parse(dataCongig);
         List<Ordine> list = Ordine.find("SELECT o FROM Ordine o " +
                 "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' AND NOT EXISTS (SELECT 1 FROM GoOrdine god WHERE god.anno =  o.anno" +
-                " AND god.serie = o.serie AND god.progressivo = o.progressivo)", Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
+                " AND god.serie = o.serie AND god.progressivo = o.progressivo)", Parameters.with("dataConfig", data)).list();
         if (!list.isEmpty()) {
             List<GoOrdine> listToSave = new ArrayList<>();
             List<GoOrdineDettaglio> listDettaglioToSave = new ArrayList<>();
@@ -535,12 +604,13 @@ public class OrdineService {
             }
             map.put("list", filtro.getStati());
         }
-        if (StringUtils.isNotBlank(filtro.getStatus())) {
+        if (StringUtils.isNotBlank(filtro.getFiltroStatus())) {
             query += " AND go.status = :status";
-            map.put("status", filtro.getStatus());
+            map.put("status", filtro.getFiltroStatus());
         }
-        map.put("dataConfig", sdf.parse(dataCongig));
-        mapPregressi.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
+        mapPregressi.put("dataConfig", data);
 
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
@@ -625,9 +695,9 @@ public class OrdineService {
 
         Map<String, Object> map = new HashMap<>();
         Map<String, Object> mapPregressi = new HashMap<>();
-
-        map.put("dataConfig", sdf.parse(dataCongig));
-        mapPregressi.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate d = LocalDate.parse(dataCongig);
+        map.put("dataConfig", d);
+        mapPregressi.put("dataConfig", d);
 
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
@@ -719,11 +789,12 @@ public class OrdineService {
             query += "AND go.status IN (:list)";
             map.put("list", filtro.getStati());
         }
-        if (StringUtils.isNotBlank(filtro.getStatus())) {
+        if (StringUtils.isNotBlank(filtro.getFiltroStatus())) {
             query += " AND go.status = :status";
-            map.put("status", filtro.getStatus());
+            map.put("status", filtro.getFiltroStatus());
         }
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());
@@ -763,7 +834,8 @@ public class OrdineService {
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String format = filtro.getDataOrdine().format(dateTimeFormatter);
             query += " and o.dataConferma = :d";
-            map.put("d", sdf.parse(format));
+            LocalDate data = LocalDate.parse(format);
+            map.put("d", data);
         }
         return query;
     }
@@ -801,11 +873,12 @@ public class OrdineService {
 
     public OrdineclienteMonitorDto getOrdiniClienteNonOrdinati() throws ParseException {
         OrdineclienteMonitorDto o = new OrdineclienteMonitorDto();
+        LocalDate data = LocalDate.parse(dataCongig);
         List<GoOrdine> listaOrdini = Ordine.find("SELECT go " +
                         "FROM Ordine o " +
                         "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                         "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' AND go.status IN ('DA_PROCESSARE', 'DA_ORDINARE')",
-                Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
+                Parameters.with("dataConfig", data)).list();
         int totDaOrd = listaOrdini.stream().filter(or -> StringUtils.equals(StatoOrdineEnum.DA_ORDINARE.getDescrizione(), or.getStatus())).toList().size();
         int totDaProc = listaOrdini.stream().filter(or -> StringUtils.equals(StatoOrdineEnum.DA_PROCESSARE.getDescrizione(), or.getStatus()))
                 .filter(ord ->
@@ -830,7 +903,8 @@ public class OrdineService {
                 "WHERE v.id.anno = o.anno AND v.id.serie = o.serie AND v.id.progressivo = o.progressivo)";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());

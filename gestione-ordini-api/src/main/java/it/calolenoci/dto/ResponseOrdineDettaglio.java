@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -25,10 +26,11 @@ public class ResponseOrdineDettaglio {
     private String userLock;
     private Boolean locked;
     private Double totale;
-    private Date dataOrdine;
+    private LocalDate dataOrdine;
     private String modalitaPagamento;
     private String noteLogistica;
     private String userNoteLogistica;
+    private String status;
     private LocalDateTime dataNoteLogistica;
     private List<OrdineDettaglioDto> articoli;
 

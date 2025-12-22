@@ -82,23 +82,19 @@ public class Ordine extends PanacheEntityBase {
     private String modoconsegna;
 
     @Column
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date dataOrdine;
+    private LocalDate dataOrdine;
 
     @Column
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date dataRichiesta;
+    private LocalDate dataRichiesta;
 
     @Column(length = 15)
     private String numeroConferma;
 
     @Column
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date dataConferma;
+    private LocalDate dataConferma;
 
     @Column
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date dataConfermaCli;
+    private LocalDate dataConfermaCli;
 
     @Column(name = "FCODICEPAGAMENT", length = 3)
     private String codicePagamento;

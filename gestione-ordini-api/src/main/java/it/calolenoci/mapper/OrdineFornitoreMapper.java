@@ -6,6 +6,7 @@ import it.calolenoci.entity.OrdineFornitore;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.time.LocalDate;
 import java.time.Year;
 import java.util.Date;
 
@@ -18,7 +19,7 @@ public class OrdineFornitoreMapper {
             o.setProgressivo(prog);
             o.setAnno(Year.now().getValue());
             o.setSerie(serieOAF);
-            o.setDataOrdine(new Date());
+            o.setDataOrdine(LocalDate.now());
             o.setCreateDate(new Date());
             o.setUpdateDate(new Date());
             o.setMagazzino("B");

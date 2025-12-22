@@ -77,12 +77,12 @@ AND c.contocliente = pc.sottoconto]]>
 		<property name="com.jaspersoft.studio.field.label" value="NUMEROCONFERMA"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI"/>
 	</field>
-	<field name="DATACONFERMA" class="java.util.Date">
+	<field name="DATACONFERMA" class="java.time.LocalDate">
 		<property name="com.jaspersoft.studio.field.name" value="DATACONFERMA"/>
 		<property name="com.jaspersoft.studio.field.label" value="DATACONFERMA"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI"/>
 	</field>
-	<field name="DATAORDINE" class="java.util.Date">
+	<field name="DATAORDINE" class="java.time.LocalDate">
 		<property name="com.jaspersoft.studio.field.name" value="DATAORDINE"/>
 		<property name="com.jaspersoft.studio.field.label" value="DATAORDINE"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="ORDCLI"/>

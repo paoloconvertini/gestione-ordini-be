@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -53,8 +54,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
     private String fDescrArticolo;
 
     @Column
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date dataConfConsegna;
+    private LocalDate dataConfConsegna;
 
     @Column
     @Temporal(TemporalType.TIMESTAMP)
@@ -239,8 +239,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
     private String username;
 
     @Column(name = "DATAMODIFICA")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date datamodifica;
+    private LocalDate datamodifica;
 
     @Column(name = "SYS_CREATEDATE")
     @Temporal(TemporalType.TIMESTAMP)

@@ -1,7 +1,5 @@
 package it.calolenoci.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
@@ -22,7 +20,6 @@ import javax.ws.rs.core.Response;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.Year;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,7 +45,6 @@ public class OrdineFornitoreService {
     @ConfigProperty(name = "data.inizio")
     String dataCongig;
 
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     @Transactional
     public List<String> save(List<OrdineDettaglio> articoli, String user) throws Exception {
@@ -248,7 +244,7 @@ public class OrdineFornitoreService {
     public List<OrdineFornitoreDto> findAllByStatus(FiltroOrdini filtro) throws ParseException {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
                 "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate, go.note";
-        if (filtro != null && StringUtils.isBlank(filtro.getStatus())) {
+        if (filtro != null && StringUtils.isBlank(filtro.getFiltroStatus())) {
             query += " , go.flInviato, go.dataInvio ";
         }
         query += " FROM OrdineFornitore o " +
@@ -256,13 +252,14 @@ public class OrdineFornitoreService {
                 + " LEFT JOIN GoOrdineFornitore go ON o.anno = go.anno AND go.serie = o.serie AND o.progressivo = go.progressivo "
                 + " WHERE o.dataOrdine >= :dataConfig ";
         Map<String, Object> params = new HashMap<>();
-        params.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        params.put("dataConfig", data);
         if (filtro != null && filtro.getFlInviato()) {
             query += " AND go.flInviato IS null OR go.flInviato = false ";
         }
-        if (filtro != null && StringUtils.isNotBlank(filtro.getStatus())) {
+        if (filtro != null && StringUtils.isNotBlank(filtro.getFiltroStatus())) {
             query += " AND  o.provvisorio =:stato";
-            params.put("stato", filtro.getStatus());
+            params.put("stato", filtro.getFiltroStatus());
         } else {
             query += " AND  (o.provvisorio is null OR o.provvisorio = '' OR o.provvisorio = ' ')";
         }

@@ -5,6 +5,7 @@ import lombok.*;
 
 import javax.persistence.Column;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -58,7 +59,7 @@ public class OrdineDettaglioDto implements Serializable {
 
     private Date dataBolla;
 
-    private Date dataOrdineOAF;
+    private LocalDate dataOrdineOAF;
 
     private String articolo;
 
@@ -113,7 +114,7 @@ public class OrdineDettaglioDto implements Serializable {
                               String codArtFornitore, String fDescrArticolo, Double quantita, Double prezzo, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla) {
+                              LocalDate dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla) {
         this.anno = anno;
         this.progressivo = progressivo;
         this.progrGenerale = progrGenerale;
@@ -145,7 +146,7 @@ public class OrdineDettaglioDto implements Serializable {
                               String codArtFornitore, String fDescrArticolo, Double quantita, Double prezzo, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla, String intestazione) {
+                              LocalDate dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla, String intestazione) {
         this.anno = anno;
         this.progressivo = progressivo;
         this.progrGenerale = progrGenerale;
@@ -178,7 +179,7 @@ public class OrdineDettaglioDto implements Serializable {
                               String codArtFornitore, String fDescrArticolo, Double quantita, Double prezzo, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla, String intestazione,
+                              LocalDate dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla, String intestazione,
                               String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna) {
         this.anno = anno;
         this.progressivo = progressivo;
@@ -217,7 +218,7 @@ public class OrdineDettaglioDto implements Serializable {
                               Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
+                              LocalDate dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
                               String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna, String noteOrdCli,
                               Date dataDoc, String numDoc, Date dataCarico, Integer annoMag, String serieMag, Integer progressivoMag, String intestazione) {
         this.anno = anno;
@@ -267,7 +268,7 @@ public class OrdineDettaglioDto implements Serializable {
                               Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, Double qtyuser1, Date datauser1, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
+                              LocalDate dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
                               String note, String userNote, LocalDateTime dataNote, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna, String noteOrdCli,
                               Date dataDoc, String numDoc, Date dataCarico, Integer annoMag, String serieMag, Integer progressivoMag,
                               String intestazione) {
@@ -323,7 +324,7 @@ public class OrdineDettaglioDto implements Serializable {
                               Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura, String magazzino,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, Double qtyuser1, Date datauser1, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
+                              LocalDate dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
                               String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna, String noteOrdCli,
                               Date dataDoc, String numDoc, Date dataCarico, Integer annoMag, String serieMag, Integer progressivoMag,
                               String intestazione) {
@@ -375,7 +376,7 @@ public class OrdineDettaglioDto implements Serializable {
                               Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,
                               Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
                               String tono, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
+                              LocalDate dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
                               String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna, String noteOrdCli,
                               Date dataDoc, String numDoc, Date dataCarico, Integer annoMag, String serieMag, Integer progressivoMag) {
         this.anno = anno;
@@ -467,7 +468,7 @@ public class OrdineDettaglioDto implements Serializable {
                               Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagRiservato,
                               Double qtaDaConsegnare, String note, Double qtaProntoConsegna,
                               String fCodiceIva, Double prezzoScontato, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF,Integer progrGenerale) {
+                              LocalDate dataOrdineOAF,Integer progrGenerale) {
         this.anno = anno;
         this.progressivo = progressivo;
         this.tipoRigo = tipoRigo;
@@ -496,7 +497,7 @@ public class OrdineDettaglioDto implements Serializable {
     public OrdineDettaglioDto(Integer anno, Integer progressivo, String tipoRigo, Integer rigo, String serie, String fArticolo,
                               String codArtFornitore, String fDescrArticolo, Double qtaDaConsegnare, String fUnitaMisura,
                               String note, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              Date dataOrdineOAF,Integer progrGenerale, Double prezzo) {
+                              LocalDate dataOrdineOAF,Integer progrGenerale, Double prezzo) {
         this.anno = anno;
         this.progressivo = progressivo;
         this.tipoRigo = tipoRigo;
