@@ -27,7 +27,7 @@ public class FiltroOrdini implements Serializable {
 
     private String codVenditore;
 
-    private String status;
+    private String filtroStatus;
 
     private List<String> stati;
 

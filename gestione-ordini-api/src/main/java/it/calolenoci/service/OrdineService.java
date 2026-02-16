@@ -23,7 +23,6 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Year;
@@ -44,8 +43,6 @@ public class OrdineService {
 
     @ConfigProperty(name = "data.inizio")
     String dataCongig;
-
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     @ConfigProperty(name = "ordini.path")
     String path;
@@ -94,7 +91,8 @@ public class OrdineService {
                 "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' ";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
         if (filtro.getProntoConsegna()) {
             query += " AND go.hasProntoConsegna = true ";
         }
@@ -102,7 +100,7 @@ public class OrdineService {
         long inizioQuery = System.currentTimeMillis();
 
         Sort sorting = Sort.descending("go.hasCarico", "dataConferma");
-        if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getStatus())) {
+        if (StatoOrdineEnum.DA_ORDINARE.getDescrizione().equals(filtro.getFiltroStatus())) {
             sorting = Sort.descending("o.updateDate", "go.hasCarico");
         }
         PanacheQuery<Ordine> panacheQuery = Ordine.find(query, sorting, map);
@@ -133,9 +131,9 @@ public class OrdineService {
             query += " and o.progressivo = :p";
             map.put("p", filtro.getProgressivo());
         }
-        if (StringUtils.isNotBlank(filtro.getStatus())) {
+        if (StringUtils.isNotBlank(filtro.getFiltroStatus())) {
             query += " AND go.status = :status ";
-            map.put("status", filtro.getStatus());
+            map.put("status", filtro.getFiltroStatus());
         } else {
             query += " AND (go.status <> 'ARCHIVIATO' AND go.status IS NOT NULL AND go.status <> '') ";
         }
@@ -151,7 +149,8 @@ public class OrdineService {
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String format = filtro.getDataOrdine().format(dateTimeFormatter);
             query += " and o.dataConferma = :d";
-            map.put("d", sdf.parse(format));
+            LocalDate data = LocalDate.parse(dataCongig);
+            map.put("d", data);
         }
         return query;
     }
@@ -184,7 +183,8 @@ public class OrdineService {
                 "AND o.contoCliente = :sottoConto";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
         map.put("sottoConto", sottoConto);
 
         List<OrdineDTO> list = Ordine.find(query, Sort.descending("dataConferma"), map).project(OrdineDTO.class).list();
@@ -201,7 +201,8 @@ public class OrdineService {
                 "AND p.latitudine = 0 AND p.provincia <> 'EE'";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
 
         return Ordine.find(query, map).project(PianoContiDto.class).list();
     }
@@ -210,11 +211,11 @@ public class OrdineService {
     public void checkStatusDettaglio(FiltroOrdini filtroOrdini) {
         // Costruisco la lista degli stati da considerare
         List<String> stati = new ArrayList<>();
-        if (StringUtils.isBlank(filtroOrdini.getStatus())) {
+        if (StringUtils.isBlank(filtroOrdini.getFiltroStatus())) {
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
         } else {
-            stati.add(filtroOrdini.getStatus());
+            stati.add(filtroOrdini.getFiltroStatus());
         }
         long inizio = System.currentTimeMillis();
 
@@ -287,13 +288,13 @@ public class OrdineService {
         long inizio = System.currentTimeMillis();
 
         List<String> statiValidi = new ArrayList<>();
-        if (StringUtils.isBlank(filtro.getStatus())) {
+        if (StringUtils.isBlank(filtro.getFiltroStatus())) {
             statiValidi.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             statiValidi.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             statiValidi.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             statiValidi.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
         } else {
-            statiValidi.add(filtro.getStatus());
+            statiValidi.add(filtro.getFiltroStatus());
         }
 
         Map<String, Object> params = new HashMap<>();
@@ -396,14 +397,14 @@ public class OrdineService {
 
         // 1) Stati da considerare
         List<String> stati = new ArrayList<>();
-        if (StringUtils.isBlank(filtro.getStatus())) {
+        if (StringUtils.isBlank(filtro.getFiltroStatus())) {
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             stati.add(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
         } else {
-            stati.add(filtro.getStatus());
+            stati.add(filtro.getFiltroStatus());
         }
 
         long t0 = System.currentTimeMillis();
@@ -521,9 +522,10 @@ public class OrdineService {
 
     public void addNuoviOrdini() throws ParseException {
         long inizio = System.currentTimeMillis();
+        LocalDate data = LocalDate.parse(dataCongig);
         List<Ordine> list = Ordine.find("SELECT o FROM Ordine o " +
                 "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' AND NOT EXISTS (SELECT 1 FROM GoOrdine god WHERE god.anno =  o.anno" +
-                " AND god.serie = o.serie AND god.progressivo = o.progressivo)", Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
+                " AND god.serie = o.serie AND god.progressivo = o.progressivo)", Parameters.with("dataConfig", data)).list();
         if (!list.isEmpty()) {
             List<GoOrdine> listToSave = new ArrayList<>();
             List<GoOrdineDettaglio> listDettaglioToSave = new ArrayList<>();
@@ -602,12 +604,13 @@ public class OrdineService {
             }
             map.put("list", filtro.getStati());
         }
-        if (StringUtils.isNotBlank(filtro.getStatus())) {
+        if (StringUtils.isNotBlank(filtro.getFiltroStatus())) {
             query += " AND go.status = :status";
-            map.put("status", filtro.getStatus());
+            map.put("status", filtro.getFiltroStatus());
         }
-        map.put("dataConfig", sdf.parse(dataCongig));
-        mapPregressi.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
+        mapPregressi.put("dataConfig", data);
 
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
@@ -692,9 +695,9 @@ public class OrdineService {
 
         Map<String, Object> map = new HashMap<>();
         Map<String, Object> mapPregressi = new HashMap<>();
-
-        map.put("dataConfig", sdf.parse(dataCongig));
-        mapPregressi.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate d = LocalDate.parse(dataCongig);
+        map.put("dataConfig", d);
+        mapPregressi.put("dataConfig", d);
 
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
@@ -786,11 +789,12 @@ public class OrdineService {
             query += "AND go.status IN (:list)";
             map.put("list", filtro.getStati());
         }
-        if (StringUtils.isNotBlank(filtro.getStatus())) {
+        if (StringUtils.isNotBlank(filtro.getFiltroStatus())) {
             query += " AND go.status = :status";
-            map.put("status", filtro.getStatus());
+            map.put("status", filtro.getFiltroStatus());
         }
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());
@@ -830,7 +834,8 @@ public class OrdineService {
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String format = filtro.getDataOrdine().format(dateTimeFormatter);
             query += " and o.dataConferma = :d";
-            map.put("d", sdf.parse(format));
+            LocalDate data = LocalDate.parse(format);
+            map.put("d", data);
         }
         return query;
     }
@@ -868,11 +873,12 @@ public class OrdineService {
 
     public OrdineclienteMonitorDto getOrdiniClienteNonOrdinati() throws ParseException {
         OrdineclienteMonitorDto o = new OrdineclienteMonitorDto();
+        LocalDate data = LocalDate.parse(dataCongig);
         List<GoOrdine> listaOrdini = Ordine.find("SELECT go " +
                         "FROM Ordine o " +
                         "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
                         "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' AND go.status IN ('DA_PROCESSARE', 'DA_ORDINARE')",
-                Parameters.with("dataConfig", sdf.parse(dataCongig))).list();
+                Parameters.with("dataConfig", data)).list();
         int totDaOrd = listaOrdini.stream().filter(or -> StringUtils.equals(StatoOrdineEnum.DA_ORDINARE.getDescrizione(), or.getStatus())).toList().size();
         int totDaProc = listaOrdini.stream().filter(or -> StringUtils.equals(StatoOrdineEnum.DA_PROCESSARE.getDescrizione(), or.getStatus()))
                 .filter(ord ->
@@ -897,7 +903,8 @@ public class OrdineService {
                 "WHERE v.id.anno = o.anno AND v.id.serie = o.serie AND v.id.progressivo = o.progressivo)";
 
         Map<String, Object> map = new HashMap<>();
-        map.put("dataConfig", sdf.parse(dataCongig));
+        LocalDate data = LocalDate.parse(dataCongig);
+        map.put("dataConfig", data);
         if (StringUtils.isNotBlank(filtro.getCodVenditore())) {
             query += " and o.serie = :venditore";
             map.put("venditore", filtro.getCodVenditore());

@@ -15,17 +15,16 @@ import java.util.Date;
 @RegisterForReflection
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class OrdineDTO implements Serializable {
 
     private  Integer anno;
     private  String serie;
     private  Integer progressivo;
-    private Date dataOrdine;
+    private  LocalDate dataOrdine;
     private  String numeroConferma;
     private  String tipoFattura;
-    private  Date dataConferma;
+    private  LocalDate dataConferma;
     private  String intestazione;
     private  String riferimento;
     private  String indirizzo;
@@ -98,7 +97,7 @@ public class OrdineDTO implements Serializable {
 
     private String descVeicolo;
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataOrdine, LocalDate dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,
                      String statoResidenza, String statoEstero, String telefono, String cellulare, String email, String pec) {
         this.anno = anno;
@@ -122,7 +121,7 @@ public class OrdineDTO implements Serializable {
         this.sottoConto = sottoConto;
     }
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataOrdine, String numeroConferma,
                      String intestazione, String status, String sottoConto, Boolean warnNoBolla,
                      Boolean locked, String userLock, Boolean hasFirma, String note) {
         this.anno = anno;
@@ -140,7 +139,7 @@ public class OrdineDTO implements Serializable {
         this.note = note;
     }
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String modalitaPagamento,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma, String modalitaPagamento,
                      String intestazione, String sottoConto, String riferimento, String indirizzo, String localita, String cap, String provincia,
                      String statoResidenza, String statoEstero, String telefono, String cellulare, String email,
                      String pec, String status, Boolean locked, String userLock, Boolean warnNoBolla,
@@ -172,7 +171,7 @@ public class OrdineDTO implements Serializable {
         this.userNoteLogistica = userNoteLogistica;
         this.dataNoteLogistica = dataNoteLogistica;
     }
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String modalitaPagamento,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma, String modalitaPagamento,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
@@ -202,7 +201,7 @@ public class OrdineDTO implements Serializable {
         this.warnNoBolla = warnNoBolla;
     }
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, Double latitudine, Double longitudine, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
@@ -238,7 +237,7 @@ public class OrdineDTO implements Serializable {
         this.noteLogistica = noteLogistica;
     }
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, Double latitudine, Double longitudine, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
@@ -277,7 +276,7 @@ public class OrdineDTO implements Serializable {
     }
 
     //OrdineService findAllByStati
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String indirdiverse,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma, String indirdiverse,
                      String locdiverse, String provdiverse,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, Double latitudine, Double longitudine, String statoResidenza, String statoEstero,
@@ -326,7 +325,7 @@ public class OrdineDTO implements Serializable {
         this.dataNoteLogistica = dataNoteLogistica;
         this.userNoteLogistica = userNoteLogistica;
     }
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String status,
@@ -354,7 +353,7 @@ public class OrdineDTO implements Serializable {
     }
 
     //OrdineService findAllRiservati
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String status,
@@ -385,7 +384,7 @@ public class OrdineDTO implements Serializable {
         this.userNoteLogistica = userNoteLogistica;
     }
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
@@ -422,7 +421,7 @@ public class OrdineDTO implements Serializable {
     }
 
     //Ordine service findAllByStatus
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, String statoResidenza, String statoEstero,
                      String telefono, String cellulare, String email, String pec, String status,
@@ -489,7 +488,7 @@ public class OrdineDTO implements Serializable {
     }
 
     //getAllPregressi
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma,
                      String intestazione, String sottoConto, String riferimento, String localita, String provincia,
                     String telefono, String cellulare) {
         this.anno = anno;
@@ -507,7 +506,7 @@ public class OrdineDTO implements Serializable {
     }
 
     //findAllByStati pregressi
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String indirdiverse,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma, String indirdiverse,
                      String locdiverse, String provdiverse,
                      String intestazione, String sottoConto, String riferimento, String localita, String provincia, Double latitudine, Double longitudine,
                      String telefono, String cellulare, Integer veicolo, LocalDate dataConsegna, Boolean flVenditore, Character oraConsegna, Long ordine) {
@@ -535,7 +534,7 @@ public class OrdineDTO implements Serializable {
         this.ordine = ordine;
     }
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma,
                       String status, Boolean hasProntoConsegna, String note, String noteLogistica,
                      String intestazione, String riferimento,
                      String localita, String provincia
@@ -557,7 +556,7 @@ public class OrdineDTO implements Serializable {
 
 
     //OrdineService findAltriOrdiniCliente
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma,
                      String status, Boolean hasProntoConsegna, String note, String noteLogistica,
                      String intestazione, String riferimento,
                      String localita, String provincia, LocalDateTime dataNote, String userNote, LocalDateTime dataNoteLogistica, String userNoteLogistica
@@ -584,7 +583,7 @@ public class OrdineDTO implements Serializable {
     /**
      * {it.calolenoci.service.OrdineService#consegneSettimanali}
      */
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String indirdiverse,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma, String indirdiverse,
                      String locdiverse, String provdiverse,
                      String intestazione, String sottoConto, String riferimento, String indirizzo,
                      String localita, String cap, String provincia, Double latitudine, Double longitudine, String statoResidenza, String statoEstero,
@@ -635,7 +634,7 @@ public class OrdineDTO implements Serializable {
         this.userNoteLogistica = userNoteLogistica;
     }
 
-    public OrdineDTO(Integer anno, String serie, Integer progressivo, Date dataConferma, String numeroConferma, String indirdiverse,
+    public OrdineDTO(Integer anno, String serie, Integer progressivo, LocalDate dataConferma, String numeroConferma, String indirdiverse,
                      String locdiverse, String provdiverse,
                      String intestazione, String sottoConto, String riferimento, String localita, String provincia, Double latitudine, Double longitudine,
                      String telefono, String cellulare, Integer veicolo, String descVeicolo, LocalDate dataConsegna, Boolean flVenditore, Character oraConsegna, Long ordine) {

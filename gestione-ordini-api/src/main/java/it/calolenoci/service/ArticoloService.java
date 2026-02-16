@@ -19,6 +19,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,8 +45,6 @@ public class ArticoloService {
     String adminEmail;
     @Inject
     GoOrdineDettaglioMapper goOrdineDettaglioMapper;
-
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     @Inject
     AuditService auditService;
@@ -80,6 +79,7 @@ public class ArticoloService {
         response.setNoteLogistica(ordineDTO.getNoteLogistica());
         response.setUserNoteLogistica(ordineDTO.getUserNoteLogistica());
         response.setDataNoteLogistica(ordineDTO.getDataNoteLogistica());
+        response.setStatus(ordineDTO.getStatus());
         response.setArticoli(list);
         long fine = System.currentTimeMillis();
         Log.info("Get articoli ordine cliente: " + (fine - inizio) / 1000 + " sec");
@@ -955,6 +955,7 @@ public class ArticoloService {
     public void findCarichi() {
         try {
             long inizio = System.currentTimeMillis();
+            LocalDate d = LocalDate.parse(dataCongig);
             List<CaricoDto> data = OrdineDettaglio.find("SELECT og, d, m  FROM OrdineDettaglio o2 " +
                             " JOIN GoOrdineDettaglio d ON d.progrGenerale = o2.progrGenerale " +
                             " JOIN GoOrdine og ON og.anno = d.anno AND og.serie = d.serie AND og.progressivo = d.progressivo " +
@@ -963,7 +964,7 @@ public class ArticoloService {
                             " JOIN Magazzino m ON m.pid = f.progrGenerale " +
                             " WHERE og.status <> 'ARCHIVIATO' and o.dataConferma >= :data and f.saldo IN ('S', 'A')" +
                             " and d.flagOrdinato = 'T' AND d.flagRiservato <> 'T' and d.flagConsegnato = 'F'",
-                    Parameters.with("data", sdf.parse(dataCongig))).project(CaricoDto.class).list();
+                    Parameters.with("data", d)).project(CaricoDto.class).list();
 
             if (!data.isEmpty()) {
                 List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();

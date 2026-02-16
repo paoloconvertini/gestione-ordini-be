@@ -4,11 +4,9 @@ import io.quarkus.panache.common.Parameters;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.file.OpenOptions;
 import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.core.file.AsyncFile;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.Ordine;
-import it.calolenoci.enums.Ruolo;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.*;
@@ -24,7 +22,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.jfree.util.Log;
 
-import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -35,7 +32,6 @@ import javax.ws.rs.core.Response;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -93,7 +89,7 @@ public class OrdineResource {
     @APIResponse(responseCode = "200", description = "Pdf generato con successo")
     @Consumes(MULTIPART_FORM_DATA)
     @Path("/upload")
-    @RolesAllowed({ADMIN, VENDITORE})
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA, AMMINISTRATIVO, MAGAZZINIERE})
     @Transactional
     public Response upload(MultipartBody data) {
 
@@ -143,8 +139,8 @@ public class OrdineResource {
     @Consumes(APPLICATION_JSON)
     public Response getAllOrdini(FiltroOrdini filtro) throws ParseException {
         long i =  System.currentTimeMillis();
-        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
-            filtro.setStatus(null);
+        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getFiltroStatus())){
+            filtro.setFiltroStatus(null);
         }
         PageOrdineDto allByStatus = ordineService.findAllByStatus(filtro);
         long fine = System.currentTimeMillis();
@@ -154,35 +150,36 @@ public class OrdineResource {
 
     @Operation(summary = "Lista degli ordini per la pagina delle consegne")
     @POST
-    @PermitAll
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA, AMMINISTRATIVO, MAGAZZINIERE})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
     @Path("/consegne")
     public Response getAllOrdiniByStati(FiltroOrdini filtro) throws ParseException {
-        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
+        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getFiltroStatus())){
             List<String> stati = new ArrayList<>();
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             filtro.setStati(stati);
-            filtro.setStatus(null);
+            filtro.setFiltroStatus(null);
         }
         return Response.ok(ordineService.findAllByStati(filtro)).build();
     }
 
     @POST
     @Path("/consegne/map")
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA, AMMINISTRATIVO, MAGAZZINIERE})
     public Response getOrdiniMappa(FiltroOrdini filtro) throws ParseException {
-        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
+        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getFiltroStatus())){
             List<String> stati = new ArrayList<>();
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             filtro.setStati(stati);
-            filtro.setStatus(null);
+            filtro.setFiltroStatus(null);
         }
         filtro.setSize(0); // oppure null
         return Response.ok(ordineService.findAllByStati(filtro).getList()).build();
@@ -191,7 +188,7 @@ public class OrdineResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @POST
-    @PermitAll
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA, AMMINISTRATIVO, MAGAZZINIERE})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
@@ -202,7 +199,7 @@ public class OrdineResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @POST
-    @RolesAllowed({ADMIN, LOGISTICA})
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA, AMMINISTRATIVO, MAGAZZINIERE})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
@@ -213,20 +210,20 @@ public class OrdineResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @POST
-    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA})
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA, AMMINISTRATIVO, MAGAZZINIERE})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
     @Path("/riservati")
     public Response getAllOrdiniRiservati(FiltroOrdini filtro) throws ParseException {
-        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getStatus())){
+        if(StatoOrdineEnum.TUTTI.getDescrizione().equals(filtro.getFiltroStatus())){
             List<String> stati = new ArrayList<>();
             stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
             stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
             filtro.setStati(stati);
-            filtro.setStatus(null);
+            filtro.setFiltroStatus(null);
         }
         PageOrdineDto pageOrdineDto = ordineService.findAllRiservati(filtro);
         List<OrdineDTO> allRiservati = pageOrdineDto.getList();
@@ -290,7 +287,7 @@ public class OrdineResource {
 
     @GET
     @Path("/apriOrdine/{anno}/{serie}/{progressivo}/{status}")
-    @RolesAllowed({ADMIN, MAGAZZINIERE, AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     public Response apriOrdine(Integer anno, String serie, Integer progressivo, String status) {
         ordineService.changeStatus(anno, serie, progressivo, status);
         return Response.ok(new ResponseDto("Ordine riaperto", false)).build();
@@ -328,7 +325,7 @@ public class OrdineResource {
     @GET
     @Path("/downloadOrdine/{sottoConto}/{anno}/{serie}/{progressivo}")
     @Produces(MediaType.TEXT_PLAIN)
-    @PermitAll
+    @RolesAllowed({ADMIN, VENDITORE, LOGISTICA, AMMINISTRATIVO, MAGAZZINIERE})
     public Uni<Response> streamDataFromFile(String sottoConto, Integer anno, String serie, Integer progressivo) {
         final OpenOptions openOptions = new OpenOptions().setCreate(false).setWrite(false);
         String ordineId = sottoConto + "_" + anno + "_" + serie + "_" + progressivo + ".pdf";
@@ -350,7 +347,7 @@ public class OrdineResource {
     @Operation(summary = "salva testata ordini")
     @PUT
     @Produces(APPLICATION_JSON)
-    @RolesAllowed({ADMIN})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @Consumes(APPLICATION_JSON)
     public Response salva(OrdineDTO dto) {
         if (dto == null) {
@@ -374,7 +371,7 @@ public class OrdineResource {
     }
    @Operation(summary = "Returns all the ordini from the database")
     @POST
-    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+   @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
@@ -385,7 +382,7 @@ public class OrdineResource {
 
     @Operation(summary = "Returns all the ordini from the database")
     @POST
-    @RolesAllowed({ADMIN, AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)
@@ -397,7 +394,7 @@ public class OrdineResource {
 
     @Operation(summary = "Acconti NON validati legati ad un ordine cliente (lista)")
     @GET
-    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @Path("/accontiNonValidati/{anno}/{serie}/{progressivo}")
     public Response getAccontiNonValidatiByOrdine(Integer anno, String serie, Integer progressivo) {
         return Response.ok(fatturaService.findAccontiNonValidatiByOrdine(anno, serie, progressivo)).build();
@@ -405,7 +402,7 @@ public class OrdineResource {
 
     @Operation(summary = "Conteggio acconti NON validati legati ad un ordine cliente")
     @GET
-    @RolesAllowed({Ruolo.ADMIN, Ruolo.VENDITORE, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO, Ruolo.LOGISTICA})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @Path("/accontiNonValidati/{anno}/{serie}/{progressivo}/count")
     public Response countAccontiNonValidatiByOrdine(Integer anno, String serie, Integer progressivo) {
         long count = fatturaService.countAccontiNonValidatiByOrdine(anno, serie, progressivo);
@@ -418,7 +415,7 @@ public class OrdineResource {
      */
     @Operation(summary = "Storno acconto (consentito solo se validata)")
     @POST
-    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @Path("/storno-acconto")
     public Response stornoAcconto(@QueryParam("anno") Integer anno,
                                   @QueryParam("serie") String serie,
@@ -432,7 +429,7 @@ public class OrdineResource {
         return Response.ok(new ResponseDto("Storno eseguito", false)).build();
     }
 
-    @RolesAllowed({ADMIN, LOGISTICA, VENDITORE})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @PUT
     @Path("/updateVeicolo")
     @Consumes(APPLICATION_JSON)
@@ -444,7 +441,7 @@ public class OrdineResource {
         }
     }
 
-    @RolesAllowed({ADMIN, LOGISTICA})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @POST
     @Path("/salvaPregressi")
     @Consumes(APPLICATION_JSON)
@@ -459,7 +456,7 @@ public class OrdineResource {
     @Operation(summary = "Returns all the ordini from the database")
     @GET
     @Path("/getOrdiniClienteNonOrdinati")
-    @RolesAllowed({ADMIN})
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Ordine.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Ordini")
     @Consumes(APPLICATION_JSON)

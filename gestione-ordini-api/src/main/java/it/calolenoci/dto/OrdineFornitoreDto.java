@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Date;
 
 /**
@@ -20,7 +21,7 @@ public class OrdineFornitoreDto implements Serializable {
     private Integer progressivo;
     private Integer gruppo;
     private String conto;
-    private Date dataOrdine;
+    private LocalDate dataOrdine;
     private Date dataConfOrdine;
 
     private Date updateDate;
@@ -94,7 +95,7 @@ public class OrdineFornitoreDto implements Serializable {
         this.conto = conto;
     }
 
-    public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, Date dataOrdine, String intestazione,
+    public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, LocalDate dataOrdine, String intestazione,
                               Date dataConfOrdine, String numConfOrdine, String provvisorio, Date updateDate, String note) {
         this.anno = anno;
         this.serie = serie;
@@ -108,7 +109,7 @@ public class OrdineFornitoreDto implements Serializable {
         this.note = note;
     }
 
-    public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, Date dataOrdine, String intestazione,
+    public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, LocalDate dataOrdine, String intestazione,
                               Date dataConfOrdine, String numConfOrdine, String provvisorio, Date updateDate,String note,
                               Boolean flInviato, Date dataInvio) {
         this.anno = anno;
@@ -134,7 +135,7 @@ public class OrdineFornitoreDto implements Serializable {
         this.intestazione = intestazione;
     }
 
-    public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, Date dataOrdine, String numConfOrdine, Date dataConfOrdine, String articolo, String descrArticolo,
+    public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, LocalDate dataOrdine, String numConfOrdine, Date dataConfOrdine, String articolo, String descrArticolo,
     String campoUser5, String nota, Double prezzo, String unitaMisura, Double quantita,
      Double scontoArticolo, Double scontoF1, Double scontoF2, Double scontoP, String codiceIva,
                               String descrBanca, Double abiBanca, String codice, String descrizione, String user, String descrArtSuppl,

@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Date;
 
 @Getter
@@ -47,7 +48,7 @@ public class OrdineReportDto implements Serializable {
 	private String FILENAME;
 	private String firmaVenditore;
 	private String NUMEROCONFERMA;
-	private Date DATAORDINE;
-	private Date DATACONFERMA;
+	private LocalDate DATAORDINE;
+	private LocalDate DATACONFERMA;
 	private Double valoreTotale;
 }

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -32,9 +33,8 @@ public class GoOrdineFornitoreBK extends PanacheEntityBase {
     @Column(name = "CONTOFOAF", length = 6)
     private String conto;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "DATAORDINE")
-    private Date dataOrdine;
+    private LocalDate dataOrdine;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataConfOrdine;
