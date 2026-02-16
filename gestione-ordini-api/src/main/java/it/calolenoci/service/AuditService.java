@@ -3,10 +3,14 @@ package it.calolenoci.service;
 import it.calolenoci.entity.Audit;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @ApplicationScoped
 public class AuditService {
+
+    private final List<Audit> buffer = new ArrayList<>();
 
     public void logChange(
             String entityName,
@@ -35,7 +39,14 @@ public class AuditService {
         a.setOperationSource(source);
         a.setNote(note);
         a.setCreateDate(new Date());
-        a.persist();
+
+        buffer.add(a); // ⬅️ niente INSERT qui
+    }
+
+    public void flush() {
+        if (!buffer.isEmpty()) {
+            Audit.persist(buffer); // ⬅️ 1 solo INSERT batch
+            buffer.clear();
+        }
     }
 }
-

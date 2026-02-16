@@ -67,6 +67,9 @@ public class OrdineService {
     @Inject
     EntityManager em;
 
+    @Inject
+    AuditService auditService;
+
     @Transactional
     @TransactionConfiguration(timeout = 15)
     public PageOrdineDto findAllByStatus(FiltroOrdini filtro) throws ParseException {
@@ -215,9 +218,6 @@ public class OrdineService {
         }
         long inizio = System.currentTimeMillis();
 
-        // Query senza DISTINCT e senza JOIN "espansiva":
-        // - 1 riga per ogni ordine
-        // - stesso insieme di ordini dell'implementazione originale
         String jpql =
                 "SELECT o.anno, o.serie, o.progressivo, o.status " +
                         "FROM GoOrdine o " +
@@ -243,15 +243,30 @@ public class OrdineService {
 
         if (!ordineList.isEmpty()) {
             for (GoOrdineDto o : ordineList) {
-                Log.info("Ordineid checkStatusDettaglio= " +
-                        o.getAnno() + "/" + o.getSerie() + "/" + o.getProgressivo() +
-                        ", old status " + o.getStatus());
+                // ======== AUDIT ========
+                String newStatus = StatoOrdineEnum.DA_PROCESSARE.getDescrizione();
 
-                // UPDATE identico alla versione originale (stessa semantica)
+                if (!Objects.equals(o.getStatus(), newStatus)) {
+                    auditService.logChange(
+                            "GO_ORDINE",
+                            o.getAnno(),
+                            o.getSerie(),
+                            o.getProgressivo(),
+                            null,  // rigo
+                            null,  // progrGenerale
+                            "status",
+                            o.getStatus(),
+                            newStatus,
+                            "checkStatusDettaglio",
+                            null
+                    );
+                }
+
+                // ======== UPDATE ORIGINALE ========
                 GoOrdine.update(
                         "status = :status " +
                                 "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo",
-                        Parameters.with("status", StatoOrdineEnum.DA_PROCESSARE.getDescrizione())
+                        Parameters.with("status", newStatus)
                                 .and("anno", o.getAnno())
                                 .and("serie", o.getSerie())
                                 .and("progressivo", o.getProgressivo())
@@ -260,35 +275,31 @@ public class OrdineService {
         }
 
         long fine = System.currentTimeMillis();
-        Log.error("check nuovi articoli: " + (fine - inizio) + " msec");
+        Log.debug("check nuovi articoli: " + (fine - inizio) + " msec");
+
+        // ======== FLUSH AUDIT ========
+        auditService.flush();
     }
+
 
     @Transactional
     public void checkConsegnati(FiltroOrdini filtro) {
         long inizio = System.currentTimeMillis();
 
-        // 1️⃣ STATI considerati chiudibili
         List<String> statiValidi = new ArrayList<>();
         if (StringUtils.isBlank(filtro.getStatus())) {
             statiValidi.add(StatoOrdineEnum.COMPLETO.getDescrizione());
             statiValidi.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
             statiValidi.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-            statiValidi.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione()); // aggiunto come richiesto
+            statiValidi.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
         } else {
             statiValidi.add(filtro.getStatus());
         }
 
-        // 2️⃣ Filtri dinamici
         Map<String, Object> params = new HashMap<>();
         params.put("stati", statiValidi);
         params.put("warn", Boolean.FALSE);
 
-        // 3️⃣ Query: trova gli ordini archiviabili
-        // REGOLE:
-        // - Nessuna riga ARTICOLO (tipoRigo = ' ') con saldoAcconto <> 'S'
-        // - Stato corrente ∈ statiValidi
-        // - warnNoBolla = false
-        // - Filtri aggiuntivi del FiltroOrdini
         String query =
                 "SELECT go.anno, go.serie, go.progressivo, go.status, go.hasProntoConsegna, go.hasCarico " +
                         "FROM GoOrdine go " +
@@ -300,10 +311,9 @@ public class OrdineService {
                         "      AND o.serie = go.serie " +
                         "      AND o.progressivo = go.progressivo " +
                         "      AND o.tipoRigo = ' ' " +
-                        "      AND o.saldoAcconto <> 'S' " + // se esiste UNA sola riga non chiusa → non archivio
+                        "      AND o.saldoAcconto <> 'S' " +
                         ")";
 
-        // applico eventuali filtri aggiuntivi del frontend
         query = applyFiltersConsegna(filtro, query, params);
 
         long t0 = System.currentTimeMillis();
@@ -311,15 +321,56 @@ public class OrdineService {
                 .project(GoOrdineDto.class)
                 .list();
         long t1 = System.currentTimeMillis();
-        Log.error("checkConsegnati - query ricerca: " + (t1 - t0) + " ms");
+        Log.debug("checkConsegnati - query ricerca: " + (t1 - t0) + " ms");
 
-        // 4️⃣ Aggiornamento batch (ordine per ordine)
         if (!ordini.isEmpty()) {
             for (GoOrdineDto o : ordini) {
-                Log.error("Archiviazione ordine = " + o.getAnno() + "/" + o.getSerie() + "/" + o.getProgressivo() +
-                        ", old status=" + o.getStatus() +
-                        ", old hasProntoConsegna=" + o.getHasProntoConsegna() +
-                        ", old hasCarico=" + o.getHasCarico());
+                // ========== AUDIT (prima della update) ==========
+                String entity = "GO_ORDINE";
+                Integer anno = o.getAnno();
+                String serie = o.getSerie();
+                Integer progressivo = o.getProgressivo();
+
+                // 1) STATUS → ARCHIVIATO
+                if (!Objects.equals(o.getStatus(), StatoOrdineEnum.ARCHIVIATO.getDescrizione())) {
+                    auditService.logChange(
+                            entity, anno, serie, progressivo,
+                            null, null,
+                            "status",
+                            o.getStatus(),
+                            StatoOrdineEnum.ARCHIVIATO.getDescrizione(),
+                            "checkConsegnati",
+                            null
+                    );
+                }
+
+                // 2) hasProntoConsegna → false
+                if (!Objects.equals(o.getHasProntoConsegna(), Boolean.FALSE)) {
+                    auditService.logChange(
+                            entity, anno, serie, progressivo,
+                            null, null,
+                            "hasProntoConsegna",
+                            o.getHasProntoConsegna(),
+                            Boolean.FALSE,
+                            "checkConsegnati",
+                            null
+                    );
+                }
+
+                // 3) hasCarico → false
+                if (!Objects.equals(o.getHasCarico(), Boolean.FALSE)) {
+                    auditService.logChange(
+                            entity, anno, serie, progressivo,
+                            null, null,
+                            "hasCarico",
+                            o.getHasCarico(),
+                            Boolean.FALSE,
+                            "checkConsegnati",
+                            null
+                    );
+                }
+
+                // ========== UPDATE DB ==========
 
                 GoOrdine.update(
                         "status = :st, hasProntoConsegna = :pc, hasCarico = :hc " +
@@ -327,16 +378,18 @@ public class OrdineService {
                         Parameters.with("st", StatoOrdineEnum.ARCHIVIATO.getDescrizione())
                                 .and("pc", Boolean.FALSE)
                                 .and("hc", Boolean.FALSE)
-                                .and("a", o.getAnno())
-                                .and("s", o.getSerie())
-                                .and("p", o.getProgressivo())
+                                .and("a", anno)
+                                .and("s", serie)
+                                .and("p", progressivo)
                 );
             }
         }
 
         long fine = System.currentTimeMillis();
-        Log.error("checkConsegnati - totale: " + (fine - inizio) + " ms");
+        Log.debug("checkConsegnati - totale: " + (fine - inizio) + " ms");
+        auditService.flush();
     }
+
 
     @Transactional
     public void checkNoProntaConegna(FiltroOrdini filtro) {
@@ -355,9 +408,6 @@ public class OrdineService {
 
         long t0 = System.currentTimeMillis();
 
-        // 2) Query corretta:
-        //    prendi solo ordini che oggi risultano hasProntoConsegna = TRUE
-        //    ma che hanno almeno UNA riga flProntoConsegna = FALSE.
         String query =
                 "SELECT go.anno, go.serie, go.progressivo, go.status, go.hasProntoConsegna " +
                         "FROM GoOrdine go " +
@@ -389,16 +439,30 @@ public class OrdineService {
                 .list();
 
         long t1 = System.currentTimeMillis();
-        Log.error("checkNoProntaConsegna - query: " + (t1 - t0) + " msec");
+        Log.debug("checkNoProntaConsegna - query: " + (t1 - t0) + " msec");
 
         // 3) Aggiornamento dei flag
         if (!ordini.isEmpty()) {
             for (GoOrdineDto o : ordini) {
 
-                Log.error("Ordine checkNoProntaConsegna = " +
-                        o.getAnno() + "/" + o.getSerie() + "/" + o.getProgressivo() +
-                        " — era hasProntoConsegna=TRUE, ora lo metto a FALSE");
+                // ======== AUDIT ========
+                if (!Objects.equals(o.getHasProntoConsegna(), Boolean.FALSE)) {
+                    auditService.logChange(
+                            "GO_ORDINE",
+                            o.getAnno(),
+                            o.getSerie(),
+                            o.getProgressivo(),
+                            null,               // rigo
+                            null,               // progrGenerale
+                            "hasProntoConsegna",
+                            o.getHasProntoConsegna(),
+                            Boolean.FALSE,
+                            "checkNoProntaConsegna",
+                            null
+                    );
+                }
 
+                // ======== UPDATE ========
                 GoOrdine.update(
                         "hasProntoConsegna = FALSE " +
                                 "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo",
@@ -410,7 +474,10 @@ public class OrdineService {
         }
 
         long t2 = System.currentTimeMillis();
-        Log.error("checkNoProntaConsegna - aggiornamento: " + (t2 - t1) + " msec");
+        Log.debug("checkNoProntaConsegna - aggiornamento: " + (t2 - t1) + " msec");
+
+        // ======== FLUSH ========
+        auditService.flush();
     }
 
 

@@ -100,13 +100,11 @@ public class ArticoloService {
                 return true;
             }
 
-            // 1️⃣ Precarico TUTTI i progrGenerale coinvolti
             List<Integer> progrGenerali = list.stream()
                     .map(OrdineDettaglioDto::getProgrGenerale)
                     .distinct()
                     .toList();
 
-            // Mappa per accesso rapido ai GoOrdineDettaglio
             Map<Integer, GoOrdineDettaglio> goMap =
                     GoOrdineDettaglio.find("progrGenerale in (:pg)", Parameters.with("pg", progrGenerali))
                             .<GoOrdineDettaglio>stream()
@@ -120,13 +118,10 @@ public class ArticoloService {
 
             final double TOLLERANZA = 0.1;
 
-            // 2️⃣ Calcolo differenze + aggiornamenti
             for (OrdineDettaglioDto dto : list) {
 
                 GoOrdineDettaglio go = goMap.get(dto.getProgrGenerale());
-                if (go == null) {
-                    continue; // nessun dettaglio GO → ignoro
-                }
+                if (go == null) continue;
 
                 Double qta = dto.getQuantita();
                 Double qtaBolla = dto.getQtaBolla();
@@ -135,15 +130,21 @@ public class ArticoloService {
                 double qtaDaConsegnare = qta - qtaBolla;
                 Double oldQtaDaCons = go.getQtaDaConsegnare() == null ? 0.0 : go.getQtaDaConsegnare();
 
-                // Se non cambia nulla in maniera significativa → skip
                 if (Math.abs(oldQtaDaCons - qtaDaConsegnare) <= TOLLERANZA) {
                     continue;
                 }
 
-                // Rilevo che devo aggiornare
-                Log.error("Ho da consegnare per progrOrdCli = " + dto.getProgrGenerale());
+                Log.debug("Ho da consegnare per progrOrdCli = " + dto.getProgrGenerale());
 
-                // 3️⃣ Logica quantità & flag consegnato
+                // Salvo copie old per audit
+                Double oldQtaConsegnatoSenzaBolla = go.getQtaConsegnatoSenzaBolla();
+                Boolean oldFlagConsegnato = go.getFlagConsegnato();
+                Boolean oldFlProntoConsegna = go.getFlProntoConsegna();
+                Double oldQtaProntoConsegna = go.getQtaProntoConsegna();
+                Double oldQtaRiservata = go.getQtaRiservata();
+                Boolean oldFlBolla = go.getFlBolla();
+
+                // ======= LOGICA DI AGGIORNAMENTO =======
                 if (Math.abs(qtaDaConsegnare) <= TOLLERANZA) {
                     go.setQtaConsegnatoSenzaBolla(null);
                     go.setFlagConsegnato(true);
@@ -153,12 +154,10 @@ public class ArticoloService {
                     go.setQtaDaConsegnare(qtaDaConsegnare);
                 }
 
-                // 4️⃣ Logica differenza vs qtaBolla
                 double diffQtaCons = qta - oldQtaDaCons;
                 double diff = Math.abs(diffQtaCons - qtaBolla);
 
                 if (diff > TOLLERANZA) {
-                    // differenza significativa → resetto
                     go.setQtaProntoConsegna(null);
                     go.setQtaRiservata(null);
                     go.setFlProntoConsegna(false);
@@ -166,19 +165,67 @@ public class ArticoloService {
                     go.setFlProntoConsegna(true);
                 }
 
-                // 5️⃣ Flag bolla sempre true
                 go.setFlBolla(Boolean.TRUE);
+                // =======================================
 
+                // ======= AUDIT =======
+                String entity = "GO_ORDINE_DETTAGLIO";
+                Integer anno = dto.getAnno();
+                String serie = dto.getSerie();
+                Integer progressivo = dto.getProgressivo();
+                Integer rigo = go.getRigo();
+                Integer progr = go.getProgrGenerale();
+
+                if (!Objects.equals(oldQtaDaCons, go.getQtaDaConsegnare())) {
+                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                            "qtaDaConsegnare", oldQtaDaCons, go.getQtaDaConsegnare(),
+                            "updateArticoliBolle", null);
+                }
+
+                if (!Objects.equals(oldQtaConsegnatoSenzaBolla, go.getQtaConsegnatoSenzaBolla())) {
+                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                            "qtaConsegnatoSenzaBolla", oldQtaConsegnatoSenzaBolla, go.getQtaConsegnatoSenzaBolla(),
+                            "updateArticoliBolle", null);
+                }
+
+                if (!Objects.equals(oldFlagConsegnato, go.getFlagConsegnato())) {
+                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                            "flagConsegnato", oldFlagConsegnato, go.getFlagConsegnato(),
+                            "updateArticoliBolle", null);
+                }
+
+                if (!Objects.equals(oldQtaProntoConsegna, go.getQtaProntoConsegna())) {
+                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                            "qtaProntoConsegna", oldQtaProntoConsegna, go.getQtaProntoConsegna(),
+                            "updateArticoliBolle", null);
+                }
+
+                if (!Objects.equals(oldQtaRiservata, go.getQtaRiservata())) {
+                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                            "qtaRiservata", oldQtaRiservata, go.getQtaRiservata(),
+                            "updateArticoliBolle", null);
+                }
+
+                if (!Objects.equals(oldFlProntoConsegna, go.getFlProntoConsegna())) {
+                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                            "flProntoConsegna", oldFlProntoConsegna, go.getFlProntoConsegna(),
+                            "updateArticoliBolle", null);
+                }
+
+                if (!Objects.equals(oldFlBolla, go.getFlBolla())) {
+                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                            "flBolla", oldFlBolla, go.getFlBolla(),
+                            "updateArticoliBolle", null);
+                }
+                // ====================== AUDIT END ======================
                 toUpdate.add(go);
                 ordiniCoinvolti.add(new OrdineId(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
             }
 
-            // 6️⃣ Persist UNA SOLA VOLTA
             if (!toUpdate.isEmpty()) {
                 GoOrdineDettaglio.persist(toUpdate);
             }
 
-            // 7️⃣ Aggiornamento warnNoBolla per tutti gli ordini coinvolti
             for (OrdineId id : ordiniCoinvolti) {
 
                 Long count = GoOrdineDettaglio.find(
@@ -201,8 +248,8 @@ public class ArticoloService {
             }
 
             long fine = System.currentTimeMillis();
-            Log.error("UpdateArticoliBolle (ottimizzato): " + (fine - inizio) + " ms");
-
+            Log.debug("UpdateArticoliBolle (ottimizzato): " + (fine - inizio) + " ms");
+            auditService.flush();
             return true;
 
         } catch (Exception e) {
@@ -210,6 +257,7 @@ public class ArticoloService {
             return false;
         }
     }
+
 
     public boolean findNoProntaConsegna(Integer anno, String serie, Integer progressivo) {
         return GoOrdineDettaglio.count("anno = :anno AND serie = :serie AND progressivo = :progressivo " +
@@ -236,20 +284,66 @@ public class ArticoloService {
                     "progrGenerale = ?1", god.getProgrGenerale()
             ).firstResult();
 
-            if (od == null) continue; // sicurezza
+            if (od == null) continue;
 
-            // Reset coerente
+            // ======== SALVO OLD VALUES per Audit ========
+            Boolean oldFlBolla = god.getFlBolla();
+            Boolean oldFlagConsegnato = god.getFlagConsegnato();
+            Double oldQtaDaConsegnare = god.getQtaDaConsegnare();
+
+            Double newQtaDaConsegnare = od.getQuantita();
+
+            // ======== LOGICA DI RESET (non modificare) ========
             god.setFlBolla(false);
             god.setFlagConsegnato(false);
-            god.setQtaDaConsegnare(od.getQuantita());  // IMPORTANTISSIMO
+            god.setQtaDaConsegnare(newQtaDaConsegnare);
 
             Log.info("checkNoBolle: reset progrGenerale=" + god.getProgrGenerale());
+
+            // ======== AUDIT ========
+            String entity = "GO_ORDINE_DETTAGLIO";
+            Integer anno = god.getAnno();
+            String serie = god.getSerie();
+            Integer progressivo = god.getProgressivo();
+            Integer rigo = god.getRigo();
+            Integer progr = god.getProgrGenerale();
+
+            // flBolla
+            if (!Objects.equals(oldFlBolla, god.getFlBolla())) {
+                auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                        "flBolla",
+                        oldFlBolla, god.getFlBolla(),
+                        "checkNoBolle",
+                        null);
+            }
+
+            // flagConsegnato
+            if (!Objects.equals(oldFlagConsegnato, god.getFlagConsegnato())) {
+                auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                        "flagConsegnato",
+                        oldFlagConsegnato, god.getFlagConsegnato(),
+                        "checkNoBolle",
+                        null);
+            }
+
+            // qtaDaConsegnare
+            if (!Objects.equals(oldQtaDaConsegnare, god.getQtaDaConsegnare())) {
+                auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                        "qtaDaConsegnare",
+                        oldQtaDaConsegnare, god.getQtaDaConsegnare(),
+                        "checkNoBolle",
+                        null);
+            }
         }
 
+        // Persist aggiornamenti
         GoOrdineDettaglio.persist(daReset);
 
         long fine = System.currentTimeMillis();
         Log.info("CheckNoBolle: " + (fine - inizio) + " msec");
+
+        // ======== FLUSH AUDIT ========
+        auditService.flush();
     }
 
     @Transactional
