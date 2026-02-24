@@ -4,7 +4,7 @@ import it.calolenoci.dto.*;
 import it.calolenoci.entity.AmmortamentoCespite;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;

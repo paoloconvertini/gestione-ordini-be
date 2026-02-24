@@ -3,7 +3,7 @@ package it.calolenoci.mapper;
 import it.calolenoci.dto.QuadraturaCespiteRequest;
 import it.calolenoci.entity.QuadraturaCespite;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class QuadCespiteMapper {

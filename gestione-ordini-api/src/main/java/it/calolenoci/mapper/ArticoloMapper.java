@@ -4,7 +4,7 @@ import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.entity.GoOrdineDettaglio;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 
 @ApplicationScoped

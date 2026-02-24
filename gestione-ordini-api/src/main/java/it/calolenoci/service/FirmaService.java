@@ -2,8 +2,8 @@ package it.calolenoci.service;
 
 import it.calolenoci.entity.FirmaOrdineCliente;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class FirmaService {

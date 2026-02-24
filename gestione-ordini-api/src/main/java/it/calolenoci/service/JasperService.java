@@ -10,8 +10,8 @@ import net.sf.jasperreports.engine.util.JRSaver;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

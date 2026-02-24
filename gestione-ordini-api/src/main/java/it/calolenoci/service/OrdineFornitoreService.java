@@ -13,10 +13,10 @@ import it.calolenoci.mapper.RegistroAzioniMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.ws.rs.core.Response;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.core.Response;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -264,7 +264,7 @@ public class OrdineFornitoreService {
             query += " AND  (o.provvisorio is null OR o.provvisorio = '' OR o.provvisorio = ' ')";
         }
         Log.debug("query: " + query);
-    return OrdineFornitore.find(query, Sort.descending("o.updateDate", "dataOrdine"), params)
+    return OrdineFornitore.find(query, Sort.descending("o.updateDate").and( "dataOrdine"), params)
                 .project(OrdineFornitoreDto.class).list();
 
     }

@@ -173,4 +173,33 @@ public class OrdineFornitoreDto implements Serializable {
         this.provincia = provincia;
         this.tipoRigo = tipoRigo;
     }
+
+    public OrdineFornitoreDto(
+            Integer anno,
+            String serie,
+            Integer progressivo,
+            LocalDate dataOrdine,
+            String intestazione,
+            java.sql.Timestamp dataConfOrdine,
+            String numConfOrdine,
+            String provvisorio,
+            java.sql.Timestamp updateDate,
+            String note,
+            Boolean flInviato,
+            java.sql.Timestamp dataInvio
+    ) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataOrdine = dataOrdine;
+        this.intestazione = intestazione;
+        this.dataConfOrdine = dataConfOrdine;
+        this.numConfOrdine = numConfOrdine;
+        this.provvisorio = provvisorio;
+        this.updateDate = updateDate;
+        this.note = note;
+        this.flInviato = flInviato;
+        this.dataInvio = dataInvio;
+    }
+
 }

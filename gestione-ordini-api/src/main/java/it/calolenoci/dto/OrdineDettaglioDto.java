@@ -3,7 +3,7 @@ package it.calolenoci.dto;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.*;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -319,15 +319,50 @@ public class OrdineDettaglioDto implements Serializable {
     /**
      * {@link it.calolenoci.entity.OrdineDettaglio#findArticoliById(FiltroArticoli)}
      */
-    public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
-                              String serie, String fArticolo, String fCodiceIva, String codArtFornitore, String fDescrArticolo,
-                              Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura, String magazzino,
-                              Boolean flagRiservato, Boolean flagNonDisponibile, Boolean flagOrdinato, Boolean flagConsegnato,
-                              String tono, Double qtyuser1, Date datauser1, String articolo, Integer annoOAF, String serieOAF, Integer progressivoOAF,
-                              LocalDate dataOrdineOAF, Double qtaConsegnatoSenzaBolla, Double qtaDaConsegnare, Boolean flBolla,
-                              String note, Double qtaRiservata, Boolean flProntoConsegna, Double qtaProntoConsegna, String noteOrdCli,
-                              Date dataDoc, String numDoc, Date dataCarico, Integer annoMag, String serieMag, Integer progressivoMag,
-                              String intestazione) {
+    public OrdineDettaglioDto(
+            Integer anno,
+            Integer progressivo,
+            Integer progrGenerale,
+            String tipoRigo,
+            Integer rigo,
+            String serie,
+            String fArticolo,
+            String fCodiceIva,
+            String codArtFornitore,
+            String fDescrArticolo,
+            Double quantita,
+            Double prezzo,
+            Double prezzoScontato,
+            String fUnitaMisura,
+            String magazzino,
+            Boolean flagRiservato,
+            Boolean flagNonDisponibile,
+            Boolean flagOrdinato,
+            Boolean flagConsegnato,
+            String tono,
+            Double qtyuser1,
+            java.sql.Timestamp datauser1,
+            String articolo,
+            Integer annoOAF,
+            String serieOAF,
+            Integer progressivoOAF,
+            LocalDate dataOrdineOAF,
+            Double qtaConsegnatoSenzaBolla,
+            Double qtaDaConsegnare,
+            Boolean flBolla,
+            String note,
+            Double qtaRiservata,
+            Boolean flProntoConsegna,
+            Double qtaProntoConsegna,
+            String noteOrdCli,
+            java.sql.Timestamp dataDoc,
+            String numDoc,
+            java.sql.Timestamp dataCarico,
+            Integer annoMag,
+            String serieMag,
+            Integer progressivoMag,
+            String intestazione
+    ) {
         this.anno = anno;
         this.progressivo = progressivo;
         this.progrGenerale = progrGenerale;
@@ -371,6 +406,7 @@ public class OrdineDettaglioDto implements Serializable {
         this.progressivoMag = progressivoMag;
         this.intestazione = intestazione;
     }
+
     public OrdineDettaglioDto(Integer anno, Integer progressivo, Integer progrGenerale, String tipoRigo, Integer rigo,
                               String serie, String fArticolo, String codArtFornitore, String fDescrArticolo,
                               Double quantita, Double prezzo, Double prezzoScontato, String fUnitaMisura,

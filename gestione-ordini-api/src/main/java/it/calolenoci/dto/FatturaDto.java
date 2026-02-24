@@ -35,4 +35,13 @@ public class FatturaDto implements Serializable {
         this.dataBolla = dataBolla;
         this.qta = qta;
     }
+
+    public FatturaDto(String numeroBolla,
+                      java.sql.Timestamp dataBolla,
+                      Double qta) {
+        this.numeroBolla = numeroBolla;
+        this.dataBolla = dataBolla;
+        this.qta = qta;
+    }
+
 }

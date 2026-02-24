@@ -5,7 +5,7 @@ import it.calolenoci.entity.GoOrdineFornitoreBK;
 import it.calolenoci.entity.OrdineFornitore;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.Date;

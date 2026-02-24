@@ -5,8 +5,8 @@ import io.quarkus.scheduler.Scheduled;
 import it.calolenoci.dto.FiltroCespite;
 import it.calolenoci.service.AmmortamentoCespiteService;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.Month;

@@ -4,7 +4,7 @@ import it.calolenoci.entity.GoOrdineDettaglio;
 import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.enums.StatoOrdineEnum;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 
 @ApplicationScoped

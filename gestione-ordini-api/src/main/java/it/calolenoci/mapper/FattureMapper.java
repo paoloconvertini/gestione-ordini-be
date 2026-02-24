@@ -6,7 +6,7 @@ import it.calolenoci.dto.OrdinePerIva;
 import it.calolenoci.entity.*;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Year;

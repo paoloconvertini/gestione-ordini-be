@@ -5,7 +5,7 @@ import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.OrdineReportDto;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class OrdineClienteReportMapper {

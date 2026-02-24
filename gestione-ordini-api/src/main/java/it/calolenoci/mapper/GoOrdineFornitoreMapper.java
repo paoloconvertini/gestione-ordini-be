@@ -2,7 +2,7 @@ package it.calolenoci.mapper;
 
 import it.calolenoci.entity.GoOrdineFornitore;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 
 @ApplicationScoped

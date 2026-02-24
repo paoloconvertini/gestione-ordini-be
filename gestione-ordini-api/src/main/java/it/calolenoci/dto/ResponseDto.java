@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 @Data
 @AllArgsConstructor

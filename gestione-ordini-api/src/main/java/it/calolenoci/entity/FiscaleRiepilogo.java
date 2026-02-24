@@ -5,7 +5,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 
 @NoArgsConstructor

@@ -3,7 +3,7 @@ package it.calolenoci.mapper;
 import it.calolenoci.dto.CategoriaCespiteResponse;
 import it.calolenoci.entity.CategoriaCespite;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class CategoriaCespiteMapper {

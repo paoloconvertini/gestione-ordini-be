@@ -2,7 +2,7 @@ package it.calolenoci.dto;
 
 import lombok.*;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import java.io.Serializable;
 
 @Getter

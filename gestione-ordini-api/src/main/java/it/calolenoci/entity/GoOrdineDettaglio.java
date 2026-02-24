@@ -2,12 +2,13 @@ package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
+import it.calolenoci.converter.TrueFalseConverter;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.Type;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
@@ -43,22 +44,22 @@ public class GoOrdineDettaglio extends PanacheEntityBase {
     private Double qtaConsegnatoSenzaBolla;
 
     @Column(length = 1, name = "FLAG_RISERVATO", columnDefinition = "CHAR(1)")
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     private Boolean flagRiservato;
 
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     @Column(length = 1, name = "FLAG_NON_DISPONIBILE", columnDefinition = "CHAR(1)")
     private Boolean flagNonDisponibile;
 
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     @Column(length = 1, name = "FLAG_ORDINATO", columnDefinition = "CHAR(1)")
     private Boolean flagOrdinato;
 
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     @Column(length = 1, name = "FLAG_CONSEGNATO", columnDefinition = "CHAR(1)")
     private Boolean flagConsegnato;
 
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     @Column(length = 1, name = "FLAG_PRONTO_CONSEGNA", columnDefinition = "CHAR(1)")
     private Boolean flProntoConsegna;
 
@@ -68,7 +69,7 @@ public class GoOrdineDettaglio extends PanacheEntityBase {
     @Column(length = 50, name = "STATUS")
     private String status;
 
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     @Column(length = 1, name = "HAS_BOLLA", columnDefinition = "CHAR(1)")
     private Boolean flBolla;
 

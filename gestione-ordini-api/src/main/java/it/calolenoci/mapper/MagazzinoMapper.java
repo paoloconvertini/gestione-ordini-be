@@ -2,7 +2,7 @@ package it.calolenoci.mapper;
 
 import it.calolenoci.entity.*;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;

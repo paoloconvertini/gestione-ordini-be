@@ -1,11 +1,12 @@
 package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import it.calolenoci.converter.TrueFalseConverter;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
@@ -27,7 +28,7 @@ public class GoOrdineFornitore extends PanacheEntityBase {
     @Id
     private Integer progressivo;
 
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     @Column(length = 1, name = "FLINVIATO", columnDefinition = "CHAR(1)")
     private Boolean flInviato;
 

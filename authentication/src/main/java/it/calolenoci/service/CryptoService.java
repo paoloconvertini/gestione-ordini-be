@@ -5,7 +5,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import java.util.Base64;
 
 @Singleton

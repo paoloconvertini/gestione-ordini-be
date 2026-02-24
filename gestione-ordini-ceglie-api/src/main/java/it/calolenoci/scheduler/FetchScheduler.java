@@ -4,8 +4,8 @@ import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.scheduler.Scheduled;
 import it.calolenoci.service.AmmortamentoCespiteService;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.text.ParseException;
 import java.time.LocalDate;
 

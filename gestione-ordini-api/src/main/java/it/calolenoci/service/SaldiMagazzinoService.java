@@ -13,9 +13,9 @@ import it.calolenoci.mapper.MagazzinoMapper;
 import it.calolenoci.mapper.SaldiMagazzinoMapper;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import java.sql.Date;
 import java.time.Year;
 import java.util.ArrayList;

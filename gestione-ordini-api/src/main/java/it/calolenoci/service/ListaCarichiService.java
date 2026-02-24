@@ -10,10 +10,10 @@ import it.calolenoci.mapper.ListaCarichiMapper;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;

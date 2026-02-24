@@ -13,20 +13,20 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import static it.calolenoci.enums.Ruolo.*;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Consumes(APPLICATION_JSON)
 @Path("api/cespiti")
@@ -63,7 +63,10 @@ public class CespiteResource {
     @Path("/cespiti")
     @Produces(APPLICATION_JSON)
     public Response getAllCespiti() {
-        return Response.ok(Cespite.find("attivo <> 'F'", Sort.ascending("tipoCespite, progressivo1, progressivo2")).list()).build();
+        return Response.ok(Cespite.find("attivo <> 'F'", Sort.ascending("tipoCespite")
+                .and("progressivo1")
+                .and("progressivo2")
+        ).list()).build();
     }
 
     //@RolesAllowed({ADMIN})

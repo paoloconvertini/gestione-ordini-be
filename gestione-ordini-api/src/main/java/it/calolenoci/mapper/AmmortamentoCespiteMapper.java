@@ -4,7 +4,7 @@ import it.calolenoci.dto.RegistroCespiteDto;
 import it.calolenoci.entity.AmmortamentoCespite;
 import it.calolenoci.entity.Cespite;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;

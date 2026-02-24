@@ -2,12 +2,13 @@ package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import it.calolenoci.converter.Boolean01Converter;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Getter
@@ -54,7 +55,6 @@ public class BoxDoccia extends PanacheEntityBase {
     @Column(name = "posa")
     private String posa;
 
-    @Type(type = "org.hibernate.type.TrueFalseType")
     @Column(length = 1, name = "venduto", columnDefinition = "CHAR(1)")
     private String venduto;
 

@@ -13,12 +13,12 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
-import javax.annotation.security.PermitAll;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.annotation.security.PermitAll;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.File;
 
 @ApplicationScoped
@@ -95,6 +95,8 @@ public class LoginResource {
             operationId = "login"
     )
     public Response login(UserRequestDTO dto) {
+        String encrypted = cryptoService.encrypt(dto.getPassword());
+        System.out.println("Encrypted locale: " + encrypted);
         User utente = User.findByUsernameAndPassword(dto.getUsername(), cryptoService.encrypt(dto.getPassword()));
         if(utente == null){
             Log.error("Utente non trovato!");

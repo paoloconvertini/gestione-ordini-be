@@ -7,7 +7,7 @@ import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.entity.OrdineFornitoreDettaglio;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.time.Year;
 import java.util.Date;
 

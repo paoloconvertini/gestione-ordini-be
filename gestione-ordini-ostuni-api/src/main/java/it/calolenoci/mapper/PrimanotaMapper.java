@@ -4,7 +4,7 @@ import it.calolenoci.dto.CespiteDBDto;
 import it.calolenoci.dto.PrimanotaDto;
 import it.calolenoci.entity.Primanota;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.time.LocalDate;
 import java.time.Year;
 

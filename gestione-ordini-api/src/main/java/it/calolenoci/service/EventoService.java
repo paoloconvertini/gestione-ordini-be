@@ -5,7 +5,7 @@ import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.RegistroAzioniDto;
 import it.calolenoci.entity.RegistroAzioni;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 
 @ApplicationScoped

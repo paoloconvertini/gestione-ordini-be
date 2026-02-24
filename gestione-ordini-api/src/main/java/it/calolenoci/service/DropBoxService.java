@@ -13,8 +13,8 @@ import it.calolenoci.handler.DBXHandler;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;

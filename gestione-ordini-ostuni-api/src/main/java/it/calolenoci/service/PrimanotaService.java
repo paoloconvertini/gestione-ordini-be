@@ -12,9 +12,9 @@ import it.calolenoci.entity.Primanota;
 import it.calolenoci.mapper.PrimanotaMapper;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.*;

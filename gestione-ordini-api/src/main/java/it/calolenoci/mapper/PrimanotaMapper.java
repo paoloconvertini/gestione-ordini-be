@@ -5,11 +5,11 @@ import it.calolenoci.dto.PrimanotaDto;
 import it.calolenoci.entity.Primanota;
 import it.calolenoci.entity.PrimanotaPK;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import java.time.LocalDate;
 import java.time.Year;
 

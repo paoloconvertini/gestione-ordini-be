@@ -8,7 +8,7 @@ import it.calolenoci.entity.RegistroAzioni;
 import it.calolenoci.entity.Trasportatore;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Comparator;
 import java.util.Date;
 

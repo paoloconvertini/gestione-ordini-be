@@ -8,7 +8,7 @@ import it.calolenoci.entity.Role;
 import it.calolenoci.entity.User;
 import org.eclipse.microprofile.jwt.Claims;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import java.util.Set;
 import java.util.stream.Collectors;
 

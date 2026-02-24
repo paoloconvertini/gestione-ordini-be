@@ -2,7 +2,7 @@ package it.calolenoci.entity;
 
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Getter

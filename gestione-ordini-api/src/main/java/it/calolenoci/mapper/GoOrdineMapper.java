@@ -5,7 +5,7 @@ import it.calolenoci.entity.Ordine;
 import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.enums.StatoOrdineEnum;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.time.LocalDateTime;
 
 

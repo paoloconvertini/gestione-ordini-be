@@ -2,7 +2,7 @@ package it.calolenoci.service;
 
 import it.calolenoci.entity.Audit;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

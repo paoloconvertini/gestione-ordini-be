@@ -1,13 +1,14 @@
 package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import it.calolenoci.converter.TrueFalseConverter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -29,7 +30,7 @@ public class GoOrdVeicolo extends PanacheEntityBase {
     private LocalDate dataConsegna;
 
     @Column(name = "FL_VENDITORE", nullable = false, columnDefinition = "CHAR(1)")
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     private Boolean venditore;
 
     @Column(name = "ora_consegna")
