@@ -18,13 +18,9 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NotaConsegna extends PanacheEntityBase {
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
-    )
     @Id
-    @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "ID", nullable = false, updatable = false)
     private String id;
     @Column(name = "dataNota", nullable = false)
     private LocalDate dataNota;

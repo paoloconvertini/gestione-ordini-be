@@ -15,13 +15,9 @@ import java.util.Date;
 @Setter
 public class RegistroAzioni extends PanacheEntityBase {
 
-    @Column(length = 36)
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
-    )
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "ID", nullable = false, updatable = false)
     private String id;
 
     @Column

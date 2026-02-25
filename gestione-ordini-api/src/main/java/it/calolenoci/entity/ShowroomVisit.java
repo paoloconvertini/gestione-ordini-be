@@ -1,5 +1,6 @@
 package it.calolenoci.entity;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ShowroomVisit {
+public class ShowroomVisit extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +21,8 @@ public class ShowroomVisit {
     @Column(name = "NOME_CLIENTE", nullable = false, length = 150)
     private String nomeCliente;
 
-    @Column(name = "PROVENIENZA", length = 100)
-    private String provenienza;
+    @Column(name = "COMUNE_ISTAT", length = 100)
+    private String comuneIstat;
 
     @Column(name = "TELEFONO", length = 50)
     private String telefono;
@@ -30,11 +31,14 @@ public class ShowroomVisit {
     @JoinColumn(name = "MOTIVO_ID", nullable = false)
     private ShowroomMotivo motivo;
 
-    @Column(name = "VENDITORE_ID", nullable = false)
-    private Long venditoreId;
+    @Column(name = "VENDITORE_COD", length = 3, nullable = false)
+    private String venditoreCodice;
 
     @Column(name = "DATA_VISITA", nullable = false)
     private LocalDateTime dataVisita;
+
+    @Column(name = "IS_DELETED", nullable = false)
+    private Boolean isDeleted = false;
 
     @Column(name = "CREATED_AT", nullable = false)
     private LocalDateTime createdAt;

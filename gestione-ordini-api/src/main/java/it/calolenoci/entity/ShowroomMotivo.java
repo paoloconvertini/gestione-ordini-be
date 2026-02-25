@@ -1,7 +1,11 @@
 package it.calolenoci.entity;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "GO_SHOWROOM_MOTIVO")
@@ -10,7 +14,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ShowroomMotivo {
+public class ShowroomMotivo extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,4 +25,8 @@ public class ShowroomMotivo {
 
     @Column(name = "ATTIVO", nullable = false)
     private Boolean attivo = true;
+
+    @ManyToOne
+    @JoinColumn(name = "PARENT_ID")
+    private ShowroomMotivo parent;
 }

@@ -7,5 +7,6 @@ public class Ruolo {
     public final static String MAGAZZINIERE = "Magazziniere";
     public final static String VENDITORE = "Venditore";
     public final static String LOGISTICA = "Logistica";
+    public final static String RECEPTION = "Reception";
 
 }

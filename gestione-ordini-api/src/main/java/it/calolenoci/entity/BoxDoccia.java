@@ -16,13 +16,9 @@ import jakarta.persistence.*;
 @Table(name = "GO_BOX_DOCCIA")
 public class BoxDoccia extends PanacheEntityBase {
 
-    @Column(length = 36)
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
-    )
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "ID", nullable = false, updatable = false)
     private String id;
 
     @Column(name = "codice")

@@ -12,13 +12,9 @@ import jakarta.persistence.*;
 @Getter
 @Setter
 public class QuadraturaCespite extends PanacheEntityBase {
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
-    )
     @Id
-    @Column(name = "ID", nullable = false, length = 36)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "ID", nullable = false, updatable = false)
     private String id;
     
     @Column(name = "ID_CESPITE", nullable = false, length = 36)
