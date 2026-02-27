@@ -20,4 +20,6 @@ public class FiltroShowroom {
     private int page;
     private int size;
 
+    private Long sedeId;
+
 }

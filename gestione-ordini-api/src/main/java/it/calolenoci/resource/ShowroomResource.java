@@ -1,10 +1,9 @@
 package it.calolenoci.resource;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import it.calolenoci.common.service.ComuneService;
-import it.calolenoci.dto.ComuneFiltroDto;
-import it.calolenoci.dto.FiltroShowroom;
-import it.calolenoci.dto.PageShowroomDto;
-import it.calolenoci.dto.ShowroomVisitDto;
+import it.calolenoci.dto.*;
+import it.calolenoci.entity.Sede;
 import it.calolenoci.service.ShowroomService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -29,7 +28,7 @@ public class ShowroomResource {
 
     @POST
     @Path("/search")
-    @RolesAllowed({ADMIN, RECEPTION, VENDITORE})
+    @RolesAllowed({ADMIN, RECEPTION_OSTUNI, RECEPTION_CEGLIE, VENDITORE})
     public Response search(FiltroShowroom filtro) {
 
         PageShowroomDto result = showroomService.search(filtro);
@@ -38,7 +37,7 @@ public class ShowroomResource {
     }
 
     @POST
-    @RolesAllowed({ADMIN, RECEPTION})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     @Transactional
     public Response create(ShowroomVisitDto dto) {
 
@@ -51,7 +50,7 @@ public class ShowroomResource {
 
     @GET
     @Path("/province")
-    @RolesAllowed({ADMIN, RECEPTION, VENDITORE})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     public Response getProvince() {
 
         List<String> province = comuneService.findProvince();
@@ -61,7 +60,7 @@ public class ShowroomResource {
 
     @GET
     @Path("/comuni")
-    @RolesAllowed({ADMIN, RECEPTION, VENDITORE})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     public Response getComuni(
             @QueryParam("provincia") String provincia,
             @QueryParam("q") String testo
@@ -82,7 +81,7 @@ public class ShowroomResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed({ADMIN, RECEPTION})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     @Transactional
     public Response update(@PathParam("id") Long id,
                            ShowroomVisitDto dto) {
@@ -94,11 +93,96 @@ public class ShowroomResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed({"ADMIN"})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     @Transactional
     public Response delete(@PathParam("id") Long id) {
 
         showroomService.delete(id);
+
+        return Response.noContent().build();
+    }
+
+    @GET
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @Path("/motivi/root")
+    public Response getRoot() {
+        return Response.ok(showroomService.getMotiviRoot()).build();
+    }
+
+    @GET
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @Path("/motivi/{parentId}/figli")
+    public Response getFigli(@PathParam("parentId") Long parentId) {
+        return Response.ok(showroomService.getFigli(parentId)).build();
+    }
+
+    @GET
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @Path("/motivi/{id}")
+    public Response getMotivoById(@PathParam("id") Long id) {
+        return Response.ok(showroomService.getMotivoById(id)).build();
+    }
+
+    @GET
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @Path("/clienti/search")
+    public List<ClienteLightDto> searchClienti(@QueryParam("q") String q) {
+        return showroomService.searchClienti(q);
+    }
+
+    @PUT
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @Path("/{id}/associa-cliente")
+    public Response associaCliente(@PathParam("id") Long id,
+                                   ClienteLinkRequest request) {
+
+        showroomService.associaCliente(id, request.getCodiceCliente());
+
+        return Response.ok().build();
+    }
+
+    @GET
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @Path("/sedi")
+    public List<SedeDto> getSedi() {
+        List<Sede> list = Sede.findAll().list();
+        return list.stream()
+                .map(s -> new SedeDto(s.getId(), s.getDescrizione()))
+                .toList();
+    }
+
+    @POST
+    @Path("/motivi")
+    @RolesAllowed({ADMIN})
+    @Transactional
+    public Response createMotivo(ShowroomMotivoDto dto) {
+
+        ShowroomMotivoDto result = showroomService.createMotivo(dto);
+
+        return Response.status(Response.Status.CREATED)
+                .entity(result)
+                .build();
+    }
+
+    @PUT
+    @Path("/motivi/{id}")
+    @RolesAllowed({ADMIN})
+    @Transactional
+    public Response updateMotivo(@PathParam("id") Long id,
+                                 ShowroomMotivoDto dto) {
+
+        ShowroomMotivoDto result = showroomService.updateMotivo(id, dto);
+
+        return Response.ok(result).build();
+    }
+
+    @PUT
+    @Path("/motivi/{id}/disattiva")
+    @RolesAllowed({ADMIN})
+    @Transactional
+    public Response disattivaMotivo(@PathParam("id") Long id) {
+
+        showroomService.disattivaMotivo(id);
 
         return Response.noContent().build();
     }

@@ -15,6 +15,7 @@ CREATE TABLE GO_SHOWROOM_VISIT (
                                    TELEFONO VARCHAR(50) NULL,
                                    MOTIVO_ID BIGINT NOT NULL,
                                    VENDITORE_COD varchar(3) NULL,
+                                   CODICE_CLIENTE VARCHAR(6) NULL,
                                    DATA_VISITA DATETIME2 NOT NULL DEFAULT GETDATE(),
                                    CREATED_AT DATETIME2 NOT NULL DEFAULT GETDATE(),
                                    UPDATED_AT DATETIME2 NULL,
@@ -83,3 +84,20 @@ SELECT 'CALDAIE', ID, 1 FROM GO_SHOWROOM_MOTIVO WHERE DESCRIZIONE = 'RISCALDAMEN
 
 INSERT INTO GO_SHOWROOM_MOTIVO (DESCRIZIONE, PARENT_ID, ATTIVO)
 SELECT 'CAMINETTI', ID, 1 FROM GO_SHOWROOM_MOTIVO WHERE DESCRIZIONE = 'RISCALDAMENTO';
+
+CREATE TABLE GO_SEDE (
+                      ID BIGINT IDENTITY(1,1) PRIMARY KEY,
+                      CODICE VARCHAR(30) NOT NULL UNIQUE,
+                      DESCRIZIONE VARCHAR(100) NOT NULL
+);
+
+INSERT INTO GO_SEDE (CODICE, DESCRIZIONE) VALUES
+                                           ('CEGLIE', 'Showroom Ceglie'),
+                                           ('OSTUNI', 'Showroom Ostuni');
+
+ALTER TABLE GO_SHOWROOM_VISIT
+    ADD SEDE_ID BIGINT NOT NULL DEFAULT 1;
+
+ALTER TABLE GO_SHOWROOM_VISIT
+    ADD CONSTRAINT FK_SHOWROOM_SEDE
+        FOREIGN KEY (SEDE_ID) REFERENCES GO_SEDE(ID);

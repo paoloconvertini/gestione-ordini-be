@@ -11,12 +11,12 @@ import lombok.Setter;
 public class Comune {
 
     @Id
-    @Column(name = "codiceIstat")
+    @Column(name = "CODICECOMUNE")
     private String codiceIstat;
 
-    @Column(name = "nomeComune")
+    @Column(name = "NOMECOMUNE")
     private String nomeComune;
 
-    @Column(name = "siglaProvincia")
+    @Column(name = "PROVCOMUNE")
     private String siglaProvincia;
 }

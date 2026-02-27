@@ -81,7 +81,7 @@ public class UserResource {
             }
         }
         entity.persist();
-        return Response.status(Response.Status.CREATED).entity(entity).build();
+        return Response.status(Response.Status.CREATED).entity(new ResponseDTO("utente salvato con successo", false)).build();
     }
 
     @GET
@@ -151,7 +151,7 @@ public class UserResource {
 
     @Operation(summary = "Returns all the roles from the database")
     @GET
-    @RolesAllowed({ADMIN, LOGISTICA, AMMINISTRATIVO, VENDITORE, MAGAZZINIERE})
+    @RolesAllowed({ADMIN, LOGISTICA, AMMINISTRATIVO, VENDITORE, MAGAZZINIERE, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = User.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Users")
     @Path("/getVenditori")

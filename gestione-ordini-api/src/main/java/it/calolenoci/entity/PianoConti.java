@@ -72,4 +72,7 @@ public class PianoConti extends PanacheEntityBase {
     @Column(name="LONGITUDINE")
     private Double longitudine;
 
+    @Column(name="CLIFOR")
+    private String cliFor;
+
 }

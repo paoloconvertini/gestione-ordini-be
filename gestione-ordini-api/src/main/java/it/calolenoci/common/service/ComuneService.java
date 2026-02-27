@@ -31,6 +31,16 @@ public class ComuneService {
         ).getResultList();
     }
 
+    public List<String> findCodiciByProvincia(String provincia) {
+
+        return em.createQuery(
+                        "SELECT c.codiceIstat FROM Comune c WHERE c.siglaProvincia = :prov",
+                        String.class
+                )
+                .setParameter("prov", provincia)
+                .getResultList();
+    }
+
     public List<Comune> searchComuni(String provincia, String testo) {
         if (testo == null || testo.length() < 3) {
             return List.of();

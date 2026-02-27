@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import it.calolenoci.config.AuthHeaderFactory;
 import it.calolenoci.dto.UserResponseDTO;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -7,6 +8,7 @@ import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import jakarta.ws.rs.GET;
@@ -19,6 +21,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path("/api/users")
 @RegisterRestClient
+@RegisterClientHeaders(AuthHeaderFactory.class)
 public interface UserService {
 
     @GET

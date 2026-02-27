@@ -12,4 +12,6 @@ public class ShowroomMotivoDto {
 
     private Long id;
     private String descrizione;
+    private Long parentId;
+    private Boolean attivo;
 }

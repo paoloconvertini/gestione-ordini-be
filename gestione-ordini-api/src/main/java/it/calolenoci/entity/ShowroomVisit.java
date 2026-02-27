@@ -34,9 +34,17 @@ public class ShowroomVisit extends PanacheEntityBase {
     @Column(name = "VENDITORE_COD", length = 3, nullable = false)
     private String venditoreCodice;
 
+    @Column(name = "CODICE_CLIENTE", length = 6)
+    private String codiceCliente;
+
     @Column(name = "DATA_VISITA", nullable = false)
     private LocalDateTime dataVisita;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "SEDE_ID", nullable = false)
+    private Sede sede;
+
+    @Builder.Default
     @Column(name = "IS_DELETED", nullable = false)
     private Boolean isDeleted = false;
 
