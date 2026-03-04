@@ -51,7 +51,7 @@ public class TokenService {
 
         builder
                 .claim(Claims.full_name, user.getFullName())
-                .subject("gp-auth-service")
+                .issuer("authentication-service")
                 .expiresAt(expiresAt)
                 .groups(roles)
                 .claim("permissions", permissions);

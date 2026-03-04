@@ -5,6 +5,7 @@ import it.calolenoci.common.service.ComuneService;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.Sede;
 import it.calolenoci.service.ShowroomService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;

@@ -18,6 +18,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,41 +38,66 @@ public class ShowroomService {
     SecurityIdentity securityIdentity;
 
     public PageShowroomDto search(FiltroShowroom filtro) {
-        boolean admin = isAdmin();
-        String receptionSede = getReceptionSedeCodice();
-        PageShowroomDto result = new PageShowroomDto();
 
-        String query = "FROM ShowroomVisit s WHERE s.isDeleted = false ";
+        boolean admin = isAdmin();
+        String receptionSedeCodice = getReceptionSedeCodice();
+
+        PageShowroomDto result = new PageShowroomDto();
         Map<String, Object> params = new HashMap<>();
 
+        StringBuilder query = new StringBuilder(
+                "FROM ShowroomVisit s WHERE s.isDeleted = false "
+        );
+
+        Sede sedeCorrente = null;
+
+        // =========================================
+        // 🔐 GESTIONE SEDE
+        // =========================================
+
         if (!admin) {
-            if (receptionSede == null) {
+
+            if (receptionSedeCodice == null) {
                 throw new WebApplicationException("Sede non autorizzata", 403);
             }
-            Sede sede = Sede.find("codice", receptionSede).firstResult();
-            query += " AND s.sede.id = :sedeIdReception ";
-            params.put("sedeIdReception", sede.getId());
+
+            sedeCorrente = Sede.find("codice", receptionSedeCodice).firstResult();
+
+            query.append(" AND s.sede.id = :sedeId ");
+            params.put("sedeId", sedeCorrente.getId());
+
+        } else {
+
+            if (filtro.getSedeId() != null) {
+                sedeCorrente = Sede.findById(filtro.getSedeId());
+                query.append(" AND s.sede.id = :sedeId ");
+                params.put("sedeId", filtro.getSedeId());
+            }
         }
 
-        // 👑 Admin filtro opzionale
-        if (admin && filtro.getSedeId() != null) {
-            query += " AND s.sede.id = :sedeIdFiltro ";
-            params.put("sedeIdFiltro", filtro.getSedeId());
+        // =========================================
+        // 📌 FILTRI
+        // =========================================
+
+        if (filtro.getDataDa() != null) {
+            query.append(" AND s.dataVisita >= :dataDa ");
+            params.put("dataDa", filtro.getDataDa());
         }
 
         if (filtro.getDataA() != null) {
-            query += " AND s.dataVisita <= :dataA ";
+            query.append(" AND s.dataVisita <= :dataA ");
             params.put("dataA", filtro.getDataA());
         }
 
         if (filtro.getNomeCliente() != null && !filtro.getNomeCliente().isBlank()) {
-            query += " AND UPPER(s.nomeCliente) LIKE :cliente ";
-            params.put("cliente", "%" + filtro.getNomeCliente().toUpperCase() + "%");
+            query.append(" AND UPPER(s.nomeCliente) LIKE :cliente ");
+            params.put("cliente",
+                    "%" + filtro.getNomeCliente().toUpperCase() + "%");
         }
 
         if (filtro.getComuneIstat() != null && !filtro.getComuneIstat().isBlank()) {
 
-            query += " AND s.comuneIstat = :comune ";
+            query.append(" AND s.comuneIstat = :comune ");
             params.put("comune", filtro.getComuneIstat());
 
         } else if (filtro.getProvincia() != null && !filtro.getProvincia().isBlank()) {
@@ -79,18 +105,24 @@ public class ShowroomService {
             List<String> comuniProvincia =
                     comuneService.findCodiciByProvincia(filtro.getProvincia());
 
-            if (!comuniProvincia.isEmpty()) {
-                query += " AND s.comuneIstat in :comuni ";
-                params.put("comuni", comuniProvincia);
-            } else {
+            if (comuniProvincia.isEmpty()) {
                 result.setCount(0);
                 result.setList(List.of());
                 return result;
             }
+
+            query.append(" AND s.comuneIstat in :comuni ");
+            params.put("comuni", comuniProvincia);
         }
 
+        // =========================================
+        // 🔎 QUERY
+        // =========================================
+
         PanacheQuery<ShowroomVisit> panacheQuery =
-                ShowroomVisit.find(query, Sort.descending("dataVisita"), params);
+                ShowroomVisit.find(query.toString(),
+                        Sort.descending("dataVisita"),
+                        params);
 
         long count = panacheQuery.count();
 
@@ -98,44 +130,77 @@ public class ShowroomService {
                 .page(Page.of(filtro.getPage(), filtro.getSize()))
                 .list();
 
+        // =========================================
         // 🔹 Lookup comuni
+        // =========================================
+
         Set<String> codiciComuni = entities.stream()
                 .map(ShowroomVisit::getComuneIstat)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        List<Comune> comuni = comuneService.findByCodici(codiciComuni);
+        Map<String, Comune> comuniMap =
+                comuneService.findByCodici(codiciComuni)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                Comune::getCodiceIstat,
+                                c -> c
+                        ));
 
-        Map<String, Comune> comuniMap = comuni.stream()
-                .collect(Collectors.toMap(
-                        Comune::getCodiceIstat,
-                        c -> c
-                ));
-
+        // =========================================
         // 🔹 Lookup venditori
-        List<UserResponseDTO> venditoriList = userService.getVenditori();
+        // =========================================
 
-        Map<String, String> venditoriMap = venditoriList.stream()
-                .collect(Collectors.toMap(
-                        UserResponseDTO::getCodVenditore,
-                        UserResponseDTO::getFullname
-                ));
+        Map<String, String> venditoriMap =
+                userService.getVenditori()
+                        .stream()
+                        .collect(Collectors.toMap(
+                                UserResponseDTO::getCodVenditore,
+                                UserResponseDTO::getFullname
+                        ));
 
+        // =========================================
         // 🔹 Mapping DTO
+        // =========================================
+
         List<ShowroomVisitDto> dtoList = new ArrayList<>();
 
         for (ShowroomVisit s : entities) {
+
             ShowroomVisitDto dto = toDto(s, venditoriMap);
+
             Comune comune = comuniMap.get(s.getComuneIstat());
             if (comune != null) {
                 dto.setComuneNome(comune.getNomeComune());
                 dto.setProvinciaSigla(comune.getSiglaProvincia());
             }
+
             dtoList.add(dto);
         }
 
         result.setCount(count);
         result.setList(dtoList);
+
+        // =========================================
+        // 🏷️ Sede corrente per il FE
+        // =========================================
+
+        if (admin) {
+
+            if (sedeCorrente != null) {
+                result.setSedeCorrenteDescrizione(
+                        sedeCorrente.getDescrizione()
+                );
+            } else {
+                result.setSedeCorrenteDescrizione("Tutte le sedi");
+            }
+
+        } else if (sedeCorrente != null) {
+
+            result.setSedeCorrenteDescrizione(
+                    sedeCorrente.getDescrizione()
+            );
+        }
 
         return result;
     }
@@ -184,7 +249,7 @@ public class ShowroomService {
                 .telefono(dto.getTelefono())
                 .motivo(motivo)
                 .venditoreCodice(dto.getVenditoreCodice())
-                .dataVisita(dto.getDataVisita())
+                .dataVisita(LocalDateTime.now())
                 .sede(sede)
                 .build();
 
@@ -197,7 +262,7 @@ public class ShowroomService {
     }
 
     @Nonnull
-    private static ShowroomMotivo getShowroomMotivo(ShowroomVisitDto dto) {
+    private ShowroomMotivo getShowroomMotivo(ShowroomVisitDto dto) {
         ShowroomMotivo motivo = ShowroomMotivo.findById(dto.getMotivoId());
 
         if (motivo == null) {
@@ -253,7 +318,7 @@ public class ShowroomService {
     }
 
     @Nonnull
-    private static ShowroomVisit getShowroomVisit(Long id) {
+    private ShowroomVisit getShowroomVisit(Long id) {
         ShowroomVisit entity = ShowroomVisit.findById(id);
         if (entity == null) {
             throw new WebApplicationException("Visita non trovata", 404);

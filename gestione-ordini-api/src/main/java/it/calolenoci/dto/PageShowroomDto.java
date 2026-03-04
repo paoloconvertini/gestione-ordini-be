@@ -8,5 +8,6 @@ public class PageShowroomDto {
 
     private long count;
     private List<ShowroomVisitDto> list;
+    private String sedeCorrenteDescrizione;
 
 }

@@ -202,4 +202,27 @@ public class OrdineFornitoreDto implements Serializable {
         this.dataInvio = dataInvio;
     }
 
+    public OrdineFornitoreDto(
+            Integer anno,
+            String serie,
+            Integer progressivo,
+            LocalDate dataOrdine,
+            String intestazione,
+            java.sql.Timestamp dataConfOrdine,
+            String numConfOrdine,
+            String provvisorio,
+            java.sql.Timestamp updateDate,
+            String note
+    ) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.dataOrdine = dataOrdine;
+        this.intestazione = intestazione;
+        this.dataConfOrdine = dataConfOrdine;
+        this.numConfOrdine = numConfOrdine;
+        this.provvisorio = provvisorio;
+        this.updateDate = updateDate;
+        this.note = note;
+    }
 }
