@@ -145,7 +145,7 @@ public class ArticoloResource {
 
     @Operation(summary = "Creazione bolle a partire da articoli in pronta consegna")
     @POST
-    @RolesAllowed({Ruolo.ADMIN, Ruolo.LOGISTICA})
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.LOGISTICA, Ruolo.AMMINISTRATIVO})
     @Path("/creaBolla")
     public Response creaBolla(Body body) {
         String result = fatturaService.creaBolla(body.getList(), body.getAccontoDtos(), user);
