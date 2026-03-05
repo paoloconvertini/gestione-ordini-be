@@ -67,6 +67,8 @@ public class OrdineService {
     @Inject
     AuditService auditService;
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     @Transactional
     @TransactionConfiguration(timeout = 15)
     public PageOrdineDto findAllByStatus(FiltroOrdini filtro) throws ParseException {
@@ -1096,7 +1098,8 @@ public class OrdineService {
                 rigo++;
                 progressivoFattDettaglio++;
                 Ordine ord = Ordine.findByOrdineId(anno, serie, progressivo);
-                String desc = "ordine n." + anno + "/" + serie + "/" + progressivo + " del " + fatturaService.sdf2.format(ord.getDataOrdine());
+                String dataFormattata = ord.getDataOrdine() != null ? ord.getDataOrdine().format(DATE_FORMATTER) : "";
+                String desc = "ordine n." + anno + "/" + serie + "/" + progressivo + " del " + dataFormattata;
                 FattureDettaglio c2 = fattureMapper.buildFatturaAccontoDettaglio("", fatture, progressivoFattDettaglio, rigo, user,
                         "C", "", desc,
                         0D, "", "");
