@@ -254,8 +254,13 @@ public class OrdineFornitoreService {
         Map<String, Object> params = new HashMap<>();
         LocalDate data = LocalDate.parse(dataCongig);
         params.put("dataConfig", data);
-        if (filtro != null && filtro.getFlInviato()) {
-            query += " AND go.flInviato IS null OR go.flInviato = false ";
+        if (filtro != null && StringUtils.isNotBlank(filtro.getFiltroInvio())) {
+            if ("da_inviare".equals(filtro.getFiltroInvio())) {
+                query += " AND (go.flInviato IS null OR go.flInviato = false) ";
+            }
+            if ("inviati".equals(filtro.getFiltroInvio())) {
+                query += " AND go.flInviato = true ";
+            }
         }
         if (filtro != null && StringUtils.isNotBlank(filtro.getFiltroStatus())) {
             query += " AND  o.provvisorio =:stato";
@@ -325,12 +330,13 @@ public class OrdineFornitoreService {
             if (opt.isEmpty()) {
                 ordineFornitore = goOrdineFornitoreMapper.creaEntity(dto.getAnno(), dto.getSerie(), dto.getProgressivo());
                 ordineFornitore.setFlInviato(dto.getFlInviato());
+                ordineFornitore.setDataInvio(LocalDate.now());
                 ordineFornitore.persist();
             } else {
-                GoOrdineFornitore.update("flInviato =:flInv" +
+                GoOrdineFornitore.update("flInviato =:flInv, dataInvio =:d" +
                                 " WHERE anno =:anno AND serie =:serie AND progressivo =:progressivo",
                         Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
-                                .and("progressivo", dto.getProgressivo())
+                                .and("progressivo", dto.getProgressivo()).and("d", LocalDate.now())
                                 .and("flInv", dto.getFlInviato()));
             }
         }

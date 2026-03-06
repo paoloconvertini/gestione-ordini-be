@@ -47,4 +47,6 @@ public class FiltroOrdini implements Serializable {
 
     private long deltaSettimana;
 
+    private String filtroInvio;
+
 }

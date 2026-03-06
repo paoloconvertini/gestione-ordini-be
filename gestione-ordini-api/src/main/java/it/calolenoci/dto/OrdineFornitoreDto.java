@@ -34,7 +34,7 @@ public class OrdineFornitoreDto implements Serializable {
 
     private String note;
 
-    private Date dataInvio;
+    private LocalDate dataInvio;
 
     private String nota;
 
@@ -111,7 +111,7 @@ public class OrdineFornitoreDto implements Serializable {
 
     public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, LocalDate dataOrdine, String intestazione,
                               Date dataConfOrdine, String numConfOrdine, String provvisorio, Date updateDate,String note,
-                              Boolean flInviato, Date dataInvio) {
+                              Boolean flInviato, LocalDate dataInvio) {
         this.anno = anno;
         this.serie = serie;
         this.progressivo = progressivo;
@@ -186,7 +186,7 @@ public class OrdineFornitoreDto implements Serializable {
             java.sql.Timestamp updateDate,
             String note,
             Boolean flInviato,
-            java.sql.Timestamp dataInvio
+            LocalDate dataInvio
     ) {
         this.anno = anno;
         this.serie = serie;

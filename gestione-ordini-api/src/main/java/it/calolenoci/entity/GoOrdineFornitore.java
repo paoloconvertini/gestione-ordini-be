@@ -7,6 +7,9 @@ import lombok.Setter;
 import org.hibernate.annotations.Type;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -36,6 +39,6 @@ public class GoOrdineFornitore extends PanacheEntityBase {
     private String note;
 
     @Column(length = 100, name= "DATAINVIO")
-    private Date dataInvio;
+    private LocalDate dataInvio;
 
 }

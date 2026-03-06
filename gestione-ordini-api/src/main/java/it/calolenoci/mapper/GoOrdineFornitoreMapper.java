@@ -4,6 +4,9 @@ import it.calolenoci.entity.GoOrdineFornitore;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 
 @ApplicationScoped
 public class GoOrdineFornitoreMapper {
