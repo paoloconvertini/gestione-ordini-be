@@ -107,21 +107,29 @@ public class ListaCarichiService {
 
     @Transactional
     public String creaReport(List<ListaCarichiDto> list) {
+
         long inizio = System.currentTimeMillis();
 
-        Optional<Long> optional = ListaCarichi.find("select ISNULL(MAX(numeroConvalida), 0) from ListaCarichi where dataConvalida  = :d", Parameters.with("d", LocalDate.now()))
-                .project(Long.class).firstResultOptional();
-        Long progressivoGiorno;
-        if(optional.isEmpty()){
-            progressivoGiorno = 1L;
-        } else {
-            progressivoGiorno = optional.get();
-            progressivoGiorno += 1L;
-        }
-        Long finalProgressivoGiorno = progressivoGiorno;
-        list.forEach(l -> ListaCarichi.update("dataConvalida =:d, numeroConvalida = :p WHERE id =:id",
-                Parameters.with("d", LocalDate.now()).and("p", finalProgressivoGiorno).and("id", l.getId())));
-        String nomeFile = LocalDate.now() + "_" + (finalProgressivoGiorno) + ".pdf";
+        Optional<Long> optional = ListaCarichi.find(
+                "select COALESCE(MAX(numeroConvalida),0) from ListaCarichi where dataConvalida = :d",
+                Parameters.with("d", LocalDate.now())
+        ).project(Long.class).firstResultOptional();
+
+        Long progressivoGiorno = optional.map(v -> v + 1).orElse(1L);
+
+        List<Long> ids = list.stream()
+                .map(ListaCarichiDto::getId)
+                .toList();
+
+        ListaCarichi.update(
+                "dataConvalida = :d, numeroConvalida = :p WHERE id IN (:ids)",
+                Parameters.with("d", LocalDate.now())
+                        .and("p", progressivoGiorno)
+                        .and("ids", ids)
+        );
+
+        String nomeFile = LocalDate.now() + "_" + progressivoGiorno + ".pdf";
+
         try {
             jasperService.createReport(list, nomeFile);
         } catch (JRException | IOException e) {
@@ -130,6 +138,7 @@ public class ListaCarichiService {
 
         long fine = System.currentTimeMillis();
         Log.info("Fine creaReport: " + (fine - inizio) / 1000 + " sec");
+
         return nomeFile;
     }
 
