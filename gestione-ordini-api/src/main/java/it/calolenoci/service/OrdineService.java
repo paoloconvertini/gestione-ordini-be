@@ -22,6 +22,8 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.ParseException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -1083,10 +1085,18 @@ public class OrdineService {
                 List<FatturaAccontoDto> dtoByOrdine = entry.getValue();
                 FattureDettaglio fattureDettaglio;
                 for (FatturaAccontoDto d : dtoByOrdine) {
+                    BigDecimal ivato = BigDecimal.valueOf(d.getNuovoAccontoIvato());
+                    BigDecimal ivaPerc = new BigDecimal(d.getIva());
+
+                    BigDecimal imponibile = ivato.divide(
+                            BigDecimal.ONE.add(ivaPerc.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)),
+                            3,
+                            RoundingMode.HALF_UP
+                    );
                     fattureDettaglio = fattureMapper.buildFatturaAccontoDettaglio(d.getIva(), fatture,
                             progressivoFattDettaglio, rigo, user,
                             "V", "*ACC", d.isASaldo() ? "A SALDO" : "Acconto",
-                            d.getNuovoAcconto(), ".", "B");
+                            imponibile.doubleValue(), ".", "B");
                     fattureDaSalvare.add(fattureDettaglio);
                     rigo++;
                     progressivoFattDettaglio++;

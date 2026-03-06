@@ -539,35 +539,64 @@ public class FatturaService {
 
     @TransactionConfiguration(timeout = 5000)
     public Double getOrdiniAperti(String sottoConto) {
-        return Ordine.find("SELECT ISNULL(SUM( o2.prezzo *(1-o2.scontoArticolo/100)*(1-o2.scontoC1/100)*(1-o2.scontoC2/100)*(1-o2.scontoP/100) " +
-                "* god.qtaDaConsegnare * o2.fCodiceIva/100 + " +
-                "(o2.prezzo *(1-o2.scontoArticolo/100)*(1-o2.scontoC1/100)*(1-o2.scontoC2/100)*(1-o2.scontoP/100) " +
-                "* god.qtaDaConsegnare )), 0) " +
-                "FROM Ordine o " +
-                "Join OrdineDettaglio o2 ON o.anno = o2.anno and o.serie = o2.serie and o.progressivo = o2.progressivo " +
-                "join GoOrdineDettaglio god ON o2.progrGenerale = god.progrGenerale " +
-                "WHERE o2.saldoAcconto <> 'S' AND o.gruppoCliente = 1231 AND o.contoCliente = :s " +
-                "GROUP BY o.gruppoCliente, o.contoCliente", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
+        return Ordine.find(
+                "SELECT COALESCE(SUM(" +
+                        " o2.prezzo" +
+                        " *(1-o2.scontoArticolo/100)" +
+                        " *(1-o2.scontoC1/100)" +
+                        " *(1-o2.scontoC2/100)" +
+                        " *(1-o2.scontoP/100)" +
+                        " * god.qtaDaConsegnare" +
+                        " * (1 + CAST(o2.fCodiceIva AS double)/100)" +
+                        "),0) " +
+                        "FROM Ordine o " +
+                        "JOIN OrdineDettaglio o2 ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
+                        "JOIN GoOrdineDettaglio god ON o2.progrGenerale = god.progrGenerale " +
+                        "WHERE o2.saldoAcconto <> 'S' " +
+                        "AND o.gruppoCliente = 1231 " +
+                        "AND o.contoCliente = :s",
+                Parameters.with("s", sottoConto)
+        ).project(Double.class).firstResult();
     }
 
     @TransactionConfiguration(timeout = 5000)
     public Double getAccontiFatturati(String sottoConto) {
-        return Fatture.find("SELECT ISNULL(SUM((f2.prezzo * f2.iva/100) + f2.prezzo), 0) " +
+
+        return Fatture.find(
+                "SELECT COALESCE(SUM(" +
+                        " f2.prezzo * (1 + CAST(f2.iva AS double)/100)" +
+                        "),0) " +
                         "FROM Fatture f " +
-                        "JOIN FattureDettaglio  f2 ON f.anno = f2.anno and f.serie = f2.serie and f.progressivo = f2.progressivo " +
-                        "WHERE f.gruppoCliente = 1231 AND f.contoCliente = :s and f2.fArticolo =  '*ACC'"
-                , Parameters.with("s", sottoConto)).project(Double.class).firstResult();
+                        "JOIN FattureDettaglio f2 " +
+                        "ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
+                        "WHERE f.gruppoCliente = 1231 " +
+                        "AND f.contoCliente = :s " +
+                        "AND f2.fArticolo = '*ACC'",
+                Parameters.with("s", sottoConto)
+        ).project(Double.class).firstResult();
     }
 
     @TransactionConfiguration(timeout = 5000)
     public Double getBolleNonFatturate(String sottoConto) {
-        return Fatture.find("SELECT ISNULL(SUM(f2.prezzo *(1-f2.scontoarticolo/100)*(1-f2.scontoc1/100)*(1-f2.scontoc2/100)*(1-f2.scontop/100) " +
-                "* f2.quantita * f2.iva/100 + " +
-                "(f2.prezzo *(1-f2.scontoarticolo/100)*(1-f2.scontoc1/100)*(1-f2.scontoc2/100)*(1-f2.scontop/100) " +
-                "* f2.quantita )), 0) " +
-                "FROM Fatture f " +
-                "join FattureDettaglio  f2 on f.anno = f2.anno and f.serie = f2.serie and f.progressivo = f2.progressivo " +
-                "WHERE f.gruppoCliente = 1231 AND f.contoCliente = :s and f.flagfattura <> 'S' ", Parameters.with("s", sottoConto)).project(Double.class).firstResult();
+
+        return Fatture.find(
+                "SELECT COALESCE(SUM(" +
+                        " f2.prezzo" +
+                        " *(1-f2.scontoarticolo/100)" +
+                        " *(1-f2.scontoc1/100)" +
+                        " *(1-f2.scontoc2/100)" +
+                        " *(1-f2.scontop/100)" +
+                        " * f2.quantita" +
+                        " * (1 + CAST(f2.iva AS double)/100)" +
+                        "),0) " +
+                        "FROM Fatture f " +
+                        "JOIN FattureDettaglio f2 " +
+                        "ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
+                        "WHERE f.gruppoCliente = 1231 " +
+                        "AND f.contoCliente = :s " +
+                        "AND f.flagfattura <> 'S'",
+                Parameters.with("s", sottoConto)
+        ).project(Double.class).firstResult();
     }
 
     /**
