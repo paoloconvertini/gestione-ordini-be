@@ -19,9 +19,10 @@ public class ListaCarichiMapper {
     public ListaCarichi fromDtoToEntity(ListaCarichiDto dto) {
         ListaCarichi listaCarichi = new ListaCarichi();
 
-        Long id = ListaCarichi.find("select isnull(max(id), 0) from ListaCarichi")
-                .project(Long.class).firstResult();
-        listaCarichi.setId(id+1);
+        Number id = ListaCarichi.find("select isnull(max(id), 0) from ListaCarichi")
+                .project(Number.class)
+                .firstResult();
+        listaCarichi.setId(id.longValue() + 1);
         if(StringUtils.isNotBlank(dto.getAzienda())){
             listaCarichi.setAzienda(dto.getAzienda());
         }
