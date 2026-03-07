@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.Panache;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
@@ -755,8 +756,8 @@ public class OrdineService {
                         .filter(Objects::nonNull)
                         .sorted(
                                 Comparator
-                                        .comparing(OrdineDTO::getOraConsegna,
-                                                Comparator.nullsLast(Comparator.naturalOrder()))
+                                        .comparing((OrdineDTO o) -> ('P' == o.getOraConsegna()) ? 2 : 1)
+                                        .thenComparing(OrdineDTO::getVeicolo)
                                         .thenComparing(OrdineDTO::getOrdine,
                                                 Comparator.nullsLast(Comparator.naturalOrder()))
                         )
@@ -885,10 +886,9 @@ public class OrdineService {
                     dto.getSerie(),
                     dto.getProgressivo()
             );
-
             // se esisteva una programmazione precedente riordino quel giro
             if (precedente != null) {
-
+                Panache.getEntityManager().detach(precedente);
                 List<GoOrdVeicolo> daRiordinare = GoOrdVeicolo.list(
                         "idVeicolo = ?1 and dataConsegna = ?2 and oraConsegna = ?3 order by ordine",
                         precedente.getIdVeicolo(),
@@ -943,6 +943,8 @@ public class OrdineService {
                     for (GoOrdVeicolo v : daShiftare) {
                         v.setOrdine(v.getOrdine() + 1);
                     }
+
+                    Panache.getEntityManager().flush();
 
                 }
 
