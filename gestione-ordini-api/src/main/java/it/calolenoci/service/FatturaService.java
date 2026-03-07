@@ -64,12 +64,13 @@ public class FatturaService {
         try {
             long inizio = System.currentTimeMillis();
             LocalDate data = LocalDate.parse(dataCongig);
+
             // 1) Prelevo i righi degli ordini che hanno fatture associate
             List<OrdineDettaglioDto> list = OrdineDettaglio.find(
                             "select o2.anno, o2.serie, o2.progressivo, " +
-                                    " o2.progrGenerale, o2.rigo, " +
-                                    " (CASE WHEN o2.quantitaV IS NOT NULL AND o2.quantita <> o2.quantitaV " +
-                                    "       THEN o2.quantitaV ELSE o2.quantita END) as quantita " +
+                                    "o2.progrGenerale, o2.rigo, " +
+                                    "(CASE WHEN o2.quantitaV IS NOT NULL AND o2.quantita <> o2.quantitaV " +
+                                    "      THEN o2.quantitaV ELSE o2.quantita END) as quantita " +
                                     "from OrdineDettaglio o2 " +
                                     "join Ordine o ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
                                     "join GoOrdine go ON go.anno = o.anno AND go.serie = o.serie AND go.progressivo = o.progressivo " +
@@ -90,14 +91,13 @@ public class FatturaService {
             Log.debug("Trovate " + list.size() + " bolle");
 
             // 2) Ricavo TUTTE le somme delle fatture con un UNICO GROUP BY
-            List<Integer> progrGenerali = list.stream()
+            Set<Integer> progrGenerali = list.stream()
                     .map(OrdineDettaglioDto::getProgrGenerale)
-                    .toList();
+                    .collect(Collectors.toSet());
 
-            // Somma quantità fatturate per ogni progrGenerale (CAST in DECIMAL per evitare problemi con FLOAT)
             List<FatturaDto> somme = FattureDettaglio.find(
                             "select f.progrOrdCli as progrOrdCli, " +
-                                    "CAST(SUM(ISNULL(f.quantita,0)) AS decimal(18,6)) as qta " +
+                                    "SUM(COALESCE(f.quantita,0)) as qta " +
                                     "from FattureDettaglio f " +
                                     "where f.progrOrdCli in (:list) " +
                                     "group by f.progrOrdCli",
