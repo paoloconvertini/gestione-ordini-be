@@ -433,9 +433,9 @@ public class OrdineResource {
     @PUT
     @Path("/updateVeicolo")
     @Consumes(APPLICATION_JSON)
-    public Response updateVeicolo(OrdineDTO dto) {
-        if(ordineService.updateVeicolo(dto, codVenditore)){
-            return Response.ok(new ResponseDto("Veicoli aggiornati con successo", false)).build();
+    public Response updateVeicolo(ProgrammaConsegnaDto dto) {
+        if(ordineService.programmaConsegna(dto, codVenditore)){
+            return Response.ok(new ResponseDto("Consegna inserita con successo", false)).build();
         } else {
             return Response.notModified().build();
         }

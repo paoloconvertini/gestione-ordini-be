@@ -753,18 +753,34 @@ public class OrdineService {
             if (giorno != DayOfWeek.SUNDAY && mappaGiorni.containsKey(giorno)) {
                 List<OrdineDTO> consegneOrdinate = entry.getValue().stream()
                         .filter(Objects::nonNull)
-                        .sorted(Comparator.comparing(OrdineDTO::getOraConsegna,
-                                Comparator.nullsLast(Comparator.naturalOrder())))
+                        .sorted(
+                                Comparator
+                                        .comparing(OrdineDTO::getOraConsegna,
+                                                Comparator.nullsLast(Comparator.naturalOrder()))
+                                        .thenComparing(OrdineDTO::getOrdine,
+                                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        )
                         .toList();
                 mappaGiorni.get(giorno).setConsegne(consegneOrdinate);
             }
         }
-        result.setLunedi(mappaGiorni.get(DayOfWeek.MONDAY));
-        result.setMartedi(mappaGiorni.get(DayOfWeek.TUESDAY));
-        result.setMercoledi(mappaGiorni.get(DayOfWeek.WEDNESDAY));
-        result.setGiovedi(mappaGiorni.get(DayOfWeek.THURSDAY));
-        result.setVenerdi(mappaGiorni.get(DayOfWeek.FRIDAY));
-        result.setSabato(mappaGiorni.get(DayOfWeek.SATURDAY));
+        List<GiornoConsegneDto> giorni = new ArrayList<>();
+
+        for (DayOfWeek giorno : List.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY)) {
+            GiornoConsegneDto dto = new GiornoConsegneDto();
+            dto.setGiorno(giorno);
+            dto.setData(monday.with(giorno));
+            ConsegnaGiornalieraDto g = mappaGiorni.get(giorno);
+            List<OrdineDTO> consegne =
+                    (g != null && g.getConsegne() != null)
+                            ? g.getConsegne()
+                            : Collections.emptyList();
+            dto.setConsegne(consegne);
+            dto.setNumeroConsegne(consegne.size());
+            giorni.add(dto);
+        }
+        result.setGiorni(giorni);
         return result;
     }
 
@@ -845,34 +861,113 @@ public class OrdineService {
     }
 
     @Transactional
-    public boolean updateVeicolo(OrdineDTO dto, String codVenditore) {
+    public boolean programmaConsegna(ProgrammaConsegnaDto dto, String codVenditore) {
+
         try {
+
+            GoOrdVeicolo precedente = GoOrdVeicolo.find(
+                    "id.anno = ?1 and id.serie = ?2 and id.progressivo = ?3",
+                    dto.getAnno(),
+                    dto.getSerie(),
+                    dto.getProgressivo()
+            ).firstResult();
+
+            GoOrdVeicoloPK pk = new GoOrdVeicoloPK(
+                    dto.getAnno(),
+                    dto.getSerie(),
+                    dto.getProgressivo()
+            );
+
+            // cancella eventuale programmazione precedente
+            GoOrdVeicolo.delete(
+                    "id.anno = ?1 and id.serie = ?2 and id.progressivo = ?3",
+                    dto.getAnno(),
+                    dto.getSerie(),
+                    dto.getProgressivo()
+            );
+
+            // se esisteva una programmazione precedente riordino quel giro
+            if (precedente != null) {
+
+                List<GoOrdVeicolo> daRiordinare = GoOrdVeicolo.list(
+                        "idVeicolo = ?1 and dataConsegna = ?2 and oraConsegna = ?3 order by ordine",
+                        precedente.getIdVeicolo(),
+                        precedente.getDataConsegna(),
+                        precedente.getOraConsegna()
+                );
+
+                long pos = 1;
+
+                for (GoOrdVeicolo v : daRiordinare) {
+                    v.setOrdine(pos++);
+                }
+
+            }
+
+            // recupero ordini esistenti del nuovo giro
+            List<Long> ordiniEsistenti = GoOrdVeicolo.find(
+                    "select ordine from GoOrdVeicolo where idVeicolo = ?1 and dataConsegna = ?2 and oraConsegna = ?3 order by ordine",
+                    dto.getVeicolo(),
+                    dto.getDataConsegna(),
+                    dto.getOraConsegna()
+            ).project(Long.class).list();
+
+            Long ordine = dto.getOrdine();
+
+            // calcolo automatico se non fornito
+            if (ordine == null) {
+
+                ordine = 1L;
+
+                for (Long o : ordiniEsistenti) {
+                    if (!o.equals(ordine)) {
+                        break;
+                    }
+                    ordine++;
+                }
+
+            } else {
+
+                boolean exists = ordiniEsistenti.contains(ordine);
+
+                if (exists) {
+
+                    List<GoOrdVeicolo> daShiftare = GoOrdVeicolo.list(
+                            "idVeicolo = ?1 and dataConsegna = ?2 and oraConsegna = ?3 and ordine >= ?4 and ordine is not null order by ordine desc",
+                            dto.getVeicolo(),
+                            dto.getDataConsegna(),
+                            dto.getOraConsegna(),
+                            ordine
+                    );
+
+                    for (GoOrdVeicolo v : daShiftare) {
+                        v.setOrdine(v.getOrdine() + 1);
+                    }
+
+                }
+
+            }
+
             GoOrdVeicolo goOrdVeicolo = new GoOrdVeicolo();
-            goOrdVeicolo.setId(new GoOrdVeicoloPK(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
-            if (dto.getVeicolo() != null) {
-                goOrdVeicolo.setIdVeicolo(dto.getVeicolo());
-            }
-            if (dto.getDataConsegna() != null) {
-                goOrdVeicolo.setDataConsegna(dto.getDataConsegna());
-            }
+
+            goOrdVeicolo.setId(pk);
+            goOrdVeicolo.setIdVeicolo(dto.getVeicolo());
+            goOrdVeicolo.setDataConsegna(dto.getDataConsegna());
             goOrdVeicolo.setOraConsegna(dto.getOraConsegna());
-            goOrdVeicolo.setOrdine(dto.getOrdine());
+            goOrdVeicolo.setOrdine(ordine);
             goOrdVeicolo.setVenditore(StringUtils.isNotBlank(codVenditore));
-            long delete = GoOrdVeicolo.delete("id.anno = :anno AND id.serie = :serie AND id.progressivo =:progressivo"
-                    , Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie())
-                            .and("progressivo", dto.getProgressivo()));
-            if (goOrdVeicolo == null && delete > 0) {
-                return true;
-            }
-            if (goOrdVeicolo != null) {
-                goOrdVeicolo.persist();
-                return true;
-            }
-            return false;
+
+            goOrdVeicolo.persist();
+
+            return true;
+
         } catch (Exception e) {
-            Log.error("Error saving veicoli", e);
+
+            Log.error("Errore programmazione consegna", e);
             return false;
+
         }
+
     }
 
     public OrdineclienteMonitorDto getOrdiniClienteNonOrdinati() throws ParseException {
