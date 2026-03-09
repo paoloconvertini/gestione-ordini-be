@@ -69,5 +69,19 @@ public class GoOrdineDto implements Serializable {
         this.hasProntoConsegna = hasProntoConsegna;
     }
 
-
+    public GoOrdineDto(
+            Integer anno,
+            String serie,
+            Integer progressivo,
+            String status,
+            Boolean hasProntoConsegna,
+            Boolean hasCarico
+    ) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.status = status;
+        this.hasProntoConsegna = hasProntoConsegna;
+        this.hasCarico = hasCarico;
+    }
 }
