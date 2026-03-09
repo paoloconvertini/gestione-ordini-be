@@ -56,43 +56,51 @@ public class FetchScheduler {
     AmmortamentoCespiteService ammortamentoCespiteService;
 
     @Scheduled(cron = "${cron.expr}")
-    @Transactional
-    @TransactionConfiguration(timeout = 500)
-    public void update() throws ParseException {
+    public void update() {
         long inizio = System.currentTimeMillis();
-        List<OrdineDettaglioDto> list = fatturaService.getBolle();
-        if (list != null && !list.isEmpty()) {
-            Log.debug("Trovate " + list.size() + " bolle");
-            int tentativi = 0;
-            boolean successo = false;
-            boolean update = false;
-            while (tentativi < 2 && !successo) {
-                try {
-                    update = articoloService.updateArticoliBolle(list);
-                    if (update) {
-                        successo = true;
-                        Log.error("Aggiornamento riuscito.");
-                    } else {
-                        throw new RuntimeException("L'aggiornamento non ha avuto successo.");
-                    }
-                } catch (Exception e) {
-                    tentativi++;
-                    Log.error("Tentativo " + tentativi + " fallito: " + e.getMessage());
 
-                    if (tentativi >= 2) {
-                        Log.error("Aggiornamento fallito dopo 2 tentativi.");
-                    }
-                }
-            }
-
-            if (update) {
-                ordineService.checkConsegnati(new FiltroOrdini());
-            }
+        try {
+            runUpdateBolle();
+            runCheckConsegnati();
+            runCheckNoBolle();
+            runCheckNoProntaConsegna();
+        } catch (Exception e) {
+            Log.error("Errore scheduler update", e);
         }
-        articoloService.checkNoBolle();
-        ordineService.checkNoProntaConegna(new FiltroOrdini());
+
         long fine = System.currentTimeMillis();
         Log.error("FINE UPDATE CHECK BOLLE: " + (fine - inizio) / 1000 + " sec");
+    }
+
+    @Transactional
+    public void runUpdateBolle() {
+
+        List<OrdineDettaglioDto> list = fatturaService.getBolle();
+
+        if (list != null && !list.isEmpty()) {
+            boolean update = articoloService.updateArticoliBolle(list);
+
+            if (update) {
+                Log.error("Aggiornamento riuscito.");
+            } else {
+                throw new RuntimeException("Update bolle fallito");
+            }
+        }
+    }
+
+    @Transactional
+    public void runCheckConsegnati() {
+        ordineService.checkConsegnati(new FiltroOrdini());
+    }
+
+    @Transactional
+    public void runCheckNoBolle() {
+        articoloService.checkNoBolle();
+    }
+
+    @Transactional
+    public void runCheckNoProntaConsegna() {
+        ordineService.checkNoProntaConegna(new FiltroOrdini());
     }
 
     @Scheduled(every = "${cron.expr.nuovi.ordini:10m}")
