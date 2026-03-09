@@ -279,82 +279,100 @@ public class ArticoloService {
 
     @Transactional
     public void checkNoBolle() {
+
         long inizio = System.currentTimeMillis();
 
-        List<GoOrdineDettaglio> daReset = GoOrdineDettaglio.find(
-                "flBolla = TRUE AND NOT EXISTS (" +
-                        "   SELECT 1 FROM FattureDettaglio f WHERE f.progrOrdCli = progrGenerale" +
-                        ") AND EXISTS (" +
-                        "   SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale" +
-                        ")"
-        ).list();
+        int pageSize = 500;
+        int pageIndex = 0;
 
-        for (GoOrdineDettaglio god : daReset) {
+        while (true) {
 
-            OrdineDettaglio od = OrdineDettaglio.find(
-                    "progrGenerale = ?1", god.getProgrGenerale()
-            ).firstResult();
+            List<GoOrdineDettaglio> daReset = GoOrdineDettaglio.find(
+                            "flBolla = TRUE AND NOT EXISTS (" +
+                                    "SELECT 1 FROM FattureDettaglio f WHERE f.progrOrdCli = progrGenerale" +
+                                    ") AND EXISTS (" +
+                                    "SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale" +
+                                    ")"
+                    )
+                    .page(pageIndex, pageSize)
+                    .list();
 
-            if (od == null) continue;
-
-            // ======== SALVO OLD VALUES per Audit ========
-            Boolean oldFlBolla = god.getFlBolla();
-            Boolean oldFlagConsegnato = god.getFlagConsegnato();
-            Double oldQtaDaConsegnare = god.getQtaDaConsegnare();
-
-            Double newQtaDaConsegnare = od.getQuantita();
-
-            // ======== LOGICA DI RESET (non modificare) ========
-            god.setFlBolla(false);
-            god.setFlagConsegnato(false);
-            god.setQtaDaConsegnare(newQtaDaConsegnare);
-
-            Log.info("checkNoBolle: reset progrGenerale=" + god.getProgrGenerale());
-
-            // ======== AUDIT ========
-            String entity = "GO_ORDINE_DETTAGLIO";
-            Integer anno = god.getAnno();
-            String serie = god.getSerie();
-            Integer progressivo = god.getProgressivo();
-            Integer rigo = god.getRigo();
-            Integer progr = god.getProgrGenerale();
-
-            // flBolla
-            if (!Objects.equals(oldFlBolla, god.getFlBolla())) {
-                auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                        "flBolla",
-                        oldFlBolla, god.getFlBolla(),
-                        "checkNoBolle",
-                        null);
+            if (daReset.isEmpty()) {
+                break;
             }
 
-            // flagConsegnato
-            if (!Objects.equals(oldFlagConsegnato, god.getFlagConsegnato())) {
-                auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                        "flagConsegnato",
-                        oldFlagConsegnato, god.getFlagConsegnato(),
-                        "checkNoBolle",
-                        null);
+            for (GoOrdineDettaglio god : daReset) {
+
+                OrdineDettaglio od = OrdineDettaglio.find(
+                        "progrGenerale = ?1", god.getProgrGenerale()
+                ).firstResult();
+
+                if (od == null) continue;
+
+                Boolean oldFlBolla = god.getFlBolla();
+                Boolean oldFlagConsegnato = god.getFlagConsegnato();
+                Double oldQtaDaConsegnare = god.getQtaDaConsegnare();
+
+                Double newQtaDaConsegnare = od.getQuantita();
+
+                god.setFlBolla(false);
+                god.setFlagConsegnato(false);
+                god.setQtaDaConsegnare(newQtaDaConsegnare);
+
+                String entity = "GO_ORDINE_DETTAGLIO";
+
+                if (!Objects.equals(oldFlBolla, god.getFlBolla())) {
+                    auditService.logChange(entity,
+                            god.getAnno(),
+                            god.getSerie(),
+                            god.getProgressivo(),
+                            god.getRigo(),
+                            god.getProgrGenerale(),
+                            "flBolla",
+                            oldFlBolla,
+                            god.getFlBolla(),
+                            "checkNoBolle",
+                            null);
+                }
+
+                if (!Objects.equals(oldFlagConsegnato, god.getFlagConsegnato())) {
+                    auditService.logChange(entity,
+                            god.getAnno(),
+                            god.getSerie(),
+                            god.getProgressivo(),
+                            god.getRigo(),
+                            god.getProgrGenerale(),
+                            "flagConsegnato",
+                            oldFlagConsegnato,
+                            god.getFlagConsegnato(),
+                            "checkNoBolle",
+                            null);
+                }
+
+                if (!Objects.equals(oldQtaDaConsegnare, god.getQtaDaConsegnare())) {
+                    auditService.logChange(entity,
+                            god.getAnno(),
+                            god.getSerie(),
+                            god.getProgressivo(),
+                            god.getRigo(),
+                            god.getProgrGenerale(),
+                            "qtaDaConsegnare",
+                            oldQtaDaConsegnare,
+                            god.getQtaDaConsegnare(),
+                            "checkNoBolle",
+                            null);
+                }
             }
 
-            // qtaDaConsegnare
-            if (!Objects.equals(oldQtaDaConsegnare, god.getQtaDaConsegnare())) {
-                auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                        "qtaDaConsegnare",
-                        oldQtaDaConsegnare, god.getQtaDaConsegnare(),
-                        "checkNoBolle",
-                        null);
-            }
+            GoOrdineDettaglio.persist(daReset);
+
+            pageIndex++;
         }
 
-        // Persist aggiornamenti
-        GoOrdineDettaglio.persist(daReset);
+        auditService.flush();
 
         long fine = System.currentTimeMillis();
         Log.info("CheckNoBolle: " + (fine - inizio) + " msec");
-
-        // ======== FLUSH AUDIT ========
-        auditService.flush();
     }
 
     @Transactional
