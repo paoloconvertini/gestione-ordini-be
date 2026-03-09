@@ -10,6 +10,7 @@ import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.*;
+import jakarta.annotation.security.PermitAll;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -51,6 +52,8 @@ public class OrdineResource {
     @Inject
     JasperService service;
 
+    @Inject
+    FetchScheduler fetchScheduler;
 
     @Inject
     OrdineService ordineService;
@@ -464,5 +467,13 @@ public class OrdineResource {
         return Response.ok(ordineService.getOrdiniClienteNonOrdinati()).build();
     }
 
+    @GET
+    @Path("/run-bolle")
+    @RolesAllowed({ADMIN})
+    @Produces(MediaType.TEXT_PLAIN)
+    public String runBolle() throws Exception {
+        fetchScheduler.update();
+        return "Scheduler eseguito manualmente.";
+    }
 
 }
