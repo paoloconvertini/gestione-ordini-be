@@ -105,13 +105,24 @@ public class ArticoloService {
                     .distinct()
                     .toList();
 
-            Map<Integer, GoOrdineDettaglio> goMap =
-                    GoOrdineDettaglio.find("progrGenerale in (:pg)", Parameters.with("pg", progrGenerali))
-                            .<GoOrdineDettaglio>stream()
-                            .collect(Collectors.toMap(
-                                    GoOrdineDettaglio::getProgrGenerale,
-                                    g -> g
-                            ));
+            final int CHUNK_SIZE = 1000;
+
+            Map<Integer, GoOrdineDettaglio> goMap = new HashMap<>();
+
+            for (int i = 0; i < progrGenerali.size(); i += CHUNK_SIZE) {
+
+                List<Integer> subList = progrGenerali.subList(
+                        i,
+                        Math.min(i + CHUNK_SIZE, progrGenerali.size())
+                );
+
+                List<GoOrdineDettaglio> partial = GoOrdineDettaglio.find("progrGenerale in (:pg)",
+                        Parameters.with("pg", subList)).list();
+
+                for (GoOrdineDettaglio g : partial) {
+                    goMap.put(g.getProgrGenerale(), g);
+                }
+            }
 
             List<GoOrdineDettaglio> toUpdate = new ArrayList<>();
             Set<OrdineId> ordiniCoinvolti = new HashSet<>();

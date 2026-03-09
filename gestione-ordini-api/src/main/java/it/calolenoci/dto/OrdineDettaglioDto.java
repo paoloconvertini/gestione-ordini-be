@@ -552,4 +552,22 @@ public class OrdineDettaglioDto implements Serializable {
         this.progrGenerale = progrGenerale;
         this.prezzo = prezzo;
     }
+
+    public OrdineDettaglioDto(
+            Integer anno,
+            String serie,
+            Integer progressivo,
+            Integer progrGenerale,
+            Integer rigo,
+            Double quantita,
+            Double qtaBolla
+    ) {
+        this.anno = anno;
+        this.serie = serie;
+        this.progressivo = progressivo;
+        this.progrGenerale = progrGenerale;
+        this.rigo = rigo;
+        this.quantita = quantita;
+        this.qtaBolla = qtaBolla;
+    }
 }

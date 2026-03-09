@@ -70,14 +70,17 @@ public class FatturaService {
                             "select o2.anno, o2.serie, o2.progressivo, " +
                                     "o2.progrGenerale, o2.rigo, " +
                                     "(CASE WHEN o2.quantitaV IS NOT NULL AND o2.quantita <> o2.quantitaV " +
-                                    "      THEN o2.quantitaV ELSE o2.quantita END) as quantita " +
+                                    "      THEN o2.quantitaV ELSE o2.quantita END) as quantita, " +
+                                    "CAST(SUM(ISNULL(f.quantita,0)) AS decimal(18,6)) as qtaBolla " +
                                     "from OrdineDettaglio o2 " +
                                     "join Ordine o ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
                                     "join GoOrdine go ON go.anno = o.anno AND go.serie = o.serie AND go.progressivo = o.progressivo " +
+                                    "join FattureDettaglio f ON f.progrOrdCli = o2.progrGenerale " +
                                     "where go.status <> 'ARCHIVIATO' " +
                                     "and o.dataConferma >= :data " +
                                     "and exists (select 1 from GoOrdineDettaglio god where god.progrGenerale = o2.progrGenerale) " +
-                                    "and exists (select 1 from FattureDettaglio f where f.progrOrdCli = o2.progrGenerale)",
+                                    "group by o2.anno, o2.serie, o2.progressivo, " +
+                                    "o2.progrGenerale, o2.rigo, o2.quantita, o2.quantitaV",
                             Parameters.with("data", data)
                     )
                     .project(OrdineDettaglioDto.class)
@@ -89,45 +92,9 @@ public class FatturaService {
             }
 
             Log.debug("Trovate " + list.size() + " bolle");
-
-            // 2) Ricavo TUTTE le somme delle fatture con un UNICO GROUP BY
-            Set<Integer> progrGenerali = list.stream()
-                    .map(OrdineDettaglioDto::getProgrGenerale)
-                    .collect(Collectors.toSet());
-
-            List<FatturaDto> somme = FattureDettaglio.find(
-                            "select f.progrOrdCli as progrOrdCli, " +
-                                    "SUM(COALESCE(f.quantita,0)) as qta " +
-                                    "from FattureDettaglio f " +
-                                    "where f.progrOrdCli in (:list) " +
-                                    "group by f.progrOrdCli",
-                            Parameters.with("list", progrGenerali)
-                    )
-                    .project(FatturaDto.class)
-                    .list();
-
-            // Mappo sommatorie
-            Map<Integer, Double> map = new HashMap<>();
-            for (FatturaDto dto : somme) {
-                map.put(dto.getProgrOrdCli(), dto.getQta());
-            }
-
-            // 3) Assegno qtaBolla ai DTO
-            for (OrdineDettaglioDto dto : list) {
-                Double qtaBolla = map.get(dto.getProgrGenerale());
-                if (qtaBolla != null) {
-                    dto.setQtaBolla(qtaBolla);
-                }
-            }
-
             long fine = System.currentTimeMillis();
             Log.debug("Query getBolle ottimizzata: " + (fine - inizio) + " ms");
-
-            // Ritorno solo quelli che hanno una quantità fatturata
-            return list.stream()
-                    .filter(o -> o.getQtaBolla() != null)
-                    .toList();
-
+            return list;
         } catch (Exception e) {
             Log.error("Errore getBolle ", e);
             return new ArrayList<>();
