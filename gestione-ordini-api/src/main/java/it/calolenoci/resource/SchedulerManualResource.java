@@ -1,6 +1,7 @@
 package it.calolenoci.resource;
 
 import it.calolenoci.scheduler.FetchScheduler;
+import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -15,6 +16,7 @@ public class SchedulerManualResource {
 
     @GET
     @Path("/run-bolle")
+    @PermitAll
     @Produces(MediaType.TEXT_PLAIN)
     public String runBolle() throws Exception {
         fetchScheduler.update();
