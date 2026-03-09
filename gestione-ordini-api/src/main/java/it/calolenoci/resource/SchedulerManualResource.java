@@ -8,7 +8,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.inject.Inject;
 
-@Path("/admin/scheduler")
+@Path("/scheduler")
 public class SchedulerManualResource {
 
     @Inject
