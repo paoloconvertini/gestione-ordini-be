@@ -62,7 +62,7 @@ public class FetchScheduler {
         try {
             runUpdateBolle();
             runCheckConsegnati();
-            runCheckNoBolle();
+            runSyncHasBolla();
             runCheckNoProntaConsegna();
         } catch (Exception e) {
             Log.error("Errore scheduler update", e);
@@ -94,8 +94,8 @@ public class FetchScheduler {
     }
 
     @Transactional
-    public void runCheckNoBolle() {
-        articoloService.checkNoBolle();
+    public void runSyncHasBolla() {
+        articoloService.syncHasBolla();
     }
 
     @Transactional

@@ -25,6 +25,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static io.quarkus.hibernate.orm.panache.Panache.getEntityManager;
+
 @ApplicationScoped
 public class ArticoloService {
 
@@ -280,36 +282,28 @@ public class ArticoloService {
                 Parameters.with("anno", anno).and("serie", serie).and("progressivo", progressivo)) == 0;
     }
 
-    public void checkNoBolle() {
+    @Transactional
+    public void syncHasBolla() {
 
-        long inizio = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
-        int pageSize = 500;
-        int pageIndex = 0;
+        int updated = getEntityManager().createNativeQuery("""
+        UPDATE g
+        SET HAS_BOLLA = CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM FATTURE2 f
+                WHERE f.PROGRORDCLI = g.PROGRGENERALE
+            )
+            THEN 'T'
+            ELSE 'F'
+        END
+        FROM GO_ORDINE_DETTAGLIO g
+    """).executeUpdate();
 
-        while (true) {
-
-            List<GoOrdineDettaglio> daReset = GoOrdineDettaglio.find(
-                            "flBolla = TRUE AND NOT EXISTS (" +
-                                    "SELECT 1 FROM FattureDettaglio f WHERE f.progrOrdCli = progrGenerale" +
-                                    ") AND EXISTS (" +
-                                    "SELECT 1 FROM OrdineDettaglio o WHERE o.progrGenerale = progrGenerale" +
-                                    ")"
-                    )
-                    .page(pageIndex, pageSize)
-                    .list();
-
-            if (daReset.isEmpty()) {
-                break;
-            }
-
-            batchService.processBatch(daReset);
-
-            pageIndex++;
-        }
-
-        long fine = System.currentTimeMillis();
-        Log.info("CheckNoBolle: " + (fine - inizio) + " msec");
+        Log.info("SYNC HAS_BOLLA completato. Righe aggiornate: "
+                + updated + " in "
+                + (System.currentTimeMillis() - start) + " ms");
     }
 
     @Transactional
