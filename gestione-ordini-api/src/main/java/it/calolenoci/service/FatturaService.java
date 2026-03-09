@@ -71,7 +71,7 @@ public class FatturaService {
                                     "o2.progrGenerale, o2.rigo, " +
                                     "(CASE WHEN o2.quantitaV IS NOT NULL AND o2.quantita <> o2.quantitaV " +
                                     "      THEN o2.quantitaV ELSE o2.quantita END) as quantita, " +
-                                    "CAST(SUM(ISNULL(f.quantita,0)) AS decimal(18,6)) as qtaBolla " +
+                                    "SUM(COALESCE(f.quantita,0)) as qtaBolla " +
                                     "from OrdineDettaglio o2 " +
                                     "join Ordine o ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
                                     "join GoOrdine go ON go.anno = o.anno AND go.serie = o.serie AND go.progressivo = o.progressivo " +
