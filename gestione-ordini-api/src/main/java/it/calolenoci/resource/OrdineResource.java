@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.file.OpenOptions;
 import io.vertx.mutiny.core.Vertx;
 import it.calolenoci.dto.*;
+import it.calolenoci.entity.GoOrdVeicolo;
 import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.Ordine;
 import it.calolenoci.enums.StatoOrdineEnum;
@@ -442,6 +443,26 @@ public class OrdineResource {
         } else {
             return Response.notModified().build();
         }
+    }
+
+    @DELETE
+    @Path("/elimina-programmazione/{anno}/{serie}/{progressivo}")
+    @Transactional
+    public Response eliminaProgrammazione(@PathParam("anno") Integer anno,
+                                      @PathParam("serie") String serie,
+                                      @PathParam("progressivo") Integer progressivo) {
+
+        ordineService.eliminaProgrammazione(anno, serie, progressivo);
+        return Response.ok(new ResponseDto("Consegna rimossa con successo", false)).build();
+    }
+
+    @PUT
+    @Path("/riordina-consegne")
+    @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
+    @Transactional
+    public Response riordinaConsegne(List<RiordinoDto> lista) {
+        service.riordinaConsegne(lista);
+        return Response.ok(new ResponseDto("Consegne riordinate con successo", false)).build();
     }
 
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})

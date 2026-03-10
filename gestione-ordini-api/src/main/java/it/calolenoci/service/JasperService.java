@@ -2,6 +2,7 @@ package it.calolenoci.service;
 
 import io.quarkus.logging.Log;
 import it.calolenoci.dto.*;
+import it.calolenoci.entity.GoOrdVeicolo;
 import it.calolenoci.mapper.OrdineClienteReportMapper;
 import it.calolenoci.mapper.RegistroCespiteReportMapper;
 import net.sf.jasperreports.engine.*;
@@ -201,5 +202,22 @@ public class JasperService {
 
     private <T> JRDataSource getDataSource(List<T> list) {
         return new JRBeanCollectionDataSource(list);
+    }
+
+    public void riordinaConsegne(List<RiordinoDto> lista) {
+        for (RiordinoDto dto : lista) {
+
+            GoOrdVeicolo v = GoOrdVeicolo.find(
+                    "id.anno=?1 and id.serie=?2 and id.progressivo=?3",
+                    dto.getAnno(),
+                    dto.getSerie(),
+                    dto.getProgressivo()
+            ).firstResult();
+
+            if (v != null) {
+                v.setOrdine(dto.getOrdine());
+            }
+
+        }
     }
 }

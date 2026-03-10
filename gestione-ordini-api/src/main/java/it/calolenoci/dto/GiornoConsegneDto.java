@@ -16,6 +16,6 @@ public class GiornoConsegneDto implements Serializable {
 
     private int numeroConsegne;
 
-    private List<OrdineDTO> consegne;
+    private List<FasciaConsegneDto> fasce;
 
 }

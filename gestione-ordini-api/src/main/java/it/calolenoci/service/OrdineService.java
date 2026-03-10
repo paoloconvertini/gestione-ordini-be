@@ -691,11 +691,13 @@ public class OrdineService {
             map.put("v", filtro.getVeicolo());
             mapPregressi.put("v", filtro.getVeicolo());
         }
-        // Calcolo lunedì e sabato della settimana desiderata
+
         LocalDate monday = LocalDate.now()
                 .with(DayOfWeek.MONDAY)
                 .plusWeeks(filtro.getDeltaSettimana());
-        LocalDate saturday = monday.plusDays(5); // sabato della stessa settimana
+
+        LocalDate saturday = monday.plusDays(5);
+
         query += " and v.dataConsegna >= :d";
         queryPregressi += " and v.dataConsegna >= :d";
         map.put("d", monday);
@@ -706,53 +708,104 @@ public class OrdineService {
         mapPregressi.put("de", saturday);
         PanacheQuery<Ordine> panacheQuery = Ordine.find(query, map);
         PanacheQuery<Ordine> dtoPanacheQuery = Ordine.find(queryPregressi, mapPregressi);
-        List<OrdineDTO> ordineList;
-        ordineList = panacheQuery.project(OrdineDTO.class).list();
+
+        List<OrdineDTO> ordineList = panacheQuery.project(OrdineDTO.class).list();
         ordineList.addAll(dtoPanacheQuery.project(OrdineDTO.class).list());
 
+        Map<DayOfWeek, List<OrdineDTO>> consegnePerGiorno = new EnumMap<>(DayOfWeek.class);
 
-        Map<DayOfWeek, ConsegnaGiornalieraDto> mappaGiorni = new EnumMap<>(DayOfWeek.class);
-        for (DayOfWeek giorno : DayOfWeek.values()) {
-            if (giorno != DayOfWeek.SUNDAY) {
-                mappaGiorni.put(giorno, new ConsegnaGiornalieraDto());
-            }
+        for (OrdineDTO o : ordineList) {
+            if (o.getDataConsegna() == null) continue;
+            DayOfWeek giorno = o.getDataConsegna().getDayOfWeek();
+            if (giorno == DayOfWeek.SUNDAY) continue;
+
+            consegnePerGiorno.computeIfAbsent(giorno, g -> new ArrayList<>()).add(o);
         }
-        // Raggruppa e ordina le consegne per giorno della settimana
-        Map<LocalDate, List<OrdineDTO>> consegnePerData = ordineList.stream()
-                .filter(o -> o.getDataConsegna() != null)
-                .collect(Collectors.groupingBy(OrdineDTO::getDataConsegna));
 
-        for (Map.Entry<LocalDate, List<OrdineDTO>> entry : consegnePerData.entrySet()) {
-            LocalDate data = entry.getKey();
-            DayOfWeek giorno = data.getDayOfWeek();
-
-            if (giorno != DayOfWeek.SUNDAY && mappaGiorni.containsKey(giorno)) {
-                List<OrdineDTO> consegneOrdinate = entry.getValue().stream()
-                        .filter(Objects::nonNull)
-                        .sorted(
-                                Comparator
-                                        .comparing((OrdineDTO o) -> ('P' == o.getOraConsegna()) ? 2 : 1)
-                                        .thenComparing(OrdineDTO::getVeicolo)
-                                        .thenComparing(OrdineDTO::getOrdine,
-                                                Comparator.nullsLast(Comparator.naturalOrder()))
-                        )
-                        .toList();
-                mappaGiorni.get(giorno).setConsegne(consegneOrdinate);
-            }
-        }
         List<GiornoConsegneDto> giorni = new ArrayList<>();
 
-        for (DayOfWeek giorno : List.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
-                DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY)) {
+        for (DayOfWeek giorno : List.of(
+                DayOfWeek.MONDAY,
+                DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY,
+                DayOfWeek.FRIDAY,
+                DayOfWeek.SATURDAY)) {
+
             GiornoConsegneDto dto = new GiornoConsegneDto();
+
             dto.setGiorno(giorno);
             dto.setData(monday.with(giorno));
-            ConsegnaGiornalieraDto g = mappaGiorni.get(giorno);
-            List<OrdineDTO> consegne =
-                    (g != null && g.getConsegne() != null)
-                            ? g.getConsegne()
-                            : Collections.emptyList();
-            dto.setConsegne(consegne);
+
+            List<OrdineDTO> consegne = consegnePerGiorno.getOrDefault(giorno, Collections.emptyList());
+
+            Map<Character, Map<Integer, List<OrdineDTO>>> struttura =
+                    consegne.stream()
+                            .sorted(
+                                    Comparator
+                                            .comparing((OrdineDTO o) -> ('P' == o.getOraConsegna()) ? 2 : 1)
+                                            .thenComparing(OrdineDTO::getVeicolo)
+                                            .thenComparing(OrdineDTO::getOrdine,
+                                                    Comparator.nullsLast(Comparator.naturalOrder()))
+                            )
+                            .collect(Collectors.groupingBy(
+                                    OrdineDTO::getOraConsegna,
+                                    LinkedHashMap::new,
+                                    Collectors.groupingBy(
+                                            OrdineDTO::getVeicolo,
+                                            LinkedHashMap::new,
+                                            Collectors.toList()
+                                    )
+                            ));
+
+            List<FasciaConsegneDto> fasce = new ArrayList<>();
+
+            Character fasciaCorrente = null;
+            Integer veicoloCorrente = null;
+
+            FasciaConsegneDto fasciaDto = null;
+            VeicoloConsegneDto veicoloDto = null;
+
+            List<OrdineDTO> sorted = consegne.stream()
+                    .sorted(
+                            Comparator
+                                    .comparing((OrdineDTO o) -> ('P' == o.getOraConsegna()) ? 2 : 1)
+                                    .thenComparing(OrdineDTO::getVeicolo)
+                                    .thenComparing(OrdineDTO::getOrdine,
+                                            Comparator.nullsLast(Comparator.naturalOrder()))
+                    )
+                    .toList();
+
+            for (OrdineDTO o : sorted) {
+
+                if (!Objects.equals(fasciaCorrente, o.getOraConsegna())) {
+
+                    fasciaCorrente = o.getOraConsegna();
+                    veicoloCorrente = null;
+
+                    fasciaDto = new FasciaConsegneDto();
+                    fasciaDto.setFascia(fasciaCorrente);
+                    fasciaDto.setVeicoli(new ArrayList<>());
+
+                    fasce.add(fasciaDto);
+                }
+
+                if (!Objects.equals(veicoloCorrente, o.getVeicolo())) {
+
+                    veicoloCorrente = o.getVeicolo();
+
+                    veicoloDto = new VeicoloConsegneDto();
+                    veicoloDto.setIdVeicolo(o.getVeicolo());
+                    veicoloDto.setDescrizione(o.getDescVeicolo());
+                    veicoloDto.setConsegne(new ArrayList<>());
+
+                    fasciaDto.getVeicoli().add(veicoloDto);
+                }
+
+                veicoloDto.getConsegne().add(o);
+            }
+
+            dto.setFasce(fasce);
             dto.setNumeroConsegne(consegne.size());
             giorni.add(dto);
         }
@@ -1199,5 +1252,42 @@ public class OrdineService {
             Log.error("Errore nella creazione della fattura di acconto: " + e.getMessage(), e);
         }
         return "Errore nella creazione della fattura di acconto";
+    }
+
+    public void eliminaProgrammazione(Integer anno, String serie, Integer progressivo) {
+        GoOrdVeicolo precedente = GoOrdVeicolo.find(
+                "id.anno = ?1 and id.serie = ?2 and id.progressivo = ?3",
+                anno,
+                serie,
+                progressivo
+        ).firstResult();
+
+        if (precedente == null) {
+            return;
+        }
+
+        Integer veicolo = precedente.getIdVeicolo();
+        LocalDate data = precedente.getDataConsegna();
+        Character fascia = precedente.getOraConsegna();
+
+        GoOrdVeicolo.delete(
+                "id.anno = ?1 and id.serie = ?2 and id.progressivo = ?3",
+                anno,
+                serie,
+                progressivo
+        );
+
+        List<GoOrdVeicolo> daRiordinare = GoOrdVeicolo.list(
+                "idVeicolo = ?1 and dataConsegna = ?2 and oraConsegna = ?3 order by ordine",
+                veicolo,
+                data,
+                fascia
+        );
+
+        long pos = 1;
+
+        for (GoOrdVeicolo v : daRiordinare) {
+            v.setOrdine(pos++);
+        }
     }
 }
