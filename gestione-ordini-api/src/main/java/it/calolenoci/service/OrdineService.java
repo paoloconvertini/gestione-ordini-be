@@ -39,6 +39,8 @@ import static it.calolenoci.enums.StatoOrdineEnum.ARCHIVIATO;
 public class OrdineService {
 
     @Inject
+    EntityManager entityManager;
+    @Inject
     GoOrdineMapper goOrdineMapper;
 
     @Inject
@@ -396,96 +398,69 @@ public class OrdineService {
         auditService.flush();
     }
 
-
     @Transactional
-    public void checkNoProntaConegna(FiltroOrdini filtro) {
+    public void syncProntoConsegna() {
 
-        // 1) Stati da considerare
-        List<String> stati = new ArrayList<>();
-        if (StringUtils.isBlank(filtro.getFiltroStatus())) {
-            stati.add(StatoOrdineEnum.COMPLETO.getDescrizione());
-            stati.add(StatoOrdineEnum.INCOMPLETO.getDescrizione());
-            stati.add(StatoOrdineEnum.DA_ORDINARE.getDescrizione());
-            stati.add(StatoOrdineEnum.DA_PROCESSARE.getDescrizione());
-            stati.add(StatoOrdineEnum.ARCHIVIATO.getDescrizione());
-        } else {
-            stati.add(filtro.getFiltroStatus());
-        }
+        long start = System.currentTimeMillis();
 
-        long t0 = System.currentTimeMillis();
+        String sql = """
+     UPDATE g
+     SET\s
+         g.FLAG_PRONTO_CONSEGNA = 'F',
+         g.QTA_PRONTO_CONSEGNA = NULL
+     FROM GO_ORDINE_DETTAGLIO g
+     LEFT JOIN (
+         SELECT f.PROGRORDCLI,
+                SUM(f.QUANTITA) AS QTA_BOLLATA
+         FROM FATTURE2 f
+         GROUP BY f.PROGRORDCLI
+     ) x ON x.PROGRORDCLI = g.PROGR_GENERALE
+     WHERE g.FLAG_PRONTO_CONSEGNA = 'T'
+     AND (
+            g.QTA_PRONTO_CONSEGNA IS NULL
+         OR g.QTA_PRONTO_CONSEGNA <= 0
+         OR x.QTA_BOLLATA >= g.QTA_PRONTO_CONSEGNA
+     )""";
 
-        String query =
-                "SELECT go.anno, go.serie, go.progressivo, go.status, go.hasProntoConsegna " +
-                        "FROM GoOrdine go " +
-                        "WHERE go.hasProntoConsegna = TRUE " +
-                        "AND EXISTS ( " +
-                        "   SELECT 1 FROM GoOrdineDettaglio god " +
-                        "   WHERE god.anno = go.anno " +
-                        "     AND god.serie = go.serie " +
-                        "     AND god.progressivo = go.progressivo " +
-                        "     AND god.flProntoConsegna = FALSE " +
-                        ") " +
-                        "AND EXISTS ( " +
-                        "   SELECT 1 FROM OrdineDettaglio o " +
-                        "   WHERE o.anno = go.anno " +
-                        "     AND o.serie = go.serie " +
-                        "     AND o.progressivo = go.progressivo " +
-                        "     AND o.tipoRigo = ' ' " +
-                        ") " +
-                        "AND go.status IN (:stati)";
+        int updated = entityManager
+                .createNativeQuery(sql)
+                .executeUpdate();
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("stati", stati);
+        long end = System.currentTimeMillis();
 
-        query = applyFiltersConsegna(filtro, query, params);
-
-        List<GoOrdineDto> ordini = GoOrdine
-                .find(query, params)
-                .project(GoOrdineDto.class)
-                .list();
-
-        long t1 = System.currentTimeMillis();
-        Log.debug("checkNoProntaConsegna - query: " + (t1 - t0) + " msec");
-
-        // 3) Aggiornamento dei flag
-        if (!ordini.isEmpty()) {
-            for (GoOrdineDto o : ordini) {
-
-                // ======== AUDIT ========
-                if (!Objects.equals(o.getHasProntoConsegna(), Boolean.FALSE)) {
-                    auditService.logChange(
-                            "GO_ORDINE",
-                            o.getAnno(),
-                            o.getSerie(),
-                            o.getProgressivo(),
-                            null,               // rigo
-                            null,               // progrGenerale
-                            "hasProntoConsegna",
-                            o.getHasProntoConsegna(),
-                            Boolean.FALSE,
-                            "checkNoProntaConsegna",
-                            null
-                    );
-                }
-
-                // ======== UPDATE ========
-                GoOrdine.update(
-                        "hasProntoConsegna = FALSE " +
-                                "WHERE anno = :anno AND serie = :serie AND progressivo = :progressivo",
-                        Parameters.with("anno", o.getAnno())
-                                .and("serie", o.getSerie())
-                                .and("progressivo", o.getProgressivo())
-                );
-            }
-        }
-
-        long t2 = System.currentTimeMillis();
-        Log.debug("checkNoProntaConsegna - aggiornamento: " + (t2 - t1) + " msec");
-
-        // ======== FLUSH ========
-        auditService.flush();
+        Log.info("syncProntoConsegna - rows updated: " + updated +
+                " in " + (end - start) + " ms");
     }
 
+    @Transactional
+    public void syncProntoTestata() {
+
+        long start = System.currentTimeMillis();
+
+        String sql = """
+        UPDATE go
+        SET go.HAS_PRONTO_CONSEGNA = 'F'
+        FROM GO_ORDINE go
+        WHERE go.HAS_PRONTO_CONSEGNA = 'T'
+          AND NOT EXISTS (
+              SELECT 1
+              FROM GO_ORDINE_DETTAGLIO god
+              WHERE god.ANNO = go.ANNO
+                AND god.SERIE = go.SERIE
+                AND god.PROGRESSIVO = go.PROGRESSIVO
+                AND god.FLAG_PRONTO_CONSEGNA = 'T'
+          )
+        """;
+
+        int updated = entityManager
+                .createNativeQuery(sql)
+                .executeUpdate();
+
+        long end = System.currentTimeMillis();
+
+        Log.info("syncProntoTestata - rows updated: " + updated +
+                " in " + (end - start) + " ms");
+    }
 
     public OrdineDTO findById(Integer anno, String serie, Integer progressivo) {
         return Ordine.find(" SELECT o.anno,  o.serie,  o.progressivo, o.dataConferma,  o.numeroConferma, pa.descrizione, " +

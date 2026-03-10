@@ -63,13 +63,19 @@ public class FetchScheduler {
             runUpdateBolle();
             runCheckConsegnati();
             runSyncHasBolla();
-            runCheckNoProntaConsegna();
+            runSyncProntoConsegna();
+            runSyncProntoTestata();
         } catch (Exception e) {
             Log.error("Errore scheduler update", e);
         }
 
         long fine = System.currentTimeMillis();
         Log.error("FINE UPDATE CHECK BOLLE: " + (fine - inizio) / 1000 + " sec");
+    }
+
+    @Transactional
+    public void runSyncProntoTestata() {
+        ordineService.syncProntoTestata();
     }
 
     @Transactional
@@ -99,8 +105,8 @@ public class FetchScheduler {
     }
 
     @Transactional
-    public void runCheckNoProntaConsegna() {
-        ordineService.checkNoProntaConegna(new FiltroOrdini());
+    public void runSyncProntoConsegna() {
+        ordineService.syncProntoConsegna();
     }
 
     @Scheduled(every = "${cron.expr.nuovi.ordini:10m}")

@@ -54,8 +54,6 @@ public class ArticoloService {
     @Inject
     MailService mailService;
 
-    @Inject
-    CheckNoBolleBatchService batchService;
 
     public ResponseOrdineDettaglio findById(FiltroArticoli filtro) {
         long inizio = System.currentTimeMillis();
@@ -97,7 +95,9 @@ public class ArticoloService {
 
     @Transactional
     public boolean updateArticoliBolle(List<OrdineDettaglioDto> list) {
+
         long inizio = System.currentTimeMillis();
+
         try {
 
             if (list == null || list.isEmpty()) {
@@ -121,8 +121,9 @@ public class ArticoloService {
                         Math.min(i + CHUNK_SIZE, progrGenerali.size())
                 );
 
-                List<GoOrdineDettaglio> partial = GoOrdineDettaglio.find("progrGenerale in (:pg)",
-                        Parameters.with("pg", subList)).list();
+                List<GoOrdineDettaglio> partial =
+                        GoOrdineDettaglio.find("progrGenerale in (:pg)",
+                                Parameters.with("pg", subList)).list();
 
                 for (GoOrdineDettaglio g : partial) {
                     goMap.put(g.getProgrGenerale(), g);
@@ -131,8 +132,6 @@ public class ArticoloService {
 
             List<GoOrdineDettaglio> toUpdate = new ArrayList<>();
             Set<OrdineId> ordiniCoinvolti = new HashSet<>();
-
-            final double TOLLERANZA = 0.1;
 
             for (OrdineDettaglioDto dto : list) {
 
@@ -143,99 +142,68 @@ public class ArticoloService {
                 Double qtaBolla = dto.getQtaBolla();
                 if (qta == null || qtaBolla == null) continue;
 
-                double qtaDaConsegnare = qta - qtaBolla;
-                Double oldQtaDaCons = go.getQtaDaConsegnare() == null ? 0.0 : go.getQtaDaConsegnare();
-
-                if (Math.abs(oldQtaDaCons - qtaDaConsegnare) <= TOLLERANZA) {
-                    continue;
+                double nuovaQtaDaConsegnare = qta - qtaBolla;
+                if (nuovaQtaDaConsegnare < 0) {
+                    nuovaQtaDaConsegnare = 0;
                 }
 
-                Log.debug("Ho da consegnare per progrOrdCli = " + dto.getProgrGenerale());
-
-                // Salvo copie old per audit
-                Double oldQtaConsegnatoSenzaBolla = go.getQtaConsegnatoSenzaBolla();
+                Double oldQtaDaCons = go.getQtaDaConsegnare();
                 Boolean oldFlagConsegnato = go.getFlagConsegnato();
-                Boolean oldFlProntoConsegna = go.getFlProntoConsegna();
-                Double oldQtaProntoConsegna = go.getQtaProntoConsegna();
-                Double oldQtaRiservata = go.getQtaRiservata();
                 Boolean oldFlBolla = go.getFlBolla();
 
-                // ======= LOGICA DI AGGIORNAMENTO =======
-                if (Math.abs(qtaDaConsegnare) <= TOLLERANZA) {
-                    go.setQtaConsegnatoSenzaBolla(null);
-                    go.setFlagConsegnato(true);
-                    go.setQtaDaConsegnare(0.0);
-                } else {
-                    go.setFlagConsegnato(false);
-                    go.setQtaDaConsegnare(qtaDaConsegnare);
+                boolean changed = false;
+
+                // ===== AGGIORNAMENTO CONSEGNA =====
+                if (!Objects.equals(oldQtaDaCons, nuovaQtaDaConsegnare)) {
+                    go.setQtaDaConsegnare(nuovaQtaDaConsegnare);
+                    changed = true;
                 }
 
-                double diffQtaCons = qta - oldQtaDaCons;
-                double diff = Math.abs(diffQtaCons - qtaBolla);
+                boolean nuovoConsegnato = nuovaQtaDaConsegnare == 0;
 
-                if (diff > TOLLERANZA) {
-                    go.setQtaProntoConsegna(null);
-                    go.setQtaRiservata(null);
-                    go.setFlProntoConsegna(false);
-                } else {
-                    go.setFlProntoConsegna(true);
+                if (!Objects.equals(oldFlagConsegnato, nuovoConsegnato)) {
+                    go.setFlagConsegnato(nuovoConsegnato);
+                    changed = true;
                 }
 
-                go.setFlBolla(Boolean.TRUE);
-                // =======================================
-
-                // ======= AUDIT =======
-                String entity = "GO_ORDINE_DETTAGLIO";
-                Integer anno = dto.getAnno();
-                String serie = dto.getSerie();
-                Integer progressivo = dto.getProgressivo();
-                Integer rigo = go.getRigo();
-                Integer progr = go.getProgrGenerale();
-
-                if (!Objects.equals(oldQtaDaCons, go.getQtaDaConsegnare())) {
-                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                            "qtaDaConsegnare", oldQtaDaCons, go.getQtaDaConsegnare(),
-                            "updateArticoliBolle", null);
+                // ===== HAS BOLLA =====
+                if (!Boolean.TRUE.equals(oldFlBolla)) {
+                    go.setFlBolla(Boolean.TRUE);
+                    changed = true;
                 }
 
-                if (!Objects.equals(oldQtaConsegnatoSenzaBolla, go.getQtaConsegnatoSenzaBolla())) {
-                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                            "qtaConsegnatoSenzaBolla", oldQtaConsegnatoSenzaBolla, go.getQtaConsegnatoSenzaBolla(),
-                            "updateArticoliBolle", null);
-                }
+                if (changed) {
 
-                if (!Objects.equals(oldFlagConsegnato, go.getFlagConsegnato())) {
-                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                            "flagConsegnato", oldFlagConsegnato, go.getFlagConsegnato(),
-                            "updateArticoliBolle", null);
-                }
+                    String entity = "GO_ORDINE_DETTAGLIO";
+                    Integer anno = dto.getAnno();
+                    String serie = dto.getSerie();
+                    Integer progressivo = dto.getProgressivo();
+                    Integer rigo = go.getRigo();
+                    Integer progr = go.getProgrGenerale();
 
-                if (!Objects.equals(oldQtaProntoConsegna, go.getQtaProntoConsegna())) {
-                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                            "qtaProntoConsegna", oldQtaProntoConsegna, go.getQtaProntoConsegna(),
-                            "updateArticoliBolle", null);
-                }
+                    if (!Objects.equals(oldQtaDaCons, go.getQtaDaConsegnare())) {
+                        auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                                "qtaDaConsegnare", oldQtaDaCons, go.getQtaDaConsegnare(),
+                                "updateArticoliBolle", null);
+                    }
 
-                if (!Objects.equals(oldQtaRiservata, go.getQtaRiservata())) {
-                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                            "qtaRiservata", oldQtaRiservata, go.getQtaRiservata(),
-                            "updateArticoliBolle", null);
-                }
+                    if (!Objects.equals(oldFlagConsegnato, go.getFlagConsegnato())) {
+                        auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                                "flagConsegnato", oldFlagConsegnato, go.getFlagConsegnato(),
+                                "updateArticoliBolle", null);
+                    }
 
-                if (!Objects.equals(oldFlProntoConsegna, go.getFlProntoConsegna())) {
-                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                            "flProntoConsegna", oldFlProntoConsegna, go.getFlProntoConsegna(),
-                            "updateArticoliBolle", null);
-                }
+                    if (!Objects.equals(oldFlBolla, go.getFlBolla())) {
+                        auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
+                                "flBolla", oldFlBolla, go.getFlBolla(),
+                                "updateArticoliBolle", null);
+                    }
 
-                if (!Objects.equals(oldFlBolla, go.getFlBolla())) {
-                    auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                            "flBolla", oldFlBolla, go.getFlBolla(),
-                            "updateArticoliBolle", null);
+                    toUpdate.add(go);
+                    ordiniCoinvolti.add(
+                            new OrdineId(dto.getAnno(), dto.getSerie(), dto.getProgressivo())
+                    );
                 }
-                // ====================== AUDIT END ======================
-                toUpdate.add(go);
-                ordiniCoinvolti.add(new OrdineId(dto.getAnno(), dto.getSerie(), dto.getProgressivo()));
             }
 
             if (!toUpdate.isEmpty()) {
@@ -264,12 +232,13 @@ public class ArticoloService {
             }
 
             long fine = System.currentTimeMillis();
-            Log.debug("UpdateArticoliBolle (ottimizzato): " + (fine - inizio) + " ms");
+            Log.debug("UpdateArticoliBolle: " + (fine - inizio) + " ms");
+
             auditService.flush();
             return true;
 
         } catch (Exception e) {
-            Log.error("Errore UpdateArticoliBolle: " + e.getMessage(), e);
+            Log.error("Errore UpdateArticoliBolle", e);
             return false;
         }
     }
