@@ -414,7 +414,7 @@ public class OrdineService {
                 SUM(f.QUANTITA) AS QTA_BOLLATA
          FROM FATTURE2 f
          GROUP BY f.PROGRORDCLI
-     ) x ON x.PROGRORDCLI = g.PROGR_GENERALE
+     ) x ON x.PROGRORDCLI = g.PROGRGENERALE
      WHERE g.FLAG_PRONTO_CONSEGNA = 'T'
      AND (
             g.QTA_PRONTO_CONSEGNA IS NULL
@@ -438,16 +438,16 @@ public class OrdineService {
         long start = System.currentTimeMillis();
 
         String sql = """
-        UPDATE go
-        SET go.HAS_PRONTO_CONSEGNA = 'F'
-        FROM GO_ORDINE go
-        WHERE go.HAS_PRONTO_CONSEGNA = 'T'
+        UPDATE gor
+        SET gor.HAS_PRONTO_CONSEGNA = 'F'
+        FROM GO_ORDINE gor
+        WHERE gor.HAS_PRONTO_CONSEGNA = 'T'
           AND NOT EXISTS (
               SELECT 1
               FROM GO_ORDINE_DETTAGLIO god
-              WHERE god.ANNO = go.ANNO
-                AND god.SERIE = go.SERIE
-                AND god.PROGRESSIVO = go.PROGRESSIVO
+              WHERE god.ANNO = gor.ANNO
+                AND god.SERIE = gor.SERIE
+                AND god.PROGRESSIVO = gor.PROGRESSIVO
                 AND god.FLAG_PRONTO_CONSEGNA = 'T'
           )
         """;
