@@ -15,6 +15,7 @@ import jakarta.persistence.*;
 public class Deposito extends PanacheEntityBase {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 

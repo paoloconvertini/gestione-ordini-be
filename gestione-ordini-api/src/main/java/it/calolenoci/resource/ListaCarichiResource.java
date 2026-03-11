@@ -186,17 +186,16 @@ public class ListaCarichiResource {
     @APIResponse(responseCode = "200", description = "Role salvato con successo")
     public Response saveDeposito(DizionarioDto dto) {
         Deposito d = Deposito.findById(dto.getId());
-        if(d != null) {
+        if (d != null) {
             d.setNome(dto.getNome());
-            d.persist();
         } else {
             Deposito entity = new Deposito();
-            Long id = Deposito.find("select ISNULL(MAX(id)+1, 1) from Deposito").project(Long.class).firstResult();
-            entity.setId(id);
             entity.setNome(dto.getNome());
             entity.persist();
         }
-        return Response.status(Response.Status.CREATED).entity(new ResponseDto("Deposito salvato", false)).build();
+        return Response.status(Response.Status.CREATED)
+                .entity(new ResponseDto("Deposito salvato", false))
+                .build();
     }
 
     @DELETE
