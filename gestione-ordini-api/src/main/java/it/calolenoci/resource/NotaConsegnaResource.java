@@ -58,9 +58,8 @@ public class NotaConsegnaResource {
             notaConsegna = new NotaConsegna();
             notaConsegna.setNota(dto.getNota());
             notaConsegna.setDataNota(dto.getDataNota());
+            notaConsegna.persist();
         }
-
-        notaConsegna.persist();
         return Response.ok().status(Response.Status.CREATED).entity(new ResponseDto("Nota salvata con successo", false)).build();
     }
 
