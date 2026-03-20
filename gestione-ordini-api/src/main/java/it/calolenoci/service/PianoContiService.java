@@ -2,10 +2,13 @@ package it.calolenoci.service;
 
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.EmailDto;
+import it.calolenoci.dto.PianoContiDto;
 import it.calolenoci.entity.PianoConti;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @ApplicationScoped
 public class PianoContiService {

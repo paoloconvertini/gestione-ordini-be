@@ -20,16 +20,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
 public class FetchScheduler {
-
-    @ConfigProperty(name = "bing.map.url")
-    String baseUrl;
-
-    @ConfigProperty(name = "bing.map.apiKey")
-    String apiKey;
 
     @ConfigProperty(name = "admin.email")
     String adminEmail;
@@ -45,9 +40,6 @@ public class FetchScheduler {
 
     @Inject
     MailService mailService;
-
-    @Inject
-    GeoLocationService geoLocationService;
 
     @Inject
     SaldiMagazzinoService saldiMagazzinoService;
@@ -141,39 +133,10 @@ public class FetchScheduler {
         mailService.invioMailOrdiniDaConsegnare(this.adminEmail);
     }
 
-
-    @Scheduled(cron = "${cron.expr.geolocation}")
-    @TransactionConfiguration(timeout = 50000)
-    public void geoLocation() throws ParseException {
-        List<PianoContiDto> clienti = ordineService.findClienti();
-        for (PianoContiDto pianoContiDto : clienti) {
-            updateLatLon(pianoContiDto);
-        }
-    }
-
     @Scheduled(cron = "${cron.expr.cespiti}")
     @TransactionConfiguration(timeout = 500000)
     public void calcolaAmmortamentoCespiti() throws ParseException {
         ammortamentoCespiteService.calcola(null);
     }
 
-    @Transactional
-    public void updateLatLon(PianoContiDto pianoContiDto) {
-        try {
-            String url = baseUrl + encodeValue(StringUtils.trim(pianoContiDto.getCap()) + " " + pianoContiDto.getLocalita() + " " + pianoContiDto.getIndirizzo()) + "&key=" + apiKey;
-            Coordinate lonLat = geoLocationService.getLonLat(url);
-            if (lonLat != null) {
-                PianoConti.update("latitudine = :lat, longitudine =:lon" +
-                                " WHERE gruppoConto = 1231 AND sottoConto =:sottoConto",
-                        Parameters.with("lat", lonLat.getLatitudine()).and("lon", lonLat.getLongitudine())
-                                .and("sottoConto", pianoContiDto.getSottoConto()));
-            }
-        } catch (Exception e) {
-            Log.error(e.getStackTrace());
-        }
-    }
-
-    private String encodeValue(String value) throws UnsupportedEncodingException {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-    }
 }

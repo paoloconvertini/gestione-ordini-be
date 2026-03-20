@@ -1,9 +1,13 @@
 package it.calolenoci.resource;
 
+import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.PianoContiDto;
+import it.calolenoci.dto.UpdateCoordsDto;
 import it.calolenoci.entity.PianoConti;
 import it.calolenoci.enums.Ruolo;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.*;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -12,10 +16,6 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.RequestScoped;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Response;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -24,8 +24,6 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path("api/pianoconti")
 @RequestScoped
 public class PianocontiResource {
-
-
 
     @Operation(summary = "Returns all fornitori")
     @GET
@@ -39,5 +37,26 @@ public class PianocontiResource {
                 .project(PianoContiDto.class).list()).build();
     }
 
+    @POST
+    @Path("/update-coordinates")
+    @Transactional
+    public void updateCoordinates(UpdateCoordsDto dto) {
+        String coords = dto.coords;
+
+        if (coords == null || !coords.contains(",")) {
+            throw new RuntimeException("Formato coordinate non valido");
+        }
+
+        String[] parts = coords.split(",");
+
+        double lat = Double.parseDouble(parts[0].trim());
+        double lon = Double.parseDouble(parts[1].trim());
+        PianoConti.update(
+                "latitudine = :lat, longitudine = :lon WHERE sottoConto = :sottoConto",
+                Parameters.with("lat", lat)
+                        .and("lon", lon)
+                        .and("sottoConto", dto.getSottoConto())
+        );
+    }
 
 }
