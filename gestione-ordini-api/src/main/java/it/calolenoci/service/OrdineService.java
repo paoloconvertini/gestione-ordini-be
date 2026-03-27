@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Year;
@@ -73,6 +74,10 @@ public class OrdineService {
     AuditService auditService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    public SimpleDateFormat annoYY = new SimpleDateFormat("dd/MM/yy");
+
+    public SimpleDateFormat sdf2 = new SimpleDateFormat("dd/MM/yyyy");
 
     @Transactional
     @TransactionConfiguration(timeout = 15)
@@ -1132,12 +1137,15 @@ public class OrdineService {
 
                 // Completo dati acconti (storni, residui)
                 for (AccontoDto a : accontoDtos) {
+                    String data1 = sdf2.format(a.getDataFattura());
+                    String data2 = annoYY.format(a.getDataFattura());
                     // a.getDataFattura() e numeroFattura sono non-null per filtro precedente
                     List<AccontoDto> listaStorno = em.createNamedQuery("StornoDto", AccontoDto.class)
                             .setParameter("sottoConto", sottoConto)
                             .setParameter("numeroFattura", a.getNumeroFattura())
                             .setParameter("iva", a.getIva())
-                            .setParameter("dataAcconto", fatturaService.sdf2.format(a.getDataFattura()))
+                            .setParameter("data1", data1)
+                            .setParameter("data2", data2)
                             .getResultList();
 
                     a.setStorni(listaStorno.stream()
