@@ -532,65 +532,68 @@ public class FatturaService {
 
     @TransactionConfiguration(timeout = 5000)
     public Double getOrdiniAperti(String sottoConto) {
-        return Ordine.find(
+        Object result = Fatture.getEntityManager().createNativeQuery(
                 "SELECT COALESCE(SUM(" +
-                        " o2.prezzo" +
-                        " *(1-o2.scontoArticolo/100)" +
-                        " *(1-o2.scontoC1/100)" +
-                        " *(1-o2.scontoC2/100)" +
-                        " *(1-o2.scontoP/100)" +
-                        " * god.qtaDaConsegnare" +
-                        " * (1 + CAST(o2.fCodiceIva AS double)/100)" +
+                        " o2.PREZZO" +
+                        " *(1-o2.SCONTOARTICOLO/100)" +
+                        " *(1-o2.SCONTOC1/100)" +
+                        " *(1-o2.SCONTOC2/100)" +
+                        " *(1-o2.SCONTOP/100)" +
+                        " * god.QUANTITA_DA_CONSEGNARE" +
+                        " * (1 + COALESCE(TRY_CAST(o2.FCODICEIVA AS float),0)/100)" +
                         "),0) " +
-                        "FROM Ordine o " +
-                        "JOIN OrdineDettaglio o2 ON o.anno = o2.anno AND o.serie = o2.serie AND o.progressivo = o2.progressivo " +
-                        "JOIN GoOrdineDettaglio god ON o2.progrGenerale = god.progrGenerale " +
-                        "WHERE o2.saldoAcconto <> 'S' " +
-                        "AND o.gruppoCliente = 1231 " +
-                        "AND o.contoCliente = :s",
-                Parameters.with("s", sottoConto)
-        ).project(Double.class).firstResult();
+                        "FROM ORDCLI o " +
+                        "JOIN ORDCLI2 o2 ON o.ANNO = o2.ANNO AND o.SERIE = o2.SERIE AND o.PROGRESSIVO = o2.PROGRESSIVO " +
+                        "JOIN GO_ORDINE_DETTAGLIO god ON o2.PROGRGENERALE = god.PROGRGENERALE " +
+                        "WHERE o2.SALDOACCONTO <> 'S' " +
+                        "AND o.GRUPPOCLIENTE = 1231 " +
+                        "AND o.CONTOCLIENTE = :s")
+                .setParameter("s", sottoConto)
+                .getSingleResult();
+        return result != null ? ((Number) result).doubleValue() : 0.0;
     }
 
     @TransactionConfiguration(timeout = 5000)
     public Double getAccontiFatturati(String sottoConto) {
+        Object result = Fatture.getEntityManager().createNativeQuery(
+                        "SELECT COALESCE(SUM(" +
+                                " f2.PREZZO * (1 + COALESCE(TRY_CAST(f2.FCODICEIVA AS float),0)/100)" +
+                                "),0) " +
+                                "FROM FATTURE f " +
+                                "JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO " +
+                                "WHERE f.GRUPPOCLIENTE = 1231 " +
+                                "AND f.CONTOCLIENTE = :s " +
+                                "AND f2.FARTICOLO = '*ACC'"
+                )
+                .setParameter("s", sottoConto)
+                .getSingleResult();
 
-        return Fatture.find(
-                "SELECT COALESCE(SUM(" +
-                        " f2.prezzo * (1 + CAST(f2.iva AS double)/100)" +
-                        "),0) " +
-                        "FROM Fatture f " +
-                        "JOIN FattureDettaglio f2 " +
-                        "ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
-                        "WHERE f.gruppoCliente = 1231 " +
-                        "AND f.contoCliente = :s " +
-                        "AND f2.fArticolo = '*ACC'",
-                Parameters.with("s", sottoConto)
-        ).project(Double.class).firstResult();
+        return result != null ? ((Number) result).doubleValue() : 0.0;
     }
 
     @TransactionConfiguration(timeout = 5000)
     public Double getBolleNonFatturate(String sottoConto) {
+        Object result = Fatture.getEntityManager().createNativeQuery(
+                            "SELECT COALESCE(SUM(" +
+                                    " f2.PREZZO" +
+                                    " *(1-f2.SCONTOARTICOLO/100)" +
+                                    " *(1-f2.SCONTOC1/100)" +
+                                    " *(1-f2.SCONTOC2/100)" +
+                                    " *(1-f2.SCONTOP/100)" +
+                                    " * f2.QUANTITA" +
+                                    " * (1 + COALESCE(TRY_CAST(f2.FCODICEIVA AS float),0)/100)" +
+                                    "),0) " +
+                                    "FROM FATTURE f " +
+                                    "JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO " +
+                                    "WHERE f.GRUPPOCLIENTE = 1231 " +
+                                    "AND f.CONTOCLIENTE = :s " +
+                                    "AND f.FLAGFATTURA <> 'S'"
+                    )
+                    .setParameter("s", sottoConto)
+                    .getSingleResult();
 
-        return Fatture.find(
-                "SELECT COALESCE(SUM(" +
-                        " f2.prezzo" +
-                        " *(1-f2.scontoarticolo/100)" +
-                        " *(1-f2.scontoc1/100)" +
-                        " *(1-f2.scontoc2/100)" +
-                        " *(1-f2.scontop/100)" +
-                        " * f2.quantita" +
-                        " * (1 + CAST(f2.iva AS double)/100)" +
-                        "),0) " +
-                        "FROM Fatture f " +
-                        "JOIN FattureDettaglio f2 " +
-                        "ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
-                        "WHERE f.gruppoCliente = 1231 " +
-                        "AND f.contoCliente = :s " +
-                        "AND f.flagfattura <> 'S'",
-                Parameters.with("s", sottoConto)
-        ).project(Double.class).firstResult();
-    }
+            return result != null ? ((Number) result).doubleValue() : 0.0;
+        }
 
     /**
      * Elenco fatture di acconto NON validate (senza numero/data) che,
