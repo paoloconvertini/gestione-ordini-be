@@ -54,6 +54,8 @@ public class FatturaService {
 
     public SimpleDateFormat sdf2 = new SimpleDateFormat("dd/MM/yyyy");
 
+    public SimpleDateFormat annoYY = new SimpleDateFormat("dd/MM/yy");
+
     @Inject
     FattureMapper fattureMapper;
 
@@ -191,14 +193,22 @@ public class FatturaService {
 
     private List<AccontoDto> getAccontoDtos(String sottoConto, List<AccontoDto> resultList, List<AccontoDto> listaAcconto) {
         for (AccontoDto a : listaAcconto) {
+            String data1 = sdf2.format(a.getDataFattura());
+            String data2 = annoYY.format(a.getDataFattura());
             List<AccontoDto> listaStorno = em.createNamedQuery("StornoDto")
                     .setParameter("sottoConto", sottoConto)
                     .setParameter("numeroFattura", StringUtils.trim(a.getNumeroFattura()))
                     .setParameter("iva", a.getIva())
-                    .setParameter("dataAcconto", sdf2.format(a.getDataFattura()))
+                    .setParameter("data1", data1)
+                    .setParameter("data2", data2)
                     .getResultList();
-            a.setStorni(listaStorno.stream().filter(s  -> s.getOrdineCliente().equals(a.getRifOrdCliente())).toList());
-        }
+            a.setStorni(listaStorno.stream()
+                    .filter(s -> {
+                        String ordA = normalize(a.getRifOrdCliente());
+                        String ordS = normalize(s.getOrdineCliente());
+                        return ordS.equals(ordA);
+                    })
+                    .toList());        }
         Set<AccontoDto> unici = listaAcconto.stream()
                 .filter(a -> a.getPrezzo() > 0)
                 .collect(Collectors.toSet());
@@ -213,6 +223,9 @@ public class FatturaService {
                 .sorted(Comparator.comparing(AccontoDto::getRifOrdCliente))
                 .toList();    }
 
+    private String normalize(String s) {
+        return s == null ? "" : s.replaceAll("[^0-9/]", "").trim();
+    }
 
     @Transactional
     public String creaBolla(List<OrdineDettaglioDto> list, List<AccontoDto> accontoDtos, String user) {
@@ -239,26 +252,39 @@ public class FatturaService {
                         double diffAccontoSommaArticoli = dtos.stream().filter(d -> StringUtils.isNotBlank(d.getFCodiceIva()) && d.getFCodiceIva().equals(s))
                                 .mapToDouble(dto -> dto.getPrezzoScontato()*dto.getQtaProntoConsegna()).sum();
                         for (AccontoDto a : accontiPerIva) {
+
                             if (diffAccontoSommaArticoli <= 0) {
-                                break; // ho già stornato tutto
+                                break;
                             }
 
-                            double prezzo;
-                            if (a.getPrezzo() > diffAccontoSommaArticoli) {
-                                prezzo = diffAccontoSommaArticoli;
-                                diffAccontoSommaArticoli = 0;
-                            } else {
-                                prezzo = a.getPrezzo();
-                                diffAccontoSommaArticoli -= prezzo;
+                            double residuo = a.getImportoResiduo();
+
+                            if (residuo <= 0) {
+                                continue; // acconto già consumato
                             }
+
+                            double prezzo = Math.min(residuo, diffAccontoSommaArticoli);
 
                             if (prezzo > 0) {
+
                                 double prezzoArrotondato = BigDecimal.valueOf(prezzo)
                                         .setScale(2, RoundingMode.HALF_UP)
                                         .doubleValue();
-                                OrdineDettaglioDto ordineDettaglio = fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzoArrotondato);
-                                dtos.add(ordineDettaglio); // non usare indexOf
-                                Log.debug("*** CREA BOLLA, creata voce storno: " + ordineDettaglio.getFDescrArticolo() + " di " + prezzoArrotondato + " euro");
+
+                                OrdineDettaglioDto ordineDettaglio =
+                                        fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzoArrotondato);
+
+                                dtos.add(ordineDettaglio);
+
+                                Log.debug("*** CREA BOLLA, creata voce storno: "
+                                        + ordineDettaglio.getFDescrArticolo()
+                                        + " di " + prezzoArrotondato + " euro");
+
+                                // 🔥 SCALO RESIDUO ACconto
+                                a.setImportoResiduo(residuo - prezzoArrotondato);
+
+                                // 🔥 SCALO MERCE DA STORNARE
+                                diffAccontoSommaArticoli -= prezzoArrotondato;
                             }
                         }
                     }

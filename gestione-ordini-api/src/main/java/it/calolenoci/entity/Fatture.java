@@ -86,11 +86,15 @@ import java.util.Date;
                         + " JOIN FATTURE2 f5 ON f5.ANNO = f4.ANNO AND f5.SERIE = f4.SERIE AND f.PROGRESSIVO = f5.PROGRESSIVO"
                         + " join ORDCLI2 o2 ON o2.PROGRGENERALE = f5.PROGRORDCLI"
                         + " join ORDCLI o ON o2.ANNO = o.ANNO AND o2.SERIE = o.SERIE AND o2.PROGRESSIVO = o.PROGRESSIVO"
-
-                        + " WHERE f4.FDESCRARTICOLO LIKE CONCAT('%',:numeroFattura, '%')"
-                        + " and f4.FDESCRARTICOLO LIKE CONCAT('%', :dataAcconto, '%')"
-                        + " and f.CONTOCLIENTE = :sottoConto "
-                        + " and f4.FCODICEIVA = :iva",
+                        +  " WHERE "
+                        +  " f.CONTOCLIENTE = :sottoConto "
+                        +  " AND f4.FCODICEIVA = :iva "
+                        +  " AND f4.FDESCRARTICOLO LIKE CONCAT('%', :numeroFattura, '%') "
+                        +  " AND ( "
+                        +  "         REPLACE(REPLACE(f4.FDESCRARTICOLO, '.', '/'), '-', '/') LIKE CONCAT('%', :data1, '%') "
+                        +  " OR "
+                        +  " REPLACE(REPLACE(f4.FDESCRARTICOLO, '.', '/'), '-', '/') LIKE CONCAT('%', :data2, '%') "
+                        +  "     ) ",
         resultSetMapping = "StornoDto"
 )
 @SqlResultSetMapping(
