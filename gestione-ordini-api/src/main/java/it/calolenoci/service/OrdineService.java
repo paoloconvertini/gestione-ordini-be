@@ -1130,7 +1130,7 @@ public class OrdineService {
             // 5) Per ogni IVA del medesimo ordine
             for (FatturaAccontoIvaView ivaView : ivaViews) {
                 String codiceIva = ivaView.getFCodiceIva();
-                double ivaPerc = NumberUtils.toDouble(codiceIva, 0d); // evita NumberFormatException
+                double ivaPerc = getAliquota(codiceIva);
 
                 // Acconti VALIDATI per (ordine, iva)
                 List<AccontoDto> accontoDtos = accontiByOrdIva.getOrDefault(ordKey + "|" + codiceIva, Collections.emptyList());
@@ -1219,7 +1219,8 @@ public class OrdineService {
                 FattureDettaglio fattureDettaglio;
                 for (FatturaAccontoDto d : dtoByOrdine) {
                     BigDecimal ivato = BigDecimal.valueOf(d.getNuovoAccontoIvato());
-                    BigDecimal ivaPerc = new BigDecimal(d.getIva());
+                    double iva = getAliquota(d.getIva());
+                    BigDecimal ivaPerc = BigDecimal.valueOf(iva);
 
                     BigDecimal imponibile = ivato.divide(
                             BigDecimal.ONE.add(ivaPerc.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)),
@@ -1297,5 +1298,18 @@ public class OrdineService {
         for (GoOrdVeicolo v : daRiordinare) {
             v.setOrdine(pos++);
         }
+    }
+
+    private double getAliquota(String codiceIva) {
+        if (codiceIva == null) return 0;
+
+        return em.createQuery(
+                        "SELECT i.aliquota FROM Iva i WHERE i.codiceIva = :c",
+                        Double.class
+                )
+                .setParameter("c", codiceIva)
+                .getResultStream()
+                .findFirst()
+                .orElse(0d);
     }
 }

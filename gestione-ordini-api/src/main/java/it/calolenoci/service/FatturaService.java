@@ -533,21 +533,21 @@ public class FatturaService {
     @TransactionConfiguration(timeout = 5000)
     public Double getOrdiniAperti(String sottoConto) {
         Object result = Fatture.getEntityManager().createNativeQuery(
-                "SELECT COALESCE(SUM(" +
-                        " o2.PREZZO" +
-                        " *(1-o2.SCONTOARTICOLO/100)" +
-                        " *(1-o2.SCONTOC1/100)" +
-                        " *(1-o2.SCONTOC2/100)" +
-                        " *(1-o2.SCONTOP/100)" +
-                        " * god.QUANTITA_DA_CONSEGNARE" +
-                        " * (1 + COALESCE(TRY_CAST(o2.FCODICEIVA AS float),0)/100)" +
-                        "),0) " +
-                        "FROM ORDCLI o " +
-                        "JOIN ORDCLI2 o2 ON o.ANNO = o2.ANNO AND o.SERIE = o2.SERIE AND o.PROGRESSIVO = o2.PROGRESSIVO " +
-                        "JOIN GO_ORDINE_DETTAGLIO god ON o2.PROGRGENERALE = god.PROGRGENERALE " +
-                        "WHERE o2.SALDOACCONTO <> 'S' " +
-                        "AND o.GRUPPOCLIENTE = 1231 " +
-                        "AND o.CONTOCLIENTE = :s")
+                        "SELECT COALESCE(SUM(" +
+                                " o2.PREZZO" +
+                                " *(1-o2.SCONTOARTICOLO/100)" +
+                                " *(1-o2.SCONTOC1/100)" +
+                                " *(1-o2.SCONTOC2/100)" +
+                                " *(1-o2.SCONTOP/100)" +
+                                " * o2.QUANTITA" +
+                                " * (1 + COALESCE(i.ALIQUOTA,0)/100)" +
+                                "),0) " +
+                                "FROM ORDCLI o " +
+                                "JOIN ORDCLI2 o2 ON o.ANNO = o2.ANNO AND o.SERIE = o2.SERIE AND o.PROGRESSIVO = o2.PROGRESSIVO " +
+                                "LEFT JOIN IVA i ON i.CODICEIVA = o2.FCODICEIVA " +
+                                "WHERE o2.SALDOACCONTO <> 'S' " +
+                                "AND o.GRUPPOCLIENTE = 1231 " +
+                                "AND o.CONTOCLIENTE = :s")
                 .setParameter("s", sottoConto)
                 .getSingleResult();
         return result != null ? ((Number) result).doubleValue() : 0.0;
@@ -557,10 +557,11 @@ public class FatturaService {
     public Double getAccontiFatturati(String sottoConto) {
         Object result = Fatture.getEntityManager().createNativeQuery(
                         "SELECT COALESCE(SUM(" +
-                                " f2.PREZZO * (1 + COALESCE(TRY_CAST(f2.FCODICEIVA AS float),0)/100)" +
+                                " f2.PREZZO * (1 + COALESCE(i.ALIQUOTA,0)/100)" +
                                 "),0) " +
                                 "FROM FATTURE f " +
                                 "JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO " +
+                                "LEFT JOIN IVA i ON i.CODICEIVA = f2.FCODICEIVA " +
                                 "WHERE f.GRUPPOCLIENTE = 1231 " +
                                 "AND f.CONTOCLIENTE = :s " +
                                 "AND f2.FARTICOLO = '*ACC'"
@@ -581,10 +582,11 @@ public class FatturaService {
                                     " *(1-f2.SCONTOC2/100)" +
                                     " *(1-f2.SCONTOP/100)" +
                                     " * f2.QUANTITA" +
-                                    " * (1 + COALESCE(TRY_CAST(f2.FCODICEIVA AS float),0)/100)" +
+                                    " * (1 + COALESCE(i.ALIQUOTA,0)/100)" +
                                     "),0) " +
                                     "FROM FATTURE f " +
                                     "JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO " +
+                                    "LEFT JOIN IVA i ON i.CODICEIVA = f2.FCODICEIVA " +
                                     "WHERE f.GRUPPOCLIENTE = 1231 " +
                                     "AND f.CONTOCLIENTE = :s " +
                                     "AND f.FLAGFATTURA <> 'S'"
