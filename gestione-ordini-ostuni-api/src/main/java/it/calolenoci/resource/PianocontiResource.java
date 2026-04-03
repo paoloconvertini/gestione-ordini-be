@@ -21,7 +21,7 @@ import jakarta.ws.rs.core.Response;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Produces(APPLICATION_JSON)
-@Path("api/pianoconti")
+@Path("api-ostuni/pianoconti")
 @RequestScoped
 public class PianocontiResource {
 

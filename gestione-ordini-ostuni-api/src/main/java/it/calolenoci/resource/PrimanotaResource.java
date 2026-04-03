@@ -22,7 +22,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
-@Path("api/primanota")
+@Path("api-ostuni/primanota")
 @RequestScoped
 public class PrimanotaResource {
 

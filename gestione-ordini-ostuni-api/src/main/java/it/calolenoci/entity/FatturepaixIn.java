@@ -5,7 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import jakarta.persistence.*;
-import java.sql.Date;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "FATTUREPAIX_IN")
@@ -25,7 +26,7 @@ public class FatturepaixIn extends PanacheEntityBase {
     private String identificativoix;
     
     @Column(name = "DATACONSEGNA", nullable = true)
-    private Date dataconsegna;
+    private LocalDateTime dataconsegna;
     
     @Column(name = "NOMEFILE", nullable = true, length = 100)
     private String nomefile;
@@ -55,10 +56,10 @@ public class FatturepaixIn extends PanacheEntityBase {
     private String versione;
     
     @Column(name = "DATAORA", nullable = true)
-    private Date dataora;
+    private LocalDateTime dataora;
     
     @Column(name = "DATAORADOWNLOAD", nullable = true)
-    private Date dataoradownload;
+    private LocalDateTime dataoradownload;
     
     @Column(name = "FORNITORE_DENOM", nullable = true, length = 40)
     private String fornitoreDenom;
@@ -67,19 +68,19 @@ public class FatturepaixIn extends PanacheEntityBase {
     private String fornitorePiva;
     
     @Column(name = "DATAORAIMPORTAZIONE", nullable = true)
-    private Date dataoraimportazione;
+    private LocalDateTime dataoraimportazione;
     
     @Column(name = "FLNOCIG", nullable = true, length = 1)
     private String flnocig;
     
     @Column(name = "SYS_CREATEDATE", nullable = true)
-    private Date sysCreatedate;
+    private LocalDateTime sysCreatedate;
     
     @Column(name = "SYS_CREATEUSER", nullable = true, length = 20)
     private String sysCreateuser;
     
     @Column(name = "SYS_UPDATEDATE", nullable = true)
-    private Date sysUpdatedate;
+    private LocalDateTime sysUpdatedate;
     
     @Column(name = "SYS_UPDATEUSER", nullable = true, length = 20)
     private String sysUpdateuser;

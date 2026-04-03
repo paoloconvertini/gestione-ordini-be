@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
@@ -33,46 +34,123 @@ public class AmmortamentoCespiteService {
     public void calcola(FiltroCespite filtroCespite) {
         try {
             long inizio = System.currentTimeMillis();
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
             LocalDate dataCorrente = LocalDate.parse(filtroCespite.getData(), formatter);
+            int anno = dataCorrente.getYear();
+
             Log.debug("### Inizio calcolo registro cespiti");
+
+            // =========================
+            // 1. CARICO CESPITI
+            // =========================
             String query = "SELECT c.id, c.tipoCespite, c.progressivo1, c.progressivo2, c.cespite, c.dataAcq, c.numDocAcq, c.fornitore, " +
                     "c.importo, c.importoRivalutazione, c.attivo, c.dataVendita, c.numDocVendita, c.intestatarioVendita, c.importoVendita," +
-                    " c.superAmm, c.protocollo, c.giornale, c.anno, c.dataInizioCalcoloAmm, c.flPrimoAnno, c.fondoRivalutazione, " +
-                    " t.id, t.descrizione, t.percAmmortamento, t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
+                    "c.superAmm, c.protocollo, c.giornale, c.anno, c.dataInizioCalcoloAmm, c.flPrimoAnno, c.fondoRivalutazione, " +
+                    "t.id, t.descrizione, t.percAmmortamento, t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
                     "t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto, s.descrizione, s.perc " +
                     "FROM Cespite c " +
                     "JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite " +
                     "LEFT JOIN TipoSuperAmm s ON s.id = c.superAmm " +
                     "WHERE c.attivo = 'T' ";
+
             Map<String, Object> params = new HashMap<>();
             if (StringUtils.isNotBlank(filtroCespite.getTipoCespite())) {
                 query += " AND c.tipoCespite = :q";
                 params.put("q", filtroCespite.getTipoCespite());
             }
-            List<RegistroCespiteDto> cespitiAttivi = Cespite.find(query, params).project(RegistroCespiteDto.class).list();
-            List<AmmortamentoCespite> ammortamentoCespites = new ArrayList<>();
-            AmmortamentoCespite.delete("idAmmortamento in (:list) and anno >=:a", Parameters.with("list", cespitiAttivi.stream().map(RegistroCespiteDto::getId).collect(Collectors.toList())).and("a", dataCorrente.getYear()));
+
+            List<RegistroCespiteDto> cespitiAttivi = Cespite.find(query, params)
+                    .project(RegistroCespiteDto.class)
+                    .list();
+
+            if (cespitiAttivi.isEmpty()) {
+                Log.debug("Nessun cespite attivo trovato");
+                return;
+            }
+
+            // =========================
+            // 2. PRELOAD AMMORTAMENTI (NO N+1)
+            // =========================
+            List<String> ids = cespitiAttivi.stream()
+                    .map(RegistroCespiteDto::getId)
+                    .toList();
+
+            List<AmmortamentoCespite> allAmm = AmmortamentoCespite.find(
+                    "idAmmortamento in :ids AND anno < :a",
+                    Parameters.with("ids", ids).and("a", anno)
+            ).list();
+
+            Map<String, List<AmmortamentoCespite>> ammMap =
+                    allAmm.stream().collect(Collectors.groupingBy(AmmortamentoCespite::getIdAmmortamento));
+
+            // =========================
+            // 3. DELETE OTTIMIZZATA
+            // =========================
+            AmmortamentoCespite.delete("anno >= :a AND idAmmortamento in :ids",
+                    Parameters.with("a", anno).and("ids", ids));
+
+            // =========================
+            // 4. CALCOLO
+            // =========================
+            List<AmmortamentoCespite> daSalvare = new ArrayList<>();
+
             Log.debug("Calcola inizio ciclo cespiti Attivi");
+
             for (RegistroCespiteDto cespite : cespitiAttivi) {
-                List<AmmortamentoCespite> ammortamenti = AmmortamentoCespite.find("idAmmortamento =:id AND anno < :a",
-                        Parameters.with("a", dataCorrente.getYear()).and("id", cespite.getId())).list();
-                Optional<AmmortamentoCespite> a = ammortamenti.stream().filter(am -> am.getAnno() == dataCorrente.getYear() - 1).findFirst();
-                if((a.isEmpty() && ammortamenti.isEmpty())  ||
-                        (a.isPresent() && (cespite.getImporto() + (cespite.getImportoRivalutazione() != null ? cespite.getImportoRivalutazione() : 0)) != (a.get().getFondo() + a.get().getFondoRivalutazione()))) {
+
+                List<AmmortamentoCespite> ammortamenti =
+                        ammMap.getOrDefault(cespite.getId(), Collections.emptyList());
+
+                Optional<AmmortamentoCespite> ammPrecAnno =
+                        ammortamenti.stream()
+                                .filter(am -> am.getAnno() == anno - 1)
+                                .findFirst();
+
+                boolean condizioneCalcolo =
+                        (ammPrecAnno.isEmpty() && ammortamenti.isEmpty()) ||
+                                (ammPrecAnno.isPresent() &&
+                                        (cespite.getImporto() +
+                                                (cespite.getImportoRivalutazione() != null ? cespite.getImportoRivalutazione() : 0))
+                                                != (ammPrecAnno.get().getFondo() + ammPrecAnno.get().getFondoRivalutazione())
+                                );
+
+                if (condizioneCalcolo) {
+
                     if (cespite.getImportoRivalutazione() != null && cespite.getImportoRivalutazione() != 0) {
-                        ammortamentoCespites.addAll(calcoloSingoloCespiteRivalutato(cespite, dataCorrente, a));
+                        daSalvare.addAll(
+                                calcoloSingoloCespiteRivalutato(cespite, dataCorrente, ammPrecAnno)
+                        );
                     } else {
-                        ammortamentoCespites.addAll(calcoloSingoloCespite(cespite, dataCorrente, a));
+                        daSalvare.addAll(
+                                calcoloSingoloCespite(cespite, dataCorrente, ammPrecAnno)
+                        );
                     }
                 }
             }
-            Log.debug("FINE --- Calcola inizio ciclo cespiti Attivi");
-            AmmortamentoCespite.persist(ammortamentoCespites);
+
+            Log.debug("FINE --- ciclo cespiti Attivi");
+
+            // =========================
+            // 5. PERSIST A BATCH
+            // =========================
+            int batchSize = 500;
+
+            for (int i = 0; i < daSalvare.size(); i++) {
+                AmmortamentoCespite.persist(daSalvare.get(i));
+
+                if (i % batchSize == 0) {
+                    AmmortamentoCespite.getEntityManager().flush();
+                    AmmortamentoCespite.getEntityManager().clear();
+                }
+            }
+
             long fine = System.currentTimeMillis();
             Log.info("Metodo calcola ammortamenti: " + (fine - inizio) / 1000 + " sec");
+
         } catch (Exception e) {
             Log.error("Errore calcolo ammortamento", e);
+            throw e;
         }
     }
 
@@ -388,6 +466,10 @@ public class AmmortamentoCespiteService {
             localDate = LocalDate.parse(filtroCespite.getData(), formatter);
         }
         int anno = localDate.getYear();
+        Map<Long, TipoSuperAmm> superAmmLookup = new HashMap<>();
+        for (TipoSuperAmm t : TipoSuperAmm.<TipoSuperAmm>listAll()) {
+            superAmmLookup.put(t.id, t);
+        }
         long inizioTempo = System.currentTimeMillis();
         final RegistroCespitiDto view = new RegistroCespitiDto();
         List<CategoriaCespitiDto> result = new ArrayList<>();
@@ -424,20 +506,33 @@ public class AmmortamentoCespiteService {
             if (!listNoAmm.isEmpty()) {
                 cespiteDtos.addAll(listNoAmm);
             }
-            Map<String, List<RegistroCespiteDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(RegistroCespiteDto::getTipoCespite));
-
-            for (String tipoCespite : mapTipoCespite.keySet()) {
-                List<RegistroCespiteDto> dtoList = mapTipoCespite.get(tipoCespite);
+            Map<String, Map<Integer, Map<Integer, List<RegistroCespiteDto>>>> struttura = new HashMap<>();
+            for (RegistroCespiteDto dto : cespiteDtos) {
+                String tipo = dto.getTipoCespite();
+                Integer p1 = dto.getProgressivo1();
+                Integer p2 = dto.getProgressivo2();
+                struttura
+                        .computeIfAbsent(tipo, k -> new HashMap<>())
+                        .computeIfAbsent(p1, k -> new HashMap<>())
+                        .computeIfAbsent(p2, k -> new ArrayList<>())
+                        .add(dto);
+            }
+            for (String tipoCespite : struttura.keySet()) {
+                Map<Integer, Map<Integer, List<RegistroCespiteDto>>> progr1Map = struttura.get(tipoCespite);
+                List<RegistroCespiteDto> dtoList = new ArrayList<>();
+                for (Map<Integer, List<RegistroCespiteDto>> m1 : progr1Map.values()) {
+                    for (List<RegistroCespiteDto> m2 : m1.values()) {
+                        dtoList.addAll(m2);
+                    }
+                }
                 CategoriaCespitiDto categoriaCespitiDto = new CategoriaCespitiDto();
                 categoriaCespitiDto.setTipoCespite(tipoCespite);
                 RegistroCespiteDto dbDto = dtoList.get(0);
                 categoriaCespitiDto.setCategoria(dbDto.getDescrTipoCesp());
                 categoriaCespitiDto.setPerc(dbDto.getPercAmmortamento());
-                Map<Integer, List<RegistroCespiteDto>> progr1Map = dtoList.stream().collect(Collectors.groupingBy(RegistroCespiteDto::getProgressivo1));
                 List<CespiteProgressivoDto> cespiteProgressivoDtoList = new ArrayList<>();
                 for (Integer progressivo : progr1Map.keySet()) {
-                    List<RegistroCespiteDto> progressivo1List = progr1Map.get(progressivo);
-                    Map<Integer, List<RegistroCespiteDto>> progr2Map = progressivo1List.stream().collect(Collectors.groupingBy(RegistroCespiteDto::getProgressivo2));
+                    Map<Integer, List<RegistroCespiteDto>> progr2Map = progr1Map.get(progressivo);
                     List<CespiteDto> cespiteDtoList = new ArrayList<>();
                     for (Integer progr2 : progr2Map.keySet()) {
                         List<RegistroCespiteDto> progr2List = progr2Map.get(progr2);
@@ -460,12 +555,26 @@ public class AmmortamentoCespiteService {
                         v.setAnnoProtocollo(dbDto1.getAnno());
                         v.setGiornale(dbDto1.getGiornale());
                         if (dbDto1.getSuperAmm() != null && dbDto1.getSuperAmm() != 0L) {
-                            TipoSuperAmm tipoSuperAmm = TipoSuperAmm.findById(dbDto1.getSuperAmm());
-                            v.setSuperAmmDesc(tipoSuperAmm.getDescrizione());
+                            TipoSuperAmm tipoSuperAmm = superAmmLookup.get(dbDto1.getSuperAmm());
+                            if (tipoSuperAmm != null) {
+                                v.setSuperAmmDesc(tipoSuperAmm.getDescrizione());
+                            }
                         }
                         List<AmmortamentoCespite> list = new ArrayList<>();
-                        progr2List.forEach(d -> list.add(mapper.buildAmmortamento(d)));
-                        List<AmmortamentoCespite> collect = list.stream().filter(a -> a != null && a.getDataAmm() != null && !StringUtils.startsWith(a.getDescrizione(), "VENDITA")).sorted(Comparator.comparing(AmmortamentoCespite::getDataAmm)).collect(Collectors.toList());
+                        for (RegistroCespiteDto d : progr2List) {
+                            AmmortamentoCespite a = mapper.buildAmmortamento(d);
+                            if (a != null) {
+                                list.add(a);
+                            }
+                        }
+                        List<AmmortamentoCespite> collect = new ArrayList<>();
+                        for (AmmortamentoCespite a : list) {
+                            if (a.getDataAmm() != null &&
+                                    !StringUtils.startsWith(a.getDescrizione(), "VENDITA")) {
+                                collect.add(a);
+                            }
+                        }
+                        collect.sort(Comparator.comparing(AmmortamentoCespite::getDataAmm));
                         if (!dbDto1.getAttivo()) {
                             if (StringUtils.isNotBlank(dbDto1.getIntestatarioVendita())) {
                                 collect.addAll(collect.size(), list.stream().filter(a -> a != null && StringUtils.startsWith(a.getDescrizione(), "VENDITA")).toList());
@@ -528,11 +637,20 @@ public class AmmortamentoCespiteService {
                 inizioEsercizio.setFondoAmmortamentiTot((inizioEsercizio.getFondoAmmortamenti() + inizioEsercizio.getFondoAmmortamentiRiv()));
                 inizioEsercizio.setResiduo(inizioEsercizio.getValoreAggiornato() - inizioEsercizio.getFondoAmmortamentiTot());
                 sommaDto.setInizioEsercizio(inizioEsercizio);
-                Map<String, List<CespiteDto>> superAmmMap = cespiteDtoList.stream().filter(c -> StringUtils.isNotBlank(c.getSuperAmmDesc())).collect(Collectors.groupingBy(CespiteDto::getSuperAmmDesc));
+                Map<String, List<CespiteDto>> superAmmMap = new HashMap<>();
+                for (CespiteDto c : cespiteDtoList) {
+                    if (StringUtils.isNotBlank(c.getSuperAmmDesc())) {
+                        superAmmMap
+                                .computeIfAbsent(c.getSuperAmmDesc(), k -> new ArrayList<>())
+                                .add(c);
+                    }
+                }
                 for (String superAmmDesc : superAmmMap.keySet()) {
                     List<CespiteDto> viewDtoList = superAmmMap.get(superAmmDesc);
                     List<AmmortamentoCespite> list = new ArrayList<>();
-                    viewDtoList.forEach(c -> list.addAll(c.getAmmortamentoCespiteList()));
+                    for (CespiteDto c : viewDtoList) {
+                        list.addAll(c.getAmmortamentoCespiteList());
+                    }
                     double sum = list.stream()
                             .filter(a -> a.getAnno() == anno - 1 && a.getSuperQuota() != null)
                             .mapToDouble(AmmortamentoCespite::getSuperQuota)
@@ -540,8 +658,13 @@ public class AmmortamentoCespiteService {
                     if (sum == 0) {
                         continue;
                     }
-                    TipoSuperAmm t = TipoSuperAmm.find("descrizione = :desc", Parameters.with("desc", superAmmDesc)).firstResult();
-                    SuperAmmDto dto = new SuperAmmDto();
+                    TipoSuperAmm t = null;
+                    for (TipoSuperAmm tipo : superAmmLookup.values()) {
+                        if (superAmmDesc.equals(tipo.getDescrizione())) {
+                            t = tipo;
+                            break;
+                        }
+                    }                    SuperAmmDto dto = new SuperAmmDto();
                     dto.setDesc(superAmmDesc);
                     dto.setTotale(sum);
                     if (t.id == 1) {
@@ -563,19 +686,23 @@ public class AmmortamentoCespiteService {
                         .filter(c -> c.getImportoVendita() != null && c.getDataVend().getYear() == anno)
                         .mapToDouble(ce -> ce.getImporto() + (ce.getImportoRivalutazione() != null ? ce.getImportoRivalutazione() : 0))
                         .sum()));
-
-
                 cespiteDtoList.forEach(c -> ammortamentoCespiteList2.addAll(c.getAmmortamentoCespiteList()));
                 List<AmmortamentoCespite> ammortamentoCespitesVend = new ArrayList<>();
-                cespiteDtoList.stream()
-                        .filter(c -> c.getImportoVendita() != null && c.getDataVend().getYear() == anno)
-                        .toList()
-                        .forEach(c -> ammortamentoCespitesVend.add(c.getAmmortamentoCespiteList()
-                                .stream()
-                                .filter(a -> StringUtils.startsWith(a.getDescrizione(), "Ammortamento"))
-                                .max(Comparator.comparing(AmmortamentoCespite::getAnno))
-                                .get()));
-
+                for (CespiteDto c : cespiteDtoList) {
+                    if (c.getImportoVendita() != null && c.getDataVend().getYear() == anno) {
+                        AmmortamentoCespite max = null;
+                        for (AmmortamentoCespite a : c.getAmmortamentoCespiteList()) {
+                            if (StringUtils.startsWith(a.getDescrizione(), "Ammortamento")) {
+                                if (max == null || a.getAnno() > max.getAnno()) {
+                                    max = a;
+                                }
+                            }
+                        }
+                        if (max != null) {
+                            ammortamentoCespitesVend.add(max);
+                        }
+                    }
+                }
                 vendite.setTotaleAmmortamento(-(ammortamentoCespitesVend.stream().mapToDouble(a -> a.getFondo() + a.getFondoRivalutazione()).sum()));
                 vendite.setFondoAmmortamenti(inizioEsercizio.getFondoAmmortamenti() - (ammortamentoCespitesVend.stream().mapToDouble(AmmortamentoCespite::getFondo).sum()));
                 vendite.setFondoAmmortamentiRiv(inizioEsercizio.getFondoAmmortamentiRiv() - (ammortamentoCespitesVend.stream().mapToDouble(AmmortamentoCespite::getFondoRivalutazione).sum()));
@@ -595,12 +722,12 @@ public class AmmortamentoCespiteService {
                 fineEsercizio.setFondoAmmortamentiTot(fineEsercizio.getFondoAmmortamenti() + fineEsercizio.getFondoAmmortamentiRiv());
                 fineEsercizio.setTotaleAmmortamento(ammortamentiDeducibili.getTotaleAmmortamento());
                 fineEsercizio.setResiduo(fineEsercizio.getValoreAggiornato() - fineEsercizio.getFondoAmmortamentiTot());
-
-                double plus = ammortamentoCespiteList2
-                        .stream()
-                        .filter(a -> a.getAnno() == anno
-                                && StringUtils.startsWith(a.getDescrizione(), "Plus"))
-                        .mapToDouble(AmmortamentoCespite::getQuota).sum();
+                double plus = 0;
+                for (AmmortamentoCespite a : ammortamentoCespiteList2) {
+                    if (a.getAnno() == anno && StringUtils.startsWith(a.getDescrizione(), "Plus")) {
+                        plus += a.getQuota();
+                    }
+                }
                 if (plus != 0) {
                     SuperAmmDto plusDto = new SuperAmmDto();
                     plusDto.setDesc("Plus");
@@ -652,7 +779,7 @@ public class AmmortamentoCespiteService {
             ammortamentiDeducibili.setFondoAmmortamenti(result.stream().mapToDouble(c -> c.getSomma().getAmmortamentiDeducibili().getFondoAmmortamenti()).sum());
 
             if (result.stream().anyMatch(c -> c.getSomma().getSuperAmm1() != null && c.getSomma().getSuperAmm1().getTotale() != null)) {
-                TipoSuperAmm tipo1 = TipoSuperAmm.findById(1L);
+                TipoSuperAmm tipo1 = superAmmLookup.get(1L);
                 sommaDto.setSuperAmm1(new SuperAmmDto(tipo1.getDescrizione(), result
                         .stream()
                         .filter(c -> c.getSomma().getSuperAmm1() != null && c.getSomma().getSuperAmm1().getTotale() != null)
@@ -660,7 +787,7 @@ public class AmmortamentoCespiteService {
                         .sum()));
             }
             if (result.stream().anyMatch(c -> c.getSomma().getSuperAmm2() != null && c.getSomma().getSuperAmm2().getTotale() != null)) {
-                TipoSuperAmm tipo2 = TipoSuperAmm.findById(2L);
+                TipoSuperAmm tipo2 = superAmmLookup.get(2L);
                 sommaDto.setSuperAmm2(new SuperAmmDto(tipo2.getDescrizione(), result
                         .stream()
                         .filter(c -> c.getSomma().getSuperAmm2() != null && c.getSomma().getSuperAmm2().getTotale() != null)
@@ -668,7 +795,8 @@ public class AmmortamentoCespiteService {
                         .sum()));
             }
             if (result.stream().anyMatch(c -> c.getSomma().getSuperAmm3() != null && c.getSomma().getSuperAmm3().getTotale() != null)) {
-                sommaDto.setSuperAmm3(new SuperAmmDto(((TipoSuperAmm) TipoSuperAmm.findById(3L)).getDescrizione(), result
+                TipoSuperAmm tipo3 = superAmmLookup.get(3L);
+                sommaDto.setSuperAmm3(new SuperAmmDto(tipo3.getDescrizione(), result
                         .stream()
                         .filter(c -> c.getSomma().getSuperAmm3() != null && c.getSomma().getSuperAmm3().getTotale() != null)
                         .mapToDouble(c -> c.getSomma().getSuperAmm3().getTotale())
@@ -687,9 +815,6 @@ public class AmmortamentoCespiteService {
             sommaDto.setAmmortamentiDeducibili(ammortamentiDeducibili);
             sommaDto.setFineEsercizio(fine);
             view.setCespiteSommaDto(sommaDto);
-          /*  if(!report){
-                view.getCespiteList().forEach(c -> c.setCespiteProgressivoDtoList(new ArrayList<>()));
-            }*/
             long fineTempo = System.currentTimeMillis();
             Log.info("Metodo get ammortamenti: " + (fineTempo - inizioTempo) / 1000 + " sec");
         } catch (Exception e) {

@@ -33,7 +33,7 @@ import static it.calolenoci.enums.Ruolo.ADMIN;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Consumes(APPLICATION_JSON)
-@Path("api/cespiti")
+@Path("api-ostuni/cespiti")
 @RequestScoped
 public class CespiteResource {
 
