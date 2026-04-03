@@ -1,5 +1,6 @@
 package it.calolenoci.service;
 
+import io.quarkus.hibernate.orm.panache.Panache;
 import io.quarkus.logging.Log;
 import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
@@ -82,9 +83,9 @@ public class PrimanotaService {
                     " t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
                     " t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto " +
                     "FROM Cespite c " +
-                    "JOIN AmmortamentoCespite a ON c.id = a.idAmmortamento " +
+                    "JOIN AmmortamentoCespite a ON c.id = a.idAmmortamento and a.anno = :a" +
                     "JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite " +
-                    "WHERE a.anno =:a and c.attivo = 'T'";
+                    "WHERE c.attivo = 'T'";
             List<RegistroCespiteDto> cespiteDtos = Cespite.find(query, Parameters.with("a", date.getYear())).project(RegistroCespiteDto.class).list();
             Integer progrGenerale = Primanota.find("SELECT MAX(progrgenerale) + 1 FROM Primanota").project(Integer.class).firstResult();
             List<Primanota> primanotaList = Primanota.find("SELECT p " +
@@ -101,24 +102,55 @@ public class PrimanotaService {
             Primanota.delete("datamovimento = :d AND causale = :c", Parameters.with("d", date).and("c", "GVM"));
             Map<String, List<RegistroCespiteDto>> mapTipoCespite = cespiteDtos.stream().collect(Collectors.groupingBy(RegistroCespiteDto::getTipoCespite));
             List<Primanota> listToSave = new ArrayList<>();
-            for (String tipoCespite : mapTipoCespite.keySet()) {
-                List<RegistroCespiteDto> cespiteDBDtos = mapTipoCespite.get(tipoCespite);
+            int batchSize = 300;
+            int counter = 0;
+            for (Map.Entry<String, List<RegistroCespiteDto>> entry : mapTipoCespite.entrySet()) {
+                List<RegistroCespiteDto> cespiteDBDtos = entry.getValue();
                 int rigo = 1;
                 for (RegistroCespiteDto dto : cespiteDBDtos) {
                     listToSave.add(mapper.buildPrimanotaContabile("GVM", date, dto.getTipoCespite(), dto.getProgressivo1(), dto.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. Q.TA AMMORT. ORD.", dto.getAmmGruppo(), dto.getAmmConto(), dto.getQuota()));
+                    counter++;
+
+                    if (counter % batchSize == 0) {
+                        flushBatch(listToSave);
+                    }
                     listToSave.add(mapper.buildPrimanotaContabile("GVM", date, dto.getTipoCespite(), dto.getProgressivo1(), dto.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. FONDO AMMORT. ORD.", dto.getFondoGruppo(), dto.getFondoConto(), -dto.getQuota()));
+                    counter++;
+
+                    if (counter % batchSize == 0) {
+                        flushBatch(listToSave);
+                    }
                     if (dto.getQuotaRivalutazione() != null) {
                         listToSave.add(mapper.buildPrimanotaContabile("GVM", date, dto.getTipoCespite(), dto.getProgressivo1(), dto.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. Q.TA AMMORT. RIV.", dto.getAmmGruppo(), dto.getAmmConto(), dto.getQuotaRivalutazione()));
+                        counter++;
+
+                        if (counter % batchSize == 0) {
+                            flushBatch(listToSave);
+                        }
                         listToSave.add(mapper.buildPrimanotaContabile("GVM", date, dto.getTipoCespite(), dto.getProgressivo1(), dto.getProgressivo2(), protocollo, rigo++, progrGenerale++, "RIL. FONDO AMMORT. RIV.", dto.getFondoGruppo(), dto.getFondoConto(), -dto.getQuotaRivalutazione()));
+                        counter++;
+
+                        if (counter % batchSize == 0) {
+                            flushBatch(listToSave);
+                        }
                     }
                 }
                 protocollo++;
             }
-            Primanota.persist(listToSave);
+            if (!listToSave.isEmpty()) {
+                flushBatch(listToSave);
+            }
             Log.debug("### FINE contabilizzzione cespiti ###");
         } catch (Exception e) {
             Log.error("Error contabilizza ammortamenti", e);
         }
+    }
+
+    private void flushBatch(List<Primanota> listToSave) {
+        Primanota.persist(listToSave);
+        Panache.getEntityManager().flush();
+        Panache.getEntityManager().clear();
+        listToSave.clear();
     }
 
     @Transactional
