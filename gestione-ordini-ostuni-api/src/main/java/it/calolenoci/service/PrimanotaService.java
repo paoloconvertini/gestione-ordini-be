@@ -83,7 +83,7 @@ public class PrimanotaService {
                     " t.costoGruppo, t.costoConto, t.ammGruppo, t.ammConto, " +
                     " t.fondoGruppo, t.fondoConto, t.plusGruppo, t.plusConto, t.minusGruppo, t.minusConto " +
                     "FROM Cespite c " +
-                    "JOIN AmmortamentoCespite a ON c.id = a.idAmmortamento and a.anno = :a" +
+                    "JOIN AmmortamentoCespite a ON c.id = a.idAmmortamento and a.anno = :a " +
                     "JOIN CategoriaCespite t ON t.tipoCespite = c.tipoCespite " +
                     "WHERE c.attivo = 'T'";
             List<RegistroCespiteDto> cespiteDtos = Cespite.find(query, Parameters.with("a", date.getYear())).project(RegistroCespiteDto.class).list();
