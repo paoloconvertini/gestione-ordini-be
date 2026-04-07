@@ -81,12 +81,12 @@ public class ShowroomService {
 
         if (filtro.getDataDa() != null) {
             query.append(" AND s.dataVisita >= :dataDa ");
-            params.put("dataDa", filtro.getDataDa());
+            params.put("dataDa", filtro.getDataDa().atStartOfDay());
         }
 
         if (filtro.getDataA() != null) {
             query.append(" AND s.dataVisita <= :dataA ");
-            params.put("dataA", filtro.getDataA());
+            params.put("dataA", filtro.getDataA().atTime(23, 59, 59));
         }
 
         if (filtro.getNomeCliente() != null && !filtro.getNomeCliente().isBlank()) {

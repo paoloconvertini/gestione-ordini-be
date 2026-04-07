@@ -148,7 +148,7 @@ public class ArticoloResource {
     @RolesAllowed({Ruolo.ADMIN, Ruolo.LOGISTICA, Ruolo.AMMINISTRATIVO})
     @Path("/creaBolla")
     public Response creaBolla(Body body) {
-        String result = fatturaService.creaBolla(body.getList(), body.getAccontoDtos(), user);
+        String result = fatturaService.creaBollaCompleta(body.getList(), body.getAccontoDtos(), user);
         return Response.ok(new ResponseDto(result, StringUtils.isBlank(result))).build();
     }
 
@@ -216,7 +216,7 @@ public class ArticoloResource {
     @PUT
     @RolesAllowed({Ruolo.ADMIN, Ruolo.MAGAZZINIERE, Ruolo.AMMINISTRATIVO})
     public Response saveArticoli(List<OrdineDettaglioDto> list) {
-        if (!list.isEmpty()) {
+        if (list != null && !list.isEmpty()) {
             articoloService.save(list, user);
             return Response.status(Response.Status.CREATED).entity(new ResponseDto("Salvataggio con successo!", false)).build();
         }

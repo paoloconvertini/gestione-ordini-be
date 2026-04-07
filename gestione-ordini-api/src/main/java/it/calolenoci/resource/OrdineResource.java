@@ -8,6 +8,7 @@ import it.calolenoci.dto.*;
 import it.calolenoci.entity.GoOrdVeicolo;
 import it.calolenoci.entity.GoOrdine;
 import it.calolenoci.entity.Ordine;
+import it.calolenoci.entity.OrdineDettaglio;
 import it.calolenoci.enums.StatoOrdineEnum;
 import it.calolenoci.scheduler.FetchScheduler;
 import it.calolenoci.service.*;
@@ -87,6 +88,9 @@ public class OrdineResource {
 
     @Inject
     FatturaService fatturaService;
+
+    @Inject
+    ResiduoService residuoService;
 
     @Operation(summary = "Returns all the roles from the database")
     @POST
@@ -497,4 +501,27 @@ public class OrdineResource {
         return "Scheduler eseguito manualmente.";
     }
 
+    @Path("/test-residui")
+    @GET
+    @PermitAll
+    public List<ResiduoDto> testResidui() {
+
+        List<OrdineDettaglio> list = OrdineDettaglio.list("anno= ?1 and serie = ?2 and progressivo = ?3", 2024, "13", 246);
+
+        List<OrdineDettaglioDto> dto = list.stream()
+                .map(o -> {
+                    OrdineDettaglioDto d = new OrdineDettaglioDto();
+                    d.setProgrGenerale(o.getProgrGenerale());
+                    d.setQuantita(o.getQuantita());
+                    d.setAnno(o.getAnno());
+                    d.setSerie(o.getSerie());
+                    d.setProgressivo(o.getProgressivo());
+                    d.setRigo(o.getRigo());
+                    d.setFArticolo(o.getFArticolo());
+                    d.setFDescrArticolo(o.getFDescrArticolo());
+                    return d;
+                }).toList();
+
+        return residuoService.calcolaResidui(dto);
+    }
 }

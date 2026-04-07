@@ -31,6 +31,9 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class FatturaService {
 
+    @Inject
+    ResiduoService residuoService;
+
     // Esempi validi:
     // "ordine n 2025/AB/123", "ord. n. 2025-AB-123", "ORD: 2025/ab/123",
     // "n 2025/AB/123", "n. 2025-AB-123", "n° 2025/AB/123", "nº 2025/AB/123"
@@ -228,6 +231,16 @@ public class FatturaService {
     }
 
     @Transactional
+    public String creaBollaCompleta(List<OrdineDettaglioDto> list, List<AccontoDto> acconti, String user) {
+
+        String result = creaBolla(list, acconti, user);
+
+        aggiornaStatoOrdine(list);
+
+        return result;
+    }
+
+    @Transactional
     public String creaBolla(List<OrdineDettaglioDto> list, List<AccontoDto> accontoDtos, String user) {
         String result = null;
         try {
@@ -330,28 +343,6 @@ public class FatturaService {
                     Log.debug("*** CREA BOLLA, lista da trasformare, riga articolo : " + dto.getRigo());
                     OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
                     fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
-                    if (dto.getQtaDaConsegnare() != null) {
-                        List<FattureDettaglio> fatture = FattureDettaglio.find("Select f " +
-                                        "FROM FattureDettaglio f " +
-                                        "WHERE f.progrOrdCli = :id ",
-                                Parameters.with("id", dto.getProgrGenerale())).list();
-                        if (!fatture.isEmpty()) {
-                            double sum = fatture.stream().mapToDouble(FattureDettaglio::getQuantita).sum();
-                            dto.setQtaDaConsegnare(dto.getQuantita() - sum);
-                        } else {
-                            dto.setQtaDaConsegnare(dto.getQuantita());
-                        }
-                        Log.error("*** CREA BOLLA, qta prontoConsegna = " + dto.getQtaProntoConsegna());
-                        Log.error("*** CREA BOLLA, qta ordinata = " + dto.getQuantita());
-                        Log.error("*** CREA BOLLA, qta da consegnare = " + dto.getQtaDaConsegnare());
-                        Double qtaDaCons = ((dto.getQtaDaConsegnare() == null || (dto.getQtaDaConsegnare() != null && dto.getQtaDaConsegnare() < 0)) ? 0 : dto.getQtaDaConsegnare());
-                        Double qta = (qtaDaCons == 0) ? dto.getQuantita() : dto.getQtaDaConsegnare();
-                        if (qta - dto.getQtaProntoConsegna() == 0) {
-                            o.setSaldoAcconto("S");
-                        } else {
-                            o.setSaldoAcconto("A");
-                        }
-                    }
                     ordineDettaglioList.add(o);
                     Optional<SaldiMagazzino> optional = SaldiMagazzino.find("marticolo =:art and  mmagazzino = :mag",
                             Parameters.with("art", o.getFArticolo()).and("mag", o.getMagazz())).firstResultOptional();
@@ -410,6 +401,132 @@ public class FatturaService {
         return result;
     }
 
+    @Transactional
+    public void aggiornaStatoOrdine(List<OrdineDettaglioDto> list) {
+
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+
+        // ===== RESIDUI SAFE =====
+        Map<Integer, ResiduoDto> residuoMap =
+                residuoService.calcolaResiduiMap(list);
+
+        // ===== CHUNK QUERY GO =====
+        List<Integer> progrGenerali = list.stream()
+                .map(OrdineDettaglioDto::getProgrGenerale)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        final int CHUNK_SIZE = 1000;
+
+        Map<Integer, GoOrdineDettaglio> goMap = new HashMap<>();
+
+        for (int i = 0; i < progrGenerali.size(); i += CHUNK_SIZE) {
+
+            List<Integer> subList = progrGenerali.subList(
+                    i,
+                    Math.min(i + CHUNK_SIZE, progrGenerali.size())
+            );
+
+            List<GoOrdineDettaglio> partial =
+                    GoOrdineDettaglio.find("progrGenerale in (:pg)",
+                            Parameters.with("pg", subList)).list();
+
+            for (GoOrdineDettaglio g : partial) {
+                goMap.put(g.getProgrGenerale(), g);
+            }
+        }
+
+        // ===== UPDATE =====
+        List<GoOrdineDettaglio> toUpdate = new ArrayList<>();
+        Set<OrdineId> ordiniCoinvolti = new HashSet<>();
+
+        for (OrdineDettaglioDto dto : list) {
+
+            if (dto.getProgrGenerale() == null) continue;
+
+            GoOrdineDettaglio go = goMap.get(dto.getProgrGenerale());
+            if (go == null) continue;
+
+            // ===== RESIDUO SAFE =====
+            double residuo =
+                    residuoMap.get(dto.getProgrGenerale()).getResiduo();
+
+            boolean changed = false;
+
+            // ===== QTA DA CONSEGNARE =====
+            if (!Objects.equals(go.getQtaDaConsegnare(), residuo)) {
+                go.setQtaDaConsegnare(residuo);
+                changed = true;
+            }
+
+            // ===== FLAG CONSEGNATO =====
+            boolean consegnato = residuo == 0;
+
+            if (!Objects.equals(go.getFlagConsegnato(), consegnato)) {
+                go.setFlagConsegnato(consegnato);
+                changed = true;
+            }
+
+            // ===== HAS BOLLA =====
+            if (!Boolean.TRUE.equals(go.getFlBolla())) {
+                go.setFlBolla(Boolean.TRUE);
+                changed = true;
+            }
+
+            if (changed) {
+                toUpdate.add(go);
+                ordiniCoinvolti.add(
+                        new OrdineId(dto.getAnno(), dto.getSerie(), dto.getProgressivo())
+                );
+            }
+
+            // ===== SALDO ACCONTO =====
+            OrdineDettaglio ordine = OrdineDettaglio.getById(
+                    dto.getAnno(),
+                    dto.getSerie(),
+                    dto.getProgressivo(),
+                    dto.getRigo()
+            );
+
+            if (ordine != null) {
+                if (residuo == 0) {
+                    ordine.setSaldoAcconto("S");
+                } else {
+                    ordine.setSaldoAcconto("A");
+                }
+            }
+        }
+
+        // ===== PERSIST =====
+        if (!toUpdate.isEmpty()) {
+            GoOrdineDettaglio.persist(toUpdate);
+        }
+
+        // ===== WARN NO BOLLA =====
+        for (OrdineId id : ordiniCoinvolti) {
+
+            Long count = GoOrdineDettaglio.find(
+                    "anno = :a AND serie = :s AND progressivo = :p " +
+                            "AND qtaConsegnatoSenzaBolla IS NOT NULL " +
+                            "AND qtaConsegnatoSenzaBolla > 0",
+                    Parameters.with("a", id.getAnno())
+                            .and("s", id.getSerie())
+                            .and("p", id.getProgressivo())
+            ).count();
+
+            if (count == 0) {
+                GoOrdine.update(
+                        "warnNoBolla = 'F' WHERE anno = :a AND serie = :s AND progressivo = :p",
+                        Parameters.with("a", id.getAnno())
+                                .and("s", id.getSerie())
+                                .and("p", id.getProgressivo())
+                );
+            }
+        }
+    }
     public List<AccontoDto> settaRifOrdCliente(List<AccontoDto> listaAcconto) {
         if (listaAcconto == null || listaAcconto.isEmpty()) return Collections.emptyList();
 

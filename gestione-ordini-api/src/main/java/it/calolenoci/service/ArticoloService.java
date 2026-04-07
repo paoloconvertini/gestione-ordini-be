@@ -30,6 +30,8 @@ import static io.quarkus.hibernate.orm.panache.Panache.getEntityManager;
 @ApplicationScoped
 public class ArticoloService {
 
+    @Inject
+    ResiduoService residuoService;
 
     @Inject
     OrdineService ordineService;
@@ -53,6 +55,9 @@ public class ArticoloService {
 
     @Inject
     MailService mailService;
+
+    @Inject
+    FatturaService fatturaService;
 
 
     public ResponseOrdineDettaglio findById(FiltroArticoli filtro) {
@@ -95,148 +100,9 @@ public class ArticoloService {
 
     @Transactional
     public boolean updateArticoliBolle(List<OrdineDettaglioDto> list) {
-
-        long inizio = System.currentTimeMillis();
-
         try {
-
-            if (list == null || list.isEmpty()) {
-                Log.debug("Nessun articolo da aggiornare.");
-                return true;
-            }
-
-            List<Integer> progrGenerali = list.stream()
-                    .map(OrdineDettaglioDto::getProgrGenerale)
-                    .distinct()
-                    .toList();
-
-            final int CHUNK_SIZE = 1000;
-
-            Map<Integer, GoOrdineDettaglio> goMap = new HashMap<>();
-
-            for (int i = 0; i < progrGenerali.size(); i += CHUNK_SIZE) {
-
-                List<Integer> subList = progrGenerali.subList(
-                        i,
-                        Math.min(i + CHUNK_SIZE, progrGenerali.size())
-                );
-
-                List<GoOrdineDettaglio> partial =
-                        GoOrdineDettaglio.find("progrGenerale in (:pg)",
-                                Parameters.with("pg", subList)).list();
-
-                for (GoOrdineDettaglio g : partial) {
-                    goMap.put(g.getProgrGenerale(), g);
-                }
-            }
-
-            List<GoOrdineDettaglio> toUpdate = new ArrayList<>();
-            Set<OrdineId> ordiniCoinvolti = new HashSet<>();
-
-            for (OrdineDettaglioDto dto : list) {
-
-                GoOrdineDettaglio go = goMap.get(dto.getProgrGenerale());
-                if (go == null) continue;
-
-                Double qta = dto.getQuantita();
-                Double qtaBolla = dto.getQtaBolla();
-                if (qta == null || qtaBolla == null) continue;
-
-                double nuovaQtaDaConsegnare = qta - qtaBolla;
-                if (nuovaQtaDaConsegnare < 0) {
-                    nuovaQtaDaConsegnare = 0;
-                }
-
-                Double oldQtaDaCons = go.getQtaDaConsegnare();
-                Boolean oldFlagConsegnato = go.getFlagConsegnato();
-                Boolean oldFlBolla = go.getFlBolla();
-
-                boolean changed = false;
-
-                // ===== AGGIORNAMENTO CONSEGNA =====
-                if (!Objects.equals(oldQtaDaCons, nuovaQtaDaConsegnare)) {
-                    go.setQtaDaConsegnare(nuovaQtaDaConsegnare);
-                    changed = true;
-                }
-
-                boolean nuovoConsegnato = nuovaQtaDaConsegnare == 0;
-
-                if (!Objects.equals(oldFlagConsegnato, nuovoConsegnato)) {
-                    go.setFlagConsegnato(nuovoConsegnato);
-                    changed = true;
-                }
-
-                // ===== HAS BOLLA =====
-                if (!Boolean.TRUE.equals(oldFlBolla)) {
-                    go.setFlBolla(Boolean.TRUE);
-                    changed = true;
-                }
-
-                if (changed) {
-
-                    String entity = "GO_ORDINE_DETTAGLIO";
-                    Integer anno = dto.getAnno();
-                    String serie = dto.getSerie();
-                    Integer progressivo = dto.getProgressivo();
-                    Integer rigo = go.getRigo();
-                    Integer progr = go.getProgrGenerale();
-
-                    if (!Objects.equals(oldQtaDaCons, go.getQtaDaConsegnare())) {
-                        auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                                "qtaDaConsegnare", oldQtaDaCons, go.getQtaDaConsegnare(),
-                                "updateArticoliBolle", null);
-                    }
-
-                    if (!Objects.equals(oldFlagConsegnato, go.getFlagConsegnato())) {
-                        auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                                "flagConsegnato", oldFlagConsegnato, go.getFlagConsegnato(),
-                                "updateArticoliBolle", null);
-                    }
-
-                    if (!Objects.equals(oldFlBolla, go.getFlBolla())) {
-                        auditService.logChange(entity, anno, serie, progressivo, rigo, progr,
-                                "flBolla", oldFlBolla, go.getFlBolla(),
-                                "updateArticoliBolle", null);
-                    }
-
-                    toUpdate.add(go);
-                    ordiniCoinvolti.add(
-                            new OrdineId(dto.getAnno(), dto.getSerie(), dto.getProgressivo())
-                    );
-                }
-            }
-
-            if (!toUpdate.isEmpty()) {
-                GoOrdineDettaglio.persist(toUpdate);
-            }
-
-            for (OrdineId id : ordiniCoinvolti) {
-
-                Long count = GoOrdineDettaglio.find(
-                        "anno = :a AND serie = :s AND progressivo = :p " +
-                                "AND qtaConsegnatoSenzaBolla IS NOT NULL " +
-                                "AND qtaConsegnatoSenzaBolla > 0",
-                        Parameters.with("a", id.getAnno())
-                                .and("s", id.getSerie())
-                                .and("p", id.getProgressivo())
-                ).count();
-
-                if (count == 0) {
-                    GoOrdine.update(
-                            "warnNoBolla = 'F' WHERE anno = :a AND serie = :s AND progressivo = :p",
-                            Parameters.with("a", id.getAnno())
-                                    .and("s", id.getSerie())
-                                    .and("p", id.getProgressivo())
-                    );
-                }
-            }
-
-            long fine = System.currentTimeMillis();
-            Log.debug("UpdateArticoliBolle: " + (fine - inizio) + " ms");
-
-            auditService.flush();
+            fatturaService.aggiornaStatoOrdine(list);
             return true;
-
         } catch (Exception e) {
             Log.error("Errore UpdateArticoliBolle", e);
             return false;
@@ -282,6 +148,9 @@ public class ArticoloService {
 
     @Transactional
     public String save(List<OrdineDettaglioDto> list, String user, Boolean chiudi) {
+        if(list == null || list.isEmpty()) {
+            return null;
+        }
         List<RegistroAzioni> registroAzioniList = new ArrayList<>();
         List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
         List<GoOrdineDettaglio> goOrdineDettaglioList = new ArrayList<>();
@@ -289,6 +158,8 @@ public class ArticoloService {
         AtomicBoolean warnNoBolla = new AtomicBoolean(false);
         AtomicBoolean hasProntoConsegna = new AtomicBoolean(false);
         AtomicBoolean hasCarico = new AtomicBoolean(false);
+        Map<Integer, ResiduoDto> residuoMap = residuoService.calcolaResiduiMap(list);
+
         list.forEach(dto -> {
             if (!"AC".equals(dto.getTipoRigo())) {
                 if (!hasProntoConsegna.get() && dto.getFlProntoConsegna() != null && dto.getFlProntoConsegna()) {
@@ -329,19 +200,9 @@ public class ArticoloService {
                             dto.getProgressivo(), user, ordineDettaglio.getFDescrArticolo(), ordineDettaglio.getQuantita(), dto.getQuantita());
                     ordineDettaglio.setQuantita(dto.getQuantita());
                     ordineDettaglio.setQuantitaV(dto.getQuantita());
-                    List<FattureDettaglio> fatture = FattureDettaglio.find("Select f " +
-                            "FROM FattureDettaglio f " +
-                            "WHERE f.progrOrdCli = :id ",
-                            Parameters.with("id", ordineDettaglio.getProgrGenerale())).list();
-                    if(!fatture.isEmpty()){
-                        double sum = fatture.stream().mapToDouble(FattureDettaglio::getQuantita).sum();
-                        dto.setQtaDaConsegnare(dto.getQuantita() - sum);
-                    } else {
-                        dto.setQtaDaConsegnare(dto.getQuantita());
-                    }
-                    if(dto.getQtaDaConsegnare() != null && dto.getQtaDaConsegnare() < 0) {
-                        dto.setQtaDaConsegnare(0D);
-                    }
+                    dto.setQtaDaConsegnare(
+                            residuoMap.get(dto.getProgrGenerale()).getResiduo()
+                    );
                 }
                 if (!Objects.equals(ordineDettaglio.getTono(), dto.getTono())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
@@ -833,20 +694,12 @@ public class ArticoloService {
         }
         List<OrdineDettaglioDto> list = OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
                 .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
-        if(!"Y".equals(bolla) && !"N".equals(bolla)) {
-            list.forEach(ordineDettaglio -> {
-                List<FattureDettaglio> fatture = FattureDettaglio.find("Select f " +
-                                "FROM FattureDettaglio f " +
-                                "WHERE f.progrOrdCli = :id ",
-                        Parameters.with("id", ordineDettaglio.getProgrGenerale())).list();
-                if(!fatture.isEmpty()){
-                    double sum = fatture.stream().mapToDouble(FattureDettaglio::getQuantita).sum();
-                    ordineDettaglio.setQtaDaConsegnare(ordineDettaglio.getQuantita() - sum);
-                } else {
-                    ordineDettaglio.setQtaDaConsegnare(ordineDettaglio.getQuantita());
-                }
+        if (!"Y".equals(bolla) && !"N".equals(bolla)) {
+            Map<Integer, ResiduoDto> residuoMap = residuoService.calcolaResiduiMap(list);
+            list.forEach(dto -> {
+                ResiduoDto residuo = residuoMap.get(dto.getProgrGenerale());
+                dto.setQtaDaConsegnare(residuo.getResiduo());
             });
-
         }
         return list;
     }
@@ -864,8 +717,22 @@ public class ArticoloService {
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +
                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo " +
                 "AND god.flagConsegnato <> 'T' AND  god.flagRiservato = 'T' ";
-        return OrdineDettaglio.find(query, Sort.ascending("o.rigo"), Parameters.with("anno", anno).and("serie", serie)
-                .and("progressivo", progressivo)).project(OrdineDettaglioDto.class).list();
+        List<OrdineDettaglioDto> list = OrdineDettaglio.find(
+                query,
+                Sort.ascending("o.rigo"),
+                Parameters.with("anno", anno)
+                        .and("serie", serie)
+                        .and("progressivo", progressivo)
+        ).project(OrdineDettaglioDto.class).list();
+        if (list != null && !list.isEmpty()) {
+            Map<Integer, ResiduoDto> residuoMap = residuoService.calcolaResiduiMap(list);
+            list.forEach(dto -> {
+                ResiduoDto residuo = residuoMap.get(dto.getProgrGenerale());
+                dto.setQtaDaConsegnare(residuo.getResiduo());
+            });
+        }
+
+        return list;
     }
 
     private void checkCodArtFornitore(List<OrdineDettaglio> ordineDettaglioDtos) {
