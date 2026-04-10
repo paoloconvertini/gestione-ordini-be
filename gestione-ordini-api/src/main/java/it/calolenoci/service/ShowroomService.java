@@ -121,10 +121,10 @@ public class ShowroomService {
             params.put("venditore", filtro.getCodVenditore());
         }
 
-        // =========================================
-        // 🔎 QUERY
-        // =========================================
-
+        if (filtro.getMotivoId() != null) {
+            query.append("  AND (  s.motivo.id = :motivoId OR s.motivo.parent.id = :motivoId   ) ");
+            params.put("motivoId", filtro.getMotivoId());
+        }
         PanacheQuery<ShowroomVisit> panacheQuery =
                 ShowroomVisit.find(query.toString(),
                         Sort.descending("dataVisita"),
@@ -135,10 +135,6 @@ public class ShowroomService {
         List<ShowroomVisit> entities = panacheQuery
                 .page(Page.of(filtro.getPage(), filtro.getSize()))
                 .list();
-
-        // =========================================
-        // 🔹 Lookup comuni
-        // =========================================
 
         Set<String> codiciComuni = entities.stream()
                 .map(ShowroomVisit::getComuneIstat)

@@ -22,4 +22,6 @@ public class FiltroShowroom {
 
     private Long sedeId;
 
+    private Long motivoId;
+
 }
