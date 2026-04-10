@@ -10,7 +10,7 @@ public class FiltroShowroom {
     private LocalDate dataDa;
     private LocalDate dataA;
 
-    private Long venditoreId;
+    private String codVenditore;
 
     private String nomeCliente;
 

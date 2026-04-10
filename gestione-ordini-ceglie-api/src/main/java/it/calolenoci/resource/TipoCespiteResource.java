@@ -22,7 +22,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
-@Path("api/tipocespite")
+@Path("api-ceglie/tipocespite")
 @RequestScoped
 public class TipoCespiteResource {
 

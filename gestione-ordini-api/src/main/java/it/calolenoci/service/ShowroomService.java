@@ -16,6 +16,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.time.LocalDateTime;
@@ -113,6 +114,11 @@ public class ShowroomService {
 
             query.append(" AND s.comuneIstat in :comuni ");
             params.put("comuni", comuniProvincia);
+        }
+
+        if (filtro.getCodVenditore() != null && !filtro.getCodVenditore().isBlank()) {
+            query.append(" AND s.venditoreCodice = :venditore ");
+            params.put("venditore", filtro.getCodVenditore());
         }
 
         // =========================================
@@ -249,8 +255,9 @@ public class ShowroomService {
                 .telefono(dto.getTelefono())
                 .motivo(motivo)
                 .venditoreCodice(dto.getVenditoreCodice())
-                .dataVisita(LocalDateTime.now())
+                .dataVisita(dto.getDataVisita() != null ? dto.getDataVisita() : LocalDateTime.now())
                 .sede(sede)
+                .note(StringUtils.isNotBlank(dto.getNote()) ? dto.getNote() : null)
                 .build();
 
         entity.persist();
@@ -297,6 +304,9 @@ public class ShowroomService {
         entity.setTelefono(dto.getTelefono());
         entity.setMotivo(motivo);
         entity.setVenditoreCodice(dto.getVenditoreCodice());
+        if(StringUtils.isNotBlank(dto.getNote())){
+            entity.setNote(dto.getNote());
+        }
 
         if (dto.getDataVisita() != null) {
             entity.setDataVisita(dto.getDataVisita());
@@ -348,6 +358,9 @@ public class ShowroomService {
         dto.setTelefono(s.getTelefono());
         dto.setVenditoreCodice(s.getVenditoreCodice());
         dto.setDataVisita(s.getDataVisita());
+        if(StringUtils.isNotBlank(s.getNote())) {
+            dto.setNote(s.getNote());
+        }
 
         if (s.getMotivo() != null) {
 

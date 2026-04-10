@@ -61,7 +61,8 @@ public class PrimanotaService {
                         .and("i", dto.getImporto())
                 );
                 boolean result = update > 0;
-                if (result && dto.getGiornale().equals("A")) {
+                if (result && (dto.getGiornale().equals("A") || dto.getGiornale().equals("B")
+                    || dto.getGiornale().equals("D"))) {
                     ammortamentoCespiteService.createCespite(dto);
                 }
             }

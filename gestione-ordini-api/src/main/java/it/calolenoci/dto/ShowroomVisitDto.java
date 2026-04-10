@@ -26,4 +26,5 @@ public class ShowroomVisitDto {
     private LocalDateTime dataVisita;
     private Long sedeId;
     private String sedeDescrizione;
+    private String note;
 }
