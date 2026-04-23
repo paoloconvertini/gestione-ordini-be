@@ -7,8 +7,10 @@ import io.quarkus.narayana.jta.runtime.TransactionConfiguration;
 import io.quarkus.panache.common.Parameters;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
+import it.calolenoci.exception.BusinessException;
 import it.calolenoci.mapper.FattureMapper;
 import it.calolenoci.mapper.MagazzinoMapper;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -17,6 +19,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -150,8 +153,8 @@ public class FatturaService {
                     .toList();
             for (AccontoDto a : listaAcconti) {
                 for (OrdineDettaglioDto o : lista) {
-                    if(a.getRifOrdCliente().equals(StringUtils.join(o.getAnno(), "/", o.getSerie(), "/", o.getProgressivo()))
-                            && a.getIva().equals(o.getFCodiceIva())){
+                    if (a.getRifOrdCliente().equals(StringUtils.join(o.getAnno(), "/", o.getSerie(), "/", o.getProgressivo()))
+                            && a.getIva().equals(o.getFCodiceIva())) {
                         listaDto.add(a);
                     }
                 }
@@ -174,7 +177,7 @@ public class FatturaService {
 
     public long countAccontiNonValidatiByOrdine(Integer annoOrd, String serieOrd, Integer progOrd) {
         String chiaveSlash = annoOrd + "/" + serieOrd + "/" + progOrd;
-        String chiaveDash  = annoOrd + "-" + serieOrd + "-" + progOrd;
+        String chiaveDash = annoOrd + "-" + serieOrd + "-" + progOrd;
 
         String hql =
                 "select distinct f.anno, f.serie, f.progressivo " +
@@ -211,7 +214,8 @@ public class FatturaService {
                         String ordS = normalize(s.getOrdineCliente());
                         return ordS.equals(ordA);
                     })
-                    .toList());        }
+                    .toList());
+        }
         Set<AccontoDto> unici = listaAcconto.stream()
                 .filter(a -> a.getPrezzo() > 0)
                 .collect(Collectors.toSet());
@@ -224,180 +228,242 @@ public class FatturaService {
         return resultList.stream()
                 .distinct() // sicurezza extra
                 .sorted(Comparator.comparing(AccontoDto::getRifOrdCliente))
-                .toList();    }
+                .toList();
+    }
 
     private String normalize(String s) {
         return s == null ? "" : s.replaceAll("[^0-9/]", "").trim();
     }
 
     @Transactional
-    public String creaBollaCompleta(List<OrdineDettaglioDto> list, List<AccontoDto> acconti, String user) {
-
-        String result = creaBolla(list, acconti, user);
-
-        aggiornaStatoOrdine(list);
-
-        return result;
+    public ResponseDto creaBollaCompleta(List<OrdineDettaglioDto> list, List<AccontoDto> acconti, String user) {
+        try {
+            String result = creaBolla(list, acconti, user);
+            aggiornaStatoOrdine(list);
+            return new ResponseDto(result, false, Response.Status.CREATED);
+        } catch (BusinessException e) {
+            return new ResponseDto(e.getMessage(), true, Response.Status.BAD_REQUEST);
+        } catch (Exception e) {
+            Log.error("Errore nella creazione della bolla: " + e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Transactional
     public String creaBolla(List<OrdineDettaglioDto> list, List<AccontoDto> accontoDtos, String user) {
         String result = null;
-        try {
-            Integer progressivoFatt = Fatture.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM Fatture o WHERE anno = :anno and serie = 'B'", Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
-            Integer progressivoFattDettaglio = FattureDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM FattureDettaglio o").project(Integer.class).firstResult();
-            Ordine ordine = Ordine.findByOrdineId(list.get(0).getAnno(), list.get(0).getSerie(), list.get(0).getProgressivo());
-            Fatture f = fattureMapper.buildFatture(progressivoFatt, ordine, user);
-            Log.debug("*** CREA BOLLA --- creata fattura n. " + f.getAnno() + "/" + f.getSerie() + "/" + f.getProgressivo());
-            f.persist();
-            Map<OrdinePerIva, List<OrdineDettaglioDto>> map = list.stream().collect(Collectors.groupingBy(o ->
-                    new OrdinePerIva(o.getAnno(), o.getSerie(), o.getProgressivo(), o.getFCodiceIva())));
-            Log.debug("*** CREA BOLLA --- mappa lista ordine dettaglio: " + map.size());
-            for (OrdinePerIva id : map.keySet()) {
-                Log.debug("*** CREA BOLLA, ciclio sulla mappa --- ordine n. " + id.getAnno() + "/" + id.getSerie() + "/" + id.getProgressivo());
-                if (accontoDtos != null && !accontoDtos.isEmpty()) {
-                    final List<OrdineDettaglioDto> dtos = map.get(id);
-                    Map<String, List<AccontoDto>> accontiPerIvaMap = accontoDtos.stream().filter(a -> AccontoDto.checkOrdineEsiste(a, id)).collect(Collectors.groupingBy(AccontoDto::getIva));
-                    for (String s : accontiPerIvaMap.keySet()) {
-                        List<AccontoDto> accontiPerIva = accontiPerIvaMap.get(s);
-                        Log.debug("*** CREA BOLLA, acconti selezionati per Iva e : " + accontiPerIva.size());
-                        accontiPerIva.sort(Comparator.comparing(AccontoDto::getDataFattura));
-                        double diffAccontoSommaArticoli = dtos.stream().filter(d -> StringUtils.isNotBlank(d.getFCodiceIva()) && d.getFCodiceIva().equals(s))
-                                .mapToDouble(dto -> dto.getPrezzoScontato()*dto.getQtaProntoConsegna()).sum();
-                        for (AccontoDto a : accontiPerIva) {
+        Integer progressivoFatt = Fatture.find("SELECT CASE WHEN MAX(progressivo) IS NULL THEN 0 ELSE MAX(progressivo) END FROM Fatture o WHERE anno = :anno and serie = 'B'", Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
+        Integer progressivoFattDettaglio = FattureDettaglio.find("SELECT CASE WHEN MAX(progrGenerale) IS NULL THEN 0 ELSE MAX(progrGenerale) END FROM FattureDettaglio o").project(Integer.class).firstResult();
+        Ordine ordine = Ordine.findByOrdineId(list.get(0).getAnno(), list.get(0).getSerie(), list.get(0).getProgressivo());
+        Fatture f = fattureMapper.buildFatture(progressivoFatt, ordine, user);
+        Log.debug("*** CREA BOLLA --- creata fattura n. " + f.getAnno() + "/" + f.getSerie() + "/" + f.getProgressivo());
+        f.persist();
+        Map<OrdinePerIva, List<OrdineDettaglioDto>> map = list.stream().collect(Collectors.groupingBy(o ->
+                new OrdinePerIva(o.getAnno(), o.getSerie(), o.getProgressivo(), o.getFCodiceIva())));
+        Log.debug("*** CREA BOLLA --- mappa lista ordine dettaglio: " + map.size());
+        for (OrdinePerIva id : map.keySet()) {
+            Log.debug("*** CREA BOLLA, ciclio sulla mappa --- ordine n. " + id.getAnno() + "/" + id.getSerie() + "/" + id.getProgressivo());
+            if (accontoDtos != null && !accontoDtos.isEmpty()) {
+                final List<OrdineDettaglioDto> dtos = map.get(id);
+                Map<String, List<AccontoDto>> accontiPerIvaMap = accontoDtos.stream().filter(a -> AccontoDto.checkOrdineEsiste(a, id)).collect(Collectors.groupingBy(AccontoDto::getIva));
+                for (String s : accontiPerIvaMap.keySet()) {
+                    List<AccontoDto> accontiPerIva = accontiPerIvaMap.get(s);
+                    Log.debug("*** CREA BOLLA, acconti selezionati per Iva e : " + accontiPerIva.size());
+                    accontiPerIva.sort(Comparator.comparing(AccontoDto::getDataFattura));
+                    double diffAccontoSommaArticoli = dtos.stream().filter(d -> StringUtils.isNotBlank(d.getFCodiceIva()) && d.getFCodiceIva().equals(s))
+                            .mapToDouble(dto -> dto.getPrezzoScontato() * dto.getQtaProntoConsegna()).sum();
+                    for (AccontoDto a : accontiPerIva) {
 
-                            if (diffAccontoSommaArticoli <= 0) {
-                                break;
-                            }
+                        if (diffAccontoSommaArticoli <= 0) {
+                            break;
+                        }
 
-                            double residuo = a.getImportoResiduo();
+                        double residuo = a.getImportoResiduo();
 
-                            if (residuo <= 0) {
-                                continue; // acconto già consumato
-                            }
+                        if (residuo <= 0) {
+                            continue; // acconto già consumato
+                        }
 
-                            double prezzo = Math.min(residuo, diffAccontoSommaArticoli);
+                        double prezzo = Math.min(residuo, diffAccontoSommaArticoli);
 
-                            if (prezzo > 0) {
+                        if (prezzo > 0) {
 
-                                double prezzoArrotondato = BigDecimal.valueOf(prezzo)
-                                        .setScale(2, RoundingMode.HALF_UP)
-                                        .doubleValue();
+                            double prezzoArrotondato = BigDecimal.valueOf(prezzo)
+                                    .setScale(2, RoundingMode.HALF_UP)
+                                    .doubleValue();
 
-                                OrdineDettaglioDto ordineDettaglio =
-                                        fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzoArrotondato);
+                            OrdineDettaglioDto ordineDettaglio =
+                                    fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzoArrotondato);
 
-                                dtos.add(ordineDettaglio);
+                            dtos.add(ordineDettaglio);
 
-                                Log.debug("*** CREA BOLLA, creata voce storno: "
-                                        + ordineDettaglio.getFDescrArticolo()
-                                        + " di " + prezzoArrotondato + " euro");
+                            Log.debug("*** CREA BOLLA, creata voce storno: "
+                                    + ordineDettaglio.getFDescrArticolo()
+                                    + " di " + prezzoArrotondato + " euro");
 
-                                // 🔥 SCALO RESIDUO ACconto
-                                a.setImportoResiduo(residuo - prezzoArrotondato);
+                            // 🔥 SCALO RESIDUO ACconto
+                            a.setImportoResiduo(residuo - prezzoArrotondato);
 
-                                // 🔥 SCALO MERCE DA STORNARE
-                                diffAccontoSommaArticoli -= prezzoArrotondato;
-                            }
+                            // 🔥 SCALO MERCE DA STORNARE
+                            diffAccontoSommaArticoli -= prezzoArrotondato;
                         }
                     }
                 }
             }
-
-            List<OrdineDettaglioDto> listaDaTrasformare = new ArrayList<>();
-            map.values().forEach(listaDaTrasformare::addAll);
-            listaDaTrasformare.sort(Comparator
-                    .comparing(OrdineDettaglioDto::getAnno)
-                    .thenComparing(OrdineDettaglioDto::getSerie)
-                    .thenComparing(OrdineDettaglioDto::getProgressivo)
-                    .thenComparing(OrdineDettaglioDto::getRigo, Comparator.nullsFirst(Integer::compareTo)));
-
-            List<FattureDettaglio> fattureDaSalvare = new ArrayList<>();
-            List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
-            List<Magazzino> magazzinoList = new ArrayList<>();
-            List<SaldiMagazzino> saldiMagazzinoList = new ArrayList<>();
-            List<GoTmpScarico> goTmpScaricoList = new ArrayList<>();
-            FattureDettaglio fd;
-            Integer progressivo = Magazzino.find("select ISNULL(MAX(m.magazzinoId.progressivo)+1, 1) from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
-                    Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
-            Log.debug("*** CREA BOLLA, Magazzino progressivo: " + progressivo);
-            Integer progressivoGen = Magazzino.find("select MAX(m.progrgenerale) from Magazzino m").project(Integer.class).firstResult();
-            Log.debug("*** CREA BOLLA, Magazzino progressivo generale: " + progressivoGen);
-            for (int i = 0; i < listaDaTrasformare.size(); i++) {
-                Log.debug("*** CREA BOLLA, lista da trasformare: " + listaDaTrasformare.size());
-                OrdineDettaglioDto dto = listaDaTrasformare.get(i);
-                Log.debug("*** CREA BOLLA, dto della lista da trasformare : " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo()
-                        + ", articolo: " + dto.getFArticolo());
-                dto.setQtaProntoConsegna(dto.getQtaProntoConsegna() == null ? 0 : dto.getQtaProntoConsegna());
-                Magazzino m;
-                if (StringUtils.containsIgnoreCase(dto.getFDescrArticolo(), "Storno")) {
-                    Log.debug("*** CREA BOLLA, lista da trasformare, riga storno : " + dto.getRigo());
-                    fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i, user);
-                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i + 1);
-                    m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, fd, f, ordine);
-                    Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
-                    if (opt.isPresent()) {
-                        Log.error("*** CREA BOLLA, Errore trovato record con progrGen: " + progressivoGen);
-                    }
-                } else {
-                    Log.debug("*** CREA BOLLA, lista da trasformare, riga articolo : " + dto.getRigo());
-                    OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
-                    fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
-                    ordineDettaglioList.add(o);
-                    Optional<SaldiMagazzino> optional = SaldiMagazzino.find("marticolo =:art and  mmagazzino = :mag",
-                            Parameters.with("art", o.getFArticolo()).and("mag", o.getMagazz())).firstResultOptional();
-                    if (optional.isPresent()) {
-                        Log.debug("*** CREA BOLLA, TmpScarico creato per articolo: " + o.getFArticolo() + ". Qta: " + o.getQuantita());
-                        SaldiMagazzino saldiMagazzino = optional.get();
-                        Double qtaScarico = (saldiMagazzino.getQscarichi() == null ? 0 : saldiMagazzino.getQscarichi()) + (o.getQuantita() == null ? 0 : o.getQuantita());
-                        qtaScarico = Math.round(qtaScarico * 100.0) / 100.0;
-                        Double qtaGiacenza = (saldiMagazzino.getQcarichi() == null ? 0 : saldiMagazzino.getQcarichi()) - qtaScarico;
-                        saldiMagazzino.setQscarichi(qtaScarico);
-                        saldiMagazzino.setQgiacenza(qtaGiacenza);
-                        saldiMagazzinoList.add(saldiMagazzino);
-                    } else {
-                        if (StringUtils.equals(o.getTipoRigo(), "") || StringUtils.equals(o.getTipoRigo(), " ")) {
-                            GoTmpScaricoPK pk = new GoTmpScaricoPK(o.getFArticolo(), o.getMagazz(), fd.getProgrGenerale());
-                            GoTmpScarico goTmpScarico = GoTmpScarico.findById(pk);
-                            if(goTmpScarico == null) {
-                                goTmpScarico = new GoTmpScarico();
-                            }
-                            goTmpScarico.setId(pk);
-                            goTmpScarico.setAttivo(Boolean.TRUE);
-                            goTmpScaricoList.add(goTmpScarico);
-                            Log.debug("*** CREA BOLLA, TmpScarico creato per articolo: " + o.getFArticolo() + ". Qta: " + o.getQuantita());
-                        }
-
-                    }
-
-                    MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i + 1);
-                    m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, o, fd, f, ordine);
-                    Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
-                    if (opt.isPresent()) {
-                        Log.error("*** CREA BOLLA, Errore trovato record con progrGen: " + progressivoGen);
-                    }
-
-                }
-                magazzinoList.add(m);
-                fattureDaSalvare.add(fd);
-            }
-            Log.debug("*** CREA BOLLA, fatture da salvare: " + fattureDaSalvare.size());
-
-            FattureDettaglio.persist(fattureDaSalvare);
-            OrdineDettaglio.persist(ordineDettaglioList);
-            if (!magazzinoList.isEmpty()) {
-                Magazzino.persist(magazzinoList);
-            }
-            if (!saldiMagazzinoList.isEmpty()) {
-                SaldiMagazzino.persist(saldiMagazzinoList);
-            }
-            if (!goTmpScaricoList.isEmpty()) {
-                GoTmpScarico.persist(goTmpScaricoList);
-            }
-            result = StringUtils.join("Creata bolla n. ", f.getAnno(), "/", f.getSerie(), "/", f.getProgressivo());
-        } catch (Exception e) {
-            Log.error("Errore nella creazione della bolla: " + e.getMessage(), e);
         }
+
+        List<OrdineDettaglioDto> listaDaTrasformare = new ArrayList<>();
+        map.values().forEach(listaDaTrasformare::addAll);
+        Map<Integer, ResiduoDto> residuoMap =
+                residuoService.calcolaResiduiMap(listaDaTrasformare);
+
+        for (OrdineDettaglioDto dto : listaDaTrasformare) {
+            if (dto.getProgrGenerale() == null) continue;
+            ResiduoDto r = residuoMap.get(dto.getProgrGenerale());
+            if (r == null) {
+                throw new BusinessException("Residuo non trovato per articolo " + dto.getFArticolo());
+            }
+            double residuo = r.getResiduo();
+            double qtaRichiesta = dto.getQtaProntoConsegna() != null
+                    ? dto.getQtaProntoConsegna()
+                    : 0;
+            if (residuo <= 0) {
+                throw new BusinessException(
+                        "Articolo già completamente consegnato: " + dto.getFArticolo()
+                );
+            }
+            if (qtaRichiesta > residuo) {
+                throw new BusinessException(
+                        "Quantità superiore al residuo per articolo " + dto.getFArticolo() +
+                                ". Residuo: " + residuo + ", richiesta: " + qtaRichiesta
+                );
+            }
+        }
+
+        listaDaTrasformare.sort(Comparator
+                .comparing(OrdineDettaglioDto::getAnno)
+                .thenComparing(OrdineDettaglioDto::getSerie)
+                .thenComparing(OrdineDettaglioDto::getProgressivo)
+                .thenComparing(OrdineDettaglioDto::getRigo, Comparator.nullsFirst(Integer::compareTo)));
+
+        List<FattureDettaglio> fattureDaSalvare = new ArrayList<>();
+        List<OrdineDettaglio> ordineDettaglioList = new ArrayList<>();
+        List<Magazzino> magazzinoList = new ArrayList<>();
+        List<SaldiMagazzino> saldiMagazzinoList = new ArrayList<>();
+        List<GoTmpScarico> goTmpScaricoList = new ArrayList<>();
+        FattureDettaglio fd;
+        Integer progressivo = Magazzino.find("select ISNULL(MAX(m.magazzinoId.progressivo)+1, 1) from Magazzino m WHERE m.magazzinoId.anno=:anno and m.magazzinoId.serie = 'B'",
+                Parameters.with("anno", Year.now().getValue())).project(Integer.class).firstResult();
+        Log.debug("*** CREA BOLLA, Magazzino progressivo: " + progressivo);
+        Integer progressivoGen = Magazzino.find("select MAX(m.progrgenerale) from Magazzino m").project(Integer.class).firstResult();
+        Log.debug("*** CREA BOLLA, Magazzino progressivo generale: " + progressivoGen);
+        List<Integer> progrGenerali = listaDaTrasformare.stream()
+                .map(OrdineDettaglioDto::getProgrGenerale)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        List<GoOrdineDettaglio> goList = GoOrdineDettaglio.list(
+                "progrGenerale in (:pg)",
+                Parameters.with("pg", progrGenerali)
+        );
+
+        Map<Integer, GoOrdineDettaglio> goMap = goList.stream()
+                .collect(Collectors.toMap(
+                        GoOrdineDettaglio::getProgrGenerale,
+                        g -> g
+                ));
+        List<GoOrdineDettaglio> goToUpdate = new ArrayList<>();
+        for (int i = 0; i < listaDaTrasformare.size(); i++) {
+            Log.debug("*** CREA BOLLA, lista da trasformare: " + listaDaTrasformare.size());
+            OrdineDettaglioDto dto = listaDaTrasformare.get(i);
+            Log.debug("*** CREA BOLLA, dto della lista da trasformare : " + dto.getAnno() + "/" + dto.getSerie() + "/" + dto.getProgressivo()
+                    + ", articolo: " + dto.getFArticolo());
+            dto.setQtaProntoConsegna(dto.getQtaProntoConsegna() == null ? 0 : dto.getQtaProntoConsegna());
+            Magazzino m;
+            if (StringUtils.containsIgnoreCase(dto.getFDescrArticolo(), "Storno")) {
+                Log.debug("*** CREA BOLLA, lista da trasformare, riga storno : " + dto.getRigo());
+                fd = fattureMapper.buildStorno(dto, f, progressivoFattDettaglio, i, user);
+                MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i + 1);
+                m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, fd, f, ordine);
+                Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
+                if (opt.isPresent()) {
+                    Log.error("*** CREA BOLLA, Errore trovato record con progrGen: " + progressivoGen);
+                }
+            } else {
+                Log.debug("*** CREA BOLLA, lista da trasformare, riga articolo : " + dto.getRigo());
+                OrdineDettaglio o = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(), dto.getProgressivo(), dto.getRigo());
+                fd = fattureMapper.buildFattureDettaglio(dto, f, o, progressivoFattDettaglio, i, user);
+                ordineDettaglioList.add(o);
+                Optional<SaldiMagazzino> optional = SaldiMagazzino.find("marticolo =:art and  mmagazzino = :mag",
+                        Parameters.with("art", o.getFArticolo()).and("mag", o.getMagazz())).firstResultOptional();
+                if (optional.isPresent()) {
+                    Log.debug("*** CREA BOLLA, TmpScarico creato per articolo: " + o.getFArticolo() + ". Qta: " + o.getQuantita());
+                    SaldiMagazzino saldiMagazzino = optional.get();
+                    double qtaEffettiva = dto.getQtaProntoConsegna() != null
+                            ? dto.getQtaProntoConsegna()
+                            : dto.getQtaDaConsegnare() != null
+                            ? dto.getQtaDaConsegnare()
+                            : dto.getQuantita();
+
+                    Double qtaScarico = (saldiMagazzino.getQscarichi() == null ? 0 : saldiMagazzino.getQscarichi())
+                            + qtaEffettiva;
+                    qtaScarico = Math.round(qtaScarico * 100.0) / 100.0;
+                    Double qtaGiacenza = (saldiMagazzino.getQcarichi() == null ? 0 : saldiMagazzino.getQcarichi()) - qtaScarico;
+                    saldiMagazzino.setQscarichi(qtaScarico);
+                    saldiMagazzino.setQgiacenza(qtaGiacenza);
+                    saldiMagazzinoList.add(saldiMagazzino);
+                } else {
+                    if (StringUtils.equals(o.getTipoRigo(), "") || StringUtils.equals(o.getTipoRigo(), " ")) {
+                        GoTmpScaricoPK pk = new GoTmpScaricoPK(o.getFArticolo(), o.getMagazz(), fd.getProgrGenerale());
+                        GoTmpScarico goTmpScarico = GoTmpScarico.findById(pk);
+                        if (goTmpScarico == null) {
+                            goTmpScarico = new GoTmpScarico();
+                        }
+                        goTmpScarico.setId(pk);
+                        goTmpScarico.setAttivo(Boolean.TRUE);
+                        goTmpScaricoList.add(goTmpScarico);
+                        Log.debug("*** CREA BOLLA, TmpScarico creato per articolo: " + o.getFArticolo() + ". Qta: " + o.getQuantita());
+                    }
+
+                }
+                GoOrdineDettaglio go = goMap.get(dto.getProgrGenerale());
+
+                if (go != null) {
+                    go.setFlProntoConsegna(false);
+                    go.setQtaProntoConsegna(0D);
+                    goToUpdate.add(go);
+                }
+
+                MagazzinoId id = new MagazzinoId(Year.now().getValue(), "B", progressivo, " ", i + 1);
+                m = magazzinoMapper.buildMagazzino(id, ++progressivoGen, o, fd, f, ordine);
+                Optional<Magazzino> opt = Magazzino.find("progrgenerale = :p", Parameters.with("p", m.getProgrgenerale())).singleResultOptional();
+                if (opt.isPresent()) {
+                    Log.error("*** CREA BOLLA, Errore trovato record con progrGen: " + progressivoGen);
+                }
+
+            }
+            magazzinoList.add(m);
+            fattureDaSalvare.add(fd);
+        }
+        if (!goToUpdate.isEmpty()) {
+            GoOrdineDettaglio.persist(goToUpdate);
+        }
+        Log.debug("*** CREA BOLLA, fatture da salvare: " + fattureDaSalvare.size());
+
+        FattureDettaglio.persist(fattureDaSalvare);
+        OrdineDettaglio.persist(ordineDettaglioList);
+        if (!magazzinoList.isEmpty()) {
+            Magazzino.persist(magazzinoList);
+        }
+        if (!saldiMagazzinoList.isEmpty()) {
+            SaldiMagazzino.persist(saldiMagazzinoList);
+        }
+        if (!goTmpScaricoList.isEmpty()) {
+            GoTmpScarico.persist(goTmpScaricoList);
+        }
+        em.flush();
+        result = StringUtils.join("Creata bolla n. ", f.getAnno(), "/", f.getSerie(), "/", f.getProgressivo());
         return result;
     }
 
@@ -527,6 +593,7 @@ public class FatturaService {
             }
         }
     }
+
     public List<AccontoDto> settaRifOrdCliente(List<AccontoDto> listaAcconto) {
         if (listaAcconto == null || listaAcconto.isEmpty()) return Collections.emptyList();
 
@@ -600,7 +667,9 @@ public class FatturaService {
             this.serie = serie;
             this.progressivo = progressivo;
         }
-        @Override public boolean equals(Object o) {
+
+        @Override
+        public boolean equals(Object o) {
             if (this == o) return true;
             if (!(o instanceof FattKey)) return false;
             FattKey fk = (FattKey) o;
@@ -608,10 +677,14 @@ public class FatturaService {
                     && Objects.equals(serie, fk.serie)
                     && Objects.equals(progressivo, fk.progressivo);
         }
-        @Override public int hashCode() {
+
+        @Override
+        public int hashCode() {
             return Objects.hash(anno, serie, progressivo);
         }
-        @Override public String toString() {
+
+        @Override
+        public String toString() {
             return anno + "/" + serie + "/" + progressivo;
         }
     }
@@ -692,27 +765,27 @@ public class FatturaService {
     @TransactionConfiguration(timeout = 5000)
     public Double getBolleNonFatturate(String sottoConto) {
         Object result = Fatture.getEntityManager().createNativeQuery(
-                            "SELECT COALESCE(SUM(" +
-                                    " f2.PREZZO" +
-                                    " *(1-f2.SCONTOARTICOLO/100)" +
-                                    " *(1-f2.SCONTOC1/100)" +
-                                    " *(1-f2.SCONTOC2/100)" +
-                                    " *(1-f2.SCONTOP/100)" +
-                                    " * f2.QUANTITA" +
-                                    " * (1 + COALESCE(i.ALIQUOTA,0)/100)" +
-                                    "),0) " +
-                                    "FROM FATTURE f " +
-                                    "JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO " +
-                                    "LEFT JOIN IVA i ON i.CODICEIVA = f2.FCODICEIVA " +
-                                    "WHERE f.GRUPPOCLIENTE = 1231 " +
-                                    "AND f.CONTOCLIENTE = :s " +
-                                    "AND f.FLAGFATTURA <> 'S'"
-                    )
-                    .setParameter("s", sottoConto)
-                    .getSingleResult();
+                        "SELECT COALESCE(SUM(" +
+                                " f2.PREZZO" +
+                                " *(1-f2.SCONTOARTICOLO/100)" +
+                                " *(1-f2.SCONTOC1/100)" +
+                                " *(1-f2.SCONTOC2/100)" +
+                                " *(1-f2.SCONTOP/100)" +
+                                " * f2.QUANTITA" +
+                                " * (1 + COALESCE(i.ALIQUOTA,0)/100)" +
+                                "),0) " +
+                                "FROM FATTURE f " +
+                                "JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO " +
+                                "LEFT JOIN IVA i ON i.CODICEIVA = f2.FCODICEIVA " +
+                                "WHERE f.GRUPPOCLIENTE = 1231 " +
+                                "AND f.CONTOCLIENTE = :s " +
+                                "AND f.FLAGFATTURA <> 'S'"
+                )
+                .setParameter("s", sottoConto)
+                .getSingleResult();
 
-            return result != null ? ((Number) result).doubleValue() : 0.0;
-        }
+        return result != null ? ((Number) result).doubleValue() : 0.0;
+    }
 
     /**
      * Elenco fatture di acconto NON validate (senza numero/data) che,
@@ -721,10 +794,10 @@ public class FatturaService {
      */
     public List<AccontoLightDto> findAccontiNonValidatiByOrdine(Integer annoOrd, String serieOrd, Integer progOrd) {
         String chiaveSlash = annoOrd + "/" + serieOrd + "/" + progOrd;
-        String chiaveDash  = annoOrd + "-" + serieOrd + "-" + progOrd;
+        String chiaveDash = annoOrd + "-" + serieOrd + "-" + progOrd;
 
         String hql =
-                "select distinct f.anno, f.serie, f.progressivo "  +
+                "select distinct f.anno, f.serie, f.progressivo " +
                         "from Fatture f, FattureDettaglio dAcc, FattureDettaglio dDesc " +
                         "where f.anno = dAcc.anno and f.serie = dAcc.serie and f.progressivo = dAcc.progressivo " +
                         "  and f.anno = dDesc.anno and f.serie = dDesc.serie and f.progressivo = dDesc.progressivo " +

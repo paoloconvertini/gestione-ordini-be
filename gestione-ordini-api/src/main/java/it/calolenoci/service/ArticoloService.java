@@ -66,6 +66,17 @@ public class ArticoloService {
         List<OrdineDettaglioDto> list;
         OrdineDTO ordineDTO = ordineService.findById(filtro.getAnno(), filtro.getSerie(), filtro.getProgressivo());
         list = OrdineDettaglio.findArticoliById(filtro);
+        Map<Integer, ResiduoDto> residuoMap =
+                residuoService.calcolaResiduiMap(list);
+
+        for (OrdineDettaglioDto dto : list) {
+            if (dto.getProgrGenerale() == null) continue;
+            ResiduoDto r = residuoMap.get(dto.getProgrGenerale());
+            if (r != null) {
+                dto.setQtaDaConsegnare(r.getResiduo());
+                dto.setFlagConsegnato(r.getResiduo() == 0 ? Boolean.TRUE:Boolean.FALSE);
+            }
+        }
 
         Optional<Double> aDouble = OrdineDettaglio.find("SELECT SUM(((CaSE WHEN prezzo is null then 0 ELSE prezzo end)*(CASE WHEN quantita is null then 0 else quantita end))*(1-scontoArticolo/100)*(1-scontoC1/100)*(1-scontoC2/100)*(1-scontoP/100)) FROM OrdineDettaglio o " +
                                 "WHERE o.anno = :anno AND o.serie = :serie AND o.progressivo = :progressivo"

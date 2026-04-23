@@ -148,8 +148,10 @@ public class ArticoloResource {
     @RolesAllowed({Ruolo.ADMIN, Ruolo.LOGISTICA, Ruolo.AMMINISTRATIVO})
     @Path("/creaBolla")
     public Response creaBolla(Body body) {
-        String result = fatturaService.creaBollaCompleta(body.getList(), body.getAccontoDtos(), user);
-        return Response.ok(new ResponseDto(result, StringUtils.isBlank(result))).build();
+        ResponseDto responseDto = fatturaService.creaBollaCompleta(body.getList(), body.getAccontoDtos(), user);
+        return Response.status(responseDto.getCode())
+                .entity(responseDto)
+                .build();
     }
 
     @Operation(summary = "Returns all the articoli from the database")
