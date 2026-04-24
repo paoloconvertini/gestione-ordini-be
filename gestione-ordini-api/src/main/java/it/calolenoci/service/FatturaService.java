@@ -318,6 +318,11 @@ public class FatturaService {
                 residuoService.calcolaResiduiMap(listaDaTrasformare);
 
         for (OrdineDettaglioDto dto : listaDaTrasformare) {
+
+            if (!StringUtils.isBlank(dto.getTipoRigo())) {
+                continue;
+            }
+
             if (dto.getProgrGenerale() == null) continue;
             ResiduoDto r = residuoMap.get(dto.getProgrGenerale());
             if (r == null) {
@@ -734,7 +739,7 @@ public class FatturaService {
                                 "),0) " +
                                 "FROM ORDCLI o " +
                                 "JOIN ORDCLI2 o2 ON o.ANNO = o2.ANNO AND o.SERIE = o2.SERIE AND o.PROGRESSIVO = o2.PROGRESSIVO " +
-                                "LEFT JOIN IVA i ON i.CODICEIVA = o2.FCODICEIVA " +
+                                "LEFT JOIN TGCI i ON i.CODICEIVA = o2.FCODICEIVA " +
                                 "WHERE o2.SALDOACCONTO <> 'S' " +
                                 "AND o.GRUPPOCLIENTE = 1231 " +
                                 "AND o.CONTOCLIENTE = :s")
@@ -751,7 +756,7 @@ public class FatturaService {
                                 "),0) " +
                                 "FROM FATTURE f " +
                                 "JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO " +
-                                "LEFT JOIN IVA i ON i.CODICEIVA = f2.FCODICEIVA " +
+                                "LEFT JOIN TGCI i ON i.CODICEIVA = f2.FCODICEIVA " +
                                 "WHERE f.GRUPPOCLIENTE = 1231 " +
                                 "AND f.CONTOCLIENTE = :s " +
                                 "AND f2.FARTICOLO = '*ACC'"
@@ -776,7 +781,7 @@ public class FatturaService {
                                 "),0) " +
                                 "FROM FATTURE f " +
                                 "JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO " +
-                                "LEFT JOIN IVA i ON i.CODICEIVA = f2.FCODICEIVA " +
+                                "LEFT JOIN TGCI i ON i.CODICEIVA = f2.FCODICEIVA " +
                                 "WHERE f.GRUPPOCLIENTE = 1231 " +
                                 "AND f.CONTOCLIENTE = :s " +
                                 "AND f.FLAGFATTURA <> 'S'"

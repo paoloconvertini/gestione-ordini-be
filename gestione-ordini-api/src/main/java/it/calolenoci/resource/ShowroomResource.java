@@ -104,7 +104,7 @@ public class ShowroomResource {
     }
 
     @GET
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     @Path("/motivi/root")
     public Response getRoot() {
         return Response.ok(showroomService.getMotiviRoot()).build();

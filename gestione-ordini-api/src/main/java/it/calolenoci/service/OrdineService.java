@@ -409,23 +409,25 @@ public class OrdineService {
         long start = System.currentTimeMillis();
 
         String sql = """
-     UPDATE g
-     SET\s
-         g.FLAG_PRONTO_CONSEGNA = 'F',
-         g.QTA_PRONTO_CONSEGNA = NULL
-     FROM GO_ORDINE_DETTAGLIO g
-     LEFT JOIN (
-         SELECT f.PROGRORDCLI,
-                SUM(f.QUANTITA) AS QTA_BOLLATA
-         FROM FATTURE2 f
-         GROUP BY f.PROGRORDCLI
-     ) x ON x.PROGRORDCLI = g.PROGRGENERALE
-     WHERE g.FLAG_PRONTO_CONSEGNA = 'T'
-     AND (
-            g.QTA_PRONTO_CONSEGNA IS NULL
-         OR g.QTA_PRONTO_CONSEGNA <= 0
-         OR x.QTA_BOLLATA >= g.QTA_PRONTO_CONSEGNA
-     )""";
+
+                UPDATE g
+SET\s
+    g.FLAG_PRONTO_CONSEGNA = 'F',
+    g.QTA_PRONTO_CONSEGNA = NULL
+FROM GO_ORDINE_DETTAGLIO g
+JOIN ORDCLI2 o ON o.PROGRGENERALE = g.PROGRGENERALE
+LEFT JOIN (
+    SELECT\s
+        f.PROGRORDCLI,
+        SUM(f.QUANTITA) AS QTA_BOLLATA
+    FROM FATTURE2 f
+    WHERE f.SERIE = 'B'
+    AND (f.TIPORIGO IS NULL OR f.TIPORIGO = '')
+    GROUP BY f.PROGRORDCLI
+) x ON x.PROGRORDCLI = g.PROGRGENERALE
+WHERE g.FLAG_PRONTO_CONSEGNA = 'T'
+AND (o.QUANTITA - ISNULL(x.QTA_BOLLATA, 0)) <= 0
+                )""";
 
         int updated = entityManager
                 .createNativeQuery(sql)
@@ -443,18 +445,18 @@ public class OrdineService {
         long start = System.currentTimeMillis();
 
         String sql = """
-        UPDATE gor
-        SET gor.HAS_PRONTO_CONSEGNA = 'F'
-        FROM GO_ORDINE gor
-        WHERE gor.HAS_PRONTO_CONSEGNA = 'T'
-          AND NOT EXISTS (
-              SELECT 1
-              FROM GO_ORDINE_DETTAGLIO god
-              WHERE god.ANNO = gor.ANNO
-                AND god.SERIE = gor.SERIE
-                AND god.PROGRESSIVO = gor.PROGRESSIVO
-                AND god.FLAG_PRONTO_CONSEGNA = 'T'
-          )
+UPDATE gor
+SET gor.HAS_PRONTO_CONSEGNA = 'F'
+FROM GO_ORDINE gor
+WHERE gor.HAS_PRONTO_CONSEGNA = 'T'
+AND NOT EXISTS (
+    SELECT 1
+    FROM GO_ORDINE_DETTAGLIO god
+    WHERE god.ANNO = gor.ANNO
+      AND god.SERIE = gor.SERIE
+      AND god.PROGRESSIVO = gor.PROGRESSIVO
+      AND god.FLAG_PRONTO_CONSEGNA = 'T'
+)
         """;
 
         int updated = entityManager
