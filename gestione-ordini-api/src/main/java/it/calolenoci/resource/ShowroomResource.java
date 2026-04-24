@@ -38,7 +38,7 @@ public class ShowroomResource {
     }
 
     @POST
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     @Transactional
     public Response create(ShowroomVisitDto dto) {
 
@@ -82,7 +82,7 @@ public class ShowroomResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     @Transactional
     public Response update(@PathParam("id") Long id,
                            ShowroomVisitDto dto) {
@@ -94,7 +94,7 @@ public class ShowroomResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     @Transactional
     public Response delete(@PathParam("id") Long id) {
 
@@ -111,28 +111,28 @@ public class ShowroomResource {
     }
 
     @GET
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     @Path("/motivi/{parentId}/figli")
     public Response getFigli(@PathParam("parentId") Long parentId) {
         return Response.ok(showroomService.getFigli(parentId)).build();
     }
 
     @GET
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     @Path("/motivi/{id}")
     public Response getMotivoById(@PathParam("id") Long id) {
         return Response.ok(showroomService.getMotivoById(id)).build();
     }
 
     @GET
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     @Path("/clienti/search")
     public List<ClienteLightDto> searchClienti(@QueryParam("q") String q) {
         return showroomService.searchClienti(q);
     }
 
     @PUT
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     @Path("/{id}/associa-cliente")
     public Response associaCliente(@PathParam("id") Long id,
                                    ClienteLinkRequest request) {
@@ -143,7 +143,7 @@ public class ShowroomResource {
     }
 
     @GET
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     @Path("/sedi")
     public List<SedeDto> getSedi() {
         List<Sede> list = Sede.findAll().list();

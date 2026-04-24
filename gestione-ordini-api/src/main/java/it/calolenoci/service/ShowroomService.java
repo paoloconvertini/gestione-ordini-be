@@ -41,6 +41,7 @@ public class ShowroomService {
     public PageShowroomDto search(FiltroShowroom filtro) {
 
         boolean admin = isAdmin();
+        boolean venditore = isVenditore();
         String receptionSedeCodice = getReceptionSedeCodice();
 
         PageShowroomDto result = new PageShowroomDto();
@@ -56,7 +57,7 @@ public class ShowroomService {
         // 🔐 GESTIONE SEDE
         // =========================================
 
-        if (!admin) {
+        if (!admin && !venditore) {
 
             if (receptionSedeCodice == null) {
                 throw new WebApplicationException("Sede non autorizzata", 403);
@@ -187,7 +188,7 @@ public class ShowroomService {
         // 🏷️ Sede corrente per il FE
         // =========================================
 
-        if (admin) {
+        if (admin || venditore) {
 
             if (sedeCorrente != null) {
                 result.setSedeCorrenteDescrizione(
@@ -555,6 +556,10 @@ public class ShowroomService {
 
     private boolean isAdmin() {
         return securityIdentity.hasRole(ADMIN );
+    }
+
+    private boolean isVenditore() {
+        return securityIdentity.hasRole(VENDITORE);
     }
 
     private String getReceptionSedeCodice() {
