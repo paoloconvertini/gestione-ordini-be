@@ -92,26 +92,32 @@ public class ResiduoService {
             return Collections.emptyMap();
         }
 
-        List<Object[]> rows = em.createQuery(
-                "SELECT f2.progrOrdCli, SUM(f2.quantita) " +
-                        "FROM FattureDettaglio f2, Fatture f " +
-                        "WHERE f.anno = f2.anno " +
-                        "AND f.serie = f2.serie " +
-                        "AND f.progressivo = f2.progressivo " +
-                        "AND f.serie = 'B' " +
-                        "AND f2.progrOrdCli IN :ids " +
-                        "GROUP BY f2.progrOrdCli",
-                Object[].class
-        ).setParameter("ids", ids).getResultList();
+        final int CHUNK_SIZE = 1000; // < 2100 per sicurezza
 
-        Map<Integer, Double> map = new HashMap<>();
+        Map<Integer, Double> result = new HashMap<>();
 
-        for (Object[] row : rows) {
-            Integer id = (Integer) row[0];
-            Double sum = (Double) row[1];
-            map.put(id, sum != null ? sum : 0D);
+        for (int i = 0; i < ids.size(); i += CHUNK_SIZE) {
+
+            List<Integer> subList = ids.subList(i, Math.min(i + CHUNK_SIZE, ids.size()));
+
+            List<Object[]> rows = em.createQuery(
+                            "SELECT f2.progrOrdCli, SUM(f2.quantita) " +
+                                    "FROM FattureDettaglio f2, Fatture f " +
+                                    "WHERE f.anno = f2.anno " +
+                                    "AND f.serie = f2.serie " +
+                                    "AND f.progressivo = f2.progressivo " +
+                                    "AND f.serie = 'B' " +
+                                    "AND f2.progrOrdCli IN :ids " +
+                                    "GROUP BY f2.progrOrdCli", Object[].class).setParameter("ids", subList)
+                    .getResultList();
+
+            for (Object[] row : rows) {
+                Integer id = (Integer) row[0];
+                Double sum = (Double) row[1];
+                result.put(id, sum != null ? sum : 0D);
+            }
         }
 
-        return map;
+        return result;
     }
 }
