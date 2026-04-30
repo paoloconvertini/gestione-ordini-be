@@ -261,59 +261,66 @@ public class FatturaService {
         Map<OrdinePerIva, List<OrdineDettaglioDto>> map = list.stream().collect(Collectors.groupingBy(o ->
                 new OrdinePerIva(o.getAnno(), o.getSerie(), o.getProgressivo(), o.getFCodiceIva())));
         Log.debug("*** CREA BOLLA --- mappa lista ordine dettaglio: " + map.size());
+        List<OrdineDettaglioDto> listaDaTrasformare = new ArrayList<>();
         for (OrdinePerIva id : map.keySet()) {
-            Log.debug("*** CREA BOLLA, ciclio sulla mappa --- ordine n. " + id.getAnno() + "/" + id.getSerie() + "/" + id.getProgressivo());
+            List<OrdineDettaglioDto> dtos = map.get(id);
+            List<OrdineDettaglioDto> risultatoOrdine = new ArrayList<>();
+            // =========================================
+            // 🔹 STORNI PER ORDINE + IVA
+            // =========================================
             if (accontoDtos != null && !accontoDtos.isEmpty()) {
-                final List<OrdineDettaglioDto> dtos = map.get(id);
-                Map<String, List<AccontoDto>> accontiPerIvaMap = accontoDtos.stream().filter(a -> AccontoDto.checkOrdineEsiste(a, id)).collect(Collectors.groupingBy(AccontoDto::getIva));
-                for (String s : accontiPerIvaMap.keySet()) {
-                    List<AccontoDto> accontiPerIva = accontiPerIvaMap.get(s);
-                    Log.debug("*** CREA BOLLA, acconti selezionati per Iva e : " + accontiPerIva.size());
-                    accontiPerIva.sort(Comparator.comparing(AccontoDto::getDataFattura));
-                    double diffAccontoSommaArticoli = dtos.stream().filter(d -> StringUtils.isNotBlank(d.getFCodiceIva()) && d.getFCodiceIva().equals(s))
-                            .mapToDouble(dto -> dto.getPrezzoScontato() * dto.getQtaProntoConsegna()).sum();
-                    for (AccontoDto a : accontiPerIva) {
-
-                        if (diffAccontoSommaArticoli <= 0) {
-                            break;
-                        }
-
-                        double residuo = a.getImportoResiduo();
-
-                        if (residuo <= 0) {
-                            continue; // acconto già consumato
-                        }
-
-                        double prezzo = Math.min(residuo, diffAccontoSommaArticoli);
-
-                        if (prezzo > 0) {
-
-                            double prezzoArrotondato = BigDecimal.valueOf(prezzo)
+                Map<String, Double> totalePerIva = dtos.stream()
+                        .filter(d -> d.getQtaProntoConsegna() != null && d.getQtaProntoConsegna() > 0)
+                        .collect(Collectors.groupingBy(
+                                OrdineDettaglioDto::getFCodiceIva,
+                                Collectors.summingDouble(d ->
+                                        d.getPrezzoScontato() * d.getQtaProntoConsegna()
+                                )
+                        ));
+                List<String> ivaOrdinate = new ArrayList<>(totalePerIva.keySet());
+                Collections.sort(ivaOrdinate);
+                for (String iva : ivaOrdinate) {
+                    double importo = totalePerIva.get(iva);
+                    if (importo <= 0) continue;
+                    List<AccontoDto> acconti = accontoDtos.stream()
+                            .filter(a -> AccontoDto.checkOrdineEsiste(a, id))
+                            .filter(a -> iva.equals(a.getIva()))
+                            .sorted(Comparator.comparing(AccontoDto::getDataFattura))
+                            .toList();
+                    double residuo = importo;
+                    for (AccontoDto a : acconti) {
+                        if (residuo <= 0) break;
+                        double disponibile = a.getImportoResiduo();
+                        if (disponibile <= 0) continue;
+                        double valore = Math.min(disponibile, residuo);
+                        if (valore > 0) {
+                            double prezzoArrotondato = BigDecimal.valueOf(valore)
                                     .setScale(2, RoundingMode.HALF_UP)
                                     .doubleValue();
-
-                            OrdineDettaglioDto ordineDettaglio =
+                            OrdineDettaglioDto storno =
                                     fattureMapper.fromAccontoToOrdineDettaglio(a, id, prezzoArrotondato);
-
-                            dtos.add(ordineDettaglio);
-
-                            Log.debug("*** CREA BOLLA, creata voce storno: "
-                                    + ordineDettaglio.getFDescrArticolo()
-                                    + " di " + prezzoArrotondato + " euro");
-
-                            // 🔥 SCALO RESIDUO ACconto
-                            a.setImportoResiduo(residuo - prezzoArrotondato);
-
-                            // 🔥 SCALO MERCE DA STORNARE
-                            diffAccontoSommaArticoli -= prezzoArrotondato;
+                            risultatoOrdine.add(storno);
+                            a.setImportoResiduo(disponibile - prezzoArrotondato);
+                            residuo -= prezzoArrotondato;
+                            Log.debug("*** CREA BOLLA, storno ordine "
+                                    + id.getAnno() + "/" + id.getSerie() + "/" + id.getProgressivo()
+                                    + " iva " + iva + " valore " + prezzoArrotondato);
                         }
                     }
                 }
             }
+
+            // =========================================
+            // 🔹 ARTICOLI DOPO STORNI
+            // =========================================
+            risultatoOrdine.addAll(dtos);
+
+            // =========================================
+            // 🔹 AGGIUNTA GLOBALE
+            // =========================================
+            listaDaTrasformare.addAll(risultatoOrdine);
         }
 
-        List<OrdineDettaglioDto> listaDaTrasformare = new ArrayList<>();
-        map.values().forEach(listaDaTrasformare::addAll);
         Map<Integer, ResiduoDto> residuoMap =
                 residuoService.calcolaResiduiMap(listaDaTrasformare);
 

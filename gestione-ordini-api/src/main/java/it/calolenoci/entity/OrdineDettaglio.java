@@ -258,7 +258,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
     @Column(length = 1, name = "SALDOACCONTO")
     private String saldoAcconto;
 
-    @Column(name = "PID_ORDCLI")
+    @Column(name = "PID_ORDCLI", insertable = false, updatable = false)
     private Integer id;
 
     public static OrdineDettaglio getById(Integer anno, String serie, Integer progressivo, Integer rigo) {
@@ -268,7 +268,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
     }
 
     public static List<OrdineDettaglioDto> findArticoliById(FiltroArticoli filtro) {
-        String query = "SELECT o.anno,  o.progressivo, o.progrGenerale,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo, o.fCodiceIva, " +
+        String query = "SELECT o.anno,  o.progressivo, o.progrGenerale,  o.tipoRigo,  o.rigo,  o.serie,  o.fArticolo, o.fCodiceIva, i.aliquota, " +
                 "o.codArtFornitore,  o.fDescrArticolo,  o.quantita,  o.prezzo, o.prezzo*(1-o.scontoArticolo/100)*(1-o.scontoC1/100)*(1-o.scontoC2/100)*(1-o.scontoP/100), " +
                 "  o.fUnitaMisura,  o.magazz as magazzino, " +
                 "god.flagRiservato, god.flagNonDisponibile, god.flagOrdinato, god.flagConsegnato,  o.tono, " +
@@ -279,7 +279,7 @@ public class OrdineDettaglio extends PanacheEntityBase {
                 "god.note, god.qtaRiservata, god.flProntoConsegna, god.qtaProntoConsegna, o.noteOrdCli, god.dataDoc, god.numDoc, god.dataCarico, god.annoMag, god.serieMag, god.progressivoMag, p.intestazione  " +
                 "FROM OrdineDettaglio o " +
                 "LEFT JOIN GoOrdineDettaglio god ON o.progrGenerale = god.progrGenerale " +
-                //"AND o.fArticolo = god.fArticolo " +
+                "LEFT JOIN Iva i ON i.codiceIva = o.fCodiceIva " +
                 "LEFT JOIN OrdineFornitoreDettaglio f2 ON f2.pid = o.progrGenerale " +
                 "LEFT JOIN FornitoreArticolo a ON a.fornitoreArticoloId.articolo = o.fArticolo " +
                 "LEFT JOIN OrdineFornitore f ON f.anno = f2.anno AND f.serie = f2.serie AND f.progressivo = f2.progressivo " +

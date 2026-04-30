@@ -120,7 +120,7 @@ public class Ordine extends PanacheEntityBase {
     @Column(name = "SYS_UPDATEDATE")
     private LocalDateTime updateDate;
 
-    @Column(name = "ID_ORDCLI")
+    @Column(name = "ID_ORDCLI", insertable = false, updatable = false)
     private Integer id;
 
     public static Ordine findByOrdineId(Integer anno, String serie,  Integer progressivo) {

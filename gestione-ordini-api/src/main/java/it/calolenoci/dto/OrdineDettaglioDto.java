@@ -42,6 +42,8 @@ public class OrdineDettaglioDto implements Serializable {
 
     private String fCodiceIva;
 
+    private Double aliquota;
+
     private Integer fColli;
     private  Boolean flagRiservato;
     private  Boolean flagNonDisponibile;
@@ -328,6 +330,7 @@ public class OrdineDettaglioDto implements Serializable {
             String serie,
             String fArticolo,
             String fCodiceIva,
+            Double aliquota,
             String codArtFornitore,
             String fDescrArticolo,
             Double quantita,
@@ -371,6 +374,7 @@ public class OrdineDettaglioDto implements Serializable {
         this.serie = serie;
         this.fArticolo = fArticolo;
         this.fCodiceIva = fCodiceIva;
+        this.aliquota = aliquota;
         this.codArtFornitore = codArtFornitore;
         this.fDescrArticolo = fDescrArticolo;
         this.quantita = quantita;

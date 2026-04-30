@@ -10,9 +10,7 @@ import io.quarkus.panache.common.Sort;
 import it.calolenoci.dto.*;
 import it.calolenoci.entity.*;
 import it.calolenoci.enums.StatoOrdineEnum;
-import it.calolenoci.mapper.FattureMapper;
-import it.calolenoci.mapper.GoOrdineDettaglioMapper;
-import it.calolenoci.mapper.GoOrdineMapper;
+import it.calolenoci.mapper.*;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -32,6 +30,7 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static it.calolenoci.enums.StatoOrdineEnum.ARCHIVIATO;
@@ -72,6 +71,12 @@ public class OrdineService {
 
     @Inject
     AuditService auditService;
+
+    @Inject
+    OrdineMapper ordineMapper;
+
+    @Inject
+    ArticoloMapper articoloMapper;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -1313,5 +1318,87 @@ AND NOT EXISTS (
                 .getResultStream()
                 .findFirst()
                 .orElse(0d);
+    }
+
+    @Transactional
+    public ResponseDto copiaOrdine(Integer anno, String serie, Integer progressivo, String user) {
+
+        try {
+
+            // ================================
+            // 🔹 1. RECUPERO ORDINE ORIGINALE
+            // ================================
+            Ordine originale = Ordine.findByOrdineId(anno, serie, progressivo);
+
+            if (originale == null) {
+                return new ResponseDto("Ordine non trovato", true);
+            }
+
+            // ================================
+            // 🔹 2. NUOVO PROGRESSIVO
+            // ================================
+            Integer annoCorrente = Year.now().getValue();
+
+            Integer nuovoProgressivo = Ordine.find(
+                    "SELECT COALESCE(MAX(o.progressivo),0) FROM Ordine o WHERE o.anno = :anno AND o.serie = :serie",
+                    Parameters.with("anno", annoCorrente).and("serie", serie)
+            ).project(Integer.class).firstResult() + 1;
+
+            // ================================
+            // 🔹 3. COPIA TESTATA
+            // ================================
+            Ordine nuovo = ordineMapper.copia(originale, nuovoProgressivo, annoCorrente);
+            nuovo.persist();
+
+            // ================================
+            // 🔹 4. RECUPERO RIGHE ORIGINALI
+            // ================================
+            List<OrdineDettaglio> righe = OrdineDettaglio.find(
+                    "anno = :anno AND serie = :serie AND progressivo = :progressivo",
+                    Parameters.with("anno", anno)
+                            .and("serie", serie)
+                            .and("progressivo", progressivo)
+            ).list();
+
+            if (righe == null || righe.isEmpty()) {
+                return new ResponseDto("Ordine copiato (senza righe)", false);
+            }
+
+            // ================================
+            // 🔹 5. CALCOLO PROGR GENERALE
+            // ================================
+            Integer maxProgrGenerale = OrdineDettaglio.find(
+                    "SELECT COALESCE(MAX(o.progrGenerale),0) FROM OrdineDettaglio o"
+            ).project(Integer.class).firstResult();
+
+            AtomicInteger progrGenCounter = new AtomicInteger(maxProgrGenerale + 1);
+
+            // ================================
+            // 🔹 6. COPIA RIGHE
+            // ================================
+            int rigo = 1;
+
+            for (OrdineDettaglio r : righe) {
+
+                OrdineDettaglio nuovoR = articoloMapper.copia(annoCorrente,
+                        r,
+                        nuovoProgressivo,
+                        rigo++,
+                        progrGenCounter.getAndIncrement(),
+                        user
+                );
+
+                nuovoR.persist();
+            }
+
+            return new ResponseDto(
+                    "Ordine copiato: " + annoCorrente + "/" + serie + "/" + nuovoProgressivo,
+                    false
+            );
+
+        } catch (Exception e) {
+            Log.error("Errore copia ordine", e);
+            return new ResponseDto("Errore durante la copia ordine", true);
+        }
     }
 }

@@ -524,4 +524,14 @@ public class OrdineResource {
 
         return residuoService.calcolaResidui(dto);
     }
+
+    @GET
+    @Path("/copia-ordine/{anno}/{serie}/{progressivo}")
+    @PermitAll
+    public Response copiaOrdine(@PathParam("anno") Integer anno,
+                                @PathParam("serie") String serie,
+                                @PathParam("progressivo") Integer progressivo) {
+        ResponseDto res = ordineService.copiaOrdine(anno, serie, progressivo, user);
+        return Response.ok(res).build();
+    }
 }
