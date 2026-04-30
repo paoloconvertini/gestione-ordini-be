@@ -247,6 +247,7 @@ public class OrdineResource {
            map.put(venditore, listMap.get(venditore).stream().mapToDouble(OrdineDTO::getImportoRiservati).sum());
         }
         dto.setImportoRiservatiMap(map);
+        dto.setPageOrdineDto(pageOrdineDto);
         return Response.ok(dto).build();
     }
 
