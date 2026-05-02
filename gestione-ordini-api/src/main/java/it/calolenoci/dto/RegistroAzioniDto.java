@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -22,7 +23,7 @@ public class RegistroAzioniDto implements Serializable {
     private Integer progressivo;
     private Integer rigo;
     private String username;
-    private Date createDate;
+    private LocalDateTime createDate;
     private String azione;
     private Double quantita;
     private String tono;

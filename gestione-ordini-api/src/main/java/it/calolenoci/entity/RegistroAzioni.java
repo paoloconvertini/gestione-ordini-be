@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 
 
@@ -35,8 +37,8 @@ public class RegistroAzioni extends PanacheEntityBase {
     @Column(length = 100)
     private String username;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createDate;
+    @Column(name = "createDate")
+    private LocalDateTime createDate;
 
     @Column(length = 30)
     private String azione;
