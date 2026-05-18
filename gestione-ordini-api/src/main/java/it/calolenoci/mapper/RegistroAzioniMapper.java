@@ -4,6 +4,8 @@ import it.calolenoci.entity.RegistroAzioni;
 import org.apache.commons.lang3.StringUtils;
 
 import jakarta.enterprise.context.ApplicationScoped;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 
 
@@ -18,7 +20,7 @@ public class RegistroAzioniMapper {
             r.setRigo(rigo);
         }
         r.setSerie(serie);
-        r.setCreateDate(new Date());
+        r.setCreateDate(LocalDateTime.now());
         r.setUsername(username);
         r.setAzione(azione);
         if (quantita != null) {
