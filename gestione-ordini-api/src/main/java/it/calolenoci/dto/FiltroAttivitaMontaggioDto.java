@@ -25,4 +25,6 @@ public class FiltroAttivitaMontaggioDto implements Serializable {
     private String ordineSerie;
 
     private Integer ordineProgressivo;
+
+    private String tipoAppuntamento;
 }

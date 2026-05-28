@@ -25,6 +25,8 @@ public class AttivitaMontaggioSearchDto implements Serializable {
 
     private String numeroOrdine;
 
+    private String telefono;
+
     private String operai;
 
     private String attivita;
@@ -32,4 +34,14 @@ public class AttivitaMontaggioSearchDto implements Serializable {
     private String colore;
 
     private String tooltip;
+
+    private String tipoAppuntamento;
+
+    private String clienteLabel;
+
+    private String indirizzoLabel;
+
+    private String attivitaLabel;
+
+    private String dataOraLabel;
 }

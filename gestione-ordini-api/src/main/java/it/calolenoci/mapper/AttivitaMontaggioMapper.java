@@ -25,6 +25,8 @@ public class AttivitaMontaggioMapper {
         dto.setStato(entity.getStato());
         dto.setScalaMobile(entity.getScalaMobile());
         dto.setNumeroOrdine(entity.getNumeroOrdine());
+        dto.setTipoAppuntamento(entity.getTipoAppuntamento());
+        dto.setTelefono(entity.getTelefono());
 
         return dto;
     }
@@ -59,6 +61,7 @@ public class AttivitaMontaggioMapper {
         dto.setDataInvioPromemoria(entity.getDataInvioPromemoria());
         dto.setDataCompletamento(entity.getDataCompletamento());
         dto.setNote(entity.getNote());
+        dto.setTipoAppuntamento(entity.getTipoAppuntamento());
 
         return dto;
     }
@@ -92,6 +95,7 @@ public class AttivitaMontaggioMapper {
         entity.setDataInvioPromemoria(dto.getDataInvioPromemoria());
         entity.setDataCompletamento(dto.getDataCompletamento());
         entity.setNote(dto.getNote());
+        entity.setTipoAppuntamento(dto.getTipoAppuntamento());
 
         return entity;
     }
@@ -118,5 +122,6 @@ public class AttivitaMontaggioMapper {
         entity.setDataInvioPromemoria(dto.getDataInvioPromemoria());
         entity.setDataCompletamento(dto.getDataCompletamento());
         entity.setNote(dto.getNote());
+        entity.setTipoAppuntamento(dto.getTipoAppuntamento());
     }
 }

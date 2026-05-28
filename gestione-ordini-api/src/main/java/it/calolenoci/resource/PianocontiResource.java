@@ -6,6 +6,9 @@ import it.calolenoci.dto.PianoContiDto;
 import it.calolenoci.dto.UpdateCoordsDto;
 import it.calolenoci.entity.PianoConti;
 import it.calolenoci.enums.Ruolo;
+import it.calolenoci.service.PianoContiService;
+import jakarta.annotation.security.PermitAll;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -18,6 +21,9 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.core.Response;
 
+import java.util.List;
+
+import static it.calolenoci.enums.Ruolo.ADMIN;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Produces(APPLICATION_JSON)
@@ -25,10 +31,13 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 @RequestScoped
 public class PianocontiResource {
 
+    @Inject
+    PianoContiService pianoContiService;
+
     @Operation(summary = "Returns all fornitori")
     @GET
     @Path("/getFornitori")
-    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
+    @RolesAllowed({ADMIN, Ruolo.AMMINISTRATIVO})
     @APIResponse(responseCode = "200", content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = PianoConti.class, type = SchemaType.ARRAY)))
     @APIResponse(responseCode = "204", description = "No Fornitori")
     @Consumes(APPLICATION_JSON)
@@ -40,6 +49,7 @@ public class PianocontiResource {
     @POST
     @Path("/update-coordinates")
     @Transactional
+    @PermitAll
     public void updateCoordinates(UpdateCoordsDto dto) {
         String coords = dto.coords;
 
@@ -57,6 +67,14 @@ public class PianocontiResource {
                         .and("lon", lon)
                         .and("sottoConto", dto.getSottoConto())
         );
+    }
+
+    @GET
+    @Path("/search-clienti")
+    @RolesAllowed({ADMIN})
+    public Response searchClienti(@QueryParam("q") String q) {
+        List<PianoContiDto> result = pianoContiService.searchClienti(q);
+        return Response.ok(result).build();
     }
 
 }

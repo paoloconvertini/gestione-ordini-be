@@ -89,4 +89,7 @@ public class AttivitaMontaggio extends PanacheEntityBase {
 
     @Column(name = "UPDATED_BY")
     private String updatedBy;
+
+    @Column(name = "TIPO_APPUNTAMENTO")
+    private String tipoAppuntamento;
 }

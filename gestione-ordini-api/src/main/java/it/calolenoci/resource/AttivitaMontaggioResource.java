@@ -66,4 +66,20 @@ public class AttivitaMontaggioResource {
         service.delete(id);
         return Response.noContent().build();
     }
+
+    @POST
+    @Path("/export-ics")
+    @Produces("text/calendar")
+    @RolesAllowed({ADMIN})
+    public Response exportIcs(FiltroAttivitaMontaggioDto filtro) {
+
+        String ics = service.exportIcs(filtro);
+
+        return Response.ok(ics)
+                .header(
+                        "Content-Disposition",
+                        "attachment; filename=agenda-montaggi.ics"
+                )
+                .build();
+    }
 }

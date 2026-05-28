@@ -10,7 +10,7 @@ import java.util.List;
 public class AttivitaMontaggioDto implements Serializable {
 
     private Long id;
-
+    private String tipoAppuntamento;
     // Ordine cliente
     private Integer ordineAnno;
     private String ordineSerie;

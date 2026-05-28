@@ -17,6 +17,7 @@ import jakarta.ws.rs.WebApplicationException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,6 +52,11 @@ public class AttivitaMontaggioService {
         Map<String, Object> params = new HashMap<>();
 
         StringBuilder query = new StringBuilder("FROM AttivitaMontaggio a WHERE 1 = 1 ");
+
+        if (StringUtils.isNotBlank(filtro.getTipoAppuntamento())) {
+            query.append(" AND tipoAppuntamento = :tipoAppuntamento ");
+            params.put("tipoAppuntamento", filtro.getTipoAppuntamento());
+        }
 
         if (filtro.getDataDa() != null) {
             query.append(" AND a.dataOraDa >= :dataDa ");
@@ -132,9 +138,12 @@ public class AttivitaMontaggioService {
 
             AttivitaMontaggioSearchDto dto = attivitaMontaggioMapper.toSearchDto(entity);
 
-            dto.setColore(getColoreByStato(entity.getStato()));
+            dto.setColore(getColoreByStato(entity.getTipoAppuntamento(), entity.getStato()));
             dto.setTooltip(buildTooltip(entity));
-
+            dto.setClienteLabel(buildClienteLabel(entity));
+            dto.setIndirizzoLabel(buildIndirizzoLabel(entity));
+            dto.setAttivitaLabel(buildAttivitaLabel(entity));
+            dto.setDataOraLabel(buildDataOraLabel(entity));
             dtoList.add(dto);
         }
 
@@ -226,92 +235,108 @@ public class AttivitaMontaggioService {
         return getById(entity.getId());
     }
 
-    private void saveDettagli(Long idAttivita,
-                              List<AttivitaMontaggioDettDto> dettagli) {
+    public String exportIcs(FiltroAttivitaMontaggioDto filtro) {
 
+        PageAttivitaMontaggioDto result = search(filtro);
+        StringBuilder sb = new StringBuilder();
+        sb.append("BEGIN:VCALENDAR\n");
+        sb.append("VERSION:2.0\n");
+        sb.append("PRODID:-//GESTIONE_ORDINI//Agenda Montaggi//IT\n");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+        for (AttivitaMontaggioSearchDto dto : result.getList()) {
+            AttivitaMontaggio entity = AttivitaMontaggio.findById(dto.getId());
+            sb.append("BEGIN:VEVENT\n");
+            sb.append("UID:").append(entity.getId()).append("@GO_\n");
+            sb.append("DTSTAMP:").append(LocalDateTime.now().format(formatter)).append("\n");
+            sb.append("DTSTART:").append(entity.getDataOraDa().format(formatter)).append("\n");
+            sb.append("DTEND:").append(entity.getDataOraA().format(formatter)).append("\n");
+            sb.append("SUMMARY:").append(buildClienteLabel(entity)).append("\n");
+            String location = buildIndirizzoLabel(entity);
+            if (StringUtils.isNotBlank(location)) {
+                sb.append("LOCATION:").append(location).append("\n");
+            }
+            StringBuilder description = new StringBuilder();
+            if (StringUtils.isNotBlank(entity.getTelefono())) {
+                description.append("Telefono: ").append(entity.getTelefono()).append("\\n");
+            }
+            String attivita = buildAttivitaLabel(entity);
+            if (StringUtils.isNotBlank(attivita)) {
+                description.append("Attività: ").append(attivita).append("\\n");
+            }
+            if (StringUtils.isNotBlank(entity.getNote())) {
+                description.append("Note: ").append(entity.getNote());
+            }
+            sb.append("DESCRIPTION:").append(description).append("\n");
+            sb.append("END:VEVENT\n");
+        }
+        sb.append("END:VCALENDAR");
+        return sb.toString();
+    }
+
+    private void saveDettagli(Long idAttivita, List<AttivitaMontaggioDettDto> dettagli) {
         if (dettagli == null) {
             return;
         }
-
         for (AttivitaMontaggioDettDto dto : dettagli) {
-
-            AttivitaMontaggioDett entity =
-                    attivitaMontaggioDettMapper.fromDto(dto);
-
+            AttivitaMontaggioDett entity = attivitaMontaggioDettMapper.fromDto(dto);
             entity.setIdAttivitaMontaggio(idAttivita);
-
             entity.persist();
         }
     }
 
-    private void saveOperai(Long idAttivita,
-                            List<AttivitaMontaggioOperaioDto> operai) {
-
+    private void saveOperai(Long idAttivita, List<AttivitaMontaggioOperaioDto> operai) {
         if (operai == null) {
             return;
         }
-
         for (AttivitaMontaggioOperaioDto dto : operai) {
-
-            AttivitaMontaggioOperaio entity =
-                    attivitaMontaggioOperaioMapper.fromDto(dto);
-
+            AttivitaMontaggioOperaio entity = attivitaMontaggioOperaioMapper.fromDto(dto);
             entity.setIdAttivitaMontaggio(idAttivita);
-
             entity.persist();
         }
     }
 
     private void validate(AttivitaMontaggioDto dto) {
-
         if (dto == null) {
             throw new WebApplicationException("Dati mancanti", 400);
         }
-
         if (dto.getDataOraDa() == null) {
             throw new WebApplicationException("Data ora inizio obbligatoria", 400);
         }
-
         if (dto.getDataOraA() == null) {
             throw new WebApplicationException("Data ora fine obbligatoria", 400);
         }
-
         if (StringUtils.isBlank(dto.getNomeCliente())) {
             throw new WebApplicationException("Nome cliente obbligatorio", 400);
         }
     }
 
     private String buildTooltip(AttivitaMontaggio entity) {
-
         StringBuilder sb = new StringBuilder();
-
         sb.append("Cliente: ").append(entity.getNomeCliente());
-
         if (StringUtils.isNotBlank(entity.getComune())) {
             sb.append("\nComune: ").append(entity.getComune());
         }
-
         if (StringUtils.isNotBlank(entity.getNumeroOrdine())) {
             sb.append("\nOrdine: ").append(entity.getNumeroOrdine());
         }
-
         if (StringUtils.isNotBlank(entity.getStato())) {
             sb.append("\nStato: ").append(entity.getStato());
         }
-
         if (Boolean.TRUE.equals(entity.getScalaMobile())) {
             sb.append("\nScala mobile: SI");
         }
-
         return sb.toString();
     }
 
-    private String getColoreByStato(String stato) {
-
-        if (stato == null) {
-            return "#1976d2";
+    private String getColoreByStato(String tipoAppuntamento, String stato) {
+        if ("RILIEVO".equals(tipoAppuntamento)) {
+            return switch (stato) {
+                case "COMPLETATO" -> "#2e7d32";
+                case "ANNULLATO" -> "#c62828";
+                case "IN_CORSO" -> "#66bb6a";
+                default -> "#43a047";
+            };
         }
-
         return switch (stato) {
             case "PROGRAMMATO" -> "#1976d2";
             case "IN_CORSO" -> "#f57c00";
@@ -319,5 +344,77 @@ public class AttivitaMontaggioService {
             case "ANNULLATO" -> "#d32f2f";
             default -> "#1976d2";
         };
+    }
+
+    private String buildClienteLabel(AttivitaMontaggio entity) {
+        StringBuilder sb = new StringBuilder();
+        if ("RILIEVO".equals(entity.getTipoAppuntamento())) {
+            sb.append("📐 ");
+        } else {
+            sb.append("🔧 ");
+        }
+        sb.append(entity.getNomeCliente());
+        return sb.toString();
+    }
+
+    private String buildIndirizzoLabel(AttivitaMontaggio entity) {
+        StringBuilder sb = new StringBuilder();
+        if (StringUtils.isNotBlank(entity.getVia())) {
+            sb.append(entity.getVia());
+            if (StringUtils.isNotBlank(entity.getCivico())) {
+                sb.append(" ").append(entity.getCivico());
+            }
+        }
+
+        if (StringUtils.isNotBlank(entity.getComune())) {
+            if (!sb.isEmpty()) {
+                sb.append(", ");
+            }
+            sb.append(entity.getComune());
+        }
+
+        return sb.toString();
+    }
+
+    private String buildAttivitaLabel(AttivitaMontaggio entity) {
+        List<AttivitaMontaggioDett> dettagli = AttivitaMontaggioDett.list("idAttivitaMontaggio", entity.getId());
+        if (dettagli.isEmpty()) {
+            return "";
+        }
+        List<Long> idsTipo = dettagli.stream()
+                .map(AttivitaMontaggioDett::getIdTipoAttivita)
+                .distinct()
+                .toList();
+
+        List<TipoAttivitaMontaggio> tipi =
+                TipoAttivitaMontaggio.list(
+                        "id in ?1",
+                        idsTipo
+                );
+
+        Map<Long, String> tipiMap = new HashMap<>();
+
+        for (TipoAttivitaMontaggio t : tipi) {
+            tipiMap.put(t.getId(), t.getDescrizione());
+        }
+
+        return dettagli.stream()
+                .map(d -> tipiMap.get(d.getIdTipoAttivita()))
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.joining(", "));
+    }
+
+    private String buildDataOraLabel(AttivitaMontaggio entity) {
+        if (entity.getDataOraDa() == null || entity.getDataOraA() == null) {
+            return "";
+        }
+        DateTimeFormatter dataFormatter = DateTimeFormatter.ofPattern("dd/MM");
+        DateTimeFormatter oraFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        return entity.getDataOraDa().format(dataFormatter)
+                + " "
+                + entity.getDataOraDa().format(oraFormatter)
+                + " - "
+                + entity.getDataOraA().format(oraFormatter);
     }
 }

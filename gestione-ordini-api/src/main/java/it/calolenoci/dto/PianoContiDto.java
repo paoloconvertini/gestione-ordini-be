@@ -24,6 +24,9 @@ public class PianoContiDto implements Serializable {
     private String provincia;
     private Double latitudine;
     private Double longitudine;
+    private String telefono;
+    private String cellulare;
+    private String email;
 
     public PianoContiDto(Integer gruppoConto, String sottoConto, String indirizzo, String localita, String cap) {
         this.gruppoConto = gruppoConto;
@@ -41,7 +44,7 @@ public class PianoContiDto implements Serializable {
 
     public PianoContiDto(Integer gruppoConto, String sottoConto, String intestazione,
                          String indirizzo, String localita, String cap, String provincia,
-                         Double latitudine, Double longitudine) {
+                         Double latitudine, Double longitudine, String telefono, String cellulare, String email) {
         this.gruppoConto = gruppoConto;
         this.sottoConto = sottoConto;
         this.intestazione = intestazione;
@@ -51,5 +54,8 @@ public class PianoContiDto implements Serializable {
         this.provincia = provincia;
         this.latitudine = latitudine;
         this.longitudine = longitudine;
+        this.telefono = telefono;
+        this.cellulare = cellulare;
+        this.email = email;
     }
 }
