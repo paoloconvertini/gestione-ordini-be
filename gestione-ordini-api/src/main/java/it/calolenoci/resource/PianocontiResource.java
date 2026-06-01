@@ -23,7 +23,7 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
-import static it.calolenoci.enums.Ruolo.ADMIN;
+import static it.calolenoci.enums.Ruolo.*;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Produces(APPLICATION_JSON)
@@ -71,7 +71,7 @@ public class PianocontiResource {
 
     @GET
     @Path("/search-clienti")
-    @RolesAllowed({ADMIN})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
     public Response searchClienti(@QueryParam("q") String q) {
         List<PianoContiDto> result = pianoContiService.searchClienti(q);
         return Response.ok(result).build();
