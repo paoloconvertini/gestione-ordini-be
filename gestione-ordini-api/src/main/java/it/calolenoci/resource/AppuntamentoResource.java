@@ -10,8 +10,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import static it.calolenoci.enums.Ruolo.ADMIN;
-import static it.calolenoci.enums.Ruolo.VENDITORE;
+import static it.calolenoci.enums.Ruolo.*;
 
 @Path("api/appuntamenti")
 @Produces(MediaType.APPLICATION_JSON)
@@ -23,34 +22,34 @@ public class AppuntamentoResource {
 
     @POST
     @Path("/search")
-    @RolesAllowed({ADMIN, VENDITORE})
+    @RolesAllowed({ADMIN, VENDITORE, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     public PageAppuntamentoDto search(FiltroAppuntamentoDto filtro) {
         return service.search(filtro);
     }
 
     @GET
     @Path("/{id}")
-    @RolesAllowed({ADMIN, VENDITORE})
+    @RolesAllowed({ADMIN, VENDITORE, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     public AppuntamentoDto getById(@PathParam("id") Long id) {
         return service.getById(id);
     }
 
     @POST
-    @RolesAllowed({ADMIN, VENDITORE})
+    @RolesAllowed({ADMIN, VENDITORE, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     public AppuntamentoDto create(AppuntamentoDto dto) {
         return service.create(dto);
     }
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed({ADMIN, VENDITORE})
+    @RolesAllowed({ADMIN, VENDITORE, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     public AppuntamentoDto update(@PathParam("id") Long id, AppuntamentoDto dto) {
         return service.update(id, dto);
     }
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed({ADMIN, VENDITORE})
+    @RolesAllowed({ADMIN, VENDITORE, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     public void delete(@PathParam("id") Long id) {
         service.delete(id);
     }
@@ -58,7 +57,7 @@ public class AppuntamentoResource {
     @POST
     @Path("/export-ics")
     @Produces("text/calendar")
-    @RolesAllowed({ADMIN, VENDITORE})
+    @RolesAllowed({ADMIN, VENDITORE, RECEPTION_CEGLIE, RECEPTION_OSTUNI})
     public Response exportIcs(FiltroAppuntamentoDto filtro) {
 
         String content = service.exportIcs(filtro);
