@@ -12,18 +12,16 @@ import it.calolenoci.mapper.ArticoloMapper;
 import it.calolenoci.mapper.GoOrdineDettaglioMapper;
 import it.calolenoci.mapper.RegistroAzioniMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import java.text.SimpleDateFormat;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import static io.quarkus.hibernate.orm.panache.Panache.getEntityManager;
 
@@ -205,7 +203,7 @@ public class ArticoloService {
                 }
                 if (!Objects.equals(ordineDettaglio.getQuantita(), dto.getQuantita())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                            dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDesczrizione(),
+                            dto.getProgressivo(), user, AzioneEnum.QUANTITA.getDescrizione(),
                             dto.getRigo(), null, dto.getQuantita(), null, null));
                     mailService.inviaMailQuantita(adminEmail, dto.getAnno(), dto.getSerie(),
                             dto.getProgressivo(), user, ordineDettaglio.getFDescrArticolo(), ordineDettaglio.getQuantita(), dto.getQuantita());
@@ -217,38 +215,38 @@ public class ArticoloService {
                 }
                 if (!Objects.equals(ordineDettaglio.getTono(), dto.getTono())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                            dto.getProgressivo(), user, AzioneEnum.TONO.getDesczrizione(),
+                            dto.getProgressivo(), user, AzioneEnum.TONO.getDescrizione(),
                             dto.getRigo(), dto.getTono(), null, null, null));
                     ordineDettaglio.setTono(StringUtils.trim(dto.getTono()));
                 }
                 if (!Objects.equals(dto.getFlagRiservato(), goOrdineDettaglio.getFlagRiservato())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                            dto.getProgressivo(), user, AzioneEnum.RISERVATO.getDesczrizione()
+                            dto.getProgressivo(), user, AzioneEnum.RISERVATO.getDescrizione()
                             , dto.getRigo(), null, null, null, null));
                 }
                 if (!Objects.equals(dto.getFlagOrdinato(), goOrdineDettaglio.getFlagOrdinato())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                            dto.getProgressivo(), user, AzioneEnum.ORDINATO.getDesczrizione()
+                            dto.getProgressivo(), user, AzioneEnum.ORDINATO.getDescrizione()
                             , dto.getRigo(), null, null, null, null));
                 }
                 if (!Objects.equals(dto.getFlagNonDisponibile(), goOrdineDettaglio.getFlagNonDisponibile())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                            dto.getProgressivo(), user, AzioneEnum.NON_DISPONIBILE.getDesczrizione()
+                            dto.getProgressivo(), user, AzioneEnum.NON_DISPONIBILE.getDescrizione()
                             , dto.getRigo(), null, null, null, null));
                 }
                 if (!Objects.equals(dto.getFlagConsegnato(), goOrdineDettaglio.getFlagConsegnato())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                            dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDesczrizione()
+                            dto.getProgressivo(), user, AzioneEnum.CONSEGNATO.getDescrizione()
                             , dto.getRigo(), null, null, null, null));
                 }
                 if (!Objects.equals(dto.getFlProntoConsegna(), goOrdineDettaglio.getFlProntoConsegna())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                            dto.getProgressivo(), user, AzioneEnum.PRONTO_CONSEGNA.getDesczrizione()
+                            dto.getProgressivo(), user, AzioneEnum.PRONTO_CONSEGNA.getDescrizione()
                             , dto.getRigo(), null, null, null, dto.getQtaProntoConsegna()));
                 }
                 if (!Objects.equals(goOrdineDettaglio.getQtaRiservata(), dto.getQtaRiservata())) {
                     registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(dto.getAnno(), dto.getSerie(),
-                            dto.getProgressivo(), user, AzioneEnum.QTA_RISERVATA.getDesczrizione(),
+                            dto.getProgressivo(), user, AzioneEnum.QTA_RISERVATA.getDescrizione(),
                             dto.getRigo(), null, null, dto.getQtaRiservata(), null));
                 }
                 if (!warnNoBolla.get()) {

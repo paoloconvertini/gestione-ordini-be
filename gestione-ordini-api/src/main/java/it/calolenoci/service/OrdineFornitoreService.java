@@ -131,7 +131,7 @@ public class OrdineFornitoreService {
                                 .and("serie", serie).and("progressivo", progressivo).and("rigo", a.getRigo()));
                         Log.debug("Cambio flag ordinato per articolo: " + anno + "/" + serie + "/" + progressivo + "-" + a.getRigo() +
                                 ". Aggiornati " + update + " articoli");
-                        registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(anno, serie, progressivo, user, AzioneEnum.ORDINATO.getDesczrizione()
+                        registroAzioniList.add(registroAzioniMapper.fromDtoToEntity(anno, serie, progressivo, user, AzioneEnum.ORDINATO.getDescrizione()
                                 , a.getRigo(), null, null, null, null));
                     }
                     OrdineFornitoreDettaglio rigoRiferimento = oafArticoloMapper.createRigoRiferimento(serieOAF, prog, articoloDto.getIntestazioneCliente(),

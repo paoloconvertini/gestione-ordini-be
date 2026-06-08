@@ -35,8 +35,8 @@ public class AppuntamentoMapper {
 
         dto.setOraDa(entity.getOraDa());
         dto.setOraA(entity.getOraA());
-
-        dto.setCodVenditore(entity.getCodVenditore());
+        dto.setTipoEvento(entity.getTipoEvento());
+        dto.setDescrizione(entity.getDescrizione());
 
         dto.setNote(entity.getNote());
 
@@ -77,8 +77,8 @@ public class AppuntamentoMapper {
 
         dto.setOraDa(entity.getOraDa());
         dto.setOraA(entity.getOraA());
-
-        dto.setCodVenditore(entity.getCodVenditore());
+        dto.setTipoEvento(entity.getTipoEvento());
+        dto.setDescrizione(entity.getDescrizione());
 
         dto.setNote(entity.getNote());
 
@@ -125,7 +125,8 @@ public class AppuntamentoMapper {
         entity.setOraDa(dto.getOraDa());
         entity.setOraA(dto.getOraA());
 
-        entity.setCodVenditore(dto.getCodVenditore());
+        entity.setTipoEvento(dto.getTipoEvento());
+        entity.setDescrizione(dto.getDescrizione());
 
         entity.setNote(dto.getNote());
 
@@ -163,7 +164,8 @@ public class AppuntamentoMapper {
         entity.setOraDa(dto.getOraDa());
         entity.setOraA(dto.getOraA());
 
-        entity.setCodVenditore(dto.getCodVenditore());
+        entity.setTipoEvento(dto.getTipoEvento());
+        entity.setDescrizione(dto.getDescrizione());
 
         entity.setNote(dto.getNote());
         entity.setIdMotivo(dto.getMotivoId());

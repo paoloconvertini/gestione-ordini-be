@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Data
 public class AppuntamentoDto implements Serializable {
@@ -29,7 +30,9 @@ public class AppuntamentoDto implements Serializable {
     private LocalDate dataAppuntamento;
     private LocalTime oraDa;
     private LocalTime oraA;
-    private String codVenditore;
+    private String tipoEvento;
+    private String descrizione;
+    private List<String> codVenditori;
     private String note;
     private Boolean promemoriaInviato;
     private LocalDateTime createdAt;

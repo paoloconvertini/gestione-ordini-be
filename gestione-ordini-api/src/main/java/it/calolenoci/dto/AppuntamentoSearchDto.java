@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Data
 public class AppuntamentoSearchDto implements Serializable {
@@ -33,9 +34,6 @@ public class AppuntamentoSearchDto implements Serializable {
     private LocalTime oraDa;
     private LocalTime oraA;
 
-    private String codVenditore;
-    private String nomeVenditore;
-
     private String note;
 
     private String colore;
@@ -48,7 +46,13 @@ public class AppuntamentoSearchDto implements Serializable {
 
     private String dataOraLabel;
 
-    private String venditoreLabel;
+    private String tipoEvento;
+
+    private String descrizione;
+
+    private List<String> codVenditori;
+
+    private String venditoriLabel;
 
     private String motivoLabel;
 }

@@ -19,5 +19,5 @@ public enum AzioneEnum {
     PRONTO_CONSEGNA("PRONTO_CONSEGNA"),
     ORDINATO("ORDINATO");
 
-    private final String desczrizione;
+    private final String descrizione;
 }

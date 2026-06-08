@@ -63,8 +63,11 @@ public class Appuntamento extends PanacheEntityBase {
     @Column(name = "ORA_A")
     private LocalTime oraA;
 
-    @Column(name = "COD_VENDITORE")
-    private String codVenditore;
+    @Column(name = "TIPO_EVENTO")
+    private String tipoEvento;
+
+    @Column(name = "DESCRIZIONE")
+    private String descrizione;
 
     @Column(name = "ID_MOTIVO")
     private Long idMotivo;
@@ -74,6 +77,9 @@ public class Appuntamento extends PanacheEntityBase {
 
     @Column(name = "PROMEMORIA_INVIATO")
     private Boolean promemoriaInviato;
+
+    @Column(name = "OUTLOOK_EVENT_ID", length = 255)
+    private String outlookEventId;
 
     @Column(name = "CREATED_AT")
     private LocalDateTime createdAt;
