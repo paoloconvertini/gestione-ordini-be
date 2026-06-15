@@ -19,11 +19,6 @@ public class CalendarLabelService {
 
     public String buildClienteLabel(AttivitaMontaggio entity) {
         StringBuilder sb = new StringBuilder();
-        if ("RILIEVO".equals(entity.getTipoAppuntamento())) {
-            sb.append("📐 ");
-        } else {
-            sb.append("🔧 ");
-        }
         sb.append(entity.getNomeCliente());
         return sb.toString();
     }

@@ -246,19 +246,14 @@ public class AttivitaMontaggioService {
     }
 
     private String getColoreByStato(String tipoAppuntamento, String stato) {
-        if ("RILIEVO".equals(tipoAppuntamento)) {
-            return switch (stato) {
-                case "COMPLETATO" -> "#2e7d32";
-                case "ANNULLATO" -> "#c62828";
-                case "IN_CORSO" -> "#66bb6a";
-                default -> "#43a047";
-            };
-        }
-        return switch (stato) {
-            case "PROGRAMMATO" -> "#1976d2";
-            case "IN_CORSO" -> "#f57c00";
-            case "COMPLETATO" -> "#388e3c";
-            case "ANNULLATO" -> "#d32f2f";
+        return switch (tipoAppuntamento) {
+
+            case "RILIEVO" -> "#43a047";
+
+            case "MANUTENZIONE" -> "#7b1fa2";
+
+            case "RIPARAZIONE" -> "#d32f2f";
+
             default -> "#1976d2";
         };
     }
