@@ -736,18 +736,30 @@ public class FatturaService {
     public Double getOrdiniAperti(String sottoConto) {
         Object result = Fatture.getEntityManager().createNativeQuery(
                         "SELECT COALESCE(SUM(" +
-                                " o2.PREZZO" +
-                                " *(1-o2.SCONTOARTICOLO/100)" +
-                                " *(1-o2.SCONTOC1/100)" +
-                                " *(1-o2.SCONTOC2/100)" +
-                                " *(1-o2.SCONTOP/100)" +
-                                " * o2.QUANTITA" +
+                                " COALESCE(o2.PREZZO,0)" +
+                                " *(1-COALESCE(o2.SCONTOARTICOLO,0)/100)" +
+                                " *(1-COALESCE(o2.SCONTOC1,0)/100)" +
+                                " *(1-COALESCE(o2.SCONTOC2,0)/100)" +
+                                " *(1-COALESCE(o2.SCONTOP,0)/100)" +
+                                " * CASE" +
+                                "     WHEN COALESCE(o2.QUANTITA,0) - COALESCE(b.QTA_BOLLATA,0) > 0" +
+                                "     THEN COALESCE(o2.QUANTITA,0) - COALESCE(b.QTA_BOLLATA,0)" +
+                                "     ELSE 0" +
+                                "   END" +
                                 " * (1 + COALESCE(i.ALIQUOTA,0)/100)" +
                                 "),0) " +
                                 "FROM ORDCLI o " +
                                 "JOIN ORDCLI2 o2 ON o.ANNO = o2.ANNO AND o.SERIE = o2.SERIE AND o.PROGRESSIVO = o2.PROGRESSIVO " +
+                                "LEFT JOIN (" +
+                                " SELECT f2.PROGRORDCLI, SUM(f2.QUANTITA) AS QTA_BOLLATA" +
+                                " FROM FATTURE f" +
+                                " JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO" +
+                                " WHERE f.SERIE = 'B'" +
+                                " GROUP BY f2.PROGRORDCLI" +
+                                ") b ON b.PROGRORDCLI = o2.PROGRGENERALE " +
                                 "LEFT JOIN TGCI i ON i.CODICEIVA = o2.FCODICEIVA " +
                                 "WHERE o2.SALDOACCONTO <> 'S' " +
+                                "AND o.PROVVISORIO <> 'S' " +
                                 "AND o.GRUPPOCLIENTE = 1231 " +
                                 "AND o.CONTOCLIENTE = :s")
                 .setParameter("s", sottoConto)
