@@ -4,7 +4,6 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
-import it.calolenoci.FornitoreAlternativoDto;
 import it.calolenoci.dto.CaricoMagazzinoDto;
 import it.calolenoci.dto.OrdineDettaglioDto;
 import it.calolenoci.dto.SaldiMagazzinoDTO;
@@ -75,19 +74,19 @@ public class SaldiMagazzinoService {
             List<SaldiMagazzino> saldiMagazzinoList = new ArrayList<>();
             for (int i = 0; i < articoli.size(); i++) {
                 OrdineDettaglio articolo = articoli.get(i);
-                Optional<FornitoreAlternativoDto> articoloOptional = Articolo.find("select fa.fornitoreArticoloId.gruppo, " +
-                                " fa.fornitoreArticoloId.conto " +
-                                " FROM Articolo a " +
-                        "JOIN FornitoreArticolo fa ON fa.fornitoreArticoloId.articolo = a.articolo")
-                        .project(FornitoreAlternativoDto.class)
+                Optional<FornitoreArticolo> fornitoreOptional = FornitoreArticolo.find(
+                                "fornitoreArticoloId.articolo = :articolo",
+                                Parameters.with("articolo", articolo.getFArticolo()))
                         .firstResultOptional();
-                if(articoloOptional.isEmpty()) {
+                if(fornitoreOptional.isEmpty()) {
                     Log.error("Errore! Articolo non trovato con id = " + articolo.getFArticolo());
                     continue;
                 }
+                FornitoreArticoloId fornitoreId = fornitoreOptional.get().getFornitoreArticoloId();
+                String contoFornitore = StringUtils.leftPad(fornitoreId.getConto(), 6, '0');
                 MagazzinoId id = new MagazzinoId(Year.now().getValue(), "CF", progressivo, " ", i+1);
-                Magazzino magazzino = magazzinoMapper.buildMagazzino(id, ++progressivoGen, articolo, articoloOptional.get().getGruppo(),
-                        articoloOptional.get().getConto(), carico.getNumDoc(), carico.getCausale(),
+                Magazzino magazzino = magazzinoMapper.buildMagazzino(id, ++progressivoGen, articolo, fornitoreId.getGruppo(),
+                        contoFornitore, carico.getNumDoc(), carico.getCausale(),
                         carico.getVettore(), carico.getDataOperazione(), user, carico.getDataDocumento());
                 magazzinoList.add(magazzino);
                 Optional<SaldiMagazzino> optional = SaldiMagazzino.find("marticolo =:art and  mmagazzino = :mag",
