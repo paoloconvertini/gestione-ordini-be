@@ -77,7 +77,7 @@
 #   accessed directly. (example: "foo.example.com,bar.example.com")
 #
 ###
-FROM registry.access.redhat.com/ubi8/openjdk-17:1.17
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime
 
 ENV LANGUAGE='en_US:en'
 
@@ -87,11 +87,9 @@ COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
 COPY --chown=185 target/quarkus-app/*.jar /deployments/
 COPY --chown=185 target/quarkus-app/app/ /deployments/app/
 COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
-ADD target/classes/conf/java.security /usr/lib/jvm/java-17-openjdk-17.0.9.0.9-2.el8.x86_64/conf/security/java.security
-ADD target/classes/conf/java.security /usr/lib/jvm/java-17-openjdk-17/conf/security/java.security
+ADD target/classes/conf/java.security /usr/lib/jvm/java-21-openjdk/conf/security/java.security
 ADD target/classes/conf/java.security /usr/lib/jvm/java-openjdk/conf/security/java.security
-ADD target/classes/conf/java.security /usr/lib/jvm/java-17-openjdk/conf/security/java.security
-ADD target/classes/conf/java.security /usr/lib/jvm/java-17/conf/security/java.security
+ADD target/classes/conf/java.security /usr/lib/jvm/java-21/conf/security/java.security
 
 EXPOSE 8080
 USER 185
@@ -99,4 +97,3 @@ ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=or
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
 
 ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
-

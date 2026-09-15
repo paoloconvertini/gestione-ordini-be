@@ -1,2 +1,27 @@
 /.idea
 /osrm-data
+
+# Local environment and database runtime data
+/.env.local
+/api-db/
+
+# Local credentials, exports and diagnostic output
+/dbx_auto.txt
+/response_*.json
+/*.pdf
+/*/quarkus.log
+/*/*.pdf
+/*/*.zip
+/*/*.jasper
+
+# Local database import material (may contain business data)
+/gestione-ordini-ostuni-api/src/main/resources/sqlserver-docker/init/
+
+# Accidental scratch source
+/gestione-ordini-api/src/main/resources/PrevisioneConsegnaDto.java
+
+# Locally compiled or unused report assets
+/gestione-ordini-api/src/main/resources/reports/ListaCarico.jasper
+/gestione-ordini-ceglie-api/src/main/resources/reports/Ammortamento.jasper
+/gestione-ordini-ceglie-api/src/main/resources/reports/AmmortamentoRow.jasper
+/gestione-ordini-ostuni-api/src/main/resources/logo_pc.png

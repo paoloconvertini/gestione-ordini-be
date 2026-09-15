@@ -9,10 +9,6 @@
   </parent>
   <artifactId>gestione-ordini-ostuni-api</artifactId>
   <version>1.2.1</version>
-  <properties>
-    <maven.compiler.release>17</maven.compiler.release>
-    <maven.compiler.target>17</maven.compiler.target>
-  </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>

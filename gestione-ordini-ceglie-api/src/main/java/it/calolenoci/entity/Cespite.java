@@ -1,10 +1,9 @@
 package it.calolenoci.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import it.calolenoci.converter.TrueFalseConverter;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -44,7 +43,7 @@ public class Cespite extends PanacheEntityBase {
     @Column(name = "IMPORTO", nullable = true, precision = 0)
     private Double importo;
 
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     @Column(name="ATTIVO", nullable = false, columnDefinition = "CHAR(1)")
     private Boolean attivo;
 
@@ -75,7 +74,7 @@ public class Cespite extends PanacheEntityBase {
     @Column(name = "DT_INIZIO_CALCOLO_AMM", nullable = true)
     private LocalDate dataInizioCalcoloAmm;
 
-    @Type(type = "org.hibernate.type.TrueFalseType")
+    @Convert(converter = TrueFalseConverter.class)
     @Column(name="FL_PRIMO_ANNO", nullable = false, columnDefinition = "CHAR(1)")
     private Boolean flPrimoAnno;
 

@@ -96,8 +96,7 @@ public class LoginResource {
     )
     public Response login(UserRequestDTO dto) {
         String encrypted = cryptoService.encrypt(dto.getPassword());
-        System.out.println("Encrypted locale: " + encrypted);
-        User utente = User.findByUsernameAndPassword(dto.getUsername(), cryptoService.encrypt(dto.getPassword()));
+        User utente = User.findByUsernameAndPassword(dto.getUsername(), encrypted);
         if(utente == null){
             Log.error("Utente non trovato!");
             throw new NotFoundException();
