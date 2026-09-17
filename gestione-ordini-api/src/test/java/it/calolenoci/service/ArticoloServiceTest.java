@@ -3,7 +3,7 @@ package it.calolenoci.service;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
+import io.quarkus.test.InjectMock;
 import it.calolenoci.dto.FiltroArticoli;
 import it.calolenoci.dto.CodificaArticoliDto;
 import it.calolenoci.dto.OrdineDTO;

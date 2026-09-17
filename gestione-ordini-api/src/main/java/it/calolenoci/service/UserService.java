@@ -2,6 +2,7 @@ package it.calolenoci.service;
 
 import it.calolenoci.config.AuthHeaderFactory;
 import it.calolenoci.dto.UserResponseDTO;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
@@ -22,6 +23,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path("/api/users")
 @RegisterRestClient
 @RegisterClientHeaders(AuthHeaderFactory.class)
+@ApplicationScoped
 public interface UserService {
 
     @GET
