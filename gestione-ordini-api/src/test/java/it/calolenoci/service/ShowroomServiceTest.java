@@ -3,7 +3,8 @@ package it.calolenoci.service;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.mockito.MockitoConfig;
 import it.calolenoci.common.service.ComuneService;
 import it.calolenoci.dto.FiltroShowroom;
 import it.calolenoci.dto.PageShowroomDto;
@@ -42,12 +43,14 @@ class ShowroomServiceTest {
     ShowroomService service;
 
     @InjectMock
+    @MockitoConfig(convertScopes = true)
     SecurityIdentity securityIdentity;
 
     @InjectMock
     ComuneService comuneService;
 
-    @InjectMock(convertScopes = true)
+    @InjectMock
+    @MockitoConfig(convertScopes = true)
     @RestClient
     UserService userService;
 

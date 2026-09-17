@@ -2,7 +2,8 @@ package it.calolenoci.service;
 
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.mockito.MockitoConfig;
 import it.calolenoci.dto.CespiteRequest;
 import it.calolenoci.dto.FiltroCespite;
 import it.calolenoci.dto.QuadraturaCespiteRequest;
@@ -42,6 +43,7 @@ class AmmortamentoCespiteServiceTest {
     EntityManager entityManager;
 
     @InjectMock
+    @MockitoConfig(convertScopes = true)
     JasperService jasperService;
 
     @Test

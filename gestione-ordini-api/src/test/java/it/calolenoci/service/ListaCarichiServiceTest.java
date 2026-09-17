@@ -3,7 +3,8 @@ package it.calolenoci.service;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.mockito.MockitoConfig;
 import it.calolenoci.dto.FiltroCarichi;
 import it.calolenoci.dto.ListaCarichiDto;
 import it.calolenoci.entity.ListaCarichi;
@@ -33,7 +34,8 @@ class ListaCarichiServiceTest {
     @Inject
     EntityManager entityManager;
 
-    @InjectMock(convertScopes = true)
+    @InjectMock
+    @MockitoConfig(convertScopes = true)
     JasperService jasperService;
 
     @Test

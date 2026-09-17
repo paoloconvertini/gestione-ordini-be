@@ -2,7 +2,7 @@ package it.calolenoci.service;
 
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
+import io.quarkus.test.InjectMock;
 import it.calolenoci.dto.AggiornaDataDto;
 import it.calolenoci.dto.CollegaOAFDto;
 import it.calolenoci.dto.FiltroOrdini;
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -289,10 +290,10 @@ class OrdineFornitoreServiceTest {
 
     @Test
     @TestTransaction
-    void segnalaLaProiezioneNonCompatibileDelReportFornitore() {
+    void recuperaLaProiezioneDelReportFornitore() {
         OrdineFornitore ordine = existingOrdine();
 
-        assertThrows(RuntimeException.class, () -> service.findForReport(
+        assertDoesNotThrow(() -> service.findForReport(
                 ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo()));
     }
 

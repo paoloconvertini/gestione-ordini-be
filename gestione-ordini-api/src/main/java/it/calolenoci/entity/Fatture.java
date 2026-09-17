@@ -56,7 +56,7 @@ import java.util.Date;
         name = "AccontoDto",
         query =
                 "select f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATABOLLA as dataBolla, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura, "
-                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO  as fArticolo, f.NUMEROBOLLA "
+                        + " f2.FDESCRARTICOLO as operazione, f2.PREZZO as prezzo, f2.FCODICEIVA as iva, f2.FARTICOLO  as fArticolo, f.NUMEROBOLLA as numeroBolla "
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f2 ON f.ANNO = f2.ANNO AND f.SERIE = f2.SERIE AND f.PROGRESSIVO = f2.PROGRESSIVO"
                         + " WHERE 1=1 and f.serie = 'A' and f.PROGRESSIVO > 0"
@@ -80,7 +80,7 @@ import java.util.Date;
         name = "StornoDto",
         query = " select distinct f.CONTOCLIENTE as contoCliente, f.ANNO as anno, F.SERIE as serie, F.PROGRESSIVO as progressivo, f.DATABOLLA as dataBolla, f.DATAFATTURA as dataFattura, f.NUMEROFATTURA as numeroFattura"
                         + " , concat('ns.ordine n.', o.anno,'/', o.serie,'/',  o.PROGRESSIVO, ' del ', FORMAT(o.DATAORDINE, 'dd.MM.yyyy')) as rifOrdCliente"
-                        + " , f4.FDESCRARTICOLO as operazione, f4.PREZZO as prezzo, f4.FCODICEIVA as iva, concat(o.anno,'/', o.serie,'/',  o.PROGRESSIVO) as ordineCliente, f.NUMEROBOLLA "
+                        + " , f4.FDESCRARTICOLO as operazione, f4.PREZZO as prezzo, f4.FCODICEIVA as iva, concat(o.anno,'/', o.serie,'/',  o.PROGRESSIVO) as ordineCliente, f.NUMEROBOLLA as numeroBolla "
                         + " FROM FATTURE f"
                         + " JOIN FATTURE2 f4 ON f.ANNO = f4.ANNO AND f.SERIE = f4.SERIE AND f.PROGRESSIVO = f4.PROGRESSIVO"
                         + " JOIN FATTURE2 f5 ON f5.ANNO = f4.ANNO AND f5.SERIE = f4.SERIE AND f.PROGRESSIVO = f5.PROGRESSIVO"
@@ -125,18 +125,18 @@ import java.util.Date;
         classes = @ConstructorResult(
                 targetClass = AccontoDto.class,
                 columns = {
-                        @ColumnResult(name = "contoCliente"),
-                        @ColumnResult(name = "anno"),
-                        @ColumnResult(name = "serie"),
-                        @ColumnResult(name = "progressivo"),
-                        @ColumnResult(name = "dataBolla"),
-                        @ColumnResult(name = "dataFattura"),
-                        @ColumnResult(name = "numeroFattura"),
-                        @ColumnResult(name = "operazione"),
-                        @ColumnResult(name = "prezzo"),
-                        @ColumnResult(name = "iva"),
-                        @ColumnResult(name= "fArticolo"),
-                        @ColumnResult(name = "numeroBolla")
+                        @ColumnResult(name = "contoCliente", type = String.class),
+                        @ColumnResult(name = "anno", type = Integer.class),
+                        @ColumnResult(name = "serie", type = String.class),
+                        @ColumnResult(name = "progressivo", type = Integer.class),
+                        @ColumnResult(name = "dataBolla", type = Date.class),
+                        @ColumnResult(name = "dataFattura", type = Date.class),
+                        @ColumnResult(name = "numeroFattura", type = String.class),
+                        @ColumnResult(name = "operazione", type = String.class),
+                        @ColumnResult(name = "prezzo", type = Double.class),
+                        @ColumnResult(name = "iva", type = String.class),
+                        @ColumnResult(name = "fArticolo", type = String.class),
+                        @ColumnResult(name = "numeroBolla", type = String.class)
                 }
         )
 )
@@ -145,16 +145,16 @@ import java.util.Date;
         classes = @ConstructorResult(
                 targetClass = AccontoDto.class,
                 columns = {
-                        @ColumnResult(name = "contoCliente"),
-                        @ColumnResult(name = "anno"),
-                        @ColumnResult(name = "serie"),
-                        @ColumnResult(name = "progressivo"),
-                        @ColumnResult(name = "dataFattura"),
-                        @ColumnResult(name = "numeroFattura"),
-                        @ColumnResult(name = "operazione"),
-                        @ColumnResult(name = "prezzo"),
-                        @ColumnResult(name = "iva"),
-                        @ColumnResult(name= "fArticolo")
+                        @ColumnResult(name = "contoCliente", type = String.class),
+                        @ColumnResult(name = "anno", type = Integer.class),
+                        @ColumnResult(name = "serie", type = String.class),
+                        @ColumnResult(name = "progressivo", type = Integer.class),
+                        @ColumnResult(name = "dataFattura", type = Date.class),
+                        @ColumnResult(name = "numeroFattura", type = String.class),
+                        @ColumnResult(name = "operazione", type = String.class),
+                        @ColumnResult(name = "prezzo", type = Double.class),
+                        @ColumnResult(name = "iva", type = String.class),
+                        @ColumnResult(name = "fArticolo", type = String.class)
                 }
         )
 )
@@ -163,19 +163,19 @@ import java.util.Date;
         classes = @ConstructorResult(
                 targetClass = AccontoDto.class,
                 columns = {
-                        @ColumnResult(name = "contoCliente"),
-                        @ColumnResult(name = "anno"),
-                        @ColumnResult(name = "serie"),
-                        @ColumnResult(name = "progressivo"),
-                        @ColumnResult(name = "dataBolla"),
-                        @ColumnResult(name = "dataFattura"),
-                        @ColumnResult(name = "numeroFattura"),
-                        @ColumnResult(name = "rifOrdCliente"),
-                        @ColumnResult(name = "operazione"),
-                        @ColumnResult(name = "prezzo"),
-                        @ColumnResult(name = "iva"),
-                        @ColumnResult(name= "ordineCliente"),
-                        @ColumnResult(name= "numeroBolla")
+                        @ColumnResult(name = "contoCliente", type = String.class),
+                        @ColumnResult(name = "anno", type = Integer.class),
+                        @ColumnResult(name = "serie", type = String.class),
+                        @ColumnResult(name = "progressivo", type = Integer.class),
+                        @ColumnResult(name = "dataBolla", type = Date.class),
+                        @ColumnResult(name = "dataFattura", type = Date.class),
+                        @ColumnResult(name = "numeroFattura", type = String.class),
+                        @ColumnResult(name = "rifOrdCliente", type = String.class),
+                        @ColumnResult(name = "operazione", type = String.class),
+                        @ColumnResult(name = "prezzo", type = Double.class),
+                        @ColumnResult(name = "iva", type = String.class),
+                        @ColumnResult(name = "ordineCliente", type = String.class),
+                        @ColumnResult(name = "numeroBolla", type = String.class)
 
                 }
         )
