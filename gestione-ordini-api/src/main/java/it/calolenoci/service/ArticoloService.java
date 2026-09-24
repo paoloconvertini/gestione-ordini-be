@@ -386,8 +386,10 @@ public class ArticoloService {
                 }
             }
 
-            Optional<Articolo> optArticolo = Articolo.find("(descrArtSuppl = :codArt OR descrArticolo like '%:codArt%') AND articolo NOT IN ('*PZ', '*ML','*KG')",
-                    Parameters.with("codArt", dto.getCodArtFornitore())).firstResultOptional();
+            Optional<Articolo> optArticolo = Articolo.find("(descrArtSuppl = :codArt OR descrArticolo like :codArtLike) AND articolo NOT IN ('*PZ', '*ML','*KG')",
+                    Parameters.with("codArt", dto.getCodArtFornitore())
+                            .and("codArtLike", "%" + dto.getCodArtFornitore() + "%"))
+                    .firstResultOptional();
             if(optArticolo.isPresent()){
                 Log.error("Articolo " + dto.getFDescrArticolo() + ":  già codificato come: " + optArticolo.get().getArticolo());
                 errors.add("Articolo " + dto.getFDescrArticolo() + ":  già codificato come: " + optArticolo.get().getArticolo());
@@ -438,14 +440,17 @@ public class ArticoloService {
             Articolo articolo = new Articolo();
             if (length >= 13) {
                 Log.info("Codice fornitore maggiore di 13. Cerco max progressivo per la classe fornitore: " + codiceFornitore);
-                codiceArticolo = Articolo.find("SELECT ISNULL(MAX(articolo), '1') " +
-                                "FROM Articolo " +
-                                "WHERE ISNUMERIC(articolo) = 1" +
-                                " AND articolo LIKE :codForn",
-                        Parameters.with("codForn", codiceFornitore+"%")).project(String.class).firstResult();
+                codiceArticolo = String.valueOf(Articolo.getEntityManager().createNativeQuery(
+                                "SELECT ISNULL(MAX(ARTICOLO), '1') " +
+                                "FROM ARTICOLI_TAB " +
+                                "WHERE ISNUMERIC(ARTICOLO) = 1 " +
+                                "AND ARTICOLO NOT LIKE '%[^0-9]%' " +
+                                "AND ARTICOLO LIKE :codForn")
+                        .setParameter("codForn", codiceFornitore + "%")
+                        .getSingleResult());
 
                 if(StringUtils.equals("1", codiceArticolo)) {
-                    this.creaId(codiceArticolo, codiceFornitore);
+                    codiceArticolo = this.creaId(codiceArticolo, codiceFornitore);
                 } else {
                     try {
                         codiceArticolo = String.valueOf(Long.parseLong(codiceArticolo)+1);

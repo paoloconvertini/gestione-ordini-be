@@ -290,6 +290,181 @@ class ArticoloServiceTest {
     }
 
     @Test
+    void codificaUnArticoloConCodiceFornitoreLungoGeneraUnProgressivoValido() {
+        OrdineDettaglio[] ordineDettaglio = new OrdineDettaglio[1];
+        String[] valoriOriginali = new String[3];
+        String[] codiceClasse = new String[1];
+        String nomeFornitore = "FORNITORE-LUNGO-TEST-" + UUID.randomUUID().toString().substring(0, 8);
+        String codiceEsterno = UUID.randomUUID().toString().replace("-", "").substring(0, 13).toUpperCase();
+        QuarkusTransaction.requiringNew().run(() -> {
+            ordineDettaglio[0] = OrdineDettaglio.find(
+                    "tipoRigo <> 'AC' and progrGenerale is not null").firstResult();
+            if (ordineDettaglio[0] == null) {
+                throw new AssertionError("Il database di sviluppo non contiene righe ordine codificabili");
+            }
+            valoriOriginali[0] = ordineDettaglio[0].getFArticolo();
+            valoriOriginali[1] = ordineDettaglio[0].getCodArtFornitore();
+            valoriOriginali[2] = ordineDettaglio[0].getFDescrArticolo();
+            codiceClasse[0] = codiceClasseLibero();
+            ArticoloClasseFornitore classe = new ArticoloClasseFornitore();
+            classe.setCodice(codiceClasse[0]);
+            classe.setDescrizione("Classe test codice lungo");
+            classe.setDescrUser(nomeFornitore);
+            classe.setDescrUser2("999999");
+            classe.persist();
+        });
+        String codiceArticolo = codiceClasse[0] + "0000000001";
+        OrdineDettaglioDto dto = dettaglioDto(ordineDettaglio[0]);
+        dto.setCodArtFornitore(codiceEsterno);
+        dto.setFDescrArticolo("Nuovo articolo codice lungo *" + nomeFornitore + "*");
+        dto.setFUnitaMisura("PZ");
+
+        try {
+            CodificaArticoliDto result = service.codificaArticoli(List.of(dto), "utente-test");
+
+            assertTrue(result.getErrors().isEmpty());
+            QuarkusTransaction.requiringNew().run(() -> {
+                Articolo articolo = Articolo.findById(codiceArticolo);
+                assertNotNull(articolo);
+                assertEquals(codiceEsterno, articolo.getDescrArtSuppl());
+                assertEquals(codiceClasse[0], articolo.getClasseA1());
+                assertNotNull(FornitoreArticolo.findById(
+                        new FornitoreArticoloId(codiceArticolo, 2351, "999999")));
+            });
+        } finally {
+            QuarkusTransaction.requiringNew().run(() -> {
+                OrdineDettaglio aggiornato = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(),
+                        dto.getProgressivo(), dto.getRigo());
+                aggiornato.setFArticolo(valoriOriginali[0]);
+                aggiornato.setCodArtFornitore(valoriOriginali[1]);
+                aggiornato.setFDescrArticolo(valoriOriginali[2]);
+                FornitoreArticolo.deleteById(
+                        new FornitoreArticoloId(codiceArticolo, 2351, "999999"));
+                Articolo.deleteById(codiceArticolo);
+                ArticoloClasseFornitore.deleteById(codiceClasse[0]);
+            });
+        }
+    }
+
+    @Test
+    void codificaUnArticoloConProgressivoEsistenteUsaIlSuccessivo() {
+        OrdineDettaglio[] ordineDettaglio = new OrdineDettaglio[1];
+        String[] valoriOriginali = new String[3];
+        String[] datiClasse = new String[4];
+        String[] codiceArticolo = new String[1];
+        String codiceEsterno = UUID.randomUUID().toString().replace("-", "").substring(0, 13).toUpperCase();
+        QuarkusTransaction.requiringNew().run(() -> {
+            ordineDettaglio[0] = OrdineDettaglio.find(
+                    "tipoRigo <> 'AC' and progrGenerale is not null").firstResult();
+            if (ordineDettaglio[0] == null) {
+                throw new AssertionError("Il database di sviluppo non contiene righe ordine codificabili");
+            }
+            valoriOriginali[0] = ordineDettaglio[0].getFArticolo();
+            valoriOriginali[1] = ordineDettaglio[0].getCodArtFornitore();
+            valoriOriginali[2] = ordineDettaglio[0].getFDescrArticolo();
+            Object[] classe = (Object[]) ArticoloClasseFornitore.getEntityManager().createNativeQuery(
+                            "SELECT TOP 1 CODICE, DESCRUSER, DESCRUSER2, DESCRUSER3 FROM TCA1 " +
+                            "WHERE NULLIF(LTRIM(RTRIM(DESCRUSER2)), '') IS NOT NULL " +
+                            "AND NULLIF(LTRIM(RTRIM(DESCRUSER3)), '') IS NOT NULL " +
+                            "AND EXISTS (SELECT 1 FROM ARTICOLI_TAB a " +
+                            "WHERE ISNUMERIC(a.ARTICOLO) = 1 " +
+                            "AND a.ARTICOLO LIKE LTRIM(RTRIM(TCA1.DESCRUSER3)) + '%') " +
+                            "ORDER BY CODICE")
+                    .getResultList().stream().findFirst().orElse(null);
+            if (classe == null) {
+                throw new AssertionError("Il database non contiene classi con progressivi esistenti");
+            }
+            for (int i = 0; i < classe.length; i++) {
+                datiClasse[i] = String.valueOf(classe[i]);
+            }
+            Object massimo = Articolo.getEntityManager().createNativeQuery(
+                            "SELECT ISNULL(MAX(ARTICOLO), '1') FROM ARTICOLI_TAB " +
+                            "WHERE ISNUMERIC(ARTICOLO) = 1 AND ARTICOLO LIKE :prefisso")
+                    .setParameter("prefisso", datiClasse[3].trim() + "%")
+                    .getSingleResult();
+            codiceArticolo[0] = String.valueOf(Long.parseLong(String.valueOf(massimo)) + 1);
+        });
+        OrdineDettaglioDto dto = dettaglioDto(ordineDettaglio[0]);
+        dto.setCodArtFornitore(codiceEsterno);
+        dto.setFDescrArticolo("Nuovo articolo progressivo *" + datiClasse[1] + "*");
+        dto.setFUnitaMisura("PZ");
+
+        try {
+            CodificaArticoliDto result = service.codificaArticoli(List.of(dto), "utente-test");
+
+            assertTrue(result.getErrors().isEmpty());
+            QuarkusTransaction.requiringNew().run(() -> {
+                Articolo articolo = Articolo.findById(codiceArticolo[0]);
+                assertNotNull(articolo);
+                assertEquals(codiceEsterno, articolo.getDescrArtSuppl());
+                assertEquals(datiClasse[3].trim(), articolo.getClasseA1());
+            });
+        } finally {
+            QuarkusTransaction.requiringNew().run(() -> {
+                OrdineDettaglio aggiornato = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(),
+                        dto.getProgressivo(), dto.getRigo());
+                aggiornato.setFArticolo(valoriOriginali[0]);
+                aggiornato.setCodArtFornitore(valoriOriginali[1]);
+                aggiornato.setFDescrArticolo(valoriOriginali[2]);
+                FornitoreArticolo.deleteById(
+                        new FornitoreArticoloId(codiceArticolo[0], 2351, datiClasse[2]));
+                Articolo.deleteById(codiceArticolo[0]);
+            });
+        }
+    }
+
+    @Test
+    void riconosceUnCodicePresenteNellaDescrizione() {
+        OrdineDettaglio[] ordineDettaglio = new OrdineDettaglio[1];
+        String[] valoriOriginali = new String[3];
+        String[] articoloEsistente = new String[2];
+        QuarkusTransaction.requiringNew().run(() -> {
+            ordineDettaglio[0] = OrdineDettaglio.find(
+                    "tipoRigo <> 'AC' and progrGenerale is not null").firstResult();
+            if (ordineDettaglio[0] == null) {
+                throw new AssertionError("Il database di sviluppo non contiene righe ordine codificabili");
+            }
+            valoriOriginali[0] = ordineDettaglio[0].getFArticolo();
+            valoriOriginali[1] = ordineDettaglio[0].getCodArtFornitore();
+            valoriOriginali[2] = ordineDettaglio[0].getFDescrArticolo();
+            Articolo articolo = Articolo.find(
+                    "(descrArtSuppl = :codArt OR descrArticolo like :codArtLike) " +
+                            "AND articolo NOT IN ('*PZ', '*ML','*KG')",
+                    io.quarkus.panache.common.Parameters.with("codArt", "GRONDA")
+                            .and("codArtLike", "%GRONDA%"))
+                    .firstResult();
+            if (articolo == null || "GRONDA".equalsIgnoreCase(articolo.getDescrArtSuppl())) {
+                throw new AssertionError("Il database di sviluppo non contiene un caso LIKE reale");
+            }
+            articoloEsistente[0] = articolo.getArticolo();
+            articoloEsistente[1] = articolo.getFlTrattato();
+        });
+        OrdineDettaglioDto dto = dettaglioDto(ordineDettaglio[0]);
+        dto.setCodArtFornitore("GRONDA");
+        dto.setFDescrArticolo("Articolo esistente nella descrizione");
+
+        try {
+            CodificaArticoliDto result = service.codificaArticoli(List.of(dto), "utente-test");
+
+            assertEquals(1, result.getErrors().size());
+            assertTrue(result.getErrors().getFirst().contains("già codificato come"));
+            QuarkusTransaction.requiringNew().run(() -> assertEquals(
+                    articoloEsistente[0], OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(),
+                            dto.getProgressivo(), dto.getRigo()).getFArticolo()));
+        } finally {
+            QuarkusTransaction.requiringNew().run(() -> {
+                OrdineDettaglio aggiornato = OrdineDettaglio.getById(dto.getAnno(), dto.getSerie(),
+                        dto.getProgressivo(), dto.getRigo());
+                aggiornato.setFArticolo(valoriOriginali[0]);
+                aggiornato.setCodArtFornitore(valoriOriginali[1]);
+                aggiornato.setFDescrArticolo(valoriOriginali[2]);
+                Articolo articolo = Articolo.findById(articoloEsistente[0]);
+                articolo.setFlTrattato(articoloEsistente[1]);
+            });
+        }
+    }
+
+    @Test
     @TestTransaction
     void rifiutaUnFornitoreArticoloDuplicato() {
         FornitoreArticolo existing = FornitoreArticolo.findAll().firstResult();
