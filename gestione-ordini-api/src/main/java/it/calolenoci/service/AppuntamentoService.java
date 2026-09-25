@@ -187,6 +187,8 @@ public class AppuntamentoService {
     @Transactional
     public AppuntamentoDto create(AppuntamentoDto dto) {
 
+        validateTipoEvento(dto.getTipoEvento());
+
         if (dto.getSedeId() == null) {
             throw new WebApplicationException("Sede obbligatoria", 400);
         }
@@ -219,6 +221,7 @@ public class AppuntamentoService {
     @Transactional
     public AppuntamentoDto update(Long id, AppuntamentoDto dto) {
         Appuntamento entity = getAppuntamento(id);
+        validateTipoEvento(dto.getTipoEvento());
         if (dto.getSedeId() == null) {
             throw new WebApplicationException("Sede obbligatoria", 400);
         }
@@ -274,6 +277,13 @@ public class AppuntamentoService {
         return motivo;
     }
 
+    private void validateTipoEvento(String tipoEvento) {
+        if (tipoEvento == null || Arrays.stream(TipoAppuntamentoEnum.values())
+                .noneMatch(tipo -> tipo.getDescrizione().equals(tipoEvento))) {
+            throw new WebApplicationException("Tipo evento non valido", 400);
+        }
+    }
+
     private void validateVenditori(AppuntamentoDto dto, Long idDaEscludere) {
         if (dto.getDataAppuntamento() == null || dto.getOraDa() == null
                 || dto.getOraA() == null || dto.getCodVenditori() == null
@@ -306,7 +316,18 @@ public class AppuntamentoService {
         if (TipoAppuntamentoEnum.FORMAZIONE.getDescrizione().equals(entity.getTipoEvento())) {
             return "#9C27B0"; // viola
         }
+        if (TipoAppuntamentoEnum.VISITA.getDescrizione().equals(entity.getTipoEvento())) {
+            return getColoreVisitaSede(entity.getSede().getId());
+        }
         return getColoreSede(entity.getSede().getId());
+    }
+
+    private String getColoreVisitaSede(Long sedeId) {
+        return switch (sedeId.intValue()) {
+            case 1 -> "#42A5F5"; // blu chiaro
+            case 2 -> "#66BB6A"; // verde chiaro
+            default -> "#BDBDBD"; // grigio chiaro
+        };
     }
 
     private String getColoreSede(Long sedeId) {

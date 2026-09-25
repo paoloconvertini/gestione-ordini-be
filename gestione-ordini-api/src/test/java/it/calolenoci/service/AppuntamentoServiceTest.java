@@ -5,6 +5,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.mockito.MockitoConfig;
 import it.calolenoci.dto.AppuntamentoDto;
+import it.calolenoci.dto.AppuntamentoSearchDto;
 import it.calolenoci.dto.FiltroAppuntamentoDto;
 import it.calolenoci.dto.OutlookEventDto;
 import it.calolenoci.dto.PageAppuntamentoDto;
@@ -96,6 +97,61 @@ class AppuntamentoServiceTest {
         assertEquals(1, AppuntamentoVenditore.count("idAppuntamento", created.getId()));
         assertEquals("outlook-test", ((Appuntamento) Appuntamento.findById(created.getId())).getOutlookEventId());
         verify(outlookCalendarService).createEvent(any(OutlookEventDto.class));
+    }
+
+    @Test
+    @TestTransaction
+    void creaVisitaConLaStessaValidazioneDellAppuntamento() {
+        ShowroomMotivo motivo = ShowroomMotivo.find("attivo", true).firstResult();
+        if (motivo == null) {
+            throw new AssertionError("Il database di sviluppo non contiene motivi attivi");
+        }
+
+        AppuntamentoDto request = newAppuntamento("Cliente visita " + UUID.randomUUID(), "901", 10, 11);
+        request.setTipoEvento("VISITA");
+        request.setMotivoId(motivo.getId());
+
+        AppuntamentoDto created = service.create(request);
+
+        assertEquals("VISITA", created.getTipoEvento());
+        assertEquals(motivo.getId(), created.getMotivoId());
+        assertEquals(List.of("901"), created.getCodVenditori());
+    }
+
+    @Test
+    @TestTransaction
+    void assegnaAllaVisitaLaVarianteChiaraDelColoreDellaSede() {
+        ShowroomMotivo motivo = ShowroomMotivo.find("attivo", true).firstResult();
+        if (motivo == null) {
+            throw new AssertionError("Il database di sviluppo non contiene motivi attivi");
+        }
+
+        AppuntamentoDto request = newAppuntamento("Cliente colore visita " + UUID.randomUUID(), "901", 10, 11);
+        request.setTipoEvento("VISITA");
+        request.setMotivoId(motivo.getId());
+        AppuntamentoDto created = service.create(request);
+
+        PageAppuntamentoDto result = service.search(new FiltroAppuntamentoDto());
+        AppuntamentoSearchDto found = result.getList().stream()
+                .filter(item -> created.getId().equals(item.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        String expected = switch (existingSede().getId().intValue()) {
+            case 1 -> "#42A5F5";
+            case 2 -> "#66BB6A";
+            default -> "#BDBDBD";
+        };
+        assertEquals(expected, found.getColore());
+    }
+
+    @Test
+    @TestTransaction
+    void rifiutaUnTipoEventoSconosciuto() {
+        AppuntamentoDto request = newAppuntamento("Cliente tipo", "901", 10, 11);
+        request.setTipoEvento("ALTRO");
+
+        assertStatus(400, assertThrows(WebApplicationException.class, () -> service.create(request)));
     }
 
     @Test

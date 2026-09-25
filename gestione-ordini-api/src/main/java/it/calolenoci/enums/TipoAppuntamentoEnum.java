@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum TipoAppuntamentoEnum {
 
     APPUNTAMENTO("APPUNTAMENTO"),
-    FORMAZIONE("FORMAZIONE");
+    FORMAZIONE("FORMAZIONE"),
+    VISITA("VISITA");
 
     private final String descrizione;
 }
