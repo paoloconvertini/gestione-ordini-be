@@ -70,9 +70,9 @@ DECLARE visite CURSOR LOCAL FAST_FORWARD FOR
           AND p.SOTTOCONTO = v.CODICE_CLIENTE
         ORDER BY p.GRUPPOCONTO
     ) pc
-    /* TTCO appartiene al database comune (legacy), non al database master
+    /* TTCO appartiene al database comune, non al database delle tabelle GO_
        dove risiedono le tabelle GO_*. */
-    LEFT JOIN legacy.dbo.TTCO c ON c.CODICECOMUNE = v.COMUNE_ISTAT
+    LEFT JOIN Trading_srl22.dbo.TTCO c ON c.CODICECOMUNE = v.COMUNE_ISTAT
     WHERE ISNULL(v.IS_DELETED, 0) = 0
       AND NOT EXISTS (
           SELECT 1 FROM GO_SHOWROOM_VISIT_MIGRATION m WHERE m.ID_VISITA = v.ID
