@@ -7,7 +7,6 @@ import it.calolenoci.mapper.OrdineClienteReportMapper;
 import it.calolenoci.mapper.RegistroCespiteReportMapper;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.util.JRSaver;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -185,7 +184,6 @@ public class JasperService {
         try {
             InputStream reportStream = getClass().getResourceAsStream("/reports/" + reportName);
             jasperReport = JasperCompileManager.compileReport(reportStream);
-            JRSaver.saveObject(jasperReport, reportName.replace(".jrxml", ".jasper"));
         } catch (JRException ex) {
             Log.error("Error compliling report", ex);
         }
