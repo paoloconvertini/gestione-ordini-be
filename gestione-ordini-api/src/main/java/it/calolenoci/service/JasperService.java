@@ -70,18 +70,9 @@ public class JasperService {
                 Log.error("Errore creazione sotto cartelle report");
             }
         }
-        File f = new File(destFileName);
-        if (!f.exists()) {
-            try {
-                if (!f.createNewFile()) {
-                    Log.info("File " + f.getName() + " already exists");
-                }
-            } catch (IOException ex) {
-                Log.error("Errore creazione file e cartelle report", ex);
-            }
-        }
-        JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
-        Files.move(f.getAbsoluteFile().toPath(), Path.of(folderDest + "/" + destFileName), StandardCopyOption.REPLACE_EXISTING);
+        Path temporaryFile = createTemporaryReportFile(destFileName);
+        JasperExportManager.exportReportToPdfFile(jasperPrint, temporaryFile.toString());
+        Files.move(temporaryFile, folderDest.toPath().resolve(destFileName), StandardCopyOption.REPLACE_EXISTING);
     }
 
     public void createReport(Integer anno, String serie, Integer progressivo) {
@@ -101,9 +92,11 @@ public class JasperService {
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
                 String destFileName = ordineId + ".pdf";
-                File f = new File(destFileName);
-                JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
-                Files.move(f.getAbsoluteFile().toPath(), java.nio.file.Path.of(tmpFolder + f.getName()), StandardCopyOption.REPLACE_EXISTING);
+                Path destination = Path.of(tmpFolder).resolve(destFileName);
+                Files.createDirectories(destination.getParent());
+                Path temporaryFile = createTemporaryReportFile(destFileName);
+                JasperExportManager.exportReportToPdfFile(jasperPrint, temporaryFile.toString());
+                Files.move(temporaryFile, destination, StandardCopyOption.REPLACE_EXISTING);
             } catch (JRException e) {
                 Log.error("Errore nella creazione del report per l'ordine a fornitore " + anno + "/" + serie + "/" + progressivo, e);
                 throw new RuntimeException(e);
@@ -133,11 +126,14 @@ public class JasperService {
 
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, ds);
                 String destFileName = "Registro_cespiti.pdf";
-                File f = new File( destFileName);
-                JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
-                return f;
+                Path temporaryFile = createTemporaryReportFile(destFileName);
+                JasperExportManager.exportReportToPdfFile(jasperPrint, temporaryFile.toString());
+                return temporaryFile.toFile();
             } catch (JRException e) {
                 Log.error("Errore nella creazione del report registro cespiti ", e);
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                Log.error("Errore nella scrittura del report registro cespiti ", e);
                 throw new RuntimeException(e);
             }
         }
@@ -165,18 +161,21 @@ public class JasperService {
                 Log.error("Errore creazione sotto cartelle report");
             }
         }
-        File f = new File(destFileName);
-        if (!f.exists()) {
-            try {
-                if (!f.createNewFile()) {
-                    Log.info("File " + f.getName() + " already exists");
-                }
-            } catch (IOException ex) {
-                Log.error("Errore creazione file e cartelle report", ex);
-            }
+        Path temporaryFile = createTemporaryReportFile(destFileName);
+        JasperExportManager.exportReportToPdfFile(jasperPrint, temporaryFile.toString());
+        Files.move(temporaryFile, folderDest.toPath().resolve(destFileName), StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    private Path createTemporaryReportFile(String filename) throws IOException {
+        Path directory = StringUtils.isNotBlank(tmpFolder)
+                ? Path.of(tmpFolder)
+                : Path.of(System.getProperty("java.io.tmpdir"));
+        Files.createDirectories(directory);
+        String prefix = StringUtils.substringBeforeLast(filename, ".");
+        if (prefix.length() < 3) {
+            prefix = "report";
         }
-        JasperExportManager.exportReportToPdfFile(jasperPrint, f.getName());
-        Files.move(f.getAbsoluteFile().toPath(), Path.of(folderDest + "/" + destFileName), StandardCopyOption.REPLACE_EXISTING);
+        return Files.createTempFile(directory, prefix + "-", ".pdf");
     }
 
     private JasperReport compileReport(String reportName) {
