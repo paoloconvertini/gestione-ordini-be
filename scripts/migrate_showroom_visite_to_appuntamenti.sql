@@ -72,7 +72,7 @@ DECLARE visite CURSOR LOCAL FAST_FORWARD FOR
     ) pc
     /* TTCO appartiene al database comune, non al database delle tabelle GO_
        dove risiedono le tabelle GO_*. */
-    LEFT JOIN Trading_srl22.dbo.TTCO c ON c.CODICECOMUNE = v.COMUNE_ISTAT
+    LEFT JOIN CommonPlurimpresa.dbo.TTCO c ON c.CODICECOMUNE = v.COMUNE_ISTAT
     WHERE ISNULL(v.IS_DELETED, 0) = 0
       AND NOT EXISTS (
           SELECT 1 FROM GO_SHOWROOM_VISIT_MIGRATION m WHERE m.ID_VISITA = v.ID
