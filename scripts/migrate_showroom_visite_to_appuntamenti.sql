@@ -64,11 +64,11 @@ DECLARE visite CURSOR LOCAL FAST_FORWARD FOR
            v.MOTIVO_ID, v.VENDITORE_COD, v.NOTE, v.CREATED_AT
     FROM GO_SHOWROOM_VISIT v
     OUTER APPLY (
-        SELECT TOP (1) p.GRUPPO_CONTO
+        SELECT TOP (1) p.GRUPPOCONTO AS GRUPPO_CONTO
         FROM PIANOCONTI p
         WHERE p.CLIFOR = 'C'
-          AND p.SOTTO_CONTO = v.CODICE_CLIENTE
-        ORDER BY p.GRUPPO_CONTO
+          AND p.SOTTOCONTO = v.CODICE_CLIENTE
+        ORDER BY p.GRUPPOCONTO
     ) pc
     /* TTCO appartiene al database comune (legacy), non al database master
        dove risiedono le tabelle GO_*. */
