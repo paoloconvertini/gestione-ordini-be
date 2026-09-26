@@ -33,6 +33,8 @@ public class AttivitaMontaggioSearchDto implements Serializable {
 
     private String colore;
 
+    private Boolean dittaEsterna;
+
     private String tooltip;
 
     private String tipoAppuntamento;

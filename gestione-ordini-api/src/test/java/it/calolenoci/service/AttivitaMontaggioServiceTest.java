@@ -147,6 +147,24 @@ class AttivitaMontaggioServiceTest {
 
     @Test
     @TestTransaction
+    void coloraLeAttivitaAffidateAllaDittaEsterna() {
+        Long operaioId = createOperaioEsatto("Ditta esterna");
+        String cliente = "Cliente ditta esterna " + UUID.randomUUID();
+        AttivitaMontaggioDto request = newAttivita(cliente);
+        request.setOperai(List.of(newOperaio(operaioId, true)));
+        service.create(request);
+
+        FiltroAttivitaMontaggioDto filtro = new FiltroAttivitaMontaggioDto();
+        filtro.setNomeCliente(cliente);
+
+        PageAttivitaMontaggioDto result = service.search(filtro);
+
+        assertEquals("rgb(25, 210, 148)", result.getList().getFirst().getColore());
+        assertTrue(result.getList().getFirst().getDittaEsterna());
+    }
+
+    @Test
+    @TestTransaction
     void cancellaAttivitaEAssociazioni() {
         Long tipoId = createTipo("Da cancellare");
         Long operaioId = createOperaio("Da cancellare");
@@ -205,6 +223,12 @@ class AttivitaMontaggioServiceTest {
     private Long createOperaio(String nome) {
         OperaioDto dto = new OperaioDto();
         dto.setNome(limit50(nome + " " + UUID.randomUUID()));
+        return operaioService.createOperaio(dto).getId();
+    }
+
+    private Long createOperaioEsatto(String nome) {
+        OperaioDto dto = new OperaioDto();
+        dto.setNome(nome);
         return operaioService.createOperaio(dto).getId();
     }
 

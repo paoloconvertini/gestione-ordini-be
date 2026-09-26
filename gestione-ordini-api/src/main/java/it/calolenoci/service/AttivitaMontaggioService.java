@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 @Transactional
 public class AttivitaMontaggioService {
 
+    private static final String DITTA_ESTERNA = "ditta esterna";
+    private static final String COLORE_DITTA_ESTERNA = "rgb(25, 210, 148)";
+
     @Inject
     AttivitaMontaggioMapper attivitaMontaggioMapper;
 
@@ -113,10 +116,32 @@ public class AttivitaMontaggioService {
         );
         long count = panacheQuery.count();
         List<AttivitaMontaggio> entities = panacheQuery.list();
+        Set<Long> idsAttivita = entities.stream()
+                .map(AttivitaMontaggio::getId)
+                .collect(Collectors.toSet());
+        Set<Long> idsOperaiDittaEsterna = Operaio.<Operaio>list(
+                        "lower(nome) = ?1",
+                        DITTA_ESTERNA
+                ).stream()
+                .map(Operaio::getId)
+                .collect(Collectors.toSet());
+        Set<Long> idsAttivitaDittaEsterna = idsAttivita.isEmpty() || idsOperaiDittaEsterna.isEmpty()
+                ? Set.of()
+                : AttivitaMontaggioOperaio.<AttivitaMontaggioOperaio>list(
+                        "idAttivitaMontaggio in ?1 and idOperaio in ?2",
+                        idsAttivita,
+                        idsOperaiDittaEsterna
+                ).stream()
+                .map(AttivitaMontaggioOperaio::getIdAttivitaMontaggio)
+                .collect(Collectors.toSet());
         List<AttivitaMontaggioSearchDto> dtoList = new ArrayList<>();
         for (AttivitaMontaggio entity : entities) {
             AttivitaMontaggioSearchDto dto = attivitaMontaggioMapper.toSearchDto(entity);
-            dto.setColore(getColoreByStato(entity.getTipoAppuntamento(), entity.getStato()));
+            boolean dittaEsterna = idsAttivitaDittaEsterna.contains(entity.getId());
+            dto.setDittaEsterna(dittaEsterna);
+            dto.setColore(dittaEsterna
+                    ? COLORE_DITTA_ESTERNA
+                    : getColoreByStato(entity.getTipoAppuntamento(), entity.getStato()));
             dto.setTooltip(buildTooltip(entity));
             dto.setClienteLabel(calendarLabelService.buildClienteLabel(entity));
             dto.setIndirizzoLabel(calendarLabelService.buildIndirizzoLabel(entity));
