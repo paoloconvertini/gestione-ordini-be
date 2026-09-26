@@ -148,11 +148,14 @@ class AttivitaMontaggioServiceTest {
     @Test
     @TestTransaction
     void coloraLeAttivitaAffidateAllaDittaEsterna() {
-        Long operaioId = createOperaioEsatto("Ditta esterna");
         String cliente = "Cliente ditta esterna " + UUID.randomUUID();
         AttivitaMontaggioDto request = newAttivita(cliente);
-        request.setOperai(List.of(newOperaio(operaioId, true)));
-        service.create(request);
+        AttivitaMontaggioDto created = service.create(request);
+        AttivitaMontaggioOperaio assegnazione = new AttivitaMontaggioOperaio();
+        assegnazione.setIdAttivitaMontaggio(created.getId());
+        assegnazione.setIdOperaio(5L);
+        assegnazione.setPrincipale(true);
+        assegnazione.persist();
 
         FiltroAttivitaMontaggioDto filtro = new FiltroAttivitaMontaggioDto();
         filtro.setNomeCliente(cliente);
@@ -223,12 +226,6 @@ class AttivitaMontaggioServiceTest {
     private Long createOperaio(String nome) {
         OperaioDto dto = new OperaioDto();
         dto.setNome(limit50(nome + " " + UUID.randomUUID()));
-        return operaioService.createOperaio(dto).getId();
-    }
-
-    private Long createOperaioEsatto(String nome) {
-        OperaioDto dto = new OperaioDto();
-        dto.setNome(nome);
         return operaioService.createOperaio(dto).getId();
     }
 

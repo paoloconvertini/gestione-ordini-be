@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class AttivitaMontaggioService {
 
-    private static final String DITTA_ESTERNA = "ditta esterna";
+    private static final Long DITTA_ESTERNA_ID = 5L;
     private static final String COLORE_DITTA_ESTERNA = "rgb(25, 210, 148)";
 
     @Inject
@@ -119,18 +119,12 @@ public class AttivitaMontaggioService {
         Set<Long> idsAttivita = entities.stream()
                 .map(AttivitaMontaggio::getId)
                 .collect(Collectors.toSet());
-        Set<Long> idsOperaiDittaEsterna = Operaio.<Operaio>list(
-                        "lower(nome) = ?1",
-                        DITTA_ESTERNA
-                ).stream()
-                .map(Operaio::getId)
-                .collect(Collectors.toSet());
-        Set<Long> idsAttivitaDittaEsterna = idsAttivita.isEmpty() || idsOperaiDittaEsterna.isEmpty()
+        Set<Long> idsAttivitaDittaEsterna = idsAttivita.isEmpty()
                 ? Set.of()
                 : AttivitaMontaggioOperaio.<AttivitaMontaggioOperaio>list(
-                        "idAttivitaMontaggio in ?1 and idOperaio in ?2",
+                        "idAttivitaMontaggio in ?1 and idOperaio = ?2",
                         idsAttivita,
-                        idsOperaiDittaEsterna
+                        DITTA_ESTERNA_ID
                 ).stream()
                 .map(AttivitaMontaggioOperaio::getIdAttivitaMontaggio)
                 .collect(Collectors.toSet());
