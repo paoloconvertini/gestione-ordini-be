@@ -156,7 +156,7 @@ class JasperServiceTest {
     void segnalaErroreNelPercorsoTemporaneoDelReportOaf(@TempDir Path tempDir) throws Exception {
         JasperService service = new JasperService();
         service.service = mock(OrdineFornitoreService.class);
-        service.tmpFolder = tempDir.resolve("cartella-inesistente").toString() + "/";
+        service.tmpFolder = Files.createFile(tempDir.resolve("file-non-directory")).toString() + "/";
         OrdineFornitoreDto riga = new OrdineFornitoreDto();
         riga.setTipoRigo(" ");
         riga.setValoreTotale(10D);
@@ -180,6 +180,7 @@ class JasperServiceTest {
     @Test
     void generaIlRegistroCespiti(@TempDir Path tempDir) throws Exception {
         JasperService service = new JasperService();
+        service.tmpFolder = tempDir.toString();
         service.registroCespiteReportMapper = mock(RegistroCespiteReportMapper.class);
         RegistroCespitiDto registro = new RegistroCespitiDto();
         registro.setCespiteList(List.of(new CategoriaCespitiDto()));
@@ -189,7 +190,9 @@ class JasperServiceTest {
 
         java.io.File result = service.createReport(registro);
 
-        assertEquals("Registro_cespiti.pdf", result.getName());
+        assertTrue(result.getName().startsWith("Registro_cespiti-"));
+        assertTrue(result.getName().endsWith(".pdf"));
+        assertEquals(tempDir, result.toPath().getParent());
         assertTrue(result.exists());
         Files.deleteIfExists(result.toPath());
     }
