@@ -1,5 +1,7 @@
 package it.calolenoci.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.InjectMock;
@@ -16,6 +18,7 @@ import it.calolenoci.entity.Sede;
 import it.calolenoci.entity.ShowroomMotivo;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +46,9 @@ class AppuntamentoServiceTest {
     @Inject
     AppuntamentoService service;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     @InjectMock
     @MockitoConfig(convertScopes = true)
     @RestClient
@@ -60,9 +67,27 @@ class AppuntamentoServiceTest {
     }
 
     @Test
+    void leggeIlPayloadDelFormAppuntamento() throws Exception {
+        AppuntamentoDto dto = objectMapper.readValue("""
+                {"tipoEvento":"APPUNTAMENTO","codVenditori":["14"],
+                 "dataAppuntamento":"2026-10-03","oraDa":"11:00","oraA":"13:00",
+                 "nomeCliente":"Cliente test","gruppoConto":null,"sottoConto":null,
+                 "sedeId":2,"comune":"OSTUNI","provincia":"BR","motivoId":5}
+                """, AppuntamentoDto.class);
+
+        assertEquals(LocalDate.of(2026, 10, 3), dto.getDataAppuntamento());
+        assertEquals(LocalTime.of(11, 0), dto.getOraDa());
+        assertEquals(LocalTime.of(13, 0), dto.getOraA());
+        assertEquals(List.of("14"), dto.getCodVenditori());
+        assertEquals(2L, dto.getSedeId());
+        assertEquals(5L, dto.getMotivoId());
+    }
+
+    @Test
     @TestTransaction
     void richiedeLaSede() {
         AppuntamentoDto dto = new AppuntamentoDto();
+        dto.setTipoEvento("APPUNTAMENTO");
         assertStatus(400, assertThrows(WebApplicationException.class, () -> service.create(dto)));
     }
 
@@ -70,6 +95,7 @@ class AppuntamentoServiceTest {
     @TestTransaction
     void richiedeAlmenoUnVenditore() {
         AppuntamentoDto dto = new AppuntamentoDto();
+        dto.setTipoEvento("APPUNTAMENTO");
         dto.setSedeId(existingSede().getId());
         assertStatus(400, assertThrows(WebApplicationException.class, () -> service.create(dto)));
     }
@@ -332,5 +358,7 @@ class AppuntamentoServiceTest {
 
     private void assertStatus(int expected, WebApplicationException exception) {
         assertEquals(expected, exception.getResponse().getStatus());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, exception.getResponse().getMediaType());
+        assertEquals(Map.of("message", exception.getMessage()), exception.getResponse().getEntity());
     }
 }

@@ -12,6 +12,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
@@ -190,15 +192,15 @@ public class AppuntamentoService {
         validateTipoEvento(dto.getTipoEvento());
 
         if (dto.getSedeId() == null) {
-            throw new WebApplicationException("Sede obbligatoria", 400);
+            throw appuntamentoException("Sede obbligatoria", 400);
         }
 
         if (dto.getCodVenditori() == null || dto.getCodVenditori().isEmpty()) {
-            throw new WebApplicationException("Almeno un venditore è obbligatorio", 400);
+            throw appuntamentoException("Almeno un venditore è obbligatorio", 400);
         }
 
         if (TipoAppuntamentoEnum.APPUNTAMENTO.getDescrizione().equals(dto.getTipoEvento()) && dto.getMotivoId() == null) {
-            throw new WebApplicationException("Motivo obbligatorio", 400);
+            throw appuntamentoException("Motivo obbligatorio", 400);
         }
 
         validateVenditori(dto, null);
@@ -223,13 +225,13 @@ public class AppuntamentoService {
         Appuntamento entity = getAppuntamento(id);
         validateTipoEvento(dto.getTipoEvento());
         if (dto.getSedeId() == null) {
-            throw new WebApplicationException("Sede obbligatoria", 400);
+            throw appuntamentoException("Sede obbligatoria", 400);
         }
         if (TipoAppuntamentoEnum.APPUNTAMENTO.getDescrizione().equals(dto.getTipoEvento()) && dto.getMotivoId() == null) {
-            throw new WebApplicationException("Motivo obbligatorio", 400);
+            throw appuntamentoException("Motivo obbligatorio", 400);
         }
         if (dto.getCodVenditori() == null || dto.getCodVenditori().isEmpty()) {
-            throw new WebApplicationException("Almeno un venditore è obbligatorio", 400);
+            throw appuntamentoException("Almeno un venditore è obbligatorio", 400);
         }
 
         validateVenditori(dto, id);
@@ -251,12 +253,20 @@ public class AppuntamentoService {
         entity.delete();
     }
 
+    private WebApplicationException appuntamentoException(String message, int status) {
+        log.warnf("Richiesta appuntamento rifiutata (HTTP %d): %s", status, message);
+        return new WebApplicationException(message, Response.status(status)
+                .type(MediaType.APPLICATION_JSON)
+                .entity(Map.of("message", message))
+                .build());
+    }
+
     private Appuntamento getAppuntamento(Long id) {
 
         Appuntamento entity = Appuntamento.findById(id);
 
         if (entity == null) {
-            throw new WebApplicationException("Appuntamento non trovato", 404);
+            throw appuntamentoException("Appuntamento non trovato", 404);
         }
 
         return entity;
@@ -267,11 +277,11 @@ public class AppuntamentoService {
         ShowroomMotivo motivo = ShowroomMotivo.findById(motivoId);
 
         if (motivo == null) {
-            throw new WebApplicationException("Motivo non valido", 400);
+            throw appuntamentoException("Motivo non valido", 400);
         }
 
         if (!Boolean.TRUE.equals(motivo.getAttivo())) {
-            throw new WebApplicationException("Motivo non attivo", 400);
+            throw appuntamentoException("Motivo non attivo", 400);
         }
 
         return motivo;
@@ -280,7 +290,7 @@ public class AppuntamentoService {
     private void validateTipoEvento(String tipoEvento) {
         if (tipoEvento == null || Arrays.stream(TipoAppuntamentoEnum.values())
                 .noneMatch(tipo -> tipo.getDescrizione().equals(tipoEvento))) {
-            throw new WebApplicationException("Tipo evento non valido", 400);
+            throw appuntamentoException("Tipo evento non valido", 400);
         }
     }
 
@@ -307,7 +317,7 @@ public class AppuntamentoService {
                             .stream()
                             .anyMatch(venditoriEsistenti::contains);
             if (conflitto) {
-                throw new WebApplicationException("Uno dei venditori selezionati ha già un appuntamento nella fascia oraria indicata", 400);
+                throw appuntamentoException("Uno dei venditori selezionati ha già un appuntamento nella fascia oraria indicata", 400);
             }
         }
     }
