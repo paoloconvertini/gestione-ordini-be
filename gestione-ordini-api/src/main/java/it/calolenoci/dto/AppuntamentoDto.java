@@ -33,6 +33,7 @@ public class AppuntamentoDto implements Serializable {
     private String tipoEvento;
     private String descrizione;
     private List<String> codVenditori;
+    private String altriPartecipanti;
     private String note;
     private Boolean promemoriaInviato;
     private LocalDateTime createdAt;

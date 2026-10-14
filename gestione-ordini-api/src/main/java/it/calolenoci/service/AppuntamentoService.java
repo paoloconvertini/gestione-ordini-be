@@ -128,7 +128,7 @@ public class AppuntamentoService {
             dto.setTipoEvento(entity.getTipoEvento());
             dto.setDescrizione(entity.getDescrizione());
             dto.setCodVenditori(getCodVenditori(entity.getId()));
-            dto.setVenditoriLabel(getVenditoriLabel(entity.getId(), venditoriMap));
+            dto.setVenditoriLabel(getVenditoriLabel(entity, venditoriMap));
             ShowroomMotivo motivo = motiviMap.get(entity.getIdMotivo());
             if (motivo != null) {
                 dto.setMotivoId(motivo.getId());
@@ -195,9 +195,7 @@ public class AppuntamentoService {
             throw appuntamentoException("Sede obbligatoria", 400);
         }
 
-        if (dto.getCodVenditori() == null || dto.getCodVenditori().isEmpty()) {
-            throw appuntamentoException("Almeno un venditore è obbligatorio", 400);
-        }
+        validatePartecipanti(dto);
 
         if (TipoAppuntamentoEnum.APPUNTAMENTO.getDescrizione().equals(dto.getTipoEvento()) && dto.getMotivoId() == null) {
             throw appuntamentoException("Motivo obbligatorio", 400);
@@ -230,9 +228,7 @@ public class AppuntamentoService {
         if (TipoAppuntamentoEnum.APPUNTAMENTO.getDescrizione().equals(dto.getTipoEvento()) && dto.getMotivoId() == null) {
             throw appuntamentoException("Motivo obbligatorio", 400);
         }
-        if (dto.getCodVenditori() == null || dto.getCodVenditori().isEmpty()) {
-            throw appuntamentoException("Almeno un venditore è obbligatorio", 400);
-        }
+        validatePartecipanti(dto);
 
         validateVenditori(dto, id);
         if (TipoAppuntamentoEnum.APPUNTAMENTO.getDescrizione().equals(dto.getTipoEvento())) {
@@ -292,6 +288,32 @@ public class AppuntamentoService {
                 .noneMatch(tipo -> tipo.getDescrizione().equals(tipoEvento))) {
             throw appuntamentoException("Tipo evento non valido", 400);
         }
+    }
+
+    private void validatePartecipanti(AppuntamentoDto dto) {
+        boolean formazione = TipoAppuntamentoEnum.FORMAZIONE.getDescrizione().equals(dto.getTipoEvento());
+        String nomi = formazione && dto.getAltriPartecipanti() != null
+                ? dto.getAltriPartecipanti().lines()
+                    .map(String::strip)
+                    .filter(StringUtils::isNotBlank)
+                    .distinct()
+                    .collect(Collectors.joining("\n"))
+                : null;
+        dto.setAltriPartecipanti(StringUtils.isBlank(nomi) ? null : nomi);
+        if ((dto.getCodVenditori() == null || dto.getCodVenditori().isEmpty())
+                && dto.getAltriPartecipanti() == null) {
+            throw appuntamentoException(formazione
+                    ? "Almeno un partecipante è obbligatorio"
+                    : "Almeno un venditore è obbligatorio", 400);
+        }
+    }
+
+    private List<String> getAltriPartecipanti(Appuntamento entity) {
+        if (!TipoAppuntamentoEnum.FORMAZIONE.getDescrizione().equals(entity.getTipoEvento())
+                || StringUtils.isBlank(entity.getAltriPartecipanti())) {
+            return List.of();
+        }
+        return entity.getAltriPartecipanti().lines().toList();
     }
 
     private void validateVenditori(AppuntamentoDto dto, Long idDaEscludere) {
@@ -356,7 +378,11 @@ public class AppuntamentoService {
 
         OutlookEventDto dto = new OutlookEventDto();
 
-        String subject = entity.getNomeCliente();
+        boolean formazione = TipoAppuntamentoEnum.FORMAZIONE.getDescrizione().equals(entity.getTipoEvento());
+        String subject = formazione ? "Formazione" : entity.getNomeCliente();
+        if (formazione && StringUtils.isNotBlank(entity.getDescrizione())) {
+            subject += " - " + entity.getDescrizione();
+        }
 
         if (StringUtils.isNotBlank(motivo)) {
             subject += " - " + motivo;
@@ -375,8 +401,8 @@ public class AppuntamentoService {
 
         StringBuilder description = new StringBuilder();
 
-        description.append("Cliente: ")
-                .append(entity.getNomeCliente());
+        description.append(formazione ? "Formazione: " : "Cliente: ")
+                .append(formazione ? StringUtils.defaultString(entity.getDescrizione()) : entity.getNomeCliente());
 
         if (StringUtils.isNotBlank(entity.getTelefono())) {
             description.append("\n\nTelefono: ")
@@ -384,7 +410,7 @@ public class AppuntamentoService {
         }
 
         if (venditori != null && !venditori.isEmpty()) {
-            description.append("\n\nVenditori:");
+            description.append(formazione ? "\n\nPartecipanti:" : "\n\nVenditori:");
             for (String venditore : venditori) {
                 description.append("\n- ").append(venditore);
             }
@@ -457,7 +483,8 @@ public class AppuntamentoService {
         Map<String, String> venditoriMap = userService.getVenditori()
                         .stream()
                         .collect(Collectors.toMap(UserResponseDTO::getCodVenditore, UserResponseDTO::getFullname));
-        List<String> nomiVenditori = getNomiVenditori(entity.getId(), venditoriMap);
+        List<String> nomiVenditori = Stream.concat(getNomiVenditori(entity.getId(), venditoriMap).stream(),
+                getAltriPartecipanti(entity).stream()).toList();
         String motivo = null;
         if (entity.getIdMotivo() != null) {
             ShowroomMotivo m = ShowroomMotivo.findById(entity.getIdMotivo());
@@ -492,11 +519,9 @@ public class AppuntamentoService {
         }
     }
 
-    private String getVenditoriLabel(Long idAppuntamento, Map<String, String> venditoriMap) {
-        List<String> codVenditori = getCodVenditori(idAppuntamento);
-        return codVenditori.stream()
-                .map(venditoriMap::get)
-                .filter(Objects::nonNull)
+    private String getVenditoriLabel(Appuntamento entity, Map<String, String> venditoriMap) {
+        return Stream.concat(getNomiVenditori(entity.getId(), venditoriMap).stream(),
+                        getAltriPartecipanti(entity).stream())
                 .collect(Collectors.joining(", "));
     }
 

@@ -69,6 +69,9 @@ public class Appuntamento extends PanacheEntityBase {
     @Column(name = "DESCRIZIONE")
     private String descrizione;
 
+    @Column(name = "ALTRI_PARTECIPANTI", columnDefinition = "nvarchar(max)")
+    private String altriPartecipanti;
+
     @Column(name = "ID_MOTIVO")
     private Long idMotivo;
 

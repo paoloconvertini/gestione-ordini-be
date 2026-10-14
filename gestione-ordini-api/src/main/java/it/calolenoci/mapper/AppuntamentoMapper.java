@@ -82,6 +82,7 @@ public class AppuntamentoMapper {
 
         dto.setNote(entity.getNote());
 
+        dto.setAltriPartecipanti(entity.getAltriPartecipanti());
         dto.setPromemoriaInviato(entity.getPromemoriaInviato());
 
         dto.setCreatedAt(entity.getCreatedAt());
@@ -127,6 +128,7 @@ public class AppuntamentoMapper {
 
         entity.setTipoEvento(dto.getTipoEvento());
         entity.setDescrizione(dto.getDescrizione());
+        entity.setAltriPartecipanti(dto.getAltriPartecipanti());
 
         entity.setNote(dto.getNote());
 
@@ -166,6 +168,7 @@ public class AppuntamentoMapper {
 
         entity.setTipoEvento(dto.getTipoEvento());
         entity.setDescrizione(dto.getDescrizione());
+        entity.setAltriPartecipanti(dto.getAltriPartecipanti());
 
         entity.setNote(dto.getNote());
         entity.setIdMotivo(dto.getMotivoId());

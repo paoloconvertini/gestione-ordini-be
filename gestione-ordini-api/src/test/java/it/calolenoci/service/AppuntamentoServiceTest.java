@@ -21,6 +21,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -332,6 +333,62 @@ class AppuntamentoServiceTest {
         AppuntamentoDto loaded = service.getById(created.getId());
         assertEquals(padre.getId(), loaded.getMotivoParentId());
         assertEquals("Motivo padre test", loaded.getMotivoParentDescrizione());
+    }
+
+    @Test
+    @TestTransaction
+    void formazioneConSoliNomiLiberiVieneSalvataEInviataAOutlook() throws Exception {
+        AppuntamentoDto request = newAppuntamento(null, "901", 9, 10);
+        request.setCodVenditori(null);
+        request.setAltriPartecipanti("  Mario Rossi  \r\n\nAnna Bianchi\nMario Rossi  ");
+
+        AppuntamentoDto created = service.create(request);
+
+        assertEquals(List.of(), created.getCodVenditori());
+        assertEquals("Mario Rossi\nAnna Bianchi", service.getById(created.getId()).getAltriPartecipanti());
+        AppuntamentoSearchDto found = service.search(new FiltroAppuntamentoDto()).getList().stream()
+                .filter(item -> created.getId().equals(item.getId())).findFirst().orElseThrow();
+        assertEquals("Mario Rossi, Anna Bianchi", found.getVenditoriLabel());
+        ArgumentCaptor<OutlookEventDto> event = ArgumentCaptor.forClass(OutlookEventDto.class);
+        verify(outlookCalendarService).createEvent(event.capture());
+        assertEquals("Formazione - Formazione di test", event.getValue().getSubject());
+        assertTrue(event.getValue().getDescription().contains("Partecipanti:\n- Mario Rossi\n- Anna Bianchi"));
+    }
+
+    @Test
+    @TestTransaction
+    void aggiornaFormazioneMistaERimuoveINomiLiberi() {
+        AppuntamentoDto request = newAppuntamento(null, "901", 9, 10);
+        request.setAltriPartecipanti("Mario Rossi");
+        AppuntamentoDto created = service.create(request);
+        AppuntamentoSearchDto found = service.search(new FiltroAppuntamentoDto()).getList().stream()
+                .filter(item -> created.getId().equals(item.getId())).findFirst().orElseThrow();
+        assertEquals("Venditore Uno, Mario Rossi", found.getVenditoriLabel());
+
+        request.setCodVenditori(List.of());
+        request.setAltriPartecipanti("Anna Bianchi");
+        AppuntamentoDto updated = service.update(created.getId(), request);
+        assertEquals(List.of(), updated.getCodVenditori());
+        assertEquals("Anna Bianchi", updated.getAltriPartecipanti());
+
+        request.setCodVenditori(List.of("901"));
+        request.setAltriPartecipanti(null);
+        assertNull(service.update(created.getId(), request).getAltriPartecipanti());
+    }
+
+    @Test
+    @TestTransaction
+    void nomiLiberiNonSostituisconoIlVenditorePerVisiteEAppuntamenti() {
+        for (String tipo : List.of("APPUNTAMENTO", "VISITA", "FORMAZIONE")) {
+            AppuntamentoDto request = newAppuntamento(null, "901", 9, 10);
+            request.setTipoEvento(tipo);
+            ShowroomMotivo motivo = ShowroomMotivo.find("attivo", true).firstResult();
+            assertNotNull(motivo);
+            request.setMotivoId(motivo.getId());
+            request.setCodVenditori(List.of());
+            request.setAltriPartecipanti("FORMAZIONE".equals(tipo) ? "  \n " : "Mario Rossi");
+            assertStatus(400, assertThrows(WebApplicationException.class, () -> service.create(request)));
+        }
     }
 
     private AppuntamentoDto newAppuntamento(String cliente, String venditore, int oraDa, int oraA) {
