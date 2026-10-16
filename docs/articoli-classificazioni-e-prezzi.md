@@ -1,6 +1,6 @@
 # Articoli Plurima: classificazioni, marchi e aggiornamento prezzi
 
-Ultimo aggiornamento: 2026-10-08.
+Ultimo aggiornamento: 2026-10-15.
 
 ## Scopo e fonti
 
@@ -406,3 +406,48 @@ azzerano la selezione, senza chiamate di aggiornamento o modifiche ai dati.
 La colonna Stato è sostituita da un'icona accanto alla descrizione: spunta
 per gli aggiornabili, avviso per gli esclusi. Il tooltip e l'etichetta
 accessibile riportano il motivo di esclusione; l'icona riceve focus da tastiera.
+
+## Giacenza positiva e dettaglio magazzini (2026-10-15)
+
+La pagina prezzi mostra solo gli articoli del fornitore A1 con giacenza
+**totale strettamente maggiore di zero**, considerando tutti i magazzini.
+Si usa SALDIMAGAZZINO.QGIACENZA per QTY='1' (quantità principale, coerente con
+SaldiMagazzinoMapper), sommando varianti e magazzini. QTY='2' resta separata
+e non viene sommata alla quantità principale. I saldi mancanti o nulli non
+rendono positivo il totale. I saldi negativi concorrono alla somma.
+
+Verifica di produzione fornita dall'utente il 15 ottobre, ottenuta con
+`scripts/verifica_giacenze_per_magazzino.sql`: B/QTY1 42869 articoli, 8578
+positivi e 1338 negativi; B/QTY2 118 articoli, 1 positivo e 109 negativi;
+C/QTY1 2158 articoli, 16 positivi e 11 negativi; OST/QTY1 461 articoli, tutti
+positivi. Questi numeri non sono default né vincoli. La richiesta è stata
+quindi estesa a tutti i magazzini, con esposizione dei saldi.
+
+Una sola riga e una sola selezione per articolo: il DTO aggiunge
+`giacenzaTotale` e `giacenze` (magazzino/giacenza). Le colonne Magazzino e
+Giacenza mostrano i saldi affiancati nello stesso ordine, esclusivamente per
+magazzini con giacenza positiva. I magazzini con saldo zero o negativo non
+sono visualizzati. Il filtro di inclusione dell'articolo continua a usare
+il totale complessivo, comprensivo anche degli eventuali saldi negativi. L'anagrafica
+prezzi resta unica e non viene aggiornata una volta per magazzino.
+
+Il filtro è nel metodo leggi condiviso da ricerca, anteprima, Porta a soglia
+e applicazione dei prezzi (compreso il secondo gruppo). Durante il salvataggio
+anche i saldi sono letti con HOLDLOCK: se il totale non è più positivo rispetto
+all'anteprima, l'articolo non risulta ammesso e si restituisce 409 senza
+aggiornamenti parziali. Una variazione di quantità che mantiene il totale
+positivo non modifica il calcolo del prezzo né costituisce da sola un conflitto.
+
+Non servono migrazioni SQL. Frontend e backend vanno aggiornati insieme
+per esporre i nuovi campi. Verifiche: suite prezzi backend completa, regressioni
+su varianti/magazzini, QTY2 separata, assenza saldi, totale zero/negativo e
+giacenza esaurita dopo l'anteprima; suite frontend e build production.
+
+Il restyling dashboard è stato messo da parte nei due repository con stash
+`feature/restyling-dashboard: pausa prima filtro giacenza prezzi`; questa
+modifica viene sviluppata su BE prod e FE master.
+
+La tabella presenta prima gli articoli aggiornabili, poi gli esclusi per
+altri motivi (blocco/unità), infine tutti quelli senza costo valido. Dentro
+ciascun gruppo mantiene l’ordine per codice ricevuto dal backend. Lo stesso
+ordine è conservato in ricerca, anteprima e annullamento dell’anteprima.

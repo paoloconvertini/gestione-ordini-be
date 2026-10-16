@@ -2,6 +2,7 @@ package it.calolenoci.service;
 
 import it.calolenoci.dto.AggiornamentoPrezziDto;
 import it.calolenoci.dto.PrezzoArticoloDto;
+import it.calolenoci.dto.GiacenzaMagazzinoDto;
 import it.calolenoci.dto.SogliaRicaricoDto;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -80,8 +81,17 @@ public class PrezziArticoliService {
         String sql = """
                 SELECT a.ARTICOLO, a.DESCRARTICOLO, a.UNITAMISURA,
                        CAST(a.BLOCCATO AS varchar(10)), CAST(a.PREZZOBASE AS decimal(28,8)),
-                       u.PROGRGENERALE, u.DATAOPMAGAZZINO, u.MUNITA, u.CostoUltimo
+                       u.PROGRGENERALE, u.DATAOPMAGAZZINO, u.MUNITA, u.CostoUltimo,
+                       g.MMAGAZZINO, g.Giacenza, g.GiacenzaTotale
                 FROM dbo.ARTICOLI_TAB a%s
+                CROSS APPLY (
+                    SELECT s.MMAGAZZINO,
+                           SUM(COALESCE(s.QGIACENZA, 0)) AS Giacenza,
+                           SUM(SUM(COALESCE(s.QGIACENZA, 0))) OVER () AS GiacenzaTotale
+                    FROM dbo.SALDIMAGAZZINO s%s
+                    WHERE s.MARTICOLO = a.ARTICOLO AND s.QTY = '1'
+                    GROUP BY s.MMAGAZZINO
+                ) g
                 OUTER APPLY (
                     SELECT TOP (1) m.PROGRGENERALE, m.DATAOPMAGAZZINO, m.MUNITA,
                            CAST(m.VALORE AS decimal(28,8)) /
@@ -95,14 +105,21 @@ public class PrezziArticoliService {
                     ORDER BY m.DATAOPMAGAZZINO DESC, m.PROGRGENERALE DESC
                 ) u
                 WHERE LTRIM(RTRIM(a.CLASSEA1)) = :classeA1
-                ORDER BY a.ARTICOLO
-                """.formatted(articoloLock, letturaLock, letturaLock);
+                  AND g.GiacenzaTotale > 0
+                  AND g.Giacenza > 0
+                ORDER BY a.ARTICOLO, g.MMAGAZZINO
+                """.formatted(articoloLock, letturaLock, letturaLock, letturaLock);
         @SuppressWarnings("unchecked")
         List<Object[]> righe = getEntityManager().createNativeQuery(sql)
                 .setParameter("classeA1", classeA1.trim()).getResultList();
-        List<PrezzoArticoloDto> risultato = new ArrayList<>();
+        Map<String, PrezzoArticoloDto> risultato = new LinkedHashMap<>();
         for (Object[] r : righe) {
-            PrezzoArticoloDto dto = new PrezzoArticoloDto();
+            PrezzoArticoloDto dto = risultato.get((String) r[0]);
+            if (dto != null) {
+                dto.getGiacenze().add(new GiacenzaMagazzinoDto((String) r[9], decimale(r[10])));
+                continue;
+            }
+            dto = new PrezzoArticoloDto();
             dto.setArticolo((String) r[0]);
             dto.setDescrizione((String) r[1]);
             dto.setUnitaMisura((String) r[2]);
@@ -112,10 +129,12 @@ public class PrezziArticoliService {
             dto.setDataUltimoAcquisto((LocalDateTime) r[6]);
             dto.setUnitaAcquisto((String) r[7]);
             dto.setCostoUltimo(decimale(r[8]));
+            dto.setGiacenzaTotale(decimale(r[11]));
+            dto.getGiacenze().add(new GiacenzaMagazzinoDto((String) r[9], decimale(r[10])));
             prepara(dto, percentuale, includiBloccati);
-            risultato.add(dto);
+            risultato.put(dto.getArticolo(), dto);
         }
-        return risultato;
+        return new ArrayList<>(risultato.values());
     }
 
     private void prepara(PrezzoArticoloDto dto, BigDecimal percentuale, boolean includiBloccati) {

@@ -50,6 +50,8 @@ class PrezziArticoliServiceTest {
         String codice = "LUX" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         em.createNativeQuery("UPDATE ARTICOLI_TAB SET ARTICOLO=:nuovo WHERE ARTICOLO=:vecchio")
                 .setParameter("nuovo", codice).setParameter("vecchio", originale).executeUpdate();
+        em.createNativeQuery("UPDATE SALDIMAGAZZINO SET MARTICOLO=:nuovo WHERE MARTICOLO=:vecchio")
+                .setParameter("nuovo", codice).setParameter("vecchio", originale).executeUpdate();
         movimento(codice, 1, 50, "PZ", "2024-01-01", 1);
         PrezzoArticoloDto visto = cerca(codice, "60", false);
         assertEquals(1, service.aggiorna(richiesta(List.of(visto), "60"), "TEST"));
@@ -413,6 +415,73 @@ class PrezziArticoliServiceTest {
         assertNull(service.ricaricoImpostato("997"));
     }
 
+    @Test
+    @TestTransaction
+    void aggregaGiacenzaPrincipaleDiTuttiIMagazziniSenzaDuplicareIlPrezzo() {
+        String codice = articolo(100, "PZ", " ");
+        eliminaSaldi(codice);
+        saldo(codice, "B", "", "1", 3D);
+        saldo(codice, "B", "A", "1", 2D);
+        saldo(codice, "C", "", "1", -1D);
+        saldo(codice, "Z", "", "1", 0D);
+        saldo(codice, "OST", "", "1", 4D);
+        saldo(codice, "B", "", "2", 100D);
+        movimento(codice, 1, 50, "PZ", "2024-01-01", 1);
+        var trovati = service.cerca("998", new BigDecimal("60"), false).stream()
+                .filter(a -> codice.equals(a.getArticolo())).toList();
+        assertEquals(1, trovati.size());
+        PrezzoArticoloDto visto = trovati.getFirst();
+        assertEquals(0, new BigDecimal("8").compareTo(visto.getGiacenzaTotale()));
+        assertEquals(List.of("B", "OST"), visto.getGiacenze().stream().map(g -> g.getMagazzino()).toList());
+        assertEquals(0, new BigDecimal("5").compareTo(visto.getGiacenze().getFirst().getGiacenza()));
+        assertEquals(1, service.aggiorna(richiesta(List.of(visto), "60"), "TEST"));
+        assertEquals(80, prezzo(codice), 0.000001);
+    }
+
+    @Test
+    @TestTransaction
+    void escludeGiacenzeNulleZeroNegativeEQuantitaSecondarie() {
+        String zero = articolo(100, "PZ", " ");
+        eliminaSaldi(zero);
+        saldo(zero, "B", "", "1", 3D);
+        saldo(zero, "C", "", "1", -3D);
+        String negativo = articolo(100, "PZ", " ");
+        eliminaSaldi(negativo);
+        saldo(negativo, "B", "", "1", -1D);
+        String nullo = articolo(100, "PZ", " ");
+        eliminaSaldi(nullo);
+        saldo(nullo, "B", "", "1", null);
+        String assente = articolo(100, "PZ", " ");
+        eliminaSaldi(assente);
+        String secondaria = articolo(100, "PZ", " ");
+        eliminaSaldi(secondaria);
+        saldo(secondaria, "B", "", "2", 10D);
+        var esclusi = List.of(zero, negativo, nullo, assente, secondaria);
+        assertFalse(service.cerca("998", null, true).stream().anyMatch(a -> esclusi.contains(a.getArticolo())));
+        String soloOst = articolo(100, "PZ", " ");
+        eliminaSaldi(soloOst);
+        saldo(soloOst, "OST", "", "1", 0.5D);
+        assertEquals(0, new BigDecimal("0.5").compareTo(cerca(soloOst, "0", true).getGiacenzaTotale()));
+    }
+
+    @Test
+    @TestTransaction
+    void rifiutaInteroAggiornamentoSeLaGiacenzaSiEsaurisceDopoAnteprima() {
+        String primo = articolo(100, "PZ", " ");
+        String secondo = articolo(100, "PZ", " ");
+        movimento(primo, 1, 50, "PZ", "2024-01-01", 1);
+        movimento(secondo, 1, 50, "PZ", "2024-01-01", 1);
+        PrezzoArticoloDto vistoPrimo = cerca(primo, "60", false);
+        PrezzoArticoloDto vistoSecondo = cerca(secondo, "60", false);
+        em.createNativeQuery("UPDATE SALDIMAGAZZINO SET QGIACENZA=0 WHERE MARTICOLO=:a")
+                .setParameter("a", secondo).executeUpdate();
+        var richiesta = richiesta(List.of(vistoPrimo, vistoSecondo), "60");
+        assertEquals(409, assertThrows(WebApplicationException.class,
+                () -> service.aggiorna(richiesta, "TEST")).getResponse().getStatus());
+        assertEquals(100, prezzo(primo), 0.000001);
+        assertEquals(100, prezzo(secondo), 0.000001);
+    }
+
     private String articolo(double prezzo, String unita, String bloccato) {
         String codice = "998" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         em.createNativeQuery("""
@@ -420,7 +489,22 @@ class PrezziArticoliServiceTest {
                 VALUES (:a,'TEST PREZZI',:u,:p,:b,'22','998')
                 """).setParameter("a", codice).setParameter("u", unita)
                 .setParameter("p", prezzo).setParameter("b", bloccato).executeUpdate();
+        saldo(codice, "B", "", "1", 10D);
         return codice;
+    }
+
+    private void saldo(String articolo, String magazzino, String variante, String qty, Double giacenza) {
+        em.createNativeQuery("""
+                INSERT INTO SALDIMAGAZZINO
+                    (MARTICOLO,VAR1,VAR2,VAR3,VAR4,VAR5,MMAGAZZINO,QTY,QGIACENZA)
+                VALUES (:a,:v,'','','','',:m,:q,:g)
+                """).setParameter("a", articolo).setParameter("v", variante)
+                .setParameter("m", magazzino).setParameter("q", qty).setParameter("g", giacenza).executeUpdate();
+    }
+
+    private void eliminaSaldi(String articolo) {
+        em.createNativeQuery("DELETE FROM SALDIMAGAZZINO WHERE MARTICOLO=:a")
+                .setParameter("a", articolo).executeUpdate();
     }
 
     private void movimento(String articolo, double quantita, double valore, String unita, String data, int rigo) {
