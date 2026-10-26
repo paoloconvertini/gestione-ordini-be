@@ -29,6 +29,43 @@ class PrezziArticoliServiceTest {
 
     @Test
     @TestTransaction
+    void storicoRegistraEntrambiIGruppiEIgnoraPrezziInvariati() {
+        String primo = articolo(100, "PZ", " ");
+        String secondo = articolo(110, "PZ", " ");
+        for (String codice : List.of(primo, secondo)) {
+            movimento(codice, 1, 100, "PZ", "2024-01-01", 1);
+            assertTrue(service.storico(codice).isEmpty());
+        }
+        AggiornamentoPrezziDto richiesta = richiesta(List.of(cerca(primo, "60", false)), "60");
+        richiesta.setArticoliDeselezionati(List.of(cerca(secondo, "30", false)));
+        richiesta.setPercentualeDeselezionati(new BigDecimal("30"));
+        service.aggiorna(richiesta, "TEST");
+        var storico = service.storico(primo);
+        assertEquals(1, storico.size());
+        assertEquals(0, new BigDecimal("100").compareTo(storico.get(0).getPrezzoPrecedente()));
+        assertEquals(0, new BigDecimal("160").compareTo(storico.get(0).getPrezzoBase()));
+        assertNotNull(storico.get(0).getDataModifica());
+        assertEquals("TEST", storico.get(0).getUtente());
+        assertEquals(0, new BigDecimal("130").compareTo(service.storico(secondo).get(0).getPrezzoBase()));
+        service.aggiorna(richiesta(List.of(cerca(primo, "60", false)), "60"), "TEST");
+        assertEquals(1, service.storico(primo).size());
+        service.aggiorna(richiesta(List.of(cerca(primo, "70", false)), "70"), "TEST2");
+        storico = service.storico(primo);
+        assertEquals(2, storico.size());
+        assertEquals(0, new BigDecimal("170").compareTo(storico.get(0).getPrezzoBase()));
+        assertEquals(0, new BigDecimal("160").compareTo(storico.get(0).getPrezzoPrecedente()));
+        assertEquals("TEST2", storico.get(0).getUtente());
+    }
+
+    @Test
+    void storicoRifiutaCodiciNonValidi() {
+        assertThrows(BadRequestException.class, () -> service.storico(null));
+        assertThrows(BadRequestException.class, () -> service.storico(" "));
+        assertThrows(BadRequestException.class, () -> service.storico("12345678901234"));
+    }
+
+    @Test
+    @TestTransaction
     void usaCostoUltimoValidoERicaricoSulCostoSenzaIva() {
         String codice = articolo(150, "PZ", " ");
         movimento(codice, 10, 100, "PZ", "2024-01-01", 1);
@@ -360,6 +397,31 @@ class PrezziArticoliServiceTest {
         assertEquals(1, service.aggiorna(richiesta, "TEST"));
         assertEquals(160, prezzo(sotto), 0.000001);
         assertEquals(110, prezzo(escluso), 0.000001);
+        assertEquals(170, prezzo(sopra), 0.000001);
+        assertEquals(0, new BigDecimal("60").compareTo(service.ricaricoImpostato("998")));
+    }
+
+    @Test
+    @TestTransaction
+    void portaASogliaAccettaSecondoRicaricoSoloPerDeselezionatiSottoSoglia() {
+        String sotto = articolo(100, "PZ", " ");
+        String escluso = articolo(110, "PZ", " ");
+        String sopra = articolo(170, "PZ", " ");
+        for (String codice : List.of(sotto, escluso, sopra)) {
+            movimento(codice, 1, 100, "PZ", "2024-01-01", 1);
+        }
+        service.salvaSoglia(soglia("60", null), "TEST");
+        AggiornamentoPrezziDto richiesta = richiesta(List.of(cerca(sotto, "60", false)), "60");
+        richiesta.setPortaASoglia(true);
+        richiesta.setPercentualeDeselezionati(new BigDecimal("30"));
+        richiesta.setArticoliDeselezionati(List.of(cerca(sopra, "30", false)));
+        assertThrows(BadRequestException.class, () -> service.aggiorna(richiesta, "TEST"));
+        assertEquals(100, prezzo(sotto), 0.000001);
+        assertEquals(170, prezzo(sopra), 0.000001);
+        richiesta.setArticoliDeselezionati(List.of(cerca(escluso, "30", false)));
+        assertEquals(2, service.aggiorna(richiesta, "TEST"));
+        assertEquals(160, prezzo(sotto), 0.000001);
+        assertEquals(130, prezzo(escluso), 0.000001);
         assertEquals(170, prezzo(sopra), 0.000001);
         assertEquals(0, new BigDecimal("60").compareTo(service.ricaricoImpostato("998")));
     }

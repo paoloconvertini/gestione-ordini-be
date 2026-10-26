@@ -4,6 +4,7 @@ import it.calolenoci.dto.AggiornamentoPrezziDto;
 import it.calolenoci.dto.PrezzoArticoloDto;
 import it.calolenoci.dto.GiacenzaMagazzinoDto;
 import it.calolenoci.dto.SogliaRicaricoDto;
+import it.calolenoci.dto.StoricoPrezzoArticoloDto;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
@@ -29,6 +30,22 @@ public class PrezziArticoliService {
         validaClasseA1(classeA1);
         if (percentuale != null) validaPercentuale(percentuale);
         return leggi(classeA1.trim(), percentuale, includiBloccati, false);
+    }
+
+    public List<StoricoPrezzoArticoloDto> storico(String articolo) {
+        if (articolo == null || articolo.isBlank() || articolo.trim().length() > 13) {
+            throw new BadRequestException("Codice articolo non valido");
+        }
+        @SuppressWarnings("unchecked")
+        List<Object[]> righe = getEntityManager().createNativeQuery("""
+                SELECT DATA_MODIFICA, PREZZO_PRECEDENTE, PREZZO_BASE, UTENTE
+                FROM dbo.GO_STORICO_PREZZI_ARTICOLI
+                WHERE ARTICOLO=:articolo
+                ORDER BY DATA_MODIFICA DESC, ID DESC
+                """).setParameter("articolo", articolo.trim()).getResultList();
+        return righe.stream().map(r -> new StoricoPrezzoArticoloDto(
+                (LocalDateTime) r[0], (BigDecimal) r[1],
+                (BigDecimal) r[2], (String) r[3])).toList();
     }
 
     public BigDecimal ricaricoImpostato(String classeA1) {
@@ -183,8 +200,8 @@ public class PrezziArticoliService {
             throw new WebApplicationException("Ricarico del fornitore cambiato. Ripetere la ricerca prima di aggiornare.", 409);
         }
         if (richiesta.isPortaASoglia() && (soglia == null
-                || !uguali(soglia, richiesta.getPercentuale()) || !deselezionati.isEmpty())) {
-            throw new BadRequestException("Porta a soglia richiede la soglia salvata e un solo gruppo di articoli");
+                || !uguali(soglia, richiesta.getPercentuale()))) {
+            throw new BadRequestException("Porta a soglia richiede la percentuale della soglia salvata");
         }
         List<PrezzoArticoloDto> correnti = leggi(richiesta.getClasseA1().trim(), null, richiesta.isIncludiBloccati(), true);
         Map<String, PrezzoArticoloDto> perCodice = correnti.stream()
@@ -193,7 +210,8 @@ public class PrezziArticoliService {
         validaArticoli(richiesta.getArticoli(), perCodice, codici);
         validaArticoli(deselezionati, perCodice, codici);
         if (richiesta.isPortaASoglia()) {
-            for (PrezzoArticoloDto articolo : richiesta.getArticoli()) {
+            for (String codice : codici) {
+                PrezzoArticoloDto articolo = perCodice.get(codice);
                 BigDecimal ricarico = perCodice.get(articolo.getArticolo()).getRicaricoAttuale();
                 if (ricarico == null || ricarico.subtract(soglia).setScale(0, RoundingMode.HALF_UP).signum() >= 0) {
                     throw new BadRequestException("Articolo non sotto soglia: " + articolo.getArticolo());
@@ -208,14 +226,24 @@ public class PrezziArticoliService {
         richiesta.getArticoli().forEach(a -> percentuali.put(a.getArticolo(), richiesta.getPercentuale()));
         for (Map.Entry<String, BigDecimal> voce : percentuali.entrySet()) {
             PrezzoArticoloDto corrente = perCodice.get(voce.getKey());
+            BigDecimal prezzo = calcolaPrezzo(corrente.getCostoRiferimento(), voce.getValue());
             int modificati = getEntityManager().createNativeQuery("""
                     UPDATE dbo.ARTICOLI_TAB
                     SET PREZZOBASE = :prezzo, SYS_UPDATEDATE = GETDATE(), SYS_UPDATEUSER = :user
                     WHERE ARTICOLO = :articolo
-                    """).setParameter("prezzo", calcolaPrezzo(corrente.getCostoRiferimento(), voce.getValue()))
+                    """).setParameter("prezzo", prezzo)
                     .setParameter("user", user)
                     .setParameter("articolo", voce.getKey()).executeUpdate();
             if (modificati != 1) throw new WebApplicationException("Articolo modificato durante l'aggiornamento", 409);
+            if (!uguali(corrente.getPrezzoBase(), prezzo)) {
+                getEntityManager().createNativeQuery("""
+                        INSERT INTO dbo.GO_STORICO_PREZZI_ARTICOLI
+                            (ARTICOLO, PREZZO_PRECEDENTE, PREZZO_BASE, UTENTE)
+                        VALUES (:articolo, :precedente, :prezzo, :user)
+                        """).setParameter("articolo", voce.getKey())
+                        .setParameter("precedente", corrente.getPrezzoBase())
+                        .setParameter("prezzo", prezzo).setParameter("user", user).executeUpdate();
+            }
         }
         return codici.size();
     }

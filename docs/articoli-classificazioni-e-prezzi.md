@@ -400,8 +400,9 @@ barra verticale interna; mantiene lo scorrimento orizzontale su schermi stretti,
 righe selezionate evidenziate e
 colonna del prezzo proposto evidenziata durante l'anteprima. La barra di
 conferma in basso mostra il numero di selezionati su tutte le pagine.
-Annulla anteprima e Mostra tutti ripristinano l'elenco già caricato e
-azzerano la selezione, senza chiamate di aggiornamento o modifiche ai dati.
+Annulla anteprima ripristina l'elenco già caricato e azzera ricavo e selezione.
+Mostra tutti rimuove solo il filtro visivo, conservando anteprima e selezioni.
+Il cambio fornitore azzera subito ricavo, anteprima e selezioni.
 
 La colonna Stato è sostituita da un'icona accanto alla descrizione: spunta
 per gli aggiornabili, avviso per gli esclusi. Il tooltip e l'etichetta
@@ -447,7 +448,32 @@ Il restyling dashboard è stato messo da parte nei due repository con stash
 `feature/restyling-dashboard: pausa prima filtro giacenza prezzi`; questa
 modifica viene sviluppata su BE prod e FE master.
 
-La tabella presenta prima gli articoli aggiornabili, poi gli esclusi per
-altri motivi (blocco/unità), infine tutti quelli senza costo valido. Dentro
-ciascun gruppo mantiene l’ordine per codice ricevuto dal backend. Lo stesso
-ordine è conservato in ricerca, anteprima e annullamento dell’anteprima.
+La tabella presenta prima tutti i sotto soglia, poi i sopra soglia per delta
+decrescente, quindi i restanti. A parità di gruppo/delta mantiene la priorità
+agli aggiornabili, poi agli esclusi per blocco/unità, infine ai senza costo.
+I contatori sotto/sopra/in soglia filtrano le righe senza cambiare selezioni né
+conteggi complessivi; un secondo clic sul filtro attivo o Mostra tutti lo rimuove.
+Porta a soglia propone lo stesso dialogo del ricavo per gli articoli sotto soglia
+deselezionati, accettando un secondo ricarico senza includere quelli sopra/in soglia.
+
+
+## Cronologia prezzo base (2026-10-26)
+
+La tabella `GO_STORICO_PREZZI_ARTICOLI` conserva una riga per ogni prezzo base
+cambiato dalla pagina Prezzi articoli: codice articolo, data/ora SQL Server,
+prezzo precedente (anche NULL), nuovo prezzo e utente JWT. Prezzi decimali
+conservati senza conversione a due decimali; la modale mostra tre decimali.
+L'indice per articolo, data e ID supporta la lettura dalla modifica più recente.
+Non vengono ricostruite modifiche anteriori né intercettate scritture dirette ERP.
+
+Eseguire `scripts/create_GO_STORICO_PREZZI_ARTICOLI.sql` nel database aziendale
+prima del backend aggiornato; script rieseguibile, applicato al solo Docker locale
+per le verifiche. La generazione automatica dello schema resta disabilitata.
+
+L'inserimento della cronologia è nella stessa transazione dell'aggiornamento
+prezzi, per entrambi i gruppi e in modalità Porta a soglia. Prezzi invariati,
+annullamenti, anteprime e salvataggi della sola soglia non creano voci.
+La lettura `GET api/prezzi-articoli/storico?articolo=...` richiede il permesso
+`prezzi_articoli.view`, come le altre operazioni della pagina.
+L'icona history accanto al prezzo base apre una modale scrollabile con data/ora,
+prezzo precedente, nuovo prezzo e utente, senza alterare selezioni e anteprima.
