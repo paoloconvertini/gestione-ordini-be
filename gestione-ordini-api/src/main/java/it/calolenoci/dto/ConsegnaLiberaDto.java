@@ -9,6 +9,7 @@ public class ConsegnaLiberaDto {
     private String indirizzo;
     private String localita;
     private String telefono;
+    private String motivazione;
     private Double latitudine;
     private Double longitudine;
     private LocalDate dataConsegna;

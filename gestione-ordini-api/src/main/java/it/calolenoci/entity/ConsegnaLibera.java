@@ -22,6 +22,8 @@ public class ConsegnaLibera extends PanacheEntityBase {
     private String localita;
     @Column(length = 50)
     private String telefono;
+    @Column(length = 2000)
+    private String motivazione;
     private Double latitudine;
     private Double longitudine;
     @Column(nullable = false)

@@ -34,6 +34,7 @@ public class ConsegnaLiberaService {
         c.setIndirizzo(dto.getIndirizzo().trim());
         c.setLocalita(dto.getLocalita().trim());
         c.setTelefono(StringUtils.trimToNull(dto.getTelefono()));
+        c.setMotivazione(StringUtils.trimToNull(dto.getMotivazione()));
         c.setLatitudine(dto.getLatitudine());
         c.setLongitudine(dto.getLongitudine());
         c.setIdVeicolo(dto.getVeicolo());
@@ -80,6 +81,9 @@ public class ConsegnaLiberaService {
                 || (dto.getOraConsegna() == null || (dto.getOraConsegna() != 'M' && dto.getOraConsegna() != 'P'))) {
             throw new BadRequestException("Indicare intestazione, indirizzo, località, data, fascia e veicolo validi");
         }
+        if (dto.getMotivazione() != null && dto.getMotivazione().length() > 2000) {
+            throw new BadRequestException("La motivazione non può superare 2000 caratteri");
+        }
         if (Veicolo.findById(dto.getVeicolo()) == null) throw new BadRequestException("Veicolo non valido");
         if ((dto.getLatitudine() == null) != (dto.getLongitudine() == null)
                 || (dto.getLatitudine() != null && (!Double.isFinite(dto.getLatitudine())
@@ -96,6 +100,7 @@ public class ConsegnaLiberaService {
         dto.setIndirizzo(c.getIndirizzo());
         dto.setLocalita(c.getLocalita());
         dto.setTelefono(c.getTelefono());
+        dto.setMotivazione(c.getMotivazione());
         dto.setLatitudine(c.getLatitudine());
         dto.setLongitudine(c.getLongitudine());
         dto.setDataConsegna(c.getDataConsegna());

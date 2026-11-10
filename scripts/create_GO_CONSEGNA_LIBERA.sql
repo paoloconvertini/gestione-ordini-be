@@ -10,6 +10,7 @@ BEGIN
         indirizzo varchar(255) NOT NULL,
         localita varchar(255) NOT NULL,
         telefono varchar(50) NULL,
+        motivazione varchar(2000) NULL,
         latitudine float NULL,
         longitudine float NULL,
         dataConsegna date NOT NULL,

@@ -10,7 +10,8 @@ La località propone i comuni della tabella `TTCO` dopo tre caratteri, riusando
 la ricerca già presente negli altri moduli; resta possibile inserire testo libero.
 
 Campi obbligatori: intestazione, indirizzo, località, data, fascia
-Mattina/Pomeriggio e mezzo. Telefono facoltativo. L'ora usa la fascia già
+Mattina/Pomeriggio e mezzo. Telefono facoltativo. Motivazione facoltativa, massimo 2000 caratteri,
+modificabile nella modale e visibile nella scheda del planner. L'ora usa la fascia già
 prevista per le consegne; non è stato introdotto un orario puntuale.
 
 Le consegne indipendenti compaiono nel planner con icona `link_off` e tooltip
@@ -57,3 +58,16 @@ verificata; restano i warning preesistenti su dimensione bundle, CommonJS e CSS.
 
 Il rilascio richiede script e aggiornamento coordinato di FE e API principale.
 Versioni e pubblicazione Docker Hub in [Rilascio 10 novembre 2026](rilascio-2026-11-10.md).
+
+## Aggiornamento: motivazione
+
+Per installazioni già esistenti, prima della nuova API eseguire
+[scripts/alter_GO_CONSEGNA_LIBERA_motivazione.sql](../scripts/alter_GO_CONSEGNA_LIBERA_motivazione.sql).
+Aggiunge soltanto la colonna nullable `motivazione varchar(2000)`, senza modificare
+indici o dati esistenti. Lo script di creazione iniziale comprende già la colonna.
+Il campo viene salvato e restituito dal backend anche dopo una modifica o il
+ricalcolo delle coordinate. Valori vuoti sono normalizzati a null.
+
+Verifiche della fix: 32 test backend di consegne, riordino e ordini;
+15 test frontend di modale, planner e mappa; build frontend production.
+Migrazione verificata nel solo SQL Server Docker di sviluppo.

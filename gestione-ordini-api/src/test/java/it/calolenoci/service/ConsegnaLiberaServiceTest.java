@@ -112,6 +112,29 @@ class ConsegnaLiberaServiceTest {
         r.setVeicolo(Integer.MIN_VALUE); assertThrows(BadRequestException.class, () -> service.salva(null, r));
     }
 
+    @Test @TestTransaction
+    void salvaEModificaLaMotivazioneERestituisceIlTestoNelPlanner() {
+        ConsegnaLiberaDto r = richiesta(veicolo());
+        r.setMotivazione("  Ritiro materiale per sopralluogo  ");
+        OrdineDTO creata = service.salva(null, r);
+        em.flush(); em.clear();
+        assertEquals("Ritiro materiale per sopralluogo", ((ConsegnaLibera) ConsegnaLibera.findById(creata.getIdConsegnaLibera())).getMotivazione());
+        assertEquals("Ritiro materiale per sopralluogo", service.cerca(r.getDataConsegna(), r.getDataConsegna(), r.getVeicolo()).getFirst().getMotivazione());
+        r.setMotivazione("Consegna campioni");
+        service.salva(creata.getIdConsegnaLibera(), r);
+        em.flush(); em.clear();
+        assertEquals("Consegna campioni", ((ConsegnaLibera) ConsegnaLibera.findById(creata.getIdConsegnaLibera())).getMotivazione());
+    }
+
+    @Test @TestTransaction
+    void validaIlLimiteDellaMotivazione() {
+        ConsegnaLiberaDto r = richiesta(veicolo());
+        r.setMotivazione("a".repeat(2000));
+        assertEquals(r.getMotivazione(), service.salva(null, r).getMotivazione());
+        r.setMotivazione("a".repeat(2001));
+        assertThrows(BadRequestException.class, () -> service.salva(null, r));
+    }
+
     private int veicolo() {
         int id = -Math.abs(UUID.randomUUID().hashCode());
         em.createNativeQuery("INSERT INTO GO_VEICOLO (id, descrizione) VALUES (:id, :descrizione)")

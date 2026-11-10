@@ -19,6 +19,7 @@ import java.util.Date;
 public class OrdineDTO implements Serializable {
 
     private Long idConsegnaLibera;
+    private String motivazione;
 
     private  Integer anno;
     private  String serie;
