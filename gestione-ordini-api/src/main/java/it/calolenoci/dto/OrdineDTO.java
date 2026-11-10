@@ -18,6 +18,8 @@ import java.util.Date;
 @NoArgsConstructor
 public class OrdineDTO implements Serializable {
 
+    private Long idConsegnaLibera;
+
     private  Integer anno;
     private  String serie;
     private  Integer progressivo;
