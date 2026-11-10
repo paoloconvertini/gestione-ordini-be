@@ -477,3 +477,87 @@ La lettura `GET api/prezzi-articoli/storico?articolo=...` richiede il permesso
 `prezzi_articoli.view`, come le altre operazioni della pagina.
 L'icona history accanto al prezzo base apre una modale scrollabile con data/ora,
 prezzo precedente, nuovo prezzo e utente, senza alterare selezioni e anteprima.
+
+
+## Conti acquisti: evidenze dall'eseguibile Plurima (2026-10-28)
+
+La codifica in `ArticoloService.createArticolo` imposta esplicitamente
+`GRUPPOACQUISTI=0` e `CONTOACQUISTI=''`. La scheda anagrafica estratta in
+`/Users/pconvertini/Downloads/strings_ascii.txt:454135` risolve questi campi
+su `PIANOCONTI.GRUPPOCONTO/SOTTOCONTO`, usando `INTESTAZIONE` per la descrizione.
+Non sono il conto del fornitore presente in FORNALTERNATIVI.
+
+Fonti primarie già estratte, da distinguere dai dati effettivi del cliente:
+
+- `strings_unicode.txt:51249` e `sql_inizi.txt:5103`: nel flusso magazzino con
+  `provenienza='R'` il gruppo è quello dell'articolo se >0, altrimenti
+  `TMDD.GRUPPOACQUISTI`; il conto è quello dell'articolo se diverso da stringa
+  vuota, altrimenti `TMDD.CONTOACQUISTI`. I due ripieghi sono separati.
+- `strings_unicode.txt:50933`: messaggio testuale «Immettere conto acquisti
+  di default in TMDD». Conferma il significato della configurazione TMDD;
+  non prova che la maschera di creazione articoli la copi automaticamente.
+- `strings_unicode.txt:21181-21184`: prima legge `PIANOCONTI.CLASSE1` dalla
+  coppia gruppo/sottoconto, poi legge `TGCT.GRUPPOACQUISTI/CONTOACQUISTI`
+  filtrando per `CLASSE1` e `CLASSEA1`.
+- `strings_unicode.txt:90709` e `:90937`: lo stesso lookup TGCT appare nei
+  flussi di contabilizzazione degli ordini fornitori. La classe del fornitore
+  e la classificazione A1 dell'articolo sono chiavi distinte.
+- `strings_unicode.txt:32355` e `:32362`: validazioni anagrafica «Conto
+  Acquisti obbligatorio» e «Conto Acquisti inesistente»; non basta una coppia
+  numerica inventata o il conto più frequente negli articoli.
+
+Nel master Docker locale TMDD e TGCT non risultano nello schema consultato;
+PIANOCONTI non contiene il gruppo 3013. I valori osservati negli articoli
+(3013 con 000001/000007/000019/000022) non determinano un default certo.
+Le stringhe estratte contengono query e messaggi, non i risultati delle
+configurazioni TMDD/TGCT dell'azienda. Non fissare 3013 o un sottoconto nel
+codice sulla base di queste frequenze.
+
+La diagnostica `scripts/verifica_conti_acquisti_articoli.sql` legge ora le
+fonti TMDD/TGCT individuate nell'eseguibile, con descrizione dal piano dei
+conti e gestione esplicita delle tabelle assenti. Nessuna modifica ai dati.
+Prima di implementare la valorizzazione automatica nell'anagrafica occorre
+verificare i valori della configurazione aziendale e distinguere il default
+TMDD dalla sostituzione TGCT prevista per i singoli documenti contabili.
+
+
+Aggiornamento del cliente (2026-10-28): TMDD è vuota. Il ripiego TMDD
+osservato nelle query non fornisce quindi valori per questa installazione.
+Non trattarlo come fonte certa da cui valorizzare le nuove anagrafiche.
+Resta da verificare TGCT con entrambe le chiavi CLASSE1 e CLASSEA1; dalle
+stringhe disponibili non emerge una regola dimostrata che copi automaticamente
+quel risultato nell'anagrafica alla creazione.
+
+Il cliente conferma vuota anche TGCT. Entrambe le fonti di configurazione
+contabile individuate negli estratti sono quindi escluse per questa azienda.
+Gli estratti confermano selezione/validazione della coppia sul piano dei conti,
+ma non forniscono una regola automatica alternativa per creare l'anagrafica.
+Il riferimento ad articolo default (:33035) riguarda artStruVar/componenti
+variabili; quello a Copia struttura/valori (:32962) riguarda artStru, quindi
+non dimostrano una copia automatica dei conti acquisti nell'anagrafica.
+Non derivare la coppia per maggioranza dagli articoli né fissarla nel codice.
+
+
+### Fonte dei valori selezionabili per il conto acquisti
+
+Verifica ulteriore sugli estratti dell'eseguibile:
+
+- `strings_ascii.txt:454154` e `:454180`: la scheda Fiscale/Contabile
+  dell'articolo cerca in PIANOCONTI e trasferisce GRUPPOCONTO/SOTTOCONTO nei
+  campi GRUPPOACQUISTI/CONTOACQUISTI; INTESTAZIONE è la descrizione. Questa
+  stringa della scheda non espone un filtro per tipo conto.
+- `strings_ascii.txt:462829-462847`: form di importazione articoli, con
+  colonne Excel GRUPPO_ACQ e CONTO_ACQ.
+- Nello stesso form, `strings_ascii.txt:463135` e `:463156`: la ricerca
+  per il conto acquisti esplicita `tipoConto='C'` sul lookup clienti;
+  la decodifica :463158 risolve comunque la coppia in PIANOCONTI.
+- `strings_ascii.txt:431185-431205`: il controllo CbtipoConto del piano
+  dei conti distingue Patrimoniale, Costo, Ricavo e altri tipi.
+
+Il filtro TIPOCONTO='C' identifica pertanto i conti di costo selezionabili
+nel flusso di importazione articoli. Non è CLIFOR='C', che identifica invece
+un cliente. La fonte delle coppie valide è PIANOCONTI; TMDD/TGCT riguardano
+configurazioni di default/associazione, non l'elenco dei conti disponibili.
+Queste evidenze non selezionano automaticamente un determinato conto di costo
+per un nuovo articolo: per quello resta necessaria una scelta o una regola
+aziendale confermata. La diagnostica ora estrae anzitutto i conti TIPOCONTO='C'.
