@@ -67,6 +67,39 @@ class OrdiniConNoteServiceTest {
         assertEquals(prima, service.countOrdiniDaOrdinareConNote()); assertTrue(righeOrdine(o).isEmpty());
     }
 
+    @Test @TestTransaction
+    void includeSoloSaldoAccontoVuotoONulloEdEscludeAccontoESaldo() throws Exception {
+        Ordine o = ordine();
+        long prima = service.countOrdiniDaOrdinareConNote();
+        var g = riga(o, true, "Da verificare", LocalDateTime.now(), " ");
+        g.setFlagConsegnato(false); // Lo stato ERP prevale sul flag applicativo non aggiornato.
+        OrdineDettaglio r = OrdineDettaglio.find("progrGenerale", g.getProgrGenerale()).firstResult();
+        for (String stato : new String[]{null, "", " ", "A", "S"}) {
+            r.setSaldoAcconto(stato);
+            boolean inclusa = stato == null || stato.isBlank();
+            assertEquals(inclusa ? 1 : 0, righeOrdine(o).size(), "SALDOACCONTO=" + stato);
+            assertEquals(prima + (inclusa ? 1 : 0), service.countOrdiniDaOrdinareConNote(), "SALDOACCONTO=" + stato);
+        }
+    }
+
+    @Test @TestTransaction
+    void contaOrdineMistoSoloSeRimaneUnaRigaNonConsegnataConNota() throws Exception {
+        Ordine o = ordine();
+        long prima = service.countOrdiniDaOrdinareConNote();
+        var aperta = riga(o, true, "Nota riga aperta", LocalDateTime.now(), " ");
+        var parziale = riga(o, true, "Nota riga parziale", LocalDateTime.now(), " ");
+        var completa = riga(o, true, "Nota riga a saldo", LocalDateTime.now(), " ");
+        OrdineDettaglio rAperta = OrdineDettaglio.find("progrGenerale", aperta.getProgrGenerale()).firstResult();
+        OrdineDettaglio rParziale = OrdineDettaglio.find("progrGenerale", parziale.getProgrGenerale()).firstResult();
+        OrdineDettaglio rCompleta = OrdineDettaglio.find("progrGenerale", completa.getProgrGenerale()).firstResult();
+        rParziale.setSaldoAcconto("A"); rCompleta.setSaldoAcconto("S");
+        assertEquals(java.util.List.of(aperta.getProgrGenerale()), righeOrdine(o).stream()
+                .map(it.calolenoci.dto.OrdineNotaDaOrdinareDto::getProgrGenerale).toList());
+        assertEquals(prima + 1, service.countOrdiniDaOrdinareConNote());
+        rAperta.setSaldoAcconto("A");
+        assertTrue(righeOrdine(o).isEmpty()); assertEquals(prima, service.countOrdiniDaOrdinareConNote());
+    }
+
     private java.util.List<it.calolenoci.dto.OrdineNotaDaOrdinareDto> righeOrdine(Ordine o) throws Exception {
         return service.noteArticoliDaOrdinare(o.getSerie()).stream().filter(r -> r.getAnno().equals(o.getAnno())
                 && r.getProgressivo().equals(o.getProgressivo())).toList();

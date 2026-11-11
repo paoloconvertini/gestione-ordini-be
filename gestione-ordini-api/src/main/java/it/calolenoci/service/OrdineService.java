@@ -164,6 +164,7 @@ public class OrdineService {
 
     private static final String RIGHE_DA_ORDINARE_CON_NOTA =
             "gd.flagNonDisponibile = true AND r.tipoRigo NOT IN ('C', 'AC') "
+            + "AND (r.saldoAcconto IS NULL OR TRIM(r.saldoAcconto) = '') "
             + "AND gd.note IS NOT NULL AND TRIM(gd.note) <> '' AND UPPER(TRIM(gd.note)) <> 'NULL' ";
 
     public long countOrdiniDaOrdinareConNote() throws ParseException {

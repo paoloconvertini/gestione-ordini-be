@@ -175,3 +175,16 @@ corrente. Il normale Indietro continua a tornare alla lista ordini. La vista
 note conserva il proprio pulsante di ritorno già presente.
 Verifica: 28 test frontend superati, compresi attesa sblocco, mancato sblocco
 e conservazione del percorso ordinario; build production completata.
+
+## Fix successiva al rilascio 6.2.16: esclusione dei consegnati dalle note
+
+La clausola condivisa da lista e contatore Da ordinare con note include solo
+le righe con ORDCLI2.SALDOACCONTO vuoto o nullo. Sono escluse sia A (consegna
+parziale) sia S (saldo): anche una consegna parziale indica un acquisto già
+avvenuto e non deve più comparire tra gli articoli da ordinare con note.
+La colonna è mappata da OrdineDettaglio.saldoAcconto ed è aggiornata da
+FatturaService; non vengono ricalcolate quantità o interrogate le bolle per
+questa lista. Il flag applicativo di consegna non sostituisce lo stato ERP.
+Se non rimangono righe valide l'ordine esce anche dal contatore.
+Nessuna modifica allo schema o agli indici. 41 test backend superati, inclusi
+valori null/vuoto/spazio/A/S e ordini con righe miste. Inclusa nel rilascio API 6.2.17.
