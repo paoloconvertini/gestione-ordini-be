@@ -103,9 +103,7 @@ public class OrdineService {
                 "p.statoResidenza,  p.statoEstero,  p.telefono,  p.cellulare,  p.email,  p.pec,  go.status, " +
                 "go.locked, go.userLock, go.warnNoBolla, go.hasFirma, go.hasProntoConsegna, go.note, go.noteLogistica, go.hasCarico " +
                 ", go.dataNote, go.userNote, go.dataNoteLogistica, go.userNoteLogistica, o.createDate, o.updateDate " +
-                "FROM Ordine o " +
-                "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
-                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' ";
+                ordiniFrom();
 
         Map<String, Object> map = new HashMap<>();
         LocalDate data = LocalDate.parse(dataCongig);
@@ -135,7 +133,118 @@ public class OrdineService {
         return pageOrdineDto;
     }
 
+    private String ordiniFrom() {
+        return ordiniFrom("");
+    }
+
+    private String ordiniFrom(String extraJoin) {
+        return "FROM Ordine o " +
+                "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo " +
+                "JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto " +
+                extraJoin + "WHERE o.dataConferma >= :dataConfig and o.provvisorio <> 'S' ";
+    }
+
+    public long countDashboard(FiltroOrdini filtro) throws ParseException {
+        Map<String, Object> params = new HashMap<>();
+        params.put("dataConfig", LocalDate.parse(dataCongig));
+        String query = "SELECT COUNT(o) " + ordiniFrom();
+        if (Boolean.TRUE.equals(filtro.getProntoConsegna())) {
+            query += " AND go.hasProntoConsegna = true ";
+        }
+        var countQuery = entityManager.createQuery(applyFilters(filtro, query, params), Long.class);
+        params.forEach(countQuery::setParameter);
+        return countQuery.getSingleResult();
+    }
+
+    private static final String RIGHE_DA_ORDINARE_CON_NOTA =
+            "gd.flagNonDisponibile = true AND r.tipoRigo NOT IN ('C', 'AC') "
+            + "AND gd.note IS NOT NULL AND TRIM(gd.note) <> '' AND UPPER(TRIM(gd.note)) <> 'NULL' ";
+
+    public long countOrdiniDaOrdinareConNote() throws ParseException {
+        Map<String, Object> params = new HashMap<>();
+        params.put("dataConfig", LocalDate.parse(dataCongig));
+        String query = "SELECT COUNT(o) " + ordiniFrom()
+                + " AND EXISTS (SELECT 1 FROM OrdineDettaglio r JOIN GoOrdineDettaglio gd "
+                + "ON gd.progrGenerale = r.progrGenerale WHERE r.anno = o.anno AND r.serie = o.serie "
+                + "AND r.progressivo = o.progressivo AND " + RIGHE_DA_ORDINARE_CON_NOTA + ") ";
+        var count = entityManager.createQuery(applyFilters(new FiltroOrdini(), query, params), Long.class);
+        params.forEach(count::setParameter);
+        return count.getSingleResult();
+    }
+
+    public List<OrdineNotaDaOrdinareDto> noteArticoliDaOrdinare(String venditore) throws ParseException {
+        Map<String, Object> params = new HashMap<>();
+        params.put("dataConfig", LocalDate.parse(dataCongig));
+        FiltroOrdini filtro = new FiltroOrdini();
+        filtro.setCodVenditore(StringUtils.trimToNull(venditore));
+        String query = "SELECT new it.calolenoci.dto.OrdineNotaDaOrdinareDto(o.anno, o.serie, o.progressivo, "
+                + "p.intestazione, go.status, r.progrGenerale, r.rigo, r.fArticolo, r.fDescrArticolo, gd.note, gd.dataNote) "
+                + ordiniFrom("JOIN OrdineDettaglio r ON r.anno = o.anno AND r.serie = o.serie AND r.progressivo = o.progressivo "
+                + "JOIN GoOrdineDettaglio gd ON gd.progrGenerale = r.progrGenerale ")
+                + "AND " + RIGHE_DA_ORDINARE_CON_NOTA;
+        query = applyFilters(filtro, query, params)
+                + " ORDER BY CASE WHEN gd.dataNote IS NULL THEN 1 ELSE 0 END, gd.dataNote, o.serie, o.anno, o.progressivo, r.rigo";
+        var result = entityManager.createQuery(query, OrdineNotaDaOrdinareDto.class);
+        params.forEach(result::setParameter);
+        return result.getResultList();
+    }
+
+    public List<DashboardCaricoDto> carichiPiuVecchi(FiltroOrdini filtro) throws ParseException {
+        filtro.setCarichiDaProcessare(true);
+        Map<String, Object> params = new HashMap<>();
+        params.put("dataConfig", LocalDate.parse(dataCongig));
+        String join = "LEFT JOIN GoOrdineDettaglio d ON d.anno = o.anno AND d.serie = o.serie " +
+                "AND d.progressivo = o.progressivo AND d.flagRiservato = false " +
+                "AND d.flagOrdinato IS NOT NULL AND d.numDoc IS NOT NULL ";
+        String query = applyFilters(filtro,
+                "SELECT o.anno, o.serie, o.progressivo, p.intestazione, MIN(d.dataCarico) " + ordiniFrom(join), params);
+        query += " GROUP BY o.anno, o.serie, o.progressivo, p.intestazione " +
+                "ORDER BY CASE WHEN MIN(d.dataCarico) IS NULL THEN 1 ELSE 0 END, MIN(d.dataCarico), " +
+                "o.anno, o.serie, o.progressivo";
+        var carichiQuery = entityManager.createQuery(query, Object[].class).setMaxResults(5);
+        params.forEach(carichiQuery::setParameter);
+        return carichiQuery.getResultList().stream().map(row -> {
+            LocalDate dataCarico = row[4] == null ? null : new java.sql.Date(((Date) row[4]).getTime()).toLocalDate();
+            Long giorni = dataCarico == null ? null : java.time.temporal.ChronoUnit.DAYS.between(dataCarico, LocalDate.now());
+            return new DashboardCaricoDto((Integer) row[0], (String) row[1], (Integer) row[2],
+                    (String) row[3], dataCarico, giorni);
+        }).toList();
+    }
+
     private String applyFilters(FiltroOrdini filtro, String query, Map<String, Object> map) throws ParseException {
+        if (Boolean.TRUE.equals(filtro.getDaOrdinareModificati())) {
+            // Stessa regola della cella rosa: date diverse, anche quando una sola è nulla.
+            query += " AND go.status = 'DA_ORDINARE' AND (o.createDate <> o.updateDate "
+                    + "OR (o.createDate IS NULL AND o.updateDate IS NOT NULL) "
+                    + "OR (o.createDate IS NOT NULL AND o.updateDate IS NULL)) ";
+        }
+        if (Boolean.TRUE.equals(filtro.getConsegneDaProgrammare())) {
+            query += " AND go.hasProntoConsegna = true " +
+                    "AND EXISTS (SELECT 1 FROM OrdineDettaglio dettaglio " +
+                    "JOIN GoOrdineDettaglio gd ON gd.progrGenerale = dettaglio.progrGenerale " +
+                    "WHERE dettaglio.anno = o.anno AND dettaglio.serie = o.serie " +
+                    "AND dettaglio.progressivo = o.progressivo " +
+                    "AND gd.flProntoConsegna = true AND gd.flBolla = true) " +
+                    "AND NOT EXISTS (SELECT 1 FROM GoOrdVeicolo v " +
+                    "WHERE v.id.anno = o.anno AND v.id.serie = o.serie " +
+                    "AND v.id.progressivo = o.progressivo AND v.dataConsegna IS NOT NULL) ";
+        }
+        if (Boolean.TRUE.equals(filtro.getCarichiDaProcessare())) {
+            query += " AND go.hasCarico = true ";
+        }
+        if (Boolean.TRUE.equals(filtro.getSenzaBolla())) {
+            query += " AND go.warnNoBolla = true ";
+        }
+        if (Boolean.TRUE.equals(filtro.getSenzaFirma())) {
+            query += " AND (go.hasFirma = false OR go.hasFirma IS NULL) ";
+        }
+        if (Boolean.TRUE.equals(filtro.getDaCodificare())) {
+            query += " AND EXISTS (SELECT 1 FROM OrdineDettaglio dettaglio " +
+                    "WHERE dettaglio.anno = o.anno AND dettaglio.serie = o.serie " +
+                    "AND dettaglio.progressivo = o.progressivo " +
+                    "AND dettaglio.fArticolo IN :codiciDaCodificare) ";
+            map.put("codiciDaCodificare", OrdineDettaglio.CODICI_DA_CODIFICARE);
+        }
         if (filtro.getAnno() != null) {
             query += " and o.anno = :a";
             map.put("a", filtro.getAnno());

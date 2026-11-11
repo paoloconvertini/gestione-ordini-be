@@ -1,0 +1,5 @@
+-- Eseguire prima del rilascio del backend. Conserva gli eventi esistenti.
+IF COL_LENGTH('dbo.GO_APPUNTAMENTO', 'ALTRI_PARTECIPANTI') IS NULL
+BEGIN
+    ALTER TABLE dbo.GO_APPUNTAMENTO ADD ALTRI_PARTECIPANTI NVARCHAR(MAX) NULL;
+END;

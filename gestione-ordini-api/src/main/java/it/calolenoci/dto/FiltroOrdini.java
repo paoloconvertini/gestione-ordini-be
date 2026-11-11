@@ -33,6 +33,18 @@ public class FiltroOrdini implements Serializable {
 
     private Boolean prontoConsegna = Boolean.FALSE;
 
+    private Boolean daCodificare = Boolean.FALSE;
+
+    private Boolean daOrdinareModificati = Boolean.FALSE;
+
+    private Boolean carichiDaProcessare = Boolean.FALSE;
+
+    private Boolean senzaBolla = Boolean.FALSE;
+
+    private Boolean senzaFirma = Boolean.FALSE;
+
+    private Boolean consegneDaProgrammare = Boolean.FALSE;
+
     private Integer veicolo;
 
     private LocalDate dataConsegnaStart;

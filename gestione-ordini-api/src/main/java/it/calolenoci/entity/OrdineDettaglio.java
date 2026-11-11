@@ -22,6 +22,8 @@ import java.util.List;
 @IdClass(OrdineDettaglioId.class)
 public class OrdineDettaglio extends PanacheEntityBase {
 
+    public static final List<String> CODICI_DA_CODIFICARE = List.of("*PZ", "*MQ", "*ML");
+
     @Column(length = 4)
     @Id
     private Integer anno;
@@ -301,8 +303,13 @@ public class OrdineDettaglio extends PanacheEntityBase {
         if (filtro.getFlDaRiservare() != null && filtro.getFlDaRiservare()) {
                 query += " AND (god.flagRiservato = 'F' OR god.flagRiservato IS NULL OR god.flagRiservato = '')";
         }
-        return find(query, Sort.ascending("o.rigo"), Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie())
-                .and("progressivo", filtro.getProgressivo())).project(OrdineDettaglioDto.class).list();
+        Parameters params = Parameters.with("anno", filtro.getAnno()).and("serie", filtro.getSerie())
+                .and("progressivo", filtro.getProgressivo());
+        if (Boolean.TRUE.equals(filtro.getFlDaCodificare())) {
+            query += " AND o.fArticolo IN :codiciDaCodificare ";
+            params.and("codiciDaCodificare", CODICI_DA_CODIFICARE);
+        }
+        return find(query, Sort.ascending("o.rigo"), params).project(OrdineDettaglioDto.class).list();
 
     }
 

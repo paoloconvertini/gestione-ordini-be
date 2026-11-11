@@ -496,6 +496,235 @@ class OrdineServiceTest {
         return vehicle(progressivo, -991, LocalDate.of(1902, 1, 1), 'M', ordine);
     }
 
+    @Test
+    @TestTransaction
+    void dashboardContaGliOrdiniUnaSolaVoltaECorrispondeAllaLista() throws Exception {
+        Ordine ordine = existingOrdineWithCliente();
+        ordine.setDataConferma(LocalDate.parse(dataConfig).plusDays(1));
+        ordine.setProvvisorio("N");
+        GoOrdine go = GoOrdine.findByOrdineId(ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
+        if (go == null) {
+            go = goOrdine(ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo(), "DA_ORDINARE");
+            go.persist();
+        }
+        go.setStatus("DA_ORDINARE");
+        go.setHasProntoConsegna(true);
+        java.util.Set<Integer> righeSpecialiTest = new java.util.HashSet<>();
+        for (String codice : List.of("*PZ", "*MQ", "DASHBOARD")) {
+            OrdineDettaglio riga = new OrdineDettaglio();
+            riga.setAnno(ordine.getAnno());
+            riga.setSerie(ordine.getSerie());
+            riga.setProgressivo(ordine.getProgressivo());
+            riga.setRigo(uniqueNegativeKey());
+            riga.setProgrGenerale(uniqueNegativeKey());
+            riga.setTipoRigo(" ");
+            riga.setFArticolo(codice);
+            if (OrdineDettaglio.CODICI_DA_CODIFICARE.contains(codice)) righeSpecialiTest.add(riga.getProgrGenerale());
+            riga.persist();
+        }
+        entityManager.flush();
+        FiltroOrdini filtro = new FiltroOrdini();
+        filtro.setAnno(ordine.getAnno());
+        filtro.setCodVenditore(ordine.getSerie());
+        filtro.setProgressivo(ordine.getProgressivo());
+        filtro.setSize(10);
+        filtro.setDaCodificare(true);
+        assertEquals(1, service.countDashboard(filtro));
+        // La transazione del test è già aperta: esegue la query senza il
+        // proxy che imposta il timeout all'ingresso di findAllByStatus.
+        OrdineService listService = new OrdineService();
+        listService.dataCongig = dataConfig;
+        assertEquals(listService.findAllByStatus(filtro).getCount(), service.countDashboard(filtro));
+        it.calolenoci.dto.FiltroArticoli dettaglio = new it.calolenoci.dto.FiltroArticoli(
+                ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
+        dettaglio.setFlDaCodificare(true);
+        // Le righe senza flag applicativi vengono nascoste dal filtro automatico
+        // "non disponibili", ma devono essere visibili entrando da codificare.
+        dettaglio.setFlNonDisponibile(true);
+        assertFalse(OrdineDettaglio.findArticoliById(dettaglio).stream()
+                .anyMatch(riga -> righeSpecialiTest.contains(riga.getProgrGenerale())));
+        dettaglio.setFlNonDisponibile(false);
+        var daCodificare = OrdineDettaglio.findArticoliById(dettaglio);
+        assertTrue(daCodificare.stream().anyMatch(riga -> "*PZ".equals(riga.getFArticolo())));
+        assertTrue(daCodificare.stream().anyMatch(riga -> "*MQ".equals(riga.getFArticolo())));
+        assertTrue(daCodificare.stream().allMatch(riga -> OrdineDettaglio.CODICI_DA_CODIFICARE.contains(riga.getFArticolo())));
+        filtro.setDaCodificare(false);
+        filtro.setFiltroStatus("DA_ORDINARE");
+        assertEquals(1, service.countDashboard(filtro));
+        filtro.setFiltroStatus(null);
+        filtro.setDaCodificare(false);
+        filtro.setProntoConsegna(true);
+        assertEquals(1, service.countDashboard(filtro));
+        go.setHasProntoConsegna(false);
+        entityManager.flush();
+        assertEquals(0, service.countDashboard(filtro));
+        filtro.setProntoConsegna(false);
+        go.setStatus("ARCHIVIATO");
+        entityManager.flush();
+        assertEquals(0, service.countDashboard(filtro));
+        go.setStatus("COMPLETO");
+        ordine.setProvvisorio("S");
+        entityManager.flush();
+        assertEquals(0, service.countDashboard(filtro));
+    }
+
+    @Test
+    @TestTransaction
+    void dashboardUsaGliAlertEsistentiELaDataDelCaricoNonRiservato() throws Exception {
+        Ordine ordine = existingOrdineWithCliente();
+        ordine.setDataConferma(LocalDate.parse(dataConfig).plusDays(1));
+        ordine.setProvvisorio("N");
+        GoOrdine go = GoOrdine.findByOrdineId(ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
+        if (go == null) {
+            go = goOrdine(ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo(), "DA_PROCESSARE");
+            go.persist();
+        }
+        go.setStatus("DA_PROCESSARE");
+        go.setHasCarico(true);
+        go.setWarnNoBolla(true);
+        go.setHasFirma(false);
+        GoOrdineDettaglio.delete("anno=?1 and serie=?2 and progressivo=?3", ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
+        LocalDate vecchioCarico = LocalDate.now().minusDays(12);
+        for (int giorni : List.of(12, 4, 30)) {
+            GoOrdineDettaglio riga = new GoOrdineDettaglio();
+            riga.setProgrGenerale(uniqueNegativeKey());
+            riga.setRigo(giorni);
+            riga.setAnno(ordine.getAnno());
+            riga.setSerie(ordine.getSerie());
+            riga.setProgressivo(ordine.getProgressivo());
+            riga.setFlagOrdinato(true);
+            riga.setFlagRiservato(giorni == 30);
+            riga.setNumDoc("TEST-DASHBOARD");
+            riga.setDataCarico(java.sql.Date.valueOf(LocalDate.now().minusDays(giorni)));
+            riga.persist();
+        }
+        entityManager.flush();
+        FiltroOrdini filtro = new FiltroOrdini();
+        filtro.setAnno(ordine.getAnno());
+        filtro.setCodVenditore(ordine.getSerie());
+        filtro.setProgressivo(ordine.getProgressivo());
+        filtro.setCarichiDaProcessare(true);
+        assertEquals(1, service.countDashboard(filtro));
+        var carichi = service.carichiPiuVecchi(filtro);
+        assertEquals(1, carichi.size());
+        assertEquals(vecchioCarico, carichi.getFirst().getDataCarico());
+        assertEquals(12L, carichi.getFirst().getGiorni());
+        // Date mancanti non escludono l'ordine e non vengono sostituite dalla data ordine.
+        GoOrdineDettaglio.update("dataCarico=null where anno=?1 and serie=?2 and progressivo=?3", ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
+        entityManager.clear();
+        assertEquals(1, service.countDashboard(filtro));
+        assertNull(service.carichiPiuVecchi(filtro).getFirst().getGiorni());
+        assertNull(service.carichiPiuVecchi(filtro).getFirst().getDataCarico());
+        filtro.setCarichiDaProcessare(false);
+        filtro.setSenzaBolla(true);
+        assertEquals(1, service.countDashboard(filtro));
+        filtro.setSenzaBolla(false);
+        filtro.setSenzaFirma(true);
+        filtro.setFiltroStatus("ARCHIVIATO");
+        assertEquals(0, service.countDashboard(filtro));
+        GoOrdine.update("status='ARCHIVIATO' where anno=?1 and serie=?2 and progressivo=?3", ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
+        assertEquals(1, service.countDashboard(filtro));
+    }
+
+    @Test
+    @TestTransaction
+    void dashboardContaProntoConBollaSullaStessaRigaESenzaDataProgrammata() throws Exception {
+        Ordine ordine = existingOrdineWithCliente();
+        ordine.setDataConferma(LocalDate.parse(dataConfig).plusDays(1));
+        ordine.setProvvisorio("N");
+        GoOrdine go = GoOrdine.findByOrdineId(ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
+        if (go == null) {
+            go = goOrdine(ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo(), "COMPLETO");
+            go.persist();
+        }
+        go.setStatus("COMPLETO");
+        go.setHasProntoConsegna(true);
+        GoOrdVeicolo.delete("id.anno=?1 and id.serie=?2 and id.progressivo=?3", ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
+        GoOrdineDettaglio.delete("anno=?1 and serie=?2 and progressivo=?3", ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
+        java.util.List<GoOrdineDettaglio> righe = new java.util.ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            OrdineDettaglio riga = new OrdineDettaglio();
+            riga.setAnno(ordine.getAnno());
+            riga.setSerie(ordine.getSerie());
+            riga.setProgressivo(ordine.getProgressivo());
+            riga.setRigo(uniqueNegativeKey());
+            riga.setProgrGenerale(uniqueNegativeKey());
+            riga.setFArticolo("TEST");
+            riga.setTipoRigo(" ");
+            riga.persist();
+            GoOrdineDettaglio dettaglio = new GoOrdineDettaglio();
+            dettaglio.setAnno(ordine.getAnno());
+            dettaglio.setSerie(ordine.getSerie());
+            dettaglio.setProgressivo(ordine.getProgressivo());
+            dettaglio.setRigo(riga.getRigo());
+            dettaglio.setProgrGenerale(riga.getProgrGenerale());
+            dettaglio.setFlProntoConsegna(i == 1);
+            dettaglio.setFlBolla(i == 0);
+            dettaglio.persist();
+            righe.add(dettaglio);
+        }
+        entityManager.flush();
+        FiltroOrdini filtro = new FiltroOrdini();
+        filtro.setAnno(ordine.getAnno());
+        filtro.setCodVenditore(ordine.getSerie());
+        filtro.setProgressivo(ordine.getProgressivo());
+        filtro.setConsegneDaProgrammare(true);
+        filtro.setSize(10);
+        // Pronto e bolla su righe differenti non bastano.
+        assertEquals(0, service.countDashboard(filtro));
+        righe.getFirst().setFlProntoConsegna(true);
+        righe.getLast().setFlBolla(true);
+        entityManager.flush();
+        assertEquals(1, service.countDashboard(filtro));
+        OrdineService listService = new OrdineService();
+        listService.dataCongig = dataConfig;
+        assertEquals(1, listService.findAllByStatus(filtro).getCount());
+        GoOrdVeicolo giro = new GoOrdVeicolo();
+        giro.setId(new GoOrdVeicoloPK(ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo()));
+        giro.setVenditore(false);
+        giro.persist();
+        entityManager.flush();
+        assertEquals(1, service.countDashboard(filtro));
+        giro.setDataConsegna(LocalDate.now().plusDays(1));
+        entityManager.flush();
+        assertEquals(0, service.countDashboard(filtro));
+        giro.setDataConsegna(null);
+        go.setHasProntoConsegna(false);
+        entityManager.flush();
+        assertEquals(0, service.countDashboard(filtro));
+        go.setHasProntoConsegna(true);
+        go.setStatus("ARCHIVIATO");
+        entityManager.flush();
+        assertEquals(0, service.countDashboard(filtro));
+    }
+
+    @Test
+    @TestTransaction
+    void dashboardModificatiCorrispondeAllaRegolaRosaEAllaListaAncheConDateNulle() throws Exception {
+        Ordine o = existingOrdineWithCliente();
+        o.setDataConferma(LocalDate.parse(dataConfig).plusDays(1)); o.setProvvisorio("N");
+        GoOrdine go = GoOrdine.findByOrdineId(o.getAnno(), o.getSerie(), o.getProgressivo());
+        if (go == null) { go = goOrdine(o.getAnno(), o.getSerie(), o.getProgressivo(), "DA_ORDINARE"); go.persist(); }
+        go.setStatus("DA_ORDINARE");
+        FiltroOrdini filtro = new FiltroOrdini();
+        filtro.setAnno(o.getAnno()); filtro.setCodVenditore(o.getSerie()); filtro.setProgressivo(o.getProgressivo());
+        filtro.setSize(10); filtro.setFiltroStatus("DA_ORDINARE"); filtro.setDaOrdinareModificati(true);
+        OrdineService lista = new OrdineService(); lista.dataCongig = dataConfig;
+        var inserimento = java.time.LocalDateTime.of(2026, 1, 1, 10, 0);
+        o.setCreateDate(inserimento); o.setUpdateDate(inserimento);
+        assertEquals(0, service.countDashboard(filtro)); assertEquals(0, lista.findAllByStatus(filtro).getCount());
+        o.setUpdateDate(inserimento.plusDays(1));
+        assertEquals(1, service.countDashboard(filtro)); assertEquals(1, lista.findAllByStatus(filtro).getCount());
+        o.setCreateDate(null);
+        assertEquals(1, service.countDashboard(filtro)); assertEquals(1, lista.findAllByStatus(filtro).getCount());
+        o.setUpdateDate(null);
+        assertEquals(0, service.countDashboard(filtro)); assertEquals(0, lista.findAllByStatus(filtro).getCount());
+        o.setCreateDate(inserimento);
+        assertEquals(1, service.countDashboard(filtro)); assertEquals(1, lista.findAllByStatus(filtro).getCount());
+        go.setStatus("INCOMPLETO");
+        assertEquals(0, service.countDashboard(filtro)); assertEquals(0, lista.findAllByStatus(filtro).getCount());
+    }
+
     private GoOrdine goOrdine(int anno, String serie, int progressivo, String status) {
         GoOrdine result = new GoOrdine();
         result.setAnno(anno);
