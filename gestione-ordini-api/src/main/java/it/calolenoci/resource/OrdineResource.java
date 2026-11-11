@@ -61,6 +61,9 @@ public class OrdineResource {
     OrdineService ordineService;
 
     @Inject
+    GiroConsegneService giroConsegneService;
+
+    @Inject
     FirmaService firmaService;
 
     @ConfigProperty(name = "firma.store.path")
@@ -466,7 +469,7 @@ public class OrdineResource {
     @RolesAllowed({ADMIN, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     @Transactional
     public Response riordinaConsegne(List<RiordinoDto> lista) {
-        service.riordinaConsegne(lista);
+        giroConsegneService.riordinaConsegne(lista);
         return Response.ok(new ResponseDto("Consegne riordinate con successo", false)).build();
     }
 

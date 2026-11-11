@@ -5,12 +5,16 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @RegisterForReflection
 public class PrezzoArticoloDto {
     private String articolo;
     private String descrizione;
+    private BigDecimal giacenzaTotale;
+    private List<GiacenzaMagazzinoDto> giacenze = new ArrayList<>();
     private String unitaMisura;
     private String unitaAcquisto;
     private String bloccato;

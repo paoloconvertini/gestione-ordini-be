@@ -70,6 +70,12 @@ public class OrdineService {
     EntityManager em;
 
     @Inject
+    ConsegnaLiberaService consegnaLiberaService;
+
+    @Inject
+    GiroConsegneService giroConsegneService;
+
+    @Inject
     AuditService auditService;
 
     @Inject
@@ -832,6 +838,9 @@ AND NOT EXISTS (
 
         List<OrdineDTO> ordineList = panacheQuery.project(OrdineDTO.class).list();
         ordineList.addAll(dtoPanacheQuery.project(OrdineDTO.class).list());
+        if (StringUtils.isBlank(filtro.getCodVenditore())) {
+            ordineList.addAll(consegnaLiberaService.cerca(monday, saturday, filtro.getVeicolo()));
+        }
 
         Map<DayOfWeek, List<OrdineDTO>> consegnePerGiorno = new EnumMap<>(DayOfWeek.class);
 
@@ -1038,66 +1047,10 @@ AND NOT EXISTS (
             // se esisteva una programmazione precedente riordino quel giro
             if (precedente != null) {
                 Panache.getEntityManager().detach(precedente);
-                List<GoOrdVeicolo> daRiordinare = GoOrdVeicolo.list(
-                        "idVeicolo = ?1 and dataConsegna = ?2 and oraConsegna = ?3 order by ordine",
-                        precedente.getIdVeicolo(),
-                        precedente.getDataConsegna(),
-                        precedente.getOraConsegna()
-                );
-
-                long pos = 1;
-
-                for (GoOrdVeicolo v : daRiordinare) {
-                    v.setOrdine(pos++);
-                }
-
+                giroConsegneService.riordina(precedente.getIdVeicolo(), precedente.getDataConsegna(), precedente.getOraConsegna());
             }
 
-            // recupero ordini esistenti del nuovo giro
-            List<Long> ordiniEsistenti = GoOrdVeicolo.find(
-                    "select ordine from GoOrdVeicolo where idVeicolo = ?1 and dataConsegna = ?2 and oraConsegna = ?3 order by ordine",
-                    dto.getVeicolo(),
-                    dto.getDataConsegna(),
-                    dto.getOraConsegna()
-            ).project(Long.class).list();
-
-            Long ordine = dto.getOrdine();
-
-            // calcolo automatico se non fornito
-            if (ordine == null) {
-
-                ordine = 1L;
-
-                for (Long o : ordiniEsistenti) {
-                    if (!o.equals(ordine)) {
-                        break;
-                    }
-                    ordine++;
-                }
-
-            } else {
-
-                boolean exists = ordiniEsistenti.contains(ordine);
-
-                if (exists) {
-
-                    List<GoOrdVeicolo> daShiftare = GoOrdVeicolo.list(
-                            "idVeicolo = ?1 and dataConsegna = ?2 and oraConsegna = ?3 and ordine >= ?4 and ordine is not null order by ordine desc",
-                            dto.getVeicolo(),
-                            dto.getDataConsegna(),
-                            dto.getOraConsegna(),
-                            ordine
-                    );
-
-                    for (GoOrdVeicolo v : daShiftare) {
-                        v.setOrdine(v.getOrdine() + 1);
-                    }
-
-                    Panache.getEntityManager().flush();
-
-                }
-
-            }
+            Long ordine = giroConsegneService.inserisci(dto.getVeicolo(), dto.getDataConsegna(), dto.getOraConsegna(), dto.getOrdine());
 
             GoOrdVeicolo goOrdVeicolo = new GoOrdVeicolo();
 
@@ -1402,18 +1355,7 @@ AND NOT EXISTS (
                 progressivo
         );
 
-        List<GoOrdVeicolo> daRiordinare = GoOrdVeicolo.list(
-                "idVeicolo = ?1 and dataConsegna = ?2 and oraConsegna = ?3 order by ordine",
-                veicolo,
-                data,
-                fascia
-        );
-
-        long pos = 1;
-
-        for (GoOrdVeicolo v : daRiordinare) {
-            v.setOrdine(pos++);
-        }
+        giroConsegneService.riordina(veicolo, data, fascia);
     }
 
     private double getAliquota(String codiceIva) {

@@ -63,6 +63,17 @@ public class PrezziArticoliResource {
         }
     }
 
+    @GET
+    @Path("storico")
+    public Response storico(@QueryParam("articolo") String articolo) {
+        try {
+            verificaPermesso();
+            return Response.ok(service.storico(articolo)).build();
+        } catch (WebApplicationException e) {
+            return Response.status(e.getResponse().getStatus()).entity(new ResponseDto(e.getMessage(), true)).build();
+        }
+    }
+
     @PUT
     public Response aggiorna(AggiornamentoPrezziDto richiesta) {
         try {

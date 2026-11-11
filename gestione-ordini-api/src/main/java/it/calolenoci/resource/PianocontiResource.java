@@ -71,7 +71,7 @@ public class PianocontiResource {
 
     @GET
     @Path("/search-clienti")
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE, LOGISTICA, AMMINISTRATIVO, MAGAZZINIERE})
     public Response searchClienti(@QueryParam("q") String q) {
         List<PianoContiDto> result = pianoContiService.searchClienti(q);
         return Response.ok(result).build();

@@ -37,6 +37,7 @@ class PrezziArticoliResourceTest {
         assertEquals(403, resource.aggiorna(new AggiornamentoPrezziDto()).getStatus());
         assertEquals(403, resource.classiFornitore().getStatus());
         assertEquals(403, resource.salvaSoglia(new SogliaRicaricoDto()).getStatus());
+        assertEquals(403, resource.storico("414").getStatus());
         verifyNoInteractions(resource.service, resource.classiService);
     }
 
@@ -61,6 +62,9 @@ class PrezziArticoliResourceTest {
         SogliaRicaricoDto soglia = new SogliaRicaricoDto();
         assertEquals(200, resource.salvaSoglia(soglia).getStatus());
         verify(resource.service).salvaSoglia(soglia, "TEST");
+        when(resource.service.storico("414")).thenReturn(List.of());
+        assertEquals(200, resource.storico("414").getStatus());
+        verify(resource.service).storico("414");
         verify(resource.jwt, never()).getGroups();
     }
 
@@ -71,6 +75,7 @@ class PrezziArticoliResourceTest {
         assertEquals(403, resource.cerca("414", null, false).getStatus());
         assertEquals(403, resource.classiFornitore().getStatus());
         assertEquals(403, resource.salvaSoglia(new SogliaRicaricoDto()).getStatus());
+        assertEquals(403, resource.storico("414").getStatus());
         verifyNoInteractions(resource.service, resource.classiService);
     }
 }

@@ -1,6 +1,6 @@
 # Articoli Plurima: classificazioni, marchi e aggiornamento prezzi
 
-Ultimo aggiornamento: 2026-10-08.
+Ultimo aggiornamento: 2026-10-15.
 
 ## Scopo e fonti
 
@@ -400,9 +400,164 @@ barra verticale interna; mantiene lo scorrimento orizzontale su schermi stretti,
 righe selezionate evidenziate e
 colonna del prezzo proposto evidenziata durante l'anteprima. La barra di
 conferma in basso mostra il numero di selezionati su tutte le pagine.
-Annulla anteprima e Mostra tutti ripristinano l'elenco già caricato e
-azzerano la selezione, senza chiamate di aggiornamento o modifiche ai dati.
+Annulla anteprima ripristina l'elenco già caricato e azzera ricavo e selezione.
+Mostra tutti rimuove solo il filtro visivo, conservando anteprima e selezioni.
+Il cambio fornitore azzera subito ricavo, anteprima e selezioni.
 
 La colonna Stato è sostituita da un'icona accanto alla descrizione: spunta
 per gli aggiornabili, avviso per gli esclusi. Il tooltip e l'etichetta
 accessibile riportano il motivo di esclusione; l'icona riceve focus da tastiera.
+
+## Giacenza positiva e dettaglio magazzini (2026-10-15)
+
+La pagina prezzi mostra solo gli articoli del fornitore A1 con giacenza
+**totale strettamente maggiore di zero**, considerando tutti i magazzini.
+Si usa SALDIMAGAZZINO.QGIACENZA per QTY='1' (quantità principale, coerente con
+SaldiMagazzinoMapper), sommando varianti e magazzini. QTY='2' resta separata
+e non viene sommata alla quantità principale. I saldi mancanti o nulli non
+rendono positivo il totale. I saldi negativi concorrono alla somma.
+
+Verifica di produzione fornita dall'utente il 15 ottobre, ottenuta con
+`scripts/verifica_giacenze_per_magazzino.sql`: B/QTY1 42869 articoli, 8578
+positivi e 1338 negativi; B/QTY2 118 articoli, 1 positivo e 109 negativi;
+C/QTY1 2158 articoli, 16 positivi e 11 negativi; OST/QTY1 461 articoli, tutti
+positivi. Questi numeri non sono default né vincoli. La richiesta è stata
+quindi estesa a tutti i magazzini, con esposizione dei saldi.
+
+Una sola riga e una sola selezione per articolo: il DTO aggiunge
+`giacenzaTotale` e `giacenze` (magazzino/giacenza). Le colonne Magazzino e
+Giacenza mostrano i saldi affiancati nello stesso ordine, esclusivamente per
+magazzini con giacenza positiva. I magazzini con saldo zero o negativo non
+sono visualizzati. Il filtro di inclusione dell'articolo continua a usare
+il totale complessivo, comprensivo anche degli eventuali saldi negativi. L'anagrafica
+prezzi resta unica e non viene aggiornata una volta per magazzino.
+
+Il filtro è nel metodo leggi condiviso da ricerca, anteprima, Porta a soglia
+e applicazione dei prezzi (compreso il secondo gruppo). Durante il salvataggio
+anche i saldi sono letti con HOLDLOCK: se il totale non è più positivo rispetto
+all'anteprima, l'articolo non risulta ammesso e si restituisce 409 senza
+aggiornamenti parziali. Una variazione di quantità che mantiene il totale
+positivo non modifica il calcolo del prezzo né costituisce da sola un conflitto.
+
+Non servono migrazioni SQL. Frontend e backend vanno aggiornati insieme
+per esporre i nuovi campi. Verifiche: suite prezzi backend completa, regressioni
+su varianti/magazzini, QTY2 separata, assenza saldi, totale zero/negativo e
+giacenza esaurita dopo l'anteprima; suite frontend e build production.
+
+Il restyling dashboard è stato messo da parte nei due repository con stash
+`feature/restyling-dashboard: pausa prima filtro giacenza prezzi`; questa
+modifica viene sviluppata su BE prod e FE master.
+
+La tabella presenta prima tutti i sotto soglia, poi i sopra soglia per delta
+decrescente, quindi i restanti. A parità di gruppo/delta mantiene la priorità
+agli aggiornabili, poi agli esclusi per blocco/unità, infine ai senza costo.
+I contatori sotto/sopra/in soglia filtrano le righe senza cambiare selezioni né
+conteggi complessivi; un secondo clic sul filtro attivo o Mostra tutti lo rimuove.
+Porta a soglia propone lo stesso dialogo del ricavo per gli articoli sotto soglia
+deselezionati, accettando un secondo ricarico senza includere quelli sopra/in soglia.
+
+
+## Cronologia prezzo base (2026-10-26)
+
+La tabella `GO_STORICO_PREZZI_ARTICOLI` conserva una riga per ogni prezzo base
+cambiato dalla pagina Prezzi articoli: codice articolo, data/ora SQL Server,
+prezzo precedente (anche NULL), nuovo prezzo e utente JWT. Prezzi decimali
+conservati senza conversione a due decimali; la modale mostra tre decimali.
+L'indice per articolo, data e ID supporta la lettura dalla modifica più recente.
+Non vengono ricostruite modifiche anteriori né intercettate scritture dirette ERP.
+
+Eseguire `scripts/create_GO_STORICO_PREZZI_ARTICOLI.sql` nel database aziendale
+prima del backend aggiornato; script rieseguibile, applicato al solo Docker locale
+per le verifiche. La generazione automatica dello schema resta disabilitata.
+
+L'inserimento della cronologia è nella stessa transazione dell'aggiornamento
+prezzi, per entrambi i gruppi e in modalità Porta a soglia. Prezzi invariati,
+annullamenti, anteprime e salvataggi della sola soglia non creano voci.
+La lettura `GET api/prezzi-articoli/storico?articolo=...` richiede il permesso
+`prezzi_articoli.view`, come le altre operazioni della pagina.
+L'icona history accanto al prezzo base apre una modale scrollabile con data/ora,
+prezzo precedente, nuovo prezzo e utente, senza alterare selezioni e anteprima.
+
+
+## Conti acquisti: evidenze dall'eseguibile Plurima (2026-10-28)
+
+La codifica in `ArticoloService.createArticolo` imposta esplicitamente
+`GRUPPOACQUISTI=0` e `CONTOACQUISTI=''`. La scheda anagrafica estratta in
+`/Users/pconvertini/Downloads/strings_ascii.txt:454135` risolve questi campi
+su `PIANOCONTI.GRUPPOCONTO/SOTTOCONTO`, usando `INTESTAZIONE` per la descrizione.
+Non sono il conto del fornitore presente in FORNALTERNATIVI.
+
+Fonti primarie già estratte, da distinguere dai dati effettivi del cliente:
+
+- `strings_unicode.txt:51249` e `sql_inizi.txt:5103`: nel flusso magazzino con
+  `provenienza='R'` il gruppo è quello dell'articolo se >0, altrimenti
+  `TMDD.GRUPPOACQUISTI`; il conto è quello dell'articolo se diverso da stringa
+  vuota, altrimenti `TMDD.CONTOACQUISTI`. I due ripieghi sono separati.
+- `strings_unicode.txt:50933`: messaggio testuale «Immettere conto acquisti
+  di default in TMDD». Conferma il significato della configurazione TMDD;
+  non prova che la maschera di creazione articoli la copi automaticamente.
+- `strings_unicode.txt:21181-21184`: prima legge `PIANOCONTI.CLASSE1` dalla
+  coppia gruppo/sottoconto, poi legge `TGCT.GRUPPOACQUISTI/CONTOACQUISTI`
+  filtrando per `CLASSE1` e `CLASSEA1`.
+- `strings_unicode.txt:90709` e `:90937`: lo stesso lookup TGCT appare nei
+  flussi di contabilizzazione degli ordini fornitori. La classe del fornitore
+  e la classificazione A1 dell'articolo sono chiavi distinte.
+- `strings_unicode.txt:32355` e `:32362`: validazioni anagrafica «Conto
+  Acquisti obbligatorio» e «Conto Acquisti inesistente»; non basta una coppia
+  numerica inventata o il conto più frequente negli articoli.
+
+Nel master Docker locale TMDD e TGCT non risultano nello schema consultato;
+PIANOCONTI non contiene il gruppo 3013. I valori osservati negli articoli
+(3013 con 000001/000007/000019/000022) non determinano un default certo.
+Le stringhe estratte contengono query e messaggi, non i risultati delle
+configurazioni TMDD/TGCT dell'azienda. Non fissare 3013 o un sottoconto nel
+codice sulla base di queste frequenze.
+
+La diagnostica `scripts/verifica_conti_acquisti_articoli.sql` legge ora le
+fonti TMDD/TGCT individuate nell'eseguibile, con descrizione dal piano dei
+conti e gestione esplicita delle tabelle assenti. Nessuna modifica ai dati.
+Prima di implementare la valorizzazione automatica nell'anagrafica occorre
+verificare i valori della configurazione aziendale e distinguere il default
+TMDD dalla sostituzione TGCT prevista per i singoli documenti contabili.
+
+
+Aggiornamento del cliente (2026-10-28): TMDD è vuota. Il ripiego TMDD
+osservato nelle query non fornisce quindi valori per questa installazione.
+Non trattarlo come fonte certa da cui valorizzare le nuove anagrafiche.
+Resta da verificare TGCT con entrambe le chiavi CLASSE1 e CLASSEA1; dalle
+stringhe disponibili non emerge una regola dimostrata che copi automaticamente
+quel risultato nell'anagrafica alla creazione.
+
+Il cliente conferma vuota anche TGCT. Entrambe le fonti di configurazione
+contabile individuate negli estratti sono quindi escluse per questa azienda.
+Gli estratti confermano selezione/validazione della coppia sul piano dei conti,
+ma non forniscono una regola automatica alternativa per creare l'anagrafica.
+Il riferimento ad articolo default (:33035) riguarda artStruVar/componenti
+variabili; quello a Copia struttura/valori (:32962) riguarda artStru, quindi
+non dimostrano una copia automatica dei conti acquisti nell'anagrafica.
+Non derivare la coppia per maggioranza dagli articoli né fissarla nel codice.
+
+
+### Fonte dei valori selezionabili per il conto acquisti
+
+Verifica ulteriore sugli estratti dell'eseguibile:
+
+- `strings_ascii.txt:454154` e `:454180`: la scheda Fiscale/Contabile
+  dell'articolo cerca in PIANOCONTI e trasferisce GRUPPOCONTO/SOTTOCONTO nei
+  campi GRUPPOACQUISTI/CONTOACQUISTI; INTESTAZIONE è la descrizione. Questa
+  stringa della scheda non espone un filtro per tipo conto.
+- `strings_ascii.txt:462829-462847`: form di importazione articoli, con
+  colonne Excel GRUPPO_ACQ e CONTO_ACQ.
+- Nello stesso form, `strings_ascii.txt:463135` e `:463156`: la ricerca
+  per il conto acquisti esplicita `tipoConto='C'` sul lookup clienti;
+  la decodifica :463158 risolve comunque la coppia in PIANOCONTI.
+- `strings_ascii.txt:431185-431205`: il controllo CbtipoConto del piano
+  dei conti distingue Patrimoniale, Costo, Ricavo e altri tipi.
+
+Il filtro TIPOCONTO='C' identifica pertanto i conti di costo selezionabili
+nel flusso di importazione articoli. Non è CLIFOR='C', che identifica invece
+un cliente. La fonte delle coppie valide è PIANOCONTI; TMDD/TGCT riguardano
+configurazioni di default/associazione, non l'elenco dei conti disponibili.
+Queste evidenze non selezionano automaticamente un determinato conto di costo
+per un nuovo articolo: per quello resta necessaria una scelta o una regola
+aziendale confermata. La diagnostica ora estrae anzitutto i conti TIPOCONTO='C'.

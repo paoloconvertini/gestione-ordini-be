@@ -61,7 +61,7 @@ public class ShowroomResource {
 
     @GET
     @Path("/comuni")
-    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE})
+    @RolesAllowed({ADMIN, RECEPTION_CEGLIE, RECEPTION_OSTUNI, VENDITORE, MAGAZZINIERE, AMMINISTRATIVO, LOGISTICA})
     public Response getComuni(
             @QueryParam("provincia") String provincia,
             @QueryParam("q") String testo
