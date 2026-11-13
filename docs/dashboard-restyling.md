@@ -188,3 +188,44 @@ questa lista. Il flag applicativo di consegna non sostituisce lo stato ERP.
 Se non rimangono righe valide l'ordine esce anche dal contatore.
 Nessuna modifica allo schema o agli indici. 41 test backend superati, inclusi
 valori null/vuoto/spazio/A/S e ordini con righe miste. Inclusa nel rilascio API 6.2.17.
+
+
+## Vista articoli dalle tile (13 novembre 2026)
+
+Le liste aperte da ordini attivi, da ordinare, modificati, da codificare,
+pronto consegna, consegne da programmare, consegnati senza bolla e archiviati
+senza firma offrono il pulsante Vista articoli. La vista esistente resta
+quella iniziale; Carichi da processare è esclusa su richiesta.
+Riutilizzata la pagina degli articoli con note, con gruppi venditore/ordine,
+selezione singola e totale per venditore e apertura WhatsApp delle righe
+selezionate nella pagina corrente. Nessun invio automatico.
+Anche la pagina con note offre Vista ordini, con lo stesso predicato di nota,
+non disponibilità e SALDOACCONTO del contatore.
+
+GET /api/dashboard/articoli/{tipo}, con venditore e pagina (da zero), restituisce
+righe e totaleOrdini. Paginazione per 20 ordini interi con ordinamento stabile,
+poi unica query per le relative righe, senza chiamate per singolo ordine.
+Il totale indica ordini, non articoli. Sono riutilizzati i filtri del contatore.
+Da codificare mostra soltanto codici da codificare; pronto consegna soltanto
+flProntoConsegna; da programmare flProntoConsegna e flBolla; senza bolla quantità
+consegnata senza bolla diversa da zero. Le viste basate sullo stato dell'ordine
+mostrano i suoi articoli, escludendo righe C/AC. La vista con note mantiene
+regole e ordinamento cronologico precedenti.
+
+I permessi backend sono quelli delle rispettive tile, oltre a ordini_clienti.view.
+Il dettaglio conserva un solo pulsante di ritorno e sblocca l'ordine prima di
+navigare. Per la nuova vista conserva tipo, venditore e pagina.
+Nessuna modifica allo schema o agli indici. Promemoria acquisti esclusi.
+Verifiche: 44 test backend e 34 frontend passati, build Angular development
+completata. Modifiche salvate sul branch feature/restyling-dashboard; immagini Docker non ancora pubblicate.
+
+
+### Rifiniture dettaglio articoli
+
+Tooltip carico nascosto se manca un numero documento valido; i valori nulli,
+vuoti e stringhe letterali NULL vengono trattati come assenti. Nessuna modifica
+alla ricerca backend dei movimenti o al contatore Carichi da processare.
+Codice fornitore presente: grassetto cliccabile come prima; codice vuoto:
+pulsante esplicito con icona, rispettando permessi e stato archiviato.
+Ultima verifica del dettaglio: 18 test passati e build Angular development riuscita.
+La nuova analisi sui carichi mancanti e sul magazzino smart proseguirà separatamente.

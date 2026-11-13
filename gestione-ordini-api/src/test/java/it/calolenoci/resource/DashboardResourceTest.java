@@ -22,6 +22,18 @@ class DashboardResourceTest {
     }
 
     @Test
+    void vistaArticoliRispettaIPermessiDellaTileEValidaLaPagina() throws Exception {
+        var base = resource("ordini_clienti.view");
+        for (String tipo : new String[]{"pronto", "codifica", "programmare", "firme"})
+            assertThrows(jakarta.ws.rs.ForbiddenException.class, () -> base.articoli(tipo, null, 0));
+        verifyNoInteractions(base.service);
+        assertThrows(jakarta.ws.rs.BadRequestException.class, () -> base.articoli("all", null, -1));
+        base.articoli("all", "11", 2);
+        verify(base.service).articoliDashboard("all", "11", 2);
+        assertThrows(jakarta.ws.rs.ForbiddenException.class, () -> resource().articoli("all", null, 0));
+    }
+
+    @Test
     void senzaPermessoNonLeggeGliOrdini() throws Exception {
         DashboardResource resource = resource("articoli.codifica_articoli", "ordini_clienti.pronto_consegna");
         var result = resource.get();

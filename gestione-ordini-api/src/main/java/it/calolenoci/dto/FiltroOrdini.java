@@ -35,6 +35,8 @@ public class FiltroOrdini implements Serializable {
 
     private Boolean daCodificare = Boolean.FALSE;
 
+    private Boolean daOrdinareConNote = Boolean.FALSE;
+
     private Boolean daOrdinareModificati = Boolean.FALSE;
 
     private Boolean carichiDaProcessare = Boolean.FALSE;

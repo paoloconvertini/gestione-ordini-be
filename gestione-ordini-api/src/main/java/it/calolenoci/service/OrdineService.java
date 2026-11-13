@@ -196,6 +196,61 @@ public class OrdineService {
         return result.getResultList();
     }
 
+    public it.calolenoci.dto.DashboardArticoliDto articoliDashboard(String tipo, String venditore, int pagina) throws ParseException {
+        FiltroOrdini filtro = new FiltroOrdini();
+        filtro.setCodVenditore(StringUtils.trimToNull(venditore));
+        String righe = "r.tipoRigo NOT IN ('C', 'AC') ";
+        switch (tipo) {
+            case "all": break;
+            case "ordinare": filtro.setFiltroStatus("DA_ORDINARE"); break;
+            case "modificati":
+                filtro.setFiltroStatus("DA_ORDINARE"); filtro.setDaOrdinareModificati(true); break;
+            case "codifica":
+                filtro.setDaCodificare(true); righe += "AND r.fArticolo IN :codiciDaCodificare "; break;
+            case "pronto":
+                righe += "AND gd.flProntoConsegna = true "; break;
+            case "programmare":
+                filtro.setConsegneDaProgrammare(true);
+                righe += "AND gd.flProntoConsegna = true AND gd.flBolla = true "; break;
+            case "bolle":
+                filtro.setSenzaBolla(true);
+                righe += "AND gd.qtaConsegnatoSenzaBolla IS NOT NULL AND gd.qtaConsegnatoSenzaBolla <> 0 "; break;
+            case "firme":
+                filtro.setFiltroStatus("ARCHIVIATO"); filtro.setSenzaFirma(true); break;
+            default: throw new jakarta.ws.rs.BadRequestException("Tipo dashboard non valido");
+        }
+        Map<String, Object> params = new HashMap<>();
+        params.put("dataConfig", LocalDate.parse(dataCongig));
+        String where = applyFilters(filtro, ordiniFrom(), params);
+        if ("pronto".equals(tipo)) where += " AND go.hasProntoConsegna = true ";
+        var count = entityManager.createQuery("SELECT COUNT(o) " + where, Long.class);
+        params.forEach(count::setParameter);
+        long totale = count.getSingleResult();
+        var ordini = entityManager.createQuery("SELECT o.anno, o.serie, o.progressivo " + where
+                + " ORDER BY o.anno, o.serie, o.progressivo", Object[].class);
+        params.forEach(ordini::setParameter);
+        var paginaOrdini = ordini.setFirstResult(Math.max(0, pagina) * 20).setMaxResults(20).getResultList();
+        if (paginaOrdini.isEmpty()) return new it.calolenoci.dto.DashboardArticoliDto(List.of(), totale);
+        Map<String, Object> rowParams = new HashMap<>();
+        StringJoiner ids = new StringJoiner(" OR ", "(", ")");
+        for (int i = 0; i < paginaOrdini.size(); i++) {
+            Object[] ordine = paginaOrdini.get(i);
+            ids.add("(o.anno = :anno" + i + " AND o.serie = :serie" + i + " AND o.progressivo = :progr" + i + ")");
+            rowParams.put("anno" + i, ordine[0]); rowParams.put("serie" + i, ordine[1]); rowParams.put("progr" + i, ordine[2]);
+        }
+        if ("codifica".equals(tipo)) rowParams.put("codiciDaCodificare", OrdineDettaglio.CODICI_DA_CODIFICARE);
+        String query = "SELECT new it.calolenoci.dto.OrdineNotaDaOrdinareDto(o.anno, o.serie, o.progressivo, "
+                + "p.intestazione, go.status, r.progrGenerale, r.rigo, r.fArticolo, r.fDescrArticolo, gd.note, gd.dataNote) "
+                + "FROM Ordine o JOIN PianoConti p ON o.gruppoCliente = p.gruppoConto AND o.contoCliente = p.sottoConto "
+                + "LEFT JOIN GoOrdine go ON o.anno = go.anno AND o.serie = go.serie AND o.progressivo = go.progressivo "
+                + "JOIN OrdineDettaglio r ON r.anno = o.anno AND r.serie = o.serie AND r.progressivo = o.progressivo "
+                + "LEFT JOIN GoOrdineDettaglio gd ON gd.progrGenerale = r.progrGenerale WHERE " + ids + " AND " + righe
+                + " ORDER BY o.anno, o.serie, o.progressivo, r.rigo";
+        var result = entityManager.createQuery(query, OrdineNotaDaOrdinareDto.class);
+        rowParams.forEach(result::setParameter);
+        return new it.calolenoci.dto.DashboardArticoliDto(result.getResultList(), totale);
+    }
+
     public List<DashboardCaricoDto> carichiPiuVecchi(FiltroOrdini filtro) throws ParseException {
         filtro.setCarichiDaProcessare(true);
         Map<String, Object> params = new HashMap<>();
@@ -219,6 +274,11 @@ public class OrdineService {
     }
 
     private String applyFilters(FiltroOrdini filtro, String query, Map<String, Object> map) throws ParseException {
+        if (Boolean.TRUE.equals(filtro.getDaOrdinareConNote())) {
+            query += " AND EXISTS (SELECT 1 FROM OrdineDettaglio r JOIN GoOrdineDettaglio gd "
+                    + "ON gd.progrGenerale = r.progrGenerale WHERE r.anno = o.anno AND r.serie = o.serie "
+                    + "AND r.progressivo = o.progressivo AND " + RIGHE_DA_ORDINARE_CON_NOTA + ") ";
+        }
         if (Boolean.TRUE.equals(filtro.getDaOrdinareModificati())) {
             // Stessa regola della cella rosa: date diverse, anche quando una sola è nulla.
             query += " AND go.status = 'DA_ORDINARE' AND (o.createDate <> o.updateDate "

@@ -117,6 +117,47 @@ class OrdiniConNoteServiceTest {
         return o;
     }
 
+    @Test @TestTransaction
+    void vistaArticoliFiltraRighePronteESenzaBollaEConservaLeNote() throws Exception {
+        Ordine o = ordine();
+        GoOrdine go = GoOrdine.findByOrdineId(o.getAnno(), o.getSerie(), o.getProgressivo());
+        go.setHasProntoConsegna(true); go.setWarnNoBolla(true);
+        var pronta = riga(o, false, "Nota pronta", LocalDateTime.now(), " ");
+        pronta.setFlProntoConsegna(true);
+        var senzaBolla = riga(o, false, "Nota consegna", null, " ");
+        senzaBolla.setQtaConsegnatoSenzaBolla(2.0);
+        var altra = riga(o, false, null, null, " ");
+        em.flush();
+        var pronte = tutteRigheDashboard("pronto", o.getSerie());
+        assertTrue(pronte.contains(pronta.getProgrGenerale()));
+        assertFalse(pronte.contains(senzaBolla.getProgrGenerale()));
+        assertFalse(pronte.contains(altra.getProgrGenerale()));
+        var bolle = tutteRigheDashboard("bolle", o.getSerie());
+        assertTrue(bolle.contains(senzaBolla.getProgrGenerale()));
+        assertFalse(bolle.contains(pronta.getProgrGenerale()));
+        assertTrue(service.articoliDashboard("all", "_INESISTENTE_", 0).getRighe().isEmpty());
+        assertThrows(jakarta.ws.rs.BadRequestException.class, () -> service.articoliDashboard("carichi", null, 0));
+    }
+
+    @Test @TestTransaction
+    void vistaOrdiniConNoteUsaLoStessoCriterioDelContatore() throws Exception {
+        Ordine o = ordine();
+        riga(o, true, "Nota aperta", LocalDateTime.now(), " ");
+        var filtro = new it.calolenoci.dto.FiltroOrdini(); filtro.setDaOrdinareConNote(true);
+        assertEquals(service.countOrdiniDaOrdinareConNote(), service.countDashboard(filtro));
+        var pagina = service.articoliDashboard("all", o.getSerie(), 10000);
+        assertTrue(pagina.getRighe().isEmpty());
+    }
+
+    private java.util.Set<Integer> tutteRigheDashboard(String tipo, String venditore) throws Exception {
+        java.util.Set<Integer> ids = new java.util.HashSet<>();
+        var prima = service.articoliDashboard(tipo, venditore, 0);
+        prima.getRighe().forEach(r -> ids.add(r.getProgrGenerale()));
+        for (int pagina = 1; pagina * 20 < prima.getTotaleOrdini(); pagina++)
+            service.articoliDashboard(tipo, venditore, pagina).getRighe().forEach(r -> ids.add(r.getProgrGenerale()));
+        return ids;
+    }
+
     private GoOrdineDettaglio riga(Ordine o, boolean daOrdinare, String nota, LocalDateTime data, String tipo) {
         int id = -1_000_000_000 - Math.floorMod(UUID.randomUUID().hashCode(), 500_000_000);
         OrdineDettaglio r = new OrdineDettaglio(); r.setAnno(o.getAnno()); r.setSerie(o.getSerie()); r.setProgressivo(o.getProgressivo());

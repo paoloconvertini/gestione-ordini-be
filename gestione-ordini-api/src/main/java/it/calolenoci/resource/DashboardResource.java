@@ -83,6 +83,23 @@ public class DashboardResource {
         return service.noteArticoliDaOrdinare(venditore);
     }
 
+    @GET
+    @Path("/articoli/{tipo}")
+    public it.calolenoci.dto.DashboardArticoliDto articoli(@jakarta.ws.rs.PathParam("tipo") String tipo,
+            @QueryParam("venditore") String venditore, @QueryParam("pagina") int pagina) throws ParseException {
+        if (!hasPerm("ordini_clienti.view")) throw new ForbiddenException();
+        String permission = switch (tipo) {
+            case "codifica" -> "articoli.codifica_articoli";
+            case "pronto" -> "ordini_clienti.pronto_consegna";
+            case "programmare" -> "logistica.update_veicolo";
+            case "firme" -> "ordini_clienti.warn_non_firmato";
+            default -> "ordini_clienti.view";
+        };
+        if (!hasPerm(permission)) throw new ForbiddenException();
+        if (pagina < 0 || pagina > 100000) throw new jakarta.ws.rs.BadRequestException();
+        return service.articoliDashboard(tipo, venditore, pagina);
+    }
+
     private boolean hasPerm(String permission) {
         Object permissions = jwt.getClaim("permissions");
         return permissions instanceof JsonArray array && array.stream()
