@@ -43,10 +43,27 @@ public class MagazzinoResource {
     SaldiMagazzinoService service;
 
     @Inject
+    it.calolenoci.service.CaricoInfissiService infissiService;
+
+    @Inject
     @Claim(standard = Claims.upn)
     String user;
 
 
+
+    @POST
+    @Path("/infissi/anteprima")
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
+    public RipartizioneCaricoInfissiDto anteprimaInfissi(CaricoInfissiDto dto) {
+        return infissiService.anteprima(dto);
+    }
+
+    @POST
+    @Path("/infissi")
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
+    public Response caricaInfissi(CaricoInfissiDto dto) {
+        return Response.ok(new ResponseDto(infissiService.salva(dto, user), false)).build();
+    }
 
     @Operation(summary = "Carica articoli in magazzino")
     @POST
