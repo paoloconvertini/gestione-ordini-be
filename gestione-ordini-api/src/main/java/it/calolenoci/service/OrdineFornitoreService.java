@@ -160,77 +160,94 @@ public class OrdineFornitoreService {
         return fornitori;
     }
 
-    @Transactional
-    public void unisciOrdini(List<OrdineFornitoreDto> dtoList) {
-        try {
-            dtoList.sort(Comparator.comparing(OrdineFornitoreDto::getAnno).reversed());
-            OrdineFornitoreDto ordineDaTenere = dtoList.get(0);
-            Log.debug("Ordine da tenere:" + ordineDaTenere.getProgressivo());
-            Integer ultimoRigo = findRigo(ordineDaTenere.getAnno(), ordineDaTenere.getSerie(), ordineDaTenere.getProgressivo());
-            List<OrdineFornitoreDto> ordiniDaUnire = dtoList.stream().skip(1).toList();
-            List<OrdineFornitoreDto> ordiniDaUnireFiltrati = ordiniDaUnire.stream().filter(o -> {
-                if (Objects.equals(o.getAnno(), ordineDaTenere.getAnno()) && Objects.equals(o.getProgressivo(), ordineDaTenere.getProgressivo()) &&
-                        Objects.equals(o.getSerie(), ordineDaTenere.getSerie())) {
-                    Log.error("UnisciOrdini: Trovato duplicato nella lista da unire con progressivo: " + o.getProgressivo() + " e serie: "
-                            + o.getSerie() + " e anno: " + o.getAnno());
-                    return false;
-                }
-                return true;
-            }).toList();
-            int count = ultimoRigo + 1;
-            int update = 0;
-            List<OrdineFornitoreDettaglio> list = new ArrayList<>();
-            ordiniDaUnireFiltrati.forEach(dto ->
-                    list.addAll(OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
-                                    Parameters.with("anno", dto.getAnno()).and("serie", dto.getSerie()).and("progressivo", dto.getProgressivo()))
-                            .list()));
-            for (OrdineFornitoreDettaglio o : list) {
-                Log.debug("Aggiorno progressivo: " + o.getProgressivo() + " con nuovo progressivo: " + ordineDaTenere.getProgressivo());
-                update += OrdineFornitoreDettaglio.update("anno=:a, rigo = :nuovoRigo, progressivo =: nuovoProgressivo " +
-                                "WHERE anno = :anno and serie =:serie and progressivo =:progressivo and rigo=:rigo",
-                        Parameters.with("anno", o.getAnno()).and("a", ordineDaTenere.getAnno()).and("serie", o.getSerie())
-                                .and("progressivo", o.getProgressivo()).and("rigo", o.getRigo())
-                                .and("nuovoRigo", count).and("nuovoProgressivo", ordineDaTenere.getProgressivo()));
-                count++;
-            }
-            if (update != 0) {
-                Log.info("Aggiornati " + update + " articoli");
-                List<OrdineFornitoreDettaglio> listaDettaglioDaEliminare = new ArrayList<>();
-                ordiniDaUnireFiltrati.forEach(o -> {
-                    listaDettaglioDaEliminare.addAll(OrdineFornitoreDettaglio.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
-                            Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).list());
-                    OrdineFornitore ordineFornitore = OrdineFornitore.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
-                            Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).firstResult();
-                    GoOrdineFornitoreBK bk = GoOrdineFornitoreBK.find("anno = :anno AND serie = :serie AND progressivo = :progressivo",
-                            Parameters.with("anno", o.getAnno()).and("serie", o.getSerie()).and("progressivo", o.getProgressivo())).firstResult();
-                    if (bk == null) {
-                        GoOrdineFornitoreBK.persist(ordineFornitoreMapper.copyOAF(ordineFornitore));
-                    }
-                    OrdineFornitore.deleteById(new FornitoreId(o.getAnno(), o.getSerie(), o.getProgressivo()));
-                });
-                if (!listaDettaglioDaEliminare.isEmpty()) {
-                    Log.debug("Trovati " + listaDettaglioDaEliminare.size() + " articoli di OAF orfani! INIZIO CANCELLAZIONE DA DB...");
-                    listaDettaglioDaEliminare.forEach(d -> {
-                        Log.debug("Elimino progressivo/anno: " + d.getProgressivo() + "/" + d.getAnno());
-                        GoOrdineFornitoreDettaglioBK bk = GoOrdineFornitoreDettaglioBK.find("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
-                                Parameters.with("anno", d.getAnno()).and("serie", d.getSerie()).and("progressivo", d.getProgressivo())
-                                        .and("rigo", d.getRigo())).firstResult();
-                        if (bk == null) {
-                            GoOrdineFornitoreDettaglioBK.persist(oafArticoloMapper.copyOAFDettaglio(d));
-                        }
-                        OrdineFornitoreDettaglio.delete("anno = :anno AND serie = :serie AND progressivo = :progressivo AND rigo =:rigo",
-                                Parameters.with("anno", d.getAnno()).and("serie", d.getSerie()).and("progressivo", d.getProgressivo())
-                                        .and("rigo", d.getRigo()));
-                    });
-                    Log.debug("CANCELLAZIONE TERMINATA!!");
-                }
+    public AnteprimaUnioneOafDto anteprimaUnione(List<OrdineFornitoreDto> richieste) {
+        return preparaUnione(richieste, false);
+    }
 
-            }
-
-        } catch (Exception e) {
-            Log.error("Errore nell'unione degli OAF: " + e.getMessage());
+    private AnteprimaUnioneOafDto preparaUnione(List<OrdineFornitoreDto> richieste, boolean blocca) {
+        if (richieste == null || richieste.size() < 2)
+            throw new it.calolenoci.exception.BusinessException("Selezionare almeno due ordini distinti");
+        List<OrdineFornitoreDto> ordini = new ArrayList<>();
+        Set<FornitoreId> chiavi = new HashSet<>();
+        StringBuilder snapshot = new StringBuilder();
+        for (OrdineFornitoreDto dto : richieste) {
+            if (dto == null || dto.getAnno() == null || StringUtils.isBlank(dto.getSerie()) || dto.getProgressivo() == null)
+                throw new it.calolenoci.exception.BusinessException("Riferimento ordine non valido");
+            FornitoreId id = new FornitoreId(dto.getAnno(), dto.getSerie(), dto.getProgressivo());
+            if (!chiavi.add(id)) throw new it.calolenoci.exception.BusinessException("Lo stesso ordine è selezionato più volte");
+            OrdineFornitore o = blocca ? OrdineFornitore.findById(id, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+                    : OrdineFornitore.findById(id);
+            if (o == null) throw new it.calolenoci.exception.BusinessException("Un ordine non esiste più: aggiornare la lista");
+            if (!"F".equals(o.getProvvisorio()))
+                throw new it.calolenoci.exception.BusinessException("Si possono unire soltanto ordini sospesi");
+            if (o.getGruppo() == null || StringUtils.isBlank(o.getConto()))
+                throw new it.calolenoci.exception.BusinessException("Fornitore mancante nell'ordine " + o.getProgressivo());
+            OrdineFornitoreDto attuale = new OrdineFornitoreDto();
+            attuale.setAnno(o.getAnno()); attuale.setSerie(o.getSerie()); attuale.setProgressivo(o.getProgressivo());
+            attuale.setGruppo(o.getGruppo()); attuale.setConto(o.getConto().trim());
+            PianoConti fornitore = PianoConti.find("gruppoConto=?1 and sottoConto=?2", o.getGruppo(), o.getConto()).firstResult();
+            attuale.setIntestazione(fornitore == null ? o.getGruppo() + "/" + o.getConto().trim() : fornitore.getIntestazione());
+            ordini.add(attuale);
+            snapshot.append(o.getAnno()).append('|').append(o.getSerie()).append('|').append(o.getProgressivo())
+                    .append('|').append(o.getGruppo()).append('|').append(o.getConto().trim()).append('|').append(o.getUpdateDate()).append(';');
+            var queryRighe = OrdineFornitoreDettaglio.find(
+                    "anno=?1 and serie=?2 and progressivo=?3 ORDER BY rigo", o.getAnno(), o.getSerie(), o.getProgressivo());
+            if (blocca) queryRighe.withLock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+            List<OrdineFornitoreDettaglio> righe = queryRighe.list();
+            for (OrdineFornitoreDettaglio r : righe)
+                snapshot.append(r.getProgrGenerale()).append('|').append(r.getRigo()).append('|')
+                        .append(r.getOArticolo()).append('|').append(r.getOQuantita()).append('|').append(r.getOPrezzo()).append(';');
         }
+        // Mantiene la scelta storica: anno più recente, primo selezionato a parità di anno.
+        ordini.sort(Comparator.comparing(OrdineFornitoreDto::getAnno).reversed());
+        boolean diversi = ordini.stream().anyMatch(o -> !Objects.equals(o.getGruppo(), ordini.get(0).getGruppo())
+                || !Objects.equals(o.getConto(), ordini.get(0).getConto()));
+        String versione;
+        try {
+            versione = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(snapshot.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
+        return new AnteprimaUnioneOafDto(ordini, diversi, versione);
+    }
 
+    @Transactional
+    public void unisciOrdini(List<OrdineFornitoreDto> ordini) {
+        unisciOrdini(ordini, false, null);
+    }
+
+    @Transactional(rollbackOn = Exception.class)
+    public void unisciOrdini(List<OrdineFornitoreDto> richieste, boolean confermaFornitoriDiversi, String versione) {
+        AnteprimaUnioneOafDto anteprima = preparaUnione(richieste, true);
+        if (versione != null && !versione.equals(anteprima.getVersione()))
+            throw new it.calolenoci.exception.BusinessException("Gli ordini sono cambiati: aggiornare la lista e confermare nuovamente");
+        if (anteprima.isFornitoriDiversi() && (!confermaFornitoriDiversi || versione == null))
+            throw new it.calolenoci.exception.BusinessException("Fornitori diversi: è richiesta la conferma esplicita dell'anteprima");
+        OrdineFornitoreDto destinazione = anteprima.getOrdini().get(0);
+        Integer ultimo = findRigo(destinazione.getAnno(), destinazione.getSerie(), destinazione.getProgressivo());
+        int prossimo = ultimo == null ? 1 : ultimo + 1;
+        for (OrdineFornitoreDto sorgente : anteprima.getOrdini().subList(1, anteprima.getOrdini().size())) {
+            OrdineFornitore testata = OrdineFornitore.findById(new FornitoreId(sorgente.getAnno(), sorgente.getSerie(), sorgente.getProgressivo()));
+            List<OrdineFornitoreDettaglio> righe = OrdineFornitoreDettaglio.find(
+                    "anno=?1 and serie=?2 and progressivo=?3 ORDER BY rigo", sorgente.getAnno(), sorgente.getSerie(), sorgente.getProgressivo()).list();
+            if (GoOrdineFornitoreBK.findById(new FornitoreId(sorgente.getAnno(), sorgente.getSerie(), sorgente.getProgressivo())) == null)
+                GoOrdineFornitoreBK.persist(ordineFornitoreMapper.copyOAF(testata));
+            for (OrdineFornitoreDettaglio r : righe) {
+                if (GoOrdineFornitoreDettaglioBK.findById(new FornitoreDettaglioId(r.getAnno(), r.getSerie(), r.getProgressivo(), r.getRigo())) == null)
+                    GoOrdineFornitoreDettaglioBK.persist(oafArticoloMapper.copyOAFDettaglio(r));
+            }
+            // Salva il backup prima di spostare le righe con update bulk delle chiavi ERP.
+            OrdineFornitore.getEntityManager().flush();
+            for (OrdineFornitoreDettaglio r : righe) {
+                int spostate = OrdineFornitoreDettaglio.update(
+                        "anno=:a, serie=:s, progressivo=:p, rigo=:r WHERE anno=:oa and serie=:os and progressivo=:op and rigo=:orr",
+                        Parameters.with("a", destinazione.getAnno()).and("s", destinazione.getSerie()).and("p", destinazione.getProgressivo())
+                                .and("r", prossimo++).and("oa", r.getAnno()).and("os", r.getSerie()).and("op", r.getProgressivo()).and("orr", r.getRigo()));
+                if (spostate != 1) throw new IllegalStateException("Riga non trasferita durante l'unione");
+            }
+            if (!OrdineFornitore.deleteById(new FornitoreId(sorgente.getAnno(), sorgente.getSerie(), sorgente.getProgressivo())))
+                throw new IllegalStateException("Testata non rimossa durante l'unione");
+        }
+        OrdineFornitore.getEntityManager().flush();
     }
 
     private Integer findRigo(Integer anno, String serie, Integer progressivo) {
@@ -243,7 +260,7 @@ public class OrdineFornitoreService {
 
     public List<OrdineFornitoreDto> findAllByStatus(FiltroOrdini filtro) throws ParseException {
         String query = " SELECT o.anno,  o.serie,  o.progressivo, o.dataOrdine,  " +
-                "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate, go.note";
+                "p.intestazione,  o.dataConfOrdine, o.numConfOrdine, o.provvisorio, o.updateDate, go.note, o.gruppo, o.conto";
         if (filtro != null && StringUtils.isBlank(filtro.getFiltroStatus())) {
             query += " , go.flInviato, go.dataInvio ";
         }

@@ -273,14 +273,15 @@ class OrdineFornitoreServiceTest {
 
     @Test
     @TestTransaction
-    void ignoraDuplicatiDuranteLUnioneDegliOrdini() {
+    void rifiutaDuplicatiDuranteLUnioneDegliOrdini() {
         OrdineFornitore ordine = existingOrdineWithDetails();
         OrdineFornitoreDto dto = keyDto(ordine);
         long dettagliPrima = OrdineFornitoreDettaglio.count(
                 "anno = ?1 and serie = ?2 and progressivo = ?3",
                 ordine.getAnno(), ordine.getSerie(), ordine.getProgressivo());
 
-        service.unisciOrdini(new ArrayList<>(List.of(dto, keyDto(ordine))));
+        assertThrows(it.calolenoci.exception.BusinessException.class,
+                () -> service.unisciOrdini(new ArrayList<>(List.of(dto, keyDto(ordine)))));
 
         assertEquals(dettagliPrima, OrdineFornitoreDettaglio.count(
                 "anno = ?1 and serie = ?2 and progressivo = ?3",

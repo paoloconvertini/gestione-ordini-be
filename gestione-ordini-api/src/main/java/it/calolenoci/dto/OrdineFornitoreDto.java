@@ -126,6 +126,22 @@ public class OrdineFornitoreDto implements Serializable {
         this.dataInvio = dataInvio;
     }
 
+    public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, LocalDate dataOrdine, String intestazione,
+                              Date dataConfOrdine, String numConfOrdine, String provvisorio, Date updateDate,
+                              String note, Integer gruppo, String conto) {
+        this(anno, serie, progressivo, dataOrdine, intestazione, dataConfOrdine, numConfOrdine, provvisorio, updateDate, note);
+        this.gruppo = gruppo;
+        this.conto = conto;
+    }
+
+    public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, LocalDate dataOrdine, String intestazione,
+                              Date dataConfOrdine, String numConfOrdine, String provvisorio, Date updateDate,
+                              String note, Integer gruppo, String conto, Boolean flInviato, LocalDate dataInvio) {
+        this(anno, serie, progressivo, dataOrdine, intestazione, dataConfOrdine, numConfOrdine, provvisorio, updateDate, note, flInviato, dataInvio);
+        this.gruppo = gruppo;
+        this.conto = conto;
+    }
+
     public OrdineFornitoreDto(Integer anno, String serie, Integer progressivo, Integer gruppo, String conto, String intestazione) {
         this.anno = anno;
         this.serie = serie;

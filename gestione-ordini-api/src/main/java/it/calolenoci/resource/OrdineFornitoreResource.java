@@ -111,19 +111,29 @@ public class OrdineFornitoreResource {
         return Response.status(Response.Status.OK).entity(service.eliminaOrdine(anno, serie, progressivo)).build();
     }
 
+    @POST
+    @Path("/unisciOrdini/anteprima")
+    @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
+    public AnteprimaUnioneOafDto anteprimaUnione(List<OrdineFornitoreDto> ordini) {
+        return service.anteprimaUnione(ordini);
+    }
+
     @Operation(summary = "Unisci ordine a fornitore")
     @POST
     @Path("/unisciOrdini")
     @RolesAllowed({Ruolo.ADMIN, Ruolo.AMMINISTRATIVO})
-    public Response unisciOrdini(List<OrdineFornitoreDto> ordini) {
+    public Response unisciOrdini(List<OrdineFornitoreDto> ordini,
+            @QueryParam("confermaFornitoriDiversi") boolean confermaFornitoriDiversi,
+            @QueryParam("versione") String versione) {
         try {
-            if (ordini.isEmpty()) {
-                return Response.status(Response.Status.CREATED).entity(new ResponseDto("Nessun ordine presente!", false)).build();
-            }
-            service.unisciOrdini(ordini);
+            service.unisciOrdini(ordini, confermaFornitoriDiversi, versione);
             return Response.status(Response.Status.CREATED).entity(new ResponseDto("Ordini unificati!", false)).build();
+        } catch (it.calolenoci.exception.BusinessException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseDto(e.getMessage(), true)).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseDto(e.getMessage(), true)).build();
+            io.quarkus.logging.Log.error("Unione ordini fornitori annullata", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ResponseDto("Unione annullata per un errore. Nessuna modifica salvata.", true)).build();
         }
     }
 
