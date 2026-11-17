@@ -37,6 +37,8 @@ class DashboardResourceTest {
     void senzaPermessoNonLeggeGliOrdini() throws Exception {
         DashboardResource resource = resource("articoli.codifica_articoli", "ordini_clienti.pronto_consegna");
         var result = resource.get();
+        assertNull(result.getFattureDaEmettere());
+        assertNull(result.getAnomaliePagamento());
         assertNull(result.getOrdiniAttivi());
         assertNull(result.getDaCodificare());
         assertNull(result.getProntoConsegna());

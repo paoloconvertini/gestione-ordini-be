@@ -61,6 +61,9 @@ public class OrdineResource {
     OrdineService ordineService;
 
     @Inject
+    ModalitaPagamentoService modalitaPagamentoService;
+
+    @Inject
     GiroConsegneService giroConsegneService;
 
     @Inject
@@ -401,7 +404,26 @@ public class OrdineResource {
     @Path("/crea-fattura-acconto")
     public Response creaFatturaAcconto(List<FatturaAccontoDto> fatturaAccontoDtoList) {
         String result = ordineService.creaFatturaAcconto(fatturaAccontoDtoList, user);
-        return Response.ok(new ResponseDto(result, StringUtils.isBlank(result))).build();
+        // Il servizio storico restituisce il messaggio dopo il commit della propria transazione.
+        if (StringUtils.isBlank(result) || !result.startsWith("Creata fattura acconto n.")) {
+            return Response.serverError().entity(new ResponseDto(
+                    StringUtils.defaultIfBlank(result,"Creazione fattura non riuscita"),true)).build();
+        }
+        Set<it.calolenoci.entity.OrdineId> ordini = new LinkedHashSet<>();
+        fatturaAccontoDtoList.forEach(d -> ordini.add(new it.calolenoci.entity.OrdineId(
+                d.getAnno(),d.getSerie(),d.getProgressivo())));
+        boolean segnalazioniAggiornate = true;
+        for (it.calolenoci.entity.OrdineId ordine : ordini) {
+            try {
+                modalitaPagamentoService.riconciliaOrdine(ordine.getAnno(),ordine.getSerie(),ordine.getProgressivo());
+            } catch (Exception e) {
+                segnalazioniAggiornate = false;
+                io.quarkus.logging.Log.error("Fattura creata, aggiornamento segnalazioni pagamento non riuscito per "+ordine,e);
+            }
+        }
+        if (!segnalazioniAggiornate)
+            result += ". La fattura è stata salvata, ma l'aggiornamento delle segnalazioni non è riuscito.";
+        return Response.ok(new ResponseDto(result,false)).build();
     }
 
     @Operation(summary = "Acconti NON validati legati ad un ordine cliente (lista)")

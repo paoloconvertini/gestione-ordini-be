@@ -7,6 +7,9 @@ import java.util.List;
 @Getter
 @Setter
 public class DashboardDto {
+    private Long fattureDaEmettere;
+    private Long anomaliePagamento;
+    private java.time.LocalDateTime controlloPagamenti;
     private Long ordiniAttivi;
     private Long daCodificare;
     private Long daOrdinare;

@@ -2,6 +2,10 @@ package it.calolenoci.resource;
 
 import io.quarkus.security.Authenticated;
 import it.calolenoci.dto.DashboardDto;
+import it.calolenoci.entity.GoPagamentoOrdine;
+import it.calolenoci.enums.Ruolo;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.persistence.EntityManager;
 import it.calolenoci.dto.FiltroOrdini;
 import it.calolenoci.service.OrdineService;
 import jakarta.enterprise.context.RequestScoped;
@@ -30,10 +34,22 @@ public class DashboardResource {
 
     @Inject
     JsonWebToken jwt;
+    @Inject EntityManager em;
+
 
     @GET
     public DashboardDto get() throws ParseException {
         DashboardDto dto = new DashboardDto();
+        if (jwt.getGroups().contains(Ruolo.ADMIN)) {
+            dto.setFattureDaEmettere(((Number)em.createNativeQuery(
+                    "SELECT COUNT(*) FROM (SELECT ANNO,SERIE,PROGRESSIVO FROM GO_PAGAMENTO_ORDINE WHERE STATO='DA_FATTURARE' GROUP BY ANNO,SERIE,PROGRESSIVO) p")
+                    .getSingleResult()).longValue());
+            dto.setAnomaliePagamento(((Number)em.createNativeQuery(
+                    "SELECT COUNT(*) FROM (SELECT ANNO,SERIE,PROGRESSIVO FROM GO_PAGAMENTO_ORDINE WHERE STATO='ANOMALIA' GROUP BY ANNO,SERIE,PROGRESSIVO) p")
+                    .getSingleResult()).longValue());
+            dto.setControlloPagamenti(em.createQuery(
+                    "SELECT MAX(p.controllatoIl) FROM GoPagamentoOrdine p", java.time.LocalDateTime.class).getSingleResult());
+        }
         if (hasPerm("ordini_clienti.view")) {
             dto.setOrdiniAttivi(service.countDashboard(new FiltroOrdini()));
             FiltroOrdini daOrdinare = new FiltroOrdini();
@@ -98,6 +114,13 @@ public class DashboardResource {
         if (!hasPerm(permission)) throw new ForbiddenException();
         if (pagina < 0 || pagina > 100000) throw new jakarta.ws.rs.BadRequestException();
         return service.articoliDashboard(tipo, venditore, pagina);
+    }
+
+    @GET
+    @Path("/pagamenti")
+    @RolesAllowed(Ruolo.ADMIN)
+    public List<GoPagamentoOrdine> pagamenti() {
+        return GoPagamentoOrdine.find("ORDER BY anno,serie,progressivo,rigo").list();
     }
 
     private boolean hasPerm(String permission) {

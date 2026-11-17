@@ -688,7 +688,7 @@ AND NOT EXISTS (
                 .collect(Collectors.toList());
     }
 
-    public void addNuoviOrdini() throws ParseException {
+    public List<OrdineId> addNuoviOrdini() throws ParseException {
         long inizio = System.currentTimeMillis();
         LocalDate data = LocalDate.parse(dataCongig);
         List<Ordine> list = Ordine.find("SELECT o FROM Ordine o " +
@@ -712,6 +712,7 @@ AND NOT EXISTS (
             Log.error("addNuoviOrdini: " + (fine - inizio) / 1000 + " sec");
             creaReport(list);
         }
+        return list.stream().map(o -> new OrdineId(o.getAnno(),o.getSerie(),o.getProgressivo())).toList();
     }
 
     private void creaReport(List<Ordine> list) {

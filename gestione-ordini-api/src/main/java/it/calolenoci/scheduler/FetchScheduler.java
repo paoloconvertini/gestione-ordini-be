@@ -36,6 +36,9 @@ public class FetchScheduler {
     OrdineService ordineService;
 
     @Inject
+    ModalitaPagamentoService modalitaPagamentoService;
+
+    @Inject
     ArticoloService articoloService;
 
     @Inject
@@ -101,11 +104,31 @@ public class FetchScheduler {
         ordineService.syncProntoConsegna();
     }
 
-    @Scheduled(every = "${cron.expr.nuovi.ordini:10m}")
-    @Transactional
+    @Scheduled(every = "${cron.expr.nuovi.ordini:10m}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     public void findNuoviOrdini() throws ParseException {
+        for (it.calolenoci.entity.OrdineId ordine : acquisisciNuoviOrdini()) {
+            try {
+                modalitaPagamentoService.riconciliaOrdine(ordine.getAnno(),ordine.getSerie(),ordine.getProgressivo());
+            } catch (Exception e) {
+                Log.error("Controllo pagamento nuovo ordine non riuscito: "+ordine,e);
+            }
+        }
+    }
+
+    @Transactional
+    public List<it.calolenoci.entity.OrdineId> acquisisciNuoviOrdini() throws ParseException {
         ordineService.checkStatusDettaglio(new FiltroOrdini());
-        ordineService.addNuoviOrdini();
+        return ordineService.addNuoviOrdini();
+    }
+
+    @Scheduled(cron = "${pagamenti.controllo.cron:off}", timeZone = "Europe/Rome",
+            concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    public void controllaPagamenti() {
+        try {
+            modalitaPagamentoService.riconcilia();
+        } catch (Exception e) {
+            Log.error("Controllo modalità pagamento non riuscito; invariato l'ultimo risultato valido", e);
+        }
     }
 
     @Scheduled(every = "${cron.expr.find.carichi}")
